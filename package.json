@@ -3,24 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",                   // run local development server
-    "build": "next build",               // build for production
-    "start": "next start",               // run production server locally
-    "lint": "next lint",                 // run ESLint checks
-    "vercel-build": "next build && next export"  // optional: if using static export
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "next": "13.6.10",                   // ensure you use latest stable
+    "next": "14.1.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "three": "^0.164.0"                  // Three.js for Matrix background
+    "three": "^0.157.0"
   },
   "devDependencies": {
-    "eslint": "8.50.0",
-    "eslint-config-next": "13.6.10",
-    "raw-loader": "^4.0.2"               // for loading shaders (.vert/.frag/.glsl)
-  },
-  "engines": {
-    "node": ">=18.0.0"                   // match Vercel supported Node version
+    "eslint": "8.45.0",
+    "eslint-config-next": "14.1.0"
   }
 }
