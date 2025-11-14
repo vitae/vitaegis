@@ -1,141 +1,114 @@
-// components/MatrixRainBackground.js
-import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+// components/MatrixBackground.js
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
-const MatrixRainBackground = () => {
+export default function MatrixBackground() {
   const mountRef = useRef(null);
 
   useEffect(() => {
-    // --- Scene Setup ---
+    if (!mountRef.current) return;
+
+    const mount = mountRef.current;
+
+    // Scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
+    // Camera
     const camera = new THREE.PerspectiveCamera(
       75,
-      window.innerWidth / window.innerHeight,
+      mount.clientWidth / mount.clientHeight,
       0.1,
       1000
     );
-    camera.position.z = 30;
+    camera.position.z = 5;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    mountRef.current?.appendChild(renderer.domElement);
+    mount.appendChild(renderer.domElement);
 
-    // --- Matrix rain setup ---
-    const matrixChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const columns = 80;
-    const drops = [];
+    // Matrix rain particles
+    const matrixChars =
+      "アカサタナハマヤラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-    const createTextSprite = (text, opacity = 1, isLeading = false) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 64;
-      canvas.height = 64;
-      const context = canvas.getContext('2d');
+    const numParticles = 2000;
+    const positions = new Float32Array(numParticles * 3);
+    const colors = new Float32Array(numParticles * 3);
 
-      context.font = 'bold 48px monospace';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.fillStyle = isLeading ? '#40ff40' : '#00ff00';
-      context.globalAlpha = opacity;
+    for (let i = 0; i < numParticles; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 1] = Math.random() * 20;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
 
-      if (isLeading) {
-        context.shadowBlur = 20;
-        context.shadowColor = '#00ff00';
-      }
-
-      context.fillText(text, 32, 32);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const spriteMaterial = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true,
-        opacity,
-        blending: THREE.AdditiveBlending,
-      });
-
-      const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(1, 1, 1);
-
-      return sprite;
-    };
-
-    // Initialize drops
-    for (let i = 0; i < columns; i++) {
-      const drop = {
-        x: (i - columns / 2) * 0.8,
-        y: Math.random() * -50,
-        speed: 0.08 + Math.random() * 0.12,
-        chars: [],
-        charData: []
-      };
-
-      for (let j = 0; j < 20; j++) {
-        const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
-        const opacity = Math.max(0, 1 - j * 0.05);
-        const sprite = createTextSprite(char, opacity, j === 0);
-        sprite.position.set(drop.x, drop.y - j * 1.2, 0);
-        scene.add(sprite);
-        drop.chars.push(sprite);
-        drop.charData.push({ char, opacity });
-      }
-
-      drops.push(drop);
+      // glowing neon green
+      colors[i * 3] = 0;
+      colors[i * 3 + 1] = 1;
+      colors[i * 3 + 2] = 0;
     }
 
-    const animate = () => {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 0.05,
+      vertexColors: true,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    // Animation loop
+    function animate() {
       requestAnimationFrame(animate);
 
-      drops.forEach(drop => {
-        drop.y += drop.speed;
-
-        if (drop.y > 40) {
-          drop.y = -20;
-          drop.speed = 0.08 + Math.random() * 0.12;
-          drop.charData.forEach(data => {
-            data.char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
-          });
+      // simple "rain" effect
+      const pos = geometry.attributes.position.array;
+      for (let i = 0; i < numParticles; i++) {
+        pos[i * 3 + 1] -= 0.05;
+        if (pos[i * 3 + 1] < -10) {
+          pos[i * 3 + 1] = 10;
         }
-
-        drop.chars.forEach((sprite, j) => {
-          sprite.position.y = drop.y - j * 1.2;
-
-          if (Math.random() < 0.005) {
-            const newChar = matrixChars[Math.floor(Math.random() * matrixChars.length)];
-            const opacity = Math.max(0, 1 - j * 0.05);
-            const newSprite = createTextSprite(newChar, opacity, j === 0);
-            newSprite.position.copy(sprite.position);
-            scene.remove(sprite);
-            scene.add(newSprite);
-            drop.chars[j] = newSprite;
-            drop.charData[j].char = newChar;
-          }
-
-          const fadeStart = 20;
-          if (sprite.position.y > fadeStart) {
-            const fadeFactor = 1 - (sprite.position.y - fadeStart) / 20;
-            sprite.material.opacity = drop.charData[j].opacity * fadeFactor;
-          }
-        });
-      });
+      }
+      geometry.attributes.position.needsUpdate = true;
 
       renderer.render(scene, camera);
-    };
-
+    }
     animate();
 
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+    // Handle resize
+    function handleResize() {
+      if (!mount) return;
+      camera.aspect = mount.clientWidth / mount.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
+      renderer.setSize(mount.clientWidth, mount.clientHeight);
+    }
+    window.addEventListener("resize", handleResize);
 
-    window.addEventListener('resize', handleResize);
-
+    // Cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
-      drops.forEach(drop => drop.chars.forEach(sprite => {
-        sprite.material.map?.dispose();
-        sprite.material.dispose();
-        scene.remove(sprite);
+      window.removeEventListener("resize", handleResize);
+      mount.removeChild(renderer.domElement);
+      renderer.dispose();
+      geometry.dispose();
+      material.dispose();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={mountRef}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        zIndex: -1,
+      }}
+    />
+  );
+}
