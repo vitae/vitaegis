@@ -1,36 +1,123 @@
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
-
-const MatrixRainBackground = dynamic(
-  () => import('../components/MatrixRainBackground'),
-  { ssr: false }
-);
+// pages/index.js
+import MatrixBackground from "../components/MatrixBackground";
 
 export default function Home() {
-  const [walletAddress, setWalletAddress] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
-
-  const connectWallet = async () => {
-    setIsConnecting(true);
-    setTimeout(() => {
-      setWalletAddress('0x742d...8f3d');
-      setIsConnecting(false);
-    }, 1500);
-  };
-
   return (
-    <>
-      <MatrixRainBackground />
-      <div style={{ position: 'relative', zIndex: 10, padding: '2rem', color: 'white', fontFamily: "'Futura Book', sans-serif" }}>
-        <nav style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-          <div style={{ fontWeight: 500, fontSize: '1.5rem', color: '#00ff00', textShadow: '0 0 20px #00ff00' }}>VITAEGIS</div>
-          <ul style={{ display: 'flex', gap: '2rem', listStyle: 'none' }}>
-            <li><a href="#features" style={{ color: 'white' }}>Features</a></li>
-            <li><a href="#docs" style={{ color: 'white' }}>Docs</a></li>
-          </ul>
-        </nav>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      <MatrixBackground />
 
-        <header style={{ marginBottom: '4rem' }}>
-          <h1 style={{ fontSize: '4rem' }}>Enter the <span style={{ color: '#00ff00' }}>Matrix</span> of Web3</h1>
-          <p style={{ fontSize: '1.25rem', opacity: 0.8 }}>Decentralized infrastructure powered by blockchain technology.</p>
-          <div style={{ marginTop
+      <main
+        style={{
+          position: "relative",
+          zIndex: 10,
+          padding: "4rem 2rem",
+          textAlign: "center",
+        }}
+      >
+        <header style={{ marginBottom: "4rem" }}>
+          <h1 style={{ fontSize: "4rem", fontFamily: "Futura, sans-serif" }}>
+            Enter the{" "}
+            <span style={{ color: "#00ff00" }}>
+              Matrix
+            </span>{" "}
+            of Web3
+          </h1>
+
+          <p
+            style={{
+              fontSize: "1.25rem",
+              opacity: 0.8,
+              maxWidth: "700px",
+              margin: "0 auto",
+            }}
+          >
+            Decentralized infrastructure powered by blockchain technology.
+            Ultra-fast, secure, and built for the next evolution of the web.
+          </p>
+
+          <div style={{ marginTop: "2rem" }}>
+            <button
+              style={{
+                padding: "1rem 2rem",
+                background: "#00ff00",
+                color: "#000",
+                fontSize: "1.2rem",
+                fontWeight: "bold",
+                borderRadius: "8px",
+                cursor: "pointer",
+                boxShadow: "0 0 20px #00ff00aa",
+                transition: "transform 0.2s",
+              }}
+              onMouseEnter={(e) => (e.target.style.transform = "scale(1.08)")}
+              onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
+            >
+              Enter Web3
+            </button>
+          </div>
+        </header>
+
+        {/* Feature Grid */}
+        <section
+          style={{
+            display: "grid",
+            gap: "2rem",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            maxWidth: "1000px",
+            margin: "0 auto",
+          }}
+        >
+          <div
+            style={{
+              padding: "2rem",
+              background: "#111",
+              borderRadius: "12px",
+              border: "1px solid #00ff00",
+              boxShadow: "0 0 15px #00ff0044",
+            }}
+          >
+            <h3 style={{ color: "#00ff00", marginBottom: "1rem" }}>
+              Crypto Payments
+            </h3>
+            <p style={{ opacity: 0.7 }}>
+              Accept ETH, SOL, USDC, and any EVM-compatible token.
+            </p>
+          </div>
+
+          <div
+            style={{
+              padding: "2rem",
+              background: "#111",
+              borderRadius: "12px",
+              border: "1px solid #00ff00",
+              boxShadow: "0 0 15px #00ff0044",
+            }}
+          >
+            <h3 style={{ color: "#00ff00", marginBottom: "1rem" }}>
+              Digital Products
+            </h3>
+            <p style={{ opacity: 0.7 }}>
+              Sell files, access keys, or Web3 services instantly.
+            </p>
+          </div>
+
+          <div
+            style={{
+              padding: "2rem",
+              background: "#111",
+              borderRadius: "12px",
+              border: "1px solid #00ff00",
+              boxShadow: "0 0 15px #00ff0044",
+            }}
+          >
+            <h3 style={{ color: "#00ff00", marginBottom: "1rem" }}>
+              Smart Contracts
+            </h3>
+            <p style={{ opacity: 0.7 }}>
+              Fully automated and trustless workflows deployed to-chain.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
