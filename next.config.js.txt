@@ -1,0 +1,47 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,       // catch potential bugs in dev
+  swcMinify: true,             // faster minification
+  output: 'standalone',        // optimized for deployment on Vercel
+  typescript: {
+    ignoreBuildErrors: false,  // ensure TS errors fail build
+  },
+  images: {
+    domains: [],               // add any external image sources if needed
+  },
+  experimental: {
+    appDir: false,             // using pages/ directory
+  },
+  webpack(config) {
+    // Load 3D model and shader files
+    config.module.rules.push(
+      {
+        test: /\.(glb|gltf|hdr|bin|fbx)$/,
+        type: 'asset/resource',
+      },
+      {
+        test: /\.(vert|frag|glsl)$/,
+        use: 'raw-loader',
+      }
+    );
+
+    // Allow importing .txt, .csv, .json, or any other static data if needed
+    config.module.rules.push({
+      test: /\.(txt|csv|json)$/i,
+      type: 'asset/source',
+    });
+
+    return config;
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/index',  // optional, redirect if needed
+        permanent: true,
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;

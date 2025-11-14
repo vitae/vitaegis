@@ -1,0 +1,13 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,           // helps catch bugs
+  swcMinify: true,                 // fast minification
+  images: {
+    domains: [],                   // add any external image domains if needed
+  },
+  experimental: {
+    appDir: false,                 // since you are using pages/ folder
+  },
+};
+
+module.exports = nextConfig;

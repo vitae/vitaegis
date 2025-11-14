@@ -1,20 +1,26 @@
 {
   "name": "vitaegis",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "next dev",                   // run local development server
+    "build": "next build",               // build for production
+    "start": "next start",               // run production server locally
+    "lint": "next lint",                 // run ESLint checks
+    "vercel-build": "next build && next export"  // optional: if using static export
   },
   "dependencies": {
-    "next": "^13.5.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "three": "^0.163.0"
+    "next": "13.6.10",                   // ensure you use latest stable
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "three": "^0.164.0"                  // Three.js for Matrix background
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.28",
-    "tailwindcss": "^3.3.3"
+    "eslint": "8.50.0",
+    "eslint-config-next": "13.6.10",
+    "raw-loader": "^4.0.2"               // for loading shaders (.vert/.frag/.glsl)
+  },
+  "engines": {
+    "node": ">=18.0.0"                   // match Vercel supported Node version
   }
 }
