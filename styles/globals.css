@@ -6,10 +6,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
     @apply bg-black text-white font-sans antialiased;
     margin: 0;

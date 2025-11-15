@@ -16,13 +16,6 @@ const nextConfig = {
 
   // Webpack optimizations for Three.js
   webpack: (config, { isServer }) => {
-    // Shader file support
-    config.module.rules.push({
-      test: /\.(glsl|vs|fs|vert|frag)$/,
-      exclude: /node_modules/,
-      use: ['raw-loader', 'glslify-loader'],
-    });
-
     // Three.js optimization
     if (!isServer) {
       config.resolve.fallback = {
@@ -33,11 +26,6 @@ const nextConfig = {
     }
 
     return config;
-  },
-
-  // Enable experimental features for better performance
-  experimental: {
-    optimizeCss: true,
   },
 
   // Headers for security and performance
