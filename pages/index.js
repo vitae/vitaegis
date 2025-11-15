@@ -60,21 +60,18 @@ export default function Home() {
             variants={itemVariants}
             className="text-6xl md:text-8xl font-bold mb-6 tracking-tight"
           >
-            Enter the{' '}
             <span className="text-green-400 drop-shadow-[0_0_30px_rgba(0,255,65,0.5)]">
-              Matrix
+              VITAEGIS
             </span>
             <br />
-            of Web3
+            VITALITY
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
             className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
           >
-            Decentralized infrastructure powered by blockchain technology.
-            <br />
-            Ultra-fast, secure, and built for the next evolution of the web.
+            Evolve your energy!
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex gap-6 justify-center">
