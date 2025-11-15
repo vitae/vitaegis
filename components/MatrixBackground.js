@@ -1,113 +1,119 @@
-// components/MatrixBackground.js
-import { useEffect, useRef } from "react";
-import * as THREE from "three";
+'use client';
+
+import { useEffect, useRef } from 'react';
 
 export default function MatrixBackground() {
-  const mountRef = useRef(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    const mount = mountRef.current;
+    const ctx = canvas.getContext('2d');
 
-    // Scene
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    // Set canvas size to full window
+    const setCanvasSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    setCanvasSize();
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      mount.clientWidth / mount.clientHeight,
-      0.1,
-      1000
-    );
-    camera.position.z = 5;
+    // Matrix characters - Japanese katakana, Latin letters, and numbers
+    const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    const chars = matrixChars.split('');
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(mount.clientWidth, mount.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    mount.appendChild(renderer.domElement);
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
 
-    // Matrix rain particles
-    const matrixChars =
-      "アカサタナハマヤラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-
-    const numParticles = 2000;
-    const positions = new Float32Array(numParticles * 3);
-    const colors = new Float32Array(numParticles * 3);
-
-    for (let i = 0; i < numParticles; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 1] = Math.random() * 20;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
-
-      // glowing neon green
-      colors[i * 3] = 0;
-      colors[i * 3 + 1] = 1;
-      colors[i * 3 + 2] = 0;
+    // Array to track y-position of each column
+    const drops = [];
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * -100; // Start at random heights
     }
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    // Draw function
+    function draw() {
+      // Semi-transparent black to create trail effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const material = new THREE.PointsMaterial({
-      size: 0.05,
-      vertexColors: true,
-    });
+      // Matrix green text
+      ctx.font = `${fontSize}px monospace`;
 
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
+      for (let i = 0; i < drops.length; i++) {
+        // Random character from the set
+        const char = chars[Math.floor(Math.random() * chars.length)];
 
-    // Animation loop
-    function animate() {
-      requestAnimationFrame(animate);
+        // Calculate x position
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
 
-      // simple "rain" effect
-      const pos = geometry.attributes.position.array;
-      for (let i = 0; i < numParticles; i++) {
-        pos[i * 3 + 1] -= 0.05;
-        if (pos[i * 3 + 1] < -10) {
-          pos[i * 3 + 1] = 10;
+        // Create gradient effect - brighter at the front
+        const isLeader = Math.random() > 0.975;
+        if (isLeader) {
+          // Bright white/green for leader character
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#00ff41';
+        } else {
+          // Regular Matrix green
+          ctx.fillStyle = '#00ff41';
+          ctx.shadowBlur = 5;
+          ctx.shadowColor = '#00ff41';
+        }
+
+        // Draw the character
+        ctx.fillText(char, x, y);
+
+        // Reset drop to top with random delay
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        // Increment y position
+        drops[i]++;
+      }
+
+      // Reset shadow
+      ctx.shadowBlur = 0;
+    }
+
+    // Animation
+    const interval = setInterval(draw, 33); // ~30fps for authentic look
+
+    // Handle window resize
+    const handleResize = () => {
+      setCanvasSize();
+      // Recalculate columns
+      const newColumns = canvas.width / fontSize;
+      drops.length = newColumns;
+      for (let i = 0; i < newColumns; i++) {
+        if (drops[i] === undefined) {
+          drops[i] = Math.random() * -100;
         }
       }
-      geometry.attributes.position.needsUpdate = true;
+    };
 
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    // Handle resize
-    function handleResize() {
-      if (!mount) return;
-      camera.aspect = mount.clientWidth / mount.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(mount.clientWidth, mount.clientHeight);
-    }
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
     // Cleanup
     return () => {
-      window.removeEventListener("resize", handleResize);
-      mount.removeChild(renderer.domElement);
-      renderer.dispose();
-      geometry.dispose();
-      material.dispose();
+      clearInterval(interval);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
   return (
-    <div
-      ref={mountRef}
+    <canvas
+      ref={canvasRef}
       style={{
-        position: "absolute",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
-        zIndex: -1,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        background: '#000000',
       }}
     />
   );

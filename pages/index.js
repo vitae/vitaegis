@@ -6,12 +6,12 @@ import Layout from '../components/Layout';
 import { Suspense } from 'react';
 
 // Dynamically import Matrix background for client-side only rendering
-const MatrixBackground3D = dynamic(
-  () => import('../components/MatrixBackground3D'),
+const MatrixBackground = dynamic(
+  () => import('../components/MatrixBackground'),
   { ssr: false }
 );
 
-// Loading component for 3D scene
+// Loading component for Matrix canvas
 function MatrixLoader() {
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-0">
@@ -43,9 +43,9 @@ export default function Home() {
 
   return (
     <Layout>
-      {/* 3D Matrix Background */}
+      {/* Matrix Canvas Background */}
       <Suspense fallback={<MatrixLoader />}>
-        <MatrixBackground3D />
+        <MatrixBackground />
       </Suspense>
 
       {/* Hero Section */}
