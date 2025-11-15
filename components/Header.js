@@ -6,6 +6,7 @@ export default function Header() {
       <h1 className="text-2xl font-futura neon-text">Vitaegis Vitality</h1>
       <nav className="space-x-4">
         <Link href="/">Home</Link>
+        <Link href="/matrix-demo">Matrix Demo</Link>
         <Link href="/about">About</Link>
         <Link href="/meditation">Meditation</Link>
         <Link href="/yoga">Yoga</Link>

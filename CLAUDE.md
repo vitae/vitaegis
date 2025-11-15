@@ -12,6 +12,9 @@
 - **Next.js** 14.1.0 - React framework with file-based routing
 - **React** 18.2.0 - UI library
 - **Three.js** 0.157.0 - 3D graphics library for Matrix background effects
+- **React Three Fiber** 8.15.0 - React renderer for Three.js
+- **@react-three/drei** 9.92.0 - Helper components for R3F
+- **@react-three/postprocessing** 2.16.0 - Post-processing effects (Bloom, Vignette)
 
 ### Styling
 - **Tailwind CSS** - Utility-first CSS framework
@@ -32,6 +35,7 @@
 vitaegis/
 ├── pages/                    # Next.js pages (auto-routed)
 │   ├── index.js             # Home page - Matrix Web3 theme
+│   ├── matrix-demo.js       # Advanced Matrix Rain demo with R3F
 │   ├── about.js             # About page
 │   ├── contact.js           # Contact page
 │   ├── yoga.js              # Yoga practice page
@@ -44,7 +48,9 @@ vitaegis/
 ├── components/              # Reusable React components
 │   ├── Header.js           # Navigation header with links
 │   ├── Footer.js           # Footer with copyright/BTC address
-│   └── MatrixBackground.js # Three.js animated Matrix effect
+│   ├── MatrixBackground.js # Three.js animated Matrix effect (basic)
+│   ├── MatrixRainR3F.js    # Advanced Matrix Rain with React Three Fiber
+│   └── GlassmorphicNav.js  # Glassmorphic bottom navigation bar
 │
 ├── styles/                  # Styling files
 │   ├── globals.css         # Global styles (Futura font, body defaults)
@@ -133,6 +139,59 @@ export default function PageName() {
 - Absolute positioning with z-index management
 - Responsive canvas sizing with resize handlers
 - Proper cleanup in useEffect return
+
+#### Advanced Matrix Rain (React Three Fiber)
+The `MatrixRainR3F` component is an advanced implementation inspired by the [Rezmason Matrix project](https://github.com/Rezmason/matrix).
+
+**Key Features**:
+- **Fixed Grid System**: Glyphs remain stationary; illumination waves create falling effect
+- **Sawtooth Wave Animation**: Controls raindrop rhythm and cursor positions
+- **GPU-Accelerated**: Uses instanced meshes for rendering 4000+ glyphs at 60fps
+- **Custom Shaders**: GLSL vertex and fragment shaders for per-instance rendering
+- **Post-Processing**: Bloom and vignette effects for authentic phosphorescent glow
+- **Authentic Characters**: Japanese katakana mixed with alphanumeric characters
+
+**Technical Implementation**:
+```jsx
+// Always use dynamic import with SSR disabled
+import dynamic from "next/dynamic";
+
+const MatrixRainR3F = dynamic(() => import("../components/MatrixRainR3F"), {
+  ssr: false,
+});
+```
+
+**How It Works**:
+1. Creates a fixed grid of 80 columns × 50 rows of glyphs
+2. Each column has independent wave parameters (speed, phase, offset)
+3. Sawtooth wave travels down each column, illuminating glyphs
+4. Brightness varies based on distance from wave cursor
+5. Bloom effect amplifies bright glyphs for glow
+6. Random flickers add ambient variation
+
+**Performance Optimizations**:
+- InstancedMesh for efficient rendering of thousands of glyphs
+- GPU computation in shaders instead of CPU
+- Texture atlas for character glyphs
+- Minimal state updates (only instance matrices and colors)
+
+#### Glassmorphic Navigation
+The `GlassmorphicNav` component provides a modern, translucent navigation bar:
+
+**Features**:
+- **Backdrop Filter**: 20px blur with 180% saturation
+- **Transparency**: Shows Matrix Rain effect underneath
+- **Neon Accents**: Green borders and shadows
+- **Animated Scan Line**: Moving gradient effect across top
+- **Responsive Design**: Icon-only on mobile, full labels on desktop
+- **Hover Effects**: Glow and lift animations on interaction
+
+**Styling**:
+```jsx
+backdropFilter: "blur(20px) saturate(180%)"
+background: "rgba(0, 0, 0, 0.4)"
+boxShadow: "0 -8px 32px 0 rgba(0, 255, 0, 0.15)"
+```
 
 ### UI Elements
 
