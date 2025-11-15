@@ -1,328 +1,229 @@
 // components/MatrixBackground.js
 "use client";
-import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
-import { useEffect, useRef, useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useRef, useMemo } from 'react';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-// VITAEGIS Matrix Rain Configuration (based on Rezmason's implementation)
-const config = {
-  numColumns: 100,
-  numRows: 60,
-  fallSpeed: 0.15,
-  raindropLength: 25,
-  animationSpeed: 1.0,
-  cycleSpeed: 0.4,
-  glyphSequenceLength: 57,
-  baseBrightness: 0.1,
-  glintBrightness: 1.5,
-  bloomStrength: 1.8,
-  bloomThreshold: 0.15,
-  bloomRadius: 0.6,
+// Matrix configuration based on Rezmason's implementation
+const CONFIG = {
+  columns: 80,
+  rows: 50,
+  fallSpeed: 0.05,
+  cycleSpeed: 0.02,
 };
 
-// Authentic Matrix character set
-const matrixChars = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:・.\"=*+-<>¦|_";
-
-// Enhanced shader implementing Rezmason's GPU state system
-const MatrixShaderMaterial = {
-  uniforms: {
-    time: { value: 0 },
-    tick: { value: 0 },
-    charTexture: { value: null },
-    numColumns: { value: config.numColumns },
-    numRows: { value: config.numRows },
-    fallSpeed: { value: config.fallSpeed },
-    raindropLength: { value: config.raindropLength },
-    animationSpeed: { value: config.animationSpeed },
-    cycleSpeed: { value: config.cycleSpeed },
-    baseBrightness: { value: config.baseBrightness },
-    glintBrightness: { value: config.glintBrightness },
-    glyphSequenceLength: { value: config.glyphSequenceLength },
-    charsPerRow: { value: 16 },
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    varying vec2 vGridPos;
-    varying float vColumnId;
-    varying float vRowId;
-
-    attribute vec3 offset;
-    attribute float columnId;
-    attribute float rowId;
-
-    void main() {
-      vUv = uv;
-      vColumnId = columnId;
-      vRowId = rowId;
-      vGridPos = vec2(columnId, rowId);
-
-      vec3 transformed = position + offset;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform float time;
-    uniform float tick;
-    uniform sampler2D charTexture;
-    uniform float numColumns;
-    uniform float numRows;
-    uniform float fallSpeed;
-    uniform float raindropLength;
-    uniform float animationSpeed;
-    uniform float cycleSpeed;
-    uniform float baseBrightness;
-    uniform float glintBrightness;
-    uniform float glyphSequenceLength;
-    uniform float charsPerRow;
-
-    varying vec2 vUv;
-    varying vec2 vGridPos;
-    varying float vColumnId;
-    varying float vRowId;
-
-    // High-quality pseudo-random (from Rezmason's implementation)
-    float rand(vec2 co) {
-      return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
-    }
-
-    float rand(vec3 co) {
-      return rand(co.xy + co.z);
-    }
-
-    // Column timing offsets (Rezmason's staggered intro effect)
-    float getColumnTimeOffset(float colId) {
-      float normalizedCol = colId / numColumns;
-
-      // Center column starts first
-      if (abs(normalizedCol - 0.5) < 0.02) {
-        return -1.0;
-      }
-
-      // 75% position starts second
-      if (abs(normalizedCol - 0.75) < 0.02) {
-        return -2.0;
-      }
-
-      // Other columns get randomized delays
-      return -4.0 + rand(vec2(colId, 0.0)) * 1.5;
-    }
-
-    // Rezmason's raindrop brightness algorithm with sawtooth waves
-    float getRaindropBrightness(vec2 gridPos, float simTime) {
-      float columnTimeOffset = getColumnTimeOffset(gridPos.x);
-
-      // Column-specific random speed variation
-      float columnRand = rand(vec2(gridPos.x, 1.0));
-      float speedMultiplier = 0.7 + columnRand * 0.6;
-
-      // Calculate raindrop progression (sawtooth wave)
-      float columnTime = (simTime + columnTimeOffset) * speedMultiplier;
-      float rainTime = (gridPos.y * 0.01 + columnTime * fallSpeed) / raindropLength;
-
-      // Create brightness wave
-      float brightness = 1.0 - fract(rainTime);
-
-      // Sharpen the head (Rezmason's glint effect)
-      if (brightness > 0.92) {
-        brightness = 1.0;
-      } else {
-        // Exponential fade for tail
-        brightness = pow(brightness, 2.2);
-      }
-
-      return brightness;
-    }
-
-    // Glyph cycling with age tracking (Rezmason's symbol shader)
-    float getGlyphIndex(vec2 gridPos, float simTime) {
-      // Calculate glyph age (cycles over time)
-      float ageIncrement = cycleSpeed * 0.016; // ~60fps
-      float age = fract(simTime * ageIncrement + rand(gridPos));
-
-      // When age wraps, pick new random glyph
-      float glyphSeed = floor(simTime * ageIncrement + rand(gridPos));
-      float glyphIndex = floor(glyphSequenceLength * rand(vec3(gridPos, glyphSeed)));
-
-      return glyphIndex;
-    }
-
-    void main() {
-      float simTime = time * animationSpeed;
-
-      // Get raindrop brightness
-      float rainBrightness = getRaindropBrightness(vGridPos, simTime);
-
-      // Early discard for performance
-      if (rainBrightness < 0.01) {
-        discard;
-      }
-
-      // Get current glyph for this position
-      float glyphIndex = getGlyphIndex(vGridPos, simTime);
-
-      // Sample character from texture atlas
-      float col = mod(glyphIndex, charsPerRow);
-      float row = floor(glyphIndex / charsPerRow);
-      float cellSize = 1.0 / charsPerRow;
-
-      vec2 atlasUV = vec2(
-        (col + vUv.x) * cellSize,
-        (row + vUv.y) * cellSize
-      );
-
-      vec4 texColor = texture2D(charTexture, atlasUV);
-
-      // VITAEGIS green color with brightness-based variation
-      vec3 baseColor = vec3(0.0, 0.9, 0.1);
-      vec3 glintColor = vec3(0.95, 1.0, 0.95);
-
-      // Apply brightness with glint at raindrop head
-      float totalBrightness = baseBrightness + rainBrightness * (1.0 - baseBrightness);
-      vec3 color = mix(baseColor, glintColor, pow(rainBrightness, 0.5) * glintBrightness);
-
-      float alpha = texColor.r * totalBrightness;
-      if (alpha < 0.01) discard;
-
-      gl_FragColor = vec4(color * alpha, alpha);
-    }
-  `,
-};
+// Katakana + numbers + symbols (like Rezmason)
+const CHARS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:・."=*+-<>¦|_';
 
 function MatrixRain() {
-  const { viewport, size } = useThree();
   const meshRef = useRef();
-  const materialRef = useRef();
-  const tickRef = useRef(0);
-
-  // Calculate grid to cover full viewport
-  const gridConfig = useMemo(() => {
-    const cols = config.numColumns;
-    const rows = config.numRows;
-    const cellWidth = viewport.width / cols;
-    const cellHeight = viewport.height / rows;
-
-    return { cols, rows, cellWidth, cellHeight };
-  }, [viewport]);
+  const timeRef = useRef(0);
 
   // Create character texture atlas
   const charTexture = useMemo(() => {
-    const fontSize = 32;
-    const charsPerRow = 16;
-    const atlasSize = charsPerRow * fontSize;
     const canvas = document.createElement('canvas');
-    canvas.width = atlasSize;
-    canvas.height = atlasSize;
+    const size = 2048;
+    const charSize = 64;
+    const charsPerRow = Math.floor(size / charSize);
+
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, atlasSize, atlasSize);
-    ctx.font = `bold ${fontSize}px monospace`;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#fff';
+    ctx.font = `${charSize * 0.9}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
 
-    // Draw all characters
-    matrixChars.split('').forEach((char, index) => {
-      const col = index % charsPerRow;
-      const row = Math.floor(index / charsPerRow);
-      const x = col * fontSize + fontSize / 2;
-      const y = row * fontSize + fontSize / 2;
+    CHARS.split('').forEach((char, i) => {
+      const x = (i % charsPerRow) * charSize + charSize / 2;
+      const y = Math.floor(i / charsPerRow) * charSize + charSize / 2;
       ctx.fillText(char, x, y);
     });
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
-
     return texture;
   }, []);
 
-  // Create instanced geometry
-  const { geometry, count } = useMemo(() => {
-    const { cols, rows, cellWidth, cellHeight } = gridConfig;
-    const cellGeometry = new THREE.PlaneGeometry(cellWidth, cellHeight);
-    const instancedGeometry = new THREE.InstancedBufferGeometry();
+  // Create instances
+  const { geometry, material, count } = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(1, 1);
+    const instancedGeo = new THREE.InstancedBufferGeometry();
 
-    instancedGeometry.index = cellGeometry.index;
-    instancedGeometry.attributes.position = cellGeometry.attributes.position;
-    instancedGeometry.attributes.uv = cellGeometry.attributes.uv;
+    instancedGeo.index = geo.index;
+    instancedGeo.attributes.position = geo.attributes.position;
+    instancedGeo.attributes.uv = geo.attributes.uv;
 
-    const count = cols * rows;
-    const offsets = new Float32Array(count * 3);
-    const columnIds = new Float32Array(count);
-    const rowIds = new Float32Array(count);
+    const instances = CONFIG.columns * CONFIG.rows;
+    const offsets = new Float32Array(instances * 3);
+    const charIndices = new Float32Array(instances);
+    const brightnesses = new Float32Array(instances);
+    const columnIds = new Float32Array(instances);
+    const rowIds = new Float32Array(instances);
 
     let idx = 0;
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const x = (col - cols / 2) * cellWidth + cellWidth / 2;
-        const y = (rows / 2 - row) * cellHeight - cellHeight / 2;
-
-        offsets[idx * 3] = x;
-        offsets[idx * 3 + 1] = y;
+    for (let row = 0; row < CONFIG.rows; row++) {
+      for (let col = 0; col < CONFIG.columns; col++) {
+        offsets[idx * 3] = (col - CONFIG.columns / 2);
+        offsets[idx * 3 + 1] = (CONFIG.rows / 2 - row);
         offsets[idx * 3 + 2] = 0;
 
+        charIndices[idx] = Math.floor(Math.random() * CHARS.length);
+        brightnesses[idx] = 0;
         columnIds[idx] = col;
         rowIds[idx] = row;
         idx++;
       }
     }
 
-    instancedGeometry.setAttribute('offset', new THREE.InstancedBufferAttribute(offsets, 3));
-    instancedGeometry.setAttribute('columnId', new THREE.InstancedBufferAttribute(columnIds, 1));
-    instancedGeometry.setAttribute('rowId', new THREE.InstancedBufferAttribute(rowIds, 1));
+    instancedGeo.setAttribute('offset', new THREE.InstancedBufferAttribute(offsets, 3));
+    instancedGeo.setAttribute('aCharIndex', new THREE.InstancedBufferAttribute(charIndices, 1));
+    instancedGeo.setAttribute('aBrightness', new THREE.InstancedBufferAttribute(brightnesses, 1));
+    instancedGeo.setAttribute('aColumn', new THREE.InstancedBufferAttribute(columnIds, 1));
+    instancedGeo.setAttribute('aRow', new THREE.InstancedBufferAttribute(rowIds, 1));
 
-    return { geometry: instancedGeometry, count };
-  }, [gridConfig]);
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uTexture: { value: charTexture },
+        uCharsPerRow: { value: 32 },
+        uNumColumns: { value: CONFIG.columns },
+        uNumRows: { value: CONFIG.rows },
+      },
+      vertexShader: `
+        attribute vec3 offset;
+        attribute float aCharIndex;
+        attribute float aBrightness;
+        attribute float aColumn;
+        attribute float aRow;
 
-  // Animation loop - update uniforms
-  useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.time.value = state.clock.elapsedTime;
-      materialRef.current.uniforms.tick.value = tickRef.current++;
+        varying vec2 vUv;
+        varying float vCharIndex;
+        varying float vBrightness;
+
+        uniform float uTime;
+        uniform float uNumColumns;
+        uniform float uNumRows;
+
+        float random(vec2 st) {
+          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        }
+
+        void main() {
+          vUv = uv;
+          vCharIndex = aCharIndex;
+
+          // Sawtooth wave for each column
+          float colRandom = random(vec2(aColumn, 0.0));
+          float timeOffset = colRandom * 100.0;
+          float speed = 0.05 + colRandom * 0.05;
+          float t = uTime * speed + timeOffset;
+
+          // Calculate brightness based on row position and time
+          float rainPos = mod(t * uNumRows, uNumRows * 2.0);
+          float dist = rainPos - aRow;
+
+          // Create bright head and fading tail
+          if (dist > 0.0 && dist < 20.0) {
+            vBrightness = 1.0 - (dist / 20.0);
+            vBrightness = pow(vBrightness, 2.0);
+          } else {
+            vBrightness = 0.0;
+          }
+
+          vec3 pos = position + offset;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uTexture;
+        uniform float uCharsPerRow;
+
+        varying vec2 vUv;
+        varying float vCharIndex;
+        varying float vBrightness;
+
+        void main() {
+          if (vBrightness < 0.01) discard;
+
+          // Sample character from atlas
+          float col = mod(vCharIndex, uCharsPerRow);
+          float row = floor(vCharIndex / uCharsPerRow);
+          vec2 charUV = vec2(
+            (col + vUv.x) / uCharsPerRow,
+            (row + vUv.y) / uCharsPerRow
+          );
+
+          vec4 texColor = texture2D(uTexture, charUV);
+
+          // Matrix green: HSL(108, 90%, 70%) ≈ RGB(179, 242, 77)
+          vec3 green = vec3(0.7, 0.95, 0.3);
+          vec3 white = vec3(1.0);
+
+          // Bright head is white-green, tail is darker green
+          vec3 color = mix(green, white, pow(vBrightness, 0.3));
+
+          float alpha = texColor.r * vBrightness;
+          gl_FragColor = vec4(color * alpha, alpha);
+        }
+      `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+    return { geometry: instancedGeo, material: mat, count: instances };
+  }, [charTexture]);
+
+  // Animation
+  useFrame((state, delta) => {
+    timeRef.current += delta;
+    if (material) {
+      material.uniforms.uTime.value = timeRef.current;
+
+      // Cycle characters randomly
+      if (Math.random() < CONFIG.cycleSpeed) {
+        const charAttr = geometry.getAttribute('aCharIndex');
+        const idx = Math.floor(Math.random() * count);
+        charAttr.array[idx] = Math.floor(Math.random() * CHARS.length);
+        charAttr.needsUpdate = true;
+      }
     }
   });
 
   return (
-    <mesh ref={meshRef} geometry={geometry}>
-      <shaderMaterial
-        ref={materialRef}
-        args={[MatrixShaderMaterial]}
-        transparent
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        uniforms-charTexture-value={charTexture}
-      />
-    </mesh>
+    <instancedMesh ref={meshRef} args={[geometry, material, count]} />
   );
 }
 
 export default function MatrixBackground() {
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
-        zIndex: -1,
-      }}
-    >
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      zIndex: -1,
+      background: '#000',
+    }}>
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 75 }}
-        gl={{ antialias: true, alpha: false }}
+        camera={{ position: [0, 0, 50], fov: 75 }}
+        gl={{ antialias: false, alpha: false }}
       >
         <color attach="background" args={['#000000']} />
         <MatrixRain />
         <EffectComposer>
           <Bloom
-            intensity={config.bloomStrength}
-            luminanceThreshold={config.bloomThreshold}
+            intensity={2.5}
+            luminanceThreshold={0.1}
             luminanceSmoothing={0.9}
-            radius={config.bloomRadius}
+            radius={0.8}
           />
         </EffectComposer>
       </Canvas>
