@@ -1,20 +1,19 @@
-// components/MatrixBackground.js
 "use client";
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useRef, useMemo } from 'react';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-// Katakana + symbols
 const CHARS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:・."=*+-<>¦|_';
 
-function Rain() {
+function MatrixRain() {
   const meshRef = useRef();
   const timeRef = useRef(0);
-  const cols = 80;
-  const rows = 50;
 
-  // Character texture
+  const cols = 100;
+  const rows = 60;
+
+  // Create character texture atlas
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 2048;
@@ -24,7 +23,7 @@ function Rain() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, 2048, 2048);
     ctx.fillStyle = '#fff';
-    ctx.font = '60px monospace';
+    ctx.font = 'bold 56px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -40,10 +39,11 @@ function Rain() {
     return tex;
   }, []);
 
-  // Geometry and material
+  // Create geometry and material
   const [geometry, material] = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(0.5, 0.8);
+    const geo = new THREE.PlaneGeometry(0.4, 0.6);
     const instGeo = new THREE.InstancedBufferGeometry();
+
     instGeo.index = geo.index;
     instGeo.attributes.position = geo.attributes.position;
     instGeo.attributes.uv = geo.attributes.uv;
@@ -57,8 +57,8 @@ function Rain() {
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
-        offsets[i * 3] = (c - cols / 2) * 0.5;
-        offsets[i * 3 + 1] = (rows / 2 - r) * 0.8;
+        offsets[i * 3] = (c - cols / 2) * 0.4;
+        offsets[i * 3 + 1] = (rows / 2 - r) * 0.6;
         offsets[i * 3 + 2] = 0;
         chars[i] = Math.floor(Math.random() * CHARS.length);
         columns[i] = c;
@@ -75,34 +75,47 @@ function Rain() {
       uniforms: {
         uTime: { value: 0 },
         uTex: { value: texture },
+        uCols: { value: cols },
+        uRows: { value: rows },
       },
       vertexShader: `
         attribute vec3 offset;
         attribute float charIdx;
         attribute float colId;
         attribute float rowId;
+
         varying vec2 vUv;
         varying float vChar;
         varying float vBright;
+
         uniform float uTime;
+        uniform float uCols;
+        uniform float uRows;
 
         float rand(vec2 co) {
-          return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
+          return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
         }
 
         void main() {
           vUv = uv;
           vChar = charIdx;
 
-          float colRand = rand(vec2(colId, 0.));
-          float speed = 0.05 + colRand * 0.05;
-          float t = uTime * speed + colRand * 100.0;
-          float rainPos = mod(t * 50.0, 100.0);
+          // Each column gets random offset and speed
+          float colRand = rand(vec2(colId, 0.0));
+          float timeOffset = colRand * 100.0;
+          float speed = 0.08 + colRand * 0.06;
+
+          // Calculate rain position (sawtooth wave)
+          float t = uTime * speed + timeOffset;
+          float rainPos = mod(t * uRows, uRows * 2.0);
+
+          // Distance from rain head
           float dist = rainPos - rowId;
 
-          if (dist > 0.0 && dist < 20.0) {
-            vBright = 1.0 - dist / 20.0;
-            vBright = pow(vBright, 2.0);
+          // Create bright head and fading tail
+          if (dist > 0.0 && dist < 25.0) {
+            vBright = 1.0 - (dist / 25.0);
+            vBright = pow(vBright, 1.8);
           } else {
             vBright = 0.0;
           }
@@ -112,6 +125,7 @@ function Rain() {
       `,
       fragmentShader: `
         uniform sampler2D uTex;
+
         varying vec2 vUv;
         varying float vChar;
         varying float vBright;
@@ -119,16 +133,25 @@ function Rain() {
         void main() {
           if (vBright < 0.01) discard;
 
+          // Sample character from atlas
           float col = mod(vChar, 32.0);
           float row = floor(vChar / 32.0);
-          vec2 uv = vec2((col + vUv.x) / 32.0, (row + vUv.y) / 32.0);
+          vec2 uv = vec2(
+            (col + vUv.x) / 32.0,
+            (row + vUv.y) / 32.0
+          );
 
-          float alpha = texture2D(uTex, uv).r;
-          vec3 green = vec3(0.7, 0.95, 0.3);
-          vec3 white = vec3(1.0);
-          vec3 color = mix(green, white, pow(vBright, 0.3));
+          float texAlpha = texture2D(uTex, uv).r;
 
-          gl_FragColor = vec4(color * alpha * vBright, alpha * vBright);
+          // Matrix green color
+          vec3 green = vec3(0.0, 1.0, 0.2);
+          vec3 white = vec3(1.0, 1.0, 1.0);
+
+          // Mix white at head, green in tail
+          vec3 color = mix(green, white, pow(vBright, 0.4));
+
+          float alpha = texAlpha * vBright;
+          gl_FragColor = vec4(color * alpha, alpha);
         }
       `,
       transparent: true,
@@ -137,19 +160,20 @@ function Rain() {
     });
 
     return [instGeo, mat];
-  }, [texture]);
+  }, [texture, cols, rows]);
 
+  // Animation loop
   useFrame((state, delta) => {
     timeRef.current += delta;
     if (material) {
       material.uniforms.uTime.value = timeRef.current;
     }
 
-    // Cycle chars
-    if (Math.random() < 0.02) {
+    // Randomly cycle characters
+    if (Math.random() < 0.03) {
       const attr = geometry.getAttribute('charIdx');
-      const i = Math.floor(Math.random() * cols * rows);
-      attr.array[i] = Math.floor(Math.random() * CHARS.length);
+      const idx = Math.floor(Math.random() * cols * rows);
+      attr.array[idx] = Math.floor(Math.random() * CHARS.length);
       attr.needsUpdate = true;
     }
   });
@@ -163,20 +187,26 @@ export default function MatrixBackground() {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100%',
-      height: '100%',
-      zIndex: -1,
+      width: '100vw',
+      height: '100vh',
+      margin: 0,
+      padding: 0,
+      overflow: 'hidden',
+      background: '#000',
     }}>
       <Canvas
-        camera={{ position: [0, 0, 30], fov: 75 }}
-        style={{ background: '#000' }}
+        camera={{ position: [0, 0, 25], fov: 75 }}
+        gl={{ antialias: true, alpha: false }}
+        style={{ display: 'block' }}
       >
-        <Rain />
+        <color attach="background" args={['#000000']} />
+        <MatrixRain />
         <EffectComposer>
           <Bloom
-            intensity={2.5}
-            luminanceThreshold={0.1}
+            intensity={3.0}
+            luminanceThreshold={0.05}
             luminanceSmoothing={0.9}
+            radius={0.8}
           />
         </EffectComposer>
       </Canvas>
