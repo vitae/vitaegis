@@ -66,11 +66,23 @@ export default function MatrixBackground() {
     charTexture.minFilter = THREE.NearestFilter;
     charTexture.magFilter = THREE.NearestFilter;
 
-    // Grid configuration
-    const cols = 80;
-    const rows = 40;
-    const columnWidth = 30 / cols;
-    const rowHeight = 20 / rows;
+    // Grid configuration - dynamically calculated to cover full viewport
+    // Calculate visible area at camera distance
+    const fov = 75 * (Math.PI / 180);
+    const cameraZ = 15;
+    const visibleHeight = 2 * Math.tan(fov / 2) * cameraZ;
+    const aspect = mount.clientWidth / mount.clientHeight;
+    const visibleWidth = visibleHeight * aspect;
+
+    // Add padding to ensure coverage beyond viewport edges
+    const gridWidth = visibleWidth * 1.3;
+    const gridHeight = visibleHeight * 1.3;
+
+    // Increase density for clearer, more distinct columns
+    const cols = Math.ceil(gridWidth / 0.35);  // ~0.35 units per column for clarity
+    const rows = Math.ceil(gridHeight / 0.45); // ~0.45 units per row
+    const columnWidth = gridWidth / cols;
+    const rowHeight = gridHeight / rows;
 
     // Rain stream configuration for each column
     class RainStream {
@@ -82,7 +94,7 @@ export default function MatrixBackground() {
       reset() {
         this.headRow = -Math.random() * rows;
         this.speed = 0.1 + Math.random() * 0.15;
-        this.length = 10 + Math.random() * 15;
+        this.length = 15 + Math.random() * 20; // Longer trails for better coverage
         this.depth = Math.random();
       }
 
@@ -104,9 +116,9 @@ export default function MatrixBackground() {
           return 1.0;
         }
 
-        // Exponential fade for the tail
+        // Exponential fade for the tail - increased brightness for better coverage
         const fade = 1 - (distanceFromHead / this.length);
-        return Math.pow(fade, 2.5) * 0.7;
+        return Math.pow(fade, 2.2) * 0.85;
       }
     }
 
@@ -184,7 +196,8 @@ export default function MatrixBackground() {
     `;
 
     // Create instanced geometry for all characters
-    const planeGeometry = new THREE.PlaneGeometry(columnWidth * 0.95, rowHeight * 0.95);
+    // Fill entire cell for complete coverage (no gaps)
+    const planeGeometry = new THREE.PlaneGeometry(columnWidth, rowHeight);
     const instancedGeometry = new THREE.InstancedBufferGeometry();
     instancedGeometry.index = planeGeometry.index;
     instancedGeometry.attributes.position = planeGeometry.attributes.position;
@@ -198,8 +211,9 @@ export default function MatrixBackground() {
     let idx = 0;
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const x = (col - cols / 2) * columnWidth;
-        const y = (rows / 2 - row) * rowHeight;
+        // Center the grid and position each character
+        const x = (col - cols / 2) * columnWidth + columnWidth / 2;
+        const y = (rows / 2 - row) * rowHeight - rowHeight / 2;
         const z = 0;
 
         offsets[idx * 3] = x;
@@ -237,9 +251,9 @@ export default function MatrixBackground() {
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(mount.clientWidth, mount.clientHeight),
-      2.0,  // strength
-      0.6,  // radius
-      0.1   // threshold
+      1.2,  // strength - reduced for clearer characters
+      0.4,  // radius - tighter for more distinct columns
+      0.15  // threshold - slightly higher to reduce bloom overlap
     );
     composer.addPass(bloomPass);
 
