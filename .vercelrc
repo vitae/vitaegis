@@ -1,0 +1,12 @@
+{
+  "name": "vitaegis",
+  "alias": ["vitaegis.com", "www.vitaegis.com"],
+  "regions": ["iad1", "sfo1"],
+  "public": false,
+  "github": {
+    "enabled": true,
+    "autoAlias": true,
+    "silent": false,
+    "autoJobCancelation": true
+  }
+}

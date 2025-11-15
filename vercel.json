@@ -3,8 +3,11 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
+  "regions": ["iad1", "sfo1"],
   "github": {
-    "silent": true
-  }
+    "silent": false,
+    "autoAlias": true,
+    "autoJobCancelation": true
+  },
+  "alias": ["vitaegis.com", "www.vitaegis.com"]
 }
