@@ -35,7 +35,7 @@ export default function MatrixBackground() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
-    // Matrix characters - authentic set
+    // VITAEGIS characters - authentic set
     const matrixChars = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:・.\"=*+-<>¦|_".split('');
 
     // Create character texture atlas
@@ -167,7 +167,7 @@ export default function MatrixBackground() {
 
         vec4 texColor = texture2D(charTexture, atlasUV);
 
-        // Matrix green color with brightness variation
+        // VITAEGIS green color with brightness variation
         vec3 glowColor = vec3(0.0, 1.0, 0.0);
 
         // Head of stream is white-green, tail is darker green
