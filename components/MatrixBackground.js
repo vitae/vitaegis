@@ -5,171 +5,130 @@ import { useRef, useMemo } from 'react';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-// Matrix configuration based on Rezmason's implementation
-const CONFIG = {
-  columns: 80,
-  rows: 50,
-  fallSpeed: 0.05,
-  cycleSpeed: 0.02,
-};
-
-// Katakana + numbers + symbols (like Rezmason)
+// Katakana + symbols
 const CHARS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:・."=*+-<>¦|_';
 
-function MatrixRain() {
+function Rain() {
   const meshRef = useRef();
   const timeRef = useRef(0);
+  const cols = 80;
+  const rows = 50;
 
-  // Create character texture atlas
-  const charTexture = useMemo(() => {
+  // Character texture
+  const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    const size = 2048;
-    const charSize = 64;
-    const charsPerRow = Math.floor(size / charSize);
-
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = 2048;
+    canvas.height = 2048;
     const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, size, size);
+    ctx.fillRect(0, 0, 2048, 2048);
     ctx.fillStyle = '#fff';
-    ctx.font = `${charSize * 0.9}px monospace`;
+    ctx.font = '60px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     CHARS.split('').forEach((char, i) => {
-      const x = (i % charsPerRow) * charSize + charSize / 2;
-      const y = Math.floor(i / charsPerRow) * charSize + charSize / 2;
+      const x = (i % 32) * 64 + 32;
+      const y = Math.floor(i / 32) * 64 + 32;
       ctx.fillText(char, x, y);
     });
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    return texture;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    return tex;
   }, []);
 
-  // Create instances
-  const { geometry, material, count } = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(1, 1);
-    const instancedGeo = new THREE.InstancedBufferGeometry();
+  // Geometry and material
+  const [geometry, material] = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(0.5, 0.8);
+    const instGeo = new THREE.InstancedBufferGeometry();
+    instGeo.index = geo.index;
+    instGeo.attributes.position = geo.attributes.position;
+    instGeo.attributes.uv = geo.attributes.uv;
 
-    instancedGeo.index = geo.index;
-    instancedGeo.attributes.position = geo.attributes.position;
-    instancedGeo.attributes.uv = geo.attributes.uv;
+    const count = cols * rows;
+    const offsets = new Float32Array(count * 3);
+    const chars = new Float32Array(count);
+    const columns = new Float32Array(count);
+    const rowIds = new Float32Array(count);
 
-    const instances = CONFIG.columns * CONFIG.rows;
-    const offsets = new Float32Array(instances * 3);
-    const charIndices = new Float32Array(instances);
-    const brightnesses = new Float32Array(instances);
-    const columnIds = new Float32Array(instances);
-    const rowIds = new Float32Array(instances);
-
-    let idx = 0;
-    for (let row = 0; row < CONFIG.rows; row++) {
-      for (let col = 0; col < CONFIG.columns; col++) {
-        offsets[idx * 3] = (col - CONFIG.columns / 2);
-        offsets[idx * 3 + 1] = (CONFIG.rows / 2 - row);
-        offsets[idx * 3 + 2] = 0;
-
-        charIndices[idx] = Math.floor(Math.random() * CHARS.length);
-        brightnesses[idx] = 0;
-        columnIds[idx] = col;
-        rowIds[idx] = row;
-        idx++;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        offsets[i * 3] = (c - cols / 2) * 0.5;
+        offsets[i * 3 + 1] = (rows / 2 - r) * 0.8;
+        offsets[i * 3 + 2] = 0;
+        chars[i] = Math.floor(Math.random() * CHARS.length);
+        columns[i] = c;
+        rowIds[i] = r;
       }
     }
 
-    instancedGeo.setAttribute('offset', new THREE.InstancedBufferAttribute(offsets, 3));
-    instancedGeo.setAttribute('aCharIndex', new THREE.InstancedBufferAttribute(charIndices, 1));
-    instancedGeo.setAttribute('aBrightness', new THREE.InstancedBufferAttribute(brightnesses, 1));
-    instancedGeo.setAttribute('aColumn', new THREE.InstancedBufferAttribute(columnIds, 1));
-    instancedGeo.setAttribute('aRow', new THREE.InstancedBufferAttribute(rowIds, 1));
+    instGeo.setAttribute('offset', new THREE.InstancedBufferAttribute(offsets, 3));
+    instGeo.setAttribute('charIdx', new THREE.InstancedBufferAttribute(chars, 1));
+    instGeo.setAttribute('colId', new THREE.InstancedBufferAttribute(columns, 1));
+    instGeo.setAttribute('rowId', new THREE.InstancedBufferAttribute(rowIds, 1));
 
     const mat = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uTexture: { value: charTexture },
-        uCharsPerRow: { value: 32 },
-        uNumColumns: { value: CONFIG.columns },
-        uNumRows: { value: CONFIG.rows },
+        uTex: { value: texture },
       },
       vertexShader: `
         attribute vec3 offset;
-        attribute float aCharIndex;
-        attribute float aBrightness;
-        attribute float aColumn;
-        attribute float aRow;
-
+        attribute float charIdx;
+        attribute float colId;
+        attribute float rowId;
         varying vec2 vUv;
-        varying float vCharIndex;
-        varying float vBrightness;
-
+        varying float vChar;
+        varying float vBright;
         uniform float uTime;
-        uniform float uNumColumns;
-        uniform float uNumRows;
 
-        float random(vec2 st) {
-          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        float rand(vec2 co) {
+          return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
         }
 
         void main() {
           vUv = uv;
-          vCharIndex = aCharIndex;
+          vChar = charIdx;
 
-          // Sawtooth wave for each column
-          float colRandom = random(vec2(aColumn, 0.0));
-          float timeOffset = colRandom * 100.0;
-          float speed = 0.05 + colRandom * 0.05;
-          float t = uTime * speed + timeOffset;
+          float colRand = rand(vec2(colId, 0.));
+          float speed = 0.05 + colRand * 0.05;
+          float t = uTime * speed + colRand * 100.0;
+          float rainPos = mod(t * 50.0, 100.0);
+          float dist = rainPos - rowId;
 
-          // Calculate brightness based on row position and time
-          float rainPos = mod(t * uNumRows, uNumRows * 2.0);
-          float dist = rainPos - aRow;
-
-          // Create bright head and fading tail
           if (dist > 0.0 && dist < 20.0) {
-            vBrightness = 1.0 - (dist / 20.0);
-            vBrightness = pow(vBrightness, 2.0);
+            vBright = 1.0 - dist / 20.0;
+            vBright = pow(vBright, 2.0);
           } else {
-            vBrightness = 0.0;
+            vBright = 0.0;
           }
 
-          vec3 pos = position + offset;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position + offset, 1.0);
         }
       `,
       fragmentShader: `
-        uniform sampler2D uTexture;
-        uniform float uCharsPerRow;
-
+        uniform sampler2D uTex;
         varying vec2 vUv;
-        varying float vCharIndex;
-        varying float vBrightness;
+        varying float vChar;
+        varying float vBright;
 
         void main() {
-          if (vBrightness < 0.01) discard;
+          if (vBright < 0.01) discard;
 
-          // Sample character from atlas
-          float col = mod(vCharIndex, uCharsPerRow);
-          float row = floor(vCharIndex / uCharsPerRow);
-          vec2 charUV = vec2(
-            (col + vUv.x) / uCharsPerRow,
-            (row + vUv.y) / uCharsPerRow
-          );
+          float col = mod(vChar, 32.0);
+          float row = floor(vChar / 32.0);
+          vec2 uv = vec2((col + vUv.x) / 32.0, (row + vUv.y) / 32.0);
 
-          vec4 texColor = texture2D(uTexture, charUV);
-
-          // Matrix green: HSL(108, 90%, 70%) ≈ RGB(179, 242, 77)
+          float alpha = texture2D(uTex, uv).r;
           vec3 green = vec3(0.7, 0.95, 0.3);
           vec3 white = vec3(1.0);
+          vec3 color = mix(green, white, pow(vBright, 0.3));
 
-          // Bright head is white-green, tail is darker green
-          vec3 color = mix(green, white, pow(vBrightness, 0.3));
-
-          float alpha = texColor.r * vBrightness;
-          gl_FragColor = vec4(color * alpha, alpha);
+          gl_FragColor = vec4(color * alpha * vBright, alpha * vBright);
         }
       `,
       transparent: true,
@@ -177,28 +136,25 @@ function MatrixRain() {
       depthWrite: false,
     });
 
-    return { geometry: instancedGeo, material: mat, count: instances };
-  }, [charTexture]);
+    return [instGeo, mat];
+  }, [texture]);
 
-  // Animation
   useFrame((state, delta) => {
     timeRef.current += delta;
     if (material) {
       material.uniforms.uTime.value = timeRef.current;
+    }
 
-      // Cycle characters randomly
-      if (Math.random() < CONFIG.cycleSpeed) {
-        const charAttr = geometry.getAttribute('aCharIndex');
-        const idx = Math.floor(Math.random() * count);
-        charAttr.array[idx] = Math.floor(Math.random() * CHARS.length);
-        charAttr.needsUpdate = true;
-      }
+    // Cycle chars
+    if (Math.random() < 0.02) {
+      const attr = geometry.getAttribute('charIdx');
+      const i = Math.floor(Math.random() * cols * rows);
+      attr.array[i] = Math.floor(Math.random() * CHARS.length);
+      attr.needsUpdate = true;
     }
   });
 
-  return (
-    <instancedMesh ref={meshRef} args={[geometry, material, count]} />
-  );
+  return <instancedMesh ref={meshRef} args={[geometry, material, cols * rows]} />;
 }
 
 export default function MatrixBackground() {
@@ -207,23 +163,20 @@ export default function MatrixBackground() {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
-      height: '100vh',
+      width: '100%',
+      height: '100%',
       zIndex: -1,
-      background: '#000',
     }}>
       <Canvas
-        camera={{ position: [0, 0, 50], fov: 75 }}
-        gl={{ antialias: false, alpha: false }}
+        camera={{ position: [0, 0, 30], fov: 75 }}
+        style={{ background: '#000' }}
       >
-        <color attach="background" args={['#000000']} />
-        <MatrixRain />
+        <Rain />
         <EffectComposer>
           <Bloom
             intensity={2.5}
             luminanceThreshold={0.1}
             luminanceSmoothing={0.9}
-            radius={0.8}
           />
         </EffectComposer>
       </Canvas>
