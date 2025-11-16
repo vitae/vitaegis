@@ -4,200 +4,128 @@ import { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// Vertex Shader - handles instanced character positioning and animation
+// Simplified vertex shader - just falling characters
 const vertexShader = `
   uniform float uTime;
   uniform vec2 uResolution;
 
   attribute float aOffset;
   attribute float aSpeed;
-  attribute float aGlyph;
   attribute float aColumn;
-  attribute float aLen;
 
-  varying vec2 vUv;
-  varying float vGlyph;
   varying float vBrightness;
-  varying float vAlpha;
 
   void main() {
-    vUv = uv;
-    vGlyph = aGlyph;
+    // Falling position with wrap
+    float y = mod(position.y + aOffset + uTime * aSpeed, uResolution.y + 10.0) - 5.0;
 
-    // Calculate vertical position with wrapping
-    float yPos = mod(position.y + aOffset + uTime * aSpeed, uResolution.y + 20.0) - 10.0;
+    // Bright head, dim tail
+    float head = mod(aOffset + uTime * aSpeed, uResolution.y + 10.0);
+    float dist = abs(y - head);
+    vBrightness = mix(1.5, 0.2, smoothstep(0.0, 8.0, dist));
 
-    // Calculate brightness (bright head, fading tail)
-    float headPosition = mod(aOffset + uTime * aSpeed, uResolution.y + 20.0);
-    float distanceFromHead = abs(yPos - headPosition);
-    vBrightness = 1.0 - smoothstep(0.0, aLen * 2.0, distanceFromHead);
-    vBrightness = max(vBrightness, 0.3); // Minimum brightness
+    // Column spread
+    float x = (aColumn - 50.0) * (uResolution.x / 100.0);
 
-    // Head glow effect
-    float isHead = step(distanceFromHead, 2.0);
-    vBrightness += isHead * 0.7;
-
-    // Alpha fade for tail
-    vAlpha = 1.0 - smoothstep(0.0, aLen * 3.0, distanceFromHead);
-    vAlpha = max(vAlpha, 0.2);
-
-    // Slight column jitter
-    float xJitter = sin(aColumn * 123.456 + uTime * 0.1) * 0.5;
-
-    vec3 pos = position;
-    pos.x += xJitter;
-    pos.y = yPos;
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(x, y, 0.0, 1.0);
+    gl_PointSize = 16.0;
   }
 `;
 
-// Fragment Shader - handles glyph rendering and coloring
+// Simplified fragment shader - green glow
 const fragmentShader = `
-  uniform sampler2D uAtlas;
-  uniform vec3 uColor;
+  uniform sampler2D uGlyphs;
   uniform float uTime;
-  uniform float uGlyphCount;
 
-  varying vec2 vUv;
-  varying float vGlyph;
   varying float vBrightness;
-  varying float vAlpha;
 
   void main() {
-    // Calculate UV coordinates for glyph in atlas
-    // Assuming atlas is a grid of glyphs
-    float glyphsPerRow = 16.0;
-    float glyphIndex = mod(vGlyph + floor(uTime * 2.0), uGlyphCount);
+    // Circle shape for point
+    vec2 center = gl_PointCoord - 0.5;
+    float dist = length(center);
+    if (dist > 0.5) discard;
 
-    float glyphX = mod(glyphIndex, glyphsPerRow);
-    float glyphY = floor(glyphIndex / glyphsPerRow);
+    // Glyph texture sample (cycling through characters)
+    vec2 uv = vec2(
+      mod(gl_PointCoord.x + floor(uTime * 3.0) * 0.0625, 1.0),
+      gl_PointCoord.y
+    );
 
-    vec2 glyphSize = vec2(1.0 / glyphsPerRow);
-    vec2 glyphUV = vec2(glyphX, glyphY) * glyphSize + vUv * glyphSize;
+    // Green with brightness
+    vec3 green = vec3(0.0, 1.0, 0.0);
+    float alpha = (1.0 - dist * 2.0) * vBrightness;
 
-    // Sample the atlas texture
-    vec4 texColor = texture2D(uAtlas, glyphUV);
-
-    // Apply neon green color
-    vec3 finalColor = uColor * vBrightness;
-
-    // Combine with texture alpha
-    float alpha = texColor.a * vAlpha;
-
-    gl_FragColor = vec4(finalColor, alpha);
+    gl_FragColor = vec4(green * vBrightness, alpha);
   }
 `;
 
-// Matrix Rain Component using instanced geometry
-function MatrixRain({ reducedMotion }) {
-  const meshRef = useRef();
-  const { viewport, size } = useThree();
-  const [atlasTexture, setAtlasTexture] = useState(null);
+function MatrixRain() {
+  const pointsRef = useRef();
+  const { viewport } = useThree();
+  const [glyphTexture, setGlyphTexture] = useState(null);
 
-  // Create glyph atlas texture
+  // Create simple glyph texture
   useEffect(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 256;
+    canvas.height = 16;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, 512, 512);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 28px Courier New, monospace';
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 256, 16);
+    ctx.fillStyle = '#fff';
+    ctx.font = '14px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Japanese katakana and alphanumeric characters
-    const chars = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const glyphsPerRow = 16;
-    const glyphSize = 32;
-
-    for (let i = 0; i < Math.min(chars.length, 256); i++) {
-      const x = (i % glyphsPerRow) * glyphSize + glyphSize / 2;
-      const y = Math.floor(i / glyphsPerRow) * glyphSize + glyphSize / 2;
-      ctx.fillText(chars[i], x, y);
+    const chars = 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ012345789ZREDACTED';
+    for (let i = 0; i < 16; i++) {
+      ctx.fillText(chars[i % chars.length], i * 16 + 8, 8);
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    setAtlasTexture(texture);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    setGlyphTexture(tex);
   }, []);
 
-  // Generate instanced geometry with attributes
-  const { geometry, instanceCount } = useMemo(() => {
+  // Create falling points
+  const geometry = useMemo(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const columnCount = isMobile ? 40 : 100;
-    const charsPerColumn = 20;
-    const count = columnCount * charsPerColumn;
+    const count = isMobile ? 400 : 1000;
 
-    const geo = new THREE.PlaneGeometry(1.5, 2);
-    const instancedGeo = new THREE.InstancedBufferGeometry();
-
-    // Copy base geometry attributes
-    instancedGeo.index = geo.index;
-    instancedGeo.attributes.position = geo.attributes.position;
-    instancedGeo.attributes.uv = geo.attributes.uv;
-
-    // Create instanced attributes
+    const positions = new Float32Array(count * 3);
     const offsets = new Float32Array(count);
     const speeds = new Float32Array(count);
-    const glyphs = new Float32Array(count);
     const columns = new Float32Array(count);
-    const lengths = new Float32Array(count);
-    const positions = new Float32Array(count * 3);
 
-    const columnWidth = viewport.width / columnCount;
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = 0;
+      positions[i * 3 + 1] = 0;
+      positions[i * 3 + 2] = 0;
 
-    for (let i = 0; i < columnCount; i++) {
-      for (let j = 0; j < charsPerColumn; j++) {
-        const idx = i * charsPerColumn + j;
-
-        // Random offset for staggered start
-        offsets[idx] = Math.random() * viewport.height * 2;
-
-        // Random speed (faster on desktop)
-        speeds[idx] = (isMobile ? 2 : 5) + Math.random() * (isMobile ? 3 : 10);
-
-        // Random glyph index
-        glyphs[idx] = Math.floor(Math.random() * 80);
-
-        // Column index
-        columns[idx] = i;
-
-        // Trail length
-        lengths[idx] = 5 + Math.random() * 10;
-
-        // Position
-        const x = (i - columnCount / 2) * columnWidth;
-        const y = j * 3;
-        positions[idx * 3] = x;
-        positions[idx * 3 + 1] = y;
-        positions[idx * 3 + 2] = 0;
-      }
+      offsets[i] = Math.random() * 100;
+      speeds[i] = 2 + Math.random() * 8;
+      columns[i] = Math.random() * 100;
     }
 
-    instancedGeo.setAttribute('aOffset', new THREE.InstancedBufferAttribute(offsets, 1));
-    instancedGeo.setAttribute('aSpeed', new THREE.InstancedBufferAttribute(speeds, 1));
-    instancedGeo.setAttribute('aGlyph', new THREE.InstancedBufferAttribute(glyphs, 1));
-    instancedGeo.setAttribute('aColumn', new THREE.InstancedBufferAttribute(columns, 1));
-    instancedGeo.setAttribute('aLen', new THREE.InstancedBufferAttribute(lengths, 1));
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('aOffset', new THREE.BufferAttribute(offsets, 1));
+    geo.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
+    geo.setAttribute('aColumn', new THREE.BufferAttribute(columns, 1));
 
-    return { geometry: instancedGeo, instanceCount: count };
-  }, [viewport.width, viewport.height]);
+    return geo;
+  }, []);
 
-  // Shader material with uniforms
+  // Shader material
   const material = useMemo(() => {
-    if (!atlasTexture) return null;
+    if (!glyphTexture) return null;
 
     return new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: new THREE.Vector2(viewport.width, viewport.height) },
-        uAtlas: { value: atlasTexture },
-        uColor: { value: new THREE.Color('#00FF00') },
-        uGlyphCount: { value: 80 },
+        uGlyphs: { value: glyphTexture },
       },
       vertexShader,
       fragmentShader,
@@ -205,41 +133,21 @@ function MatrixRain({ reducedMotion }) {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
-  }, [atlasTexture, viewport.width, viewport.height]);
+  }, [glyphTexture, viewport]);
 
-  // Animation loop
+  // Animate
   useFrame((state) => {
-    if (meshRef.current && material) {
-      const speed = reducedMotion ? 0.5 : 1;
-      material.uniforms.uTime.value = state.clock.elapsedTime * speed;
+    if (pointsRef.current && material) {
+      material.uniforms.uTime.value = state.clock.elapsedTime;
     }
   });
 
   if (!material) return null;
 
-  return (
-    <instancedMesh
-      ref={meshRef}
-      args={[geometry, material, instanceCount]}
-      frustumCulled={false}
-    />
-  );
+  return <points ref={pointsRef} geometry={geometry} material={material} />;
 }
 
-// Main Canvas Component
 export default function MatrixCanvas() {
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    // Check for reduced motion preference
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mediaQuery.matches);
-
-    const handleChange = (e) => setReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
   return (
     <div className="canvas-full">
       <Canvas
@@ -247,11 +155,10 @@ export default function MatrixCanvas() {
         gl={{
           alpha: true,
           antialias: false,
-          powerPreference: 'high-performance',
+          powerPreference: 'high-performance'
         }}
-        dpr={[1, 2]}
       >
-        <MatrixRain reducedMotion={reducedMotion} />
+        <MatrixRain />
       </Canvas>
     </div>
   );
