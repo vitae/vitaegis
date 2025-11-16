@@ -13,14 +13,14 @@ const MatrixCanvas = dynamic(() => import('../components/MatrixCanvas'), {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
+    <div className="min-h-screen bg-black text-white overflow-hidden flex flex-col">
       {/* Matrix Rain Background */}
       <Suspense fallback={<div className="canvas-full bg-black" />}>
         <MatrixCanvas />
       </Suspense>
 
       {/* Main Content */}
-      <main className="site-content">
+      <main className="site-content flex-grow">
         <h1
           className="neon text-6xl md:text-8xl tracking-wide"
           style={{
@@ -35,7 +35,7 @@ export default function HomePage() {
       {/* Bottom Navigation */}
       <BottomNav />
 
-      {/* Footer with Social Links */}
+      {/* Footer */}
       <Footer />
     </div>
   );

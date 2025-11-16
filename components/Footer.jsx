@@ -1,6 +1,16 @@
 'use client';
 
 export default function Footer() {
+  const navLinks = [
+    { name: 'About', href: '#about' },
+    { name: 'Features', href: '#features' },
+    { name: 'Wellness', href: '#wellness' },
+    { name: 'Resources', href: '#resources' },
+    { name: 'Community', href: '#community' },
+    { name: 'Blog', href: '#blog' },
+    { name: 'Terms', href: '#terms' },
+  ];
+
   const socialLinks = [
     {
       name: 'GitHub',
@@ -56,65 +66,94 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="fixed bottom-0 right-0 mb-4 mr-4 z-40 flex items-end justify-end gap-3">
-      {/* Social Links */}
-      <div className="flex gap-2">
-        {socialLinks.map((link) => (
-          <a
-            key={link.name}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group w-12 h-12 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 hover:rotate-12 flex items-center justify-center"
-            style={{
-              background: 'rgba(0, 255, 0, 0.1)',
-              border: '1px solid rgba(0, 255, 0, 0.3)',
-            }}
-            aria-label={link.name}
-            title={link.name}
-          >
-            <span
-              className="transition-all duration-300"
+    <footer className="relative z-30 mt-auto">
+      <div className="container flex flex-col mx-auto px-4 py-20">
+        <div className="flex flex-col items-center w-full">
+          {/* VITAEGIS Logo */}
+          <div className="mb-8">
+            <h2
+              className="text-5xl font-bold tracking-wider"
               style={{
-                color: 'rgba(255, 255, 255, 0.7)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#00FF00';
-                e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0, 255, 0, 0.8))';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
-                e.currentTarget.style.filter = 'none';
+                fontFamily: "'Futura Book', 'Futura', sans-serif",
+                color: '#00FF00',
+                textShadow: '0 0 20px rgba(0, 255, 0, 0.8), 0 0 40px rgba(0, 255, 0, 0.4)',
               }}
             >
-              {link.icon}
-            </span>
-          </a>
-        ))}
-      </div>
+              VITAEGIS
+            </h2>
+            <p className="text-center mt-2 text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+              Wellness • Vitality • Web3
+            </p>
+          </div>
 
-      {/* VITAEGIS Badge */}
-      <a
-        href="/"
-        className="group w-14 h-14 rounded-full transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-110 flex items-center justify-center"
-        style={{
-          background: 'rgba(0, 255, 0, 0.15)',
-          border: '2px solid rgba(0, 255, 0, 0.5)',
-        }}
-        aria-label="VITAEGIS Home"
-        title="VITAEGIS"
-      >
-        <span
-          className="text-sm font-bold tracking-tight transition-all duration-300"
-          style={{
-            fontFamily: "'Futura Book', 'Futura', sans-serif",
-            color: '#00FF00',
-            textShadow: '0 0 10px rgba(0, 255, 0, 0.8)',
-          }}
-        >
-          VΞ
-        </span>
-      </a>
+          {/* Navigation Links */}
+          <div className="flex flex-col items-center gap-6 mb-8">
+            <div className="flex flex-wrap items-center justify-center gap-5 lg:gap-12 gap-y-3 lg:flex-nowrap">
+              {navLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="transition-all duration-300"
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.95rem',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#00FF00';
+                    e.currentTarget.style.textShadow = '0 0 10px rgba(0, 255, 0, 0.8)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                    e.currentTarget.style.textShadow = 'none';
+                  }}
+                >
+                  {link.name}
+                </a>
+              ))}
+            </div>
+
+            {/* Social Media Icons */}
+            <div className="flex items-center gap-8">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-all duration-300 transform hover:scale-110"
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#00FF00';
+                    e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0, 255, 0, 0.8))';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                    e.currentTarget.style.filter = 'none';
+                  }}
+                  aria-label={social.name}
+                  title={social.name}
+                >
+                  {social.icon}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="flex items-center">
+            <p
+              className="text-sm font-normal leading-7 text-center"
+              style={{
+                color: 'rgba(255, 255, 255, 0.4)',
+              }}
+            >
+              © {new Date().getFullYear()} VITAEGIS. All rights reserved. | Matrix Web3 Wellness Platform
+            </p>
+          </div>
+        </div>
+      </div>
     </footer>
   );
 }
