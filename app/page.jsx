@@ -26,7 +26,7 @@ export default function HomePage() {
             fontFamily: "'Futura Book', 'Futura', 'Courier New', monospace, sans-serif",
           }}
         >
-          Patagios
+          VITAEGIS
         </h1>
       </main>
 

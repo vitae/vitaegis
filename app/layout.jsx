@@ -1,8 +1,8 @@
 import '../styles/globals.css';
 
 export const metadata = {
-  title: 'Patagios - Matrix Web3 Interface',
-  description: 'A Web3 platform with Matrix Digital Rain aesthetic',
+  title: 'VITAEGIS - Matrix Web3 Interface',
+  description: 'A Web3 wellness platform with Matrix Digital Rain aesthetic',
 };
 
 export default function RootLayout({ children }) {
