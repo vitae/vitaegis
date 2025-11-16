@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import BottomNav from '../components/BottomNav';
+import Footer from '../components/Footer';
 
 // Dynamic import with SSR disabled for Three.js components
 const MatrixCanvas = dynamic(() => import('../components/MatrixCanvas'), {
@@ -33,6 +34,9 @@ export default function HomePage() {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      {/* Footer with Social Links */}
+      <Footer />
     </div>
   );
 }
