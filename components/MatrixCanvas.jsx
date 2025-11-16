@@ -8,8 +8,6 @@ import * as THREE from 'three';
 const vertexShader = `
   uniform float uTime;
   uniform vec2 uResolution;
-  uniform vec2 uMouse;
-  uniform float uParallaxStrength;
 
   attribute float aOffset;
   attribute float aSpeed;
@@ -46,12 +44,9 @@ const vertexShader = `
     // Slight column jitter
     float xJitter = sin(aColumn * 123.456 + uTime * 0.1) * 0.5;
 
-    // Mouse parallax effect
-    vec2 mouseOffset = (uMouse - 0.5) * uParallaxStrength;
-
     vec3 pos = position;
-    pos.x += xJitter + mouseOffset.x * 10.0;
-    pos.y = yPos + mouseOffset.y * 5.0;
+    pos.x += xJitter;
+    pos.y = yPos;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
   }
@@ -95,7 +90,7 @@ const fragmentShader = `
 `;
 
 // Matrix Rain Component using instanced geometry
-function MatrixRain({ mousePosition, reducedMotion }) {
+function MatrixRain({ reducedMotion }) {
   const meshRef = useRef();
   const { viewport, size } = useThree();
   const [atlasTexture, setAtlasTexture] = useState(null);
@@ -203,8 +198,6 @@ function MatrixRain({ mousePosition, reducedMotion }) {
         uAtlas: { value: atlasTexture },
         uColor: { value: new THREE.Color('#00FF00') },
         uGlyphCount: { value: 80 },
-        uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        uParallaxStrength: { value: reducedMotion ? 0 : 20 },
       },
       vertexShader,
       fragmentShader,
@@ -212,14 +205,13 @@ function MatrixRain({ mousePosition, reducedMotion }) {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
-  }, [atlasTexture, viewport.width, viewport.height, reducedMotion]);
+  }, [atlasTexture, viewport.width, viewport.height]);
 
   // Animation loop
   useFrame((state) => {
     if (meshRef.current && material) {
       const speed = reducedMotion ? 0.5 : 1;
       material.uniforms.uTime.value = state.clock.elapsedTime * speed;
-      material.uniforms.uMouse.value.set(mousePosition.x, mousePosition.y);
     }
   });
 
@@ -236,7 +228,6 @@ function MatrixRain({ mousePosition, reducedMotion }) {
 
 // Main Canvas Component
 export default function MatrixCanvas() {
-  const [mousePosition, setMousePosition] = useState({ x: 0.5, y: 0.5 });
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -249,20 +240,6 @@ export default function MatrixCanvas() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!reducedMotion) {
-        setMousePosition({
-          x: e.clientX / window.innerWidth,
-          y: 1 - e.clientY / window.innerHeight,
-        });
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [reducedMotion]);
-
   return (
     <div className="canvas-full">
       <Canvas
@@ -274,7 +251,7 @@ export default function MatrixCanvas() {
         }}
         dpr={[1, 2]}
       >
-        <MatrixRain mousePosition={mousePosition} reducedMotion={reducedMotion} />
+        <MatrixRain reducedMotion={reducedMotion} />
       </Canvas>
     </div>
   );
