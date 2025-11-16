@@ -21,9 +21,10 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="site-content">
         <h1
-          className="neon font-futura text-6xl md:text-8xl font-bold tracking-wide"
+          className="neon text-6xl md:text-8xl tracking-wide"
           style={{
-            fontFamily: "'Futura Book', 'Futura', 'Courier New', monospace, sans-serif",
+            fontFamily: "'Futura Book', 'Futura', sans-serif",
+            fontWeight: 400,
           }}
         >
           VITAEGIS
