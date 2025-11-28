@@ -69,7 +69,7 @@ export default function Home() {
       <div className="fixed top-0 left-0 w-full h-[2px] z-[60] bg-black/50">
         <div
           className="h-full bg-gradient-to-r from-vitae-green via-emerald-400 to-vitae-green transition-all duration-150"
-          style={{ width: `${scrollProgress}%`, boxShadow: '0 0 20px #00ff41, 0 0 40px #00ff41' }}
+          style={{ width: `${scrollProgress}%`, boxShadow: '0 0 20px #00ff00, 0 0 40px #00ff00' }}
         />
       </div>
 
@@ -98,7 +98,7 @@ export default function Home() {
             onClick={() => scrollToSection(section.id)}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
               activeSection === section.id
-                ? 'bg-vitae-green w-6 shadow-[0_0_10px_#00ff41]'
+                ? 'bg-vitae-green w-6 shadow-[0_0_10px_#00ff00]'
                 : 'bg-white/30'
             }`}
             aria-label={`Go to ${section.label}`}
