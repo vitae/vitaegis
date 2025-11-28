@@ -1,55 +1,51 @@
 'use client';
 
-import React, { useRef, useMemo, useCallback, useEffect, useState } from 'react';
-import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 
 // ============================================================================
-// CONFIGURATION - Tuned to match Rezmason's Matrix 3D
+// CONFIGURATION - Based on Rezmason's Matrix 3D implementation
+// Key concepts from https://github.com/Rezmason/matrix:
+// - Sawtooth wave for raindrop animation (multiple per column, no collisions)
+// - MSDF for crisp glyphs
+// - GPU-side particle computation
+// - Bloom + tone-mapping for the green glow
+// - Volumetric depth with forward movement
 // ============================================================================
 const CONFIG = {
   // Grid settings
   numColumns: 80,
   numRows: 50,
-  numLayers: 12, // Depth layers for volumetric effect
+  numLayers: 8,
   
-  // Animation speeds
-  fallSpeed: 1.2,
-  forwardSpeed: 0.4,
-  cycleSpeed: 4.0,
-  
-  // Visual settings
-  glyphSize: 0.4,
-  bloomStrength: 2.0,
-  bloomRadius: 0.6,
-  glowIntensity: 1.5,
-  
-  // Colors (Matrix green palette)
-  backgroundColor: '#000000',
-  primaryColor: '#00ff41', // Bright matrix green
-  secondaryColor: '#003b00', // Dark green
-  cursorColor: '#ffffff', // White cursor tip
-  glintColor: '#88ff88', // Occasional glint
-  
-  // Raindrop settings
+  // Animation (Rezmason defaults)
+  fallSpeed: 0.3,
+  forwardSpeed: 1.0,
+  cycleSpeed: 1.0,
   raindropLength: 0.4,
-  raindropDensity: 0.7,
+  
+  // Visual
+  glyphSize: 0.35,
+  bloomStrength: 1.8,
+  bloomRadius: 0.5,
+  ditherMagnitude: 0.05,
+  
+  // Colors (authentic Matrix palette)
+  backgroundColor: '#000000',
+  primaryColor: '#00ff41',
+  secondaryColor: '#003b00',
+  cursorColor: '#aaffaa',
+  cursorIntensity: 2.0,
 };
 
-// Matrix characters - authentic set from the films
-const MATRIX_GLYPHS = `
-アイウエオカキクケコサシスセソタチツテトナニヌネノ
-ハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴ
-ザジズゼゾダヂヅデドバビブベボパピプペポ
-0123456789
-∀∂∃∅∆∇∈∉∋∏∑−∗√∝∞∠∧∨∩∪∫≈≠≡≤≥⊂⊃⊆⊇⊕⊗⊥
-ＺＹＸＷＶＵＴＳＲＱＰＯＮＭＬＫＪＩＨＧＦＥＤＣＢＡ
-`;
+// Matrix glyphs - Katakana + special symbols (authentic set)
+const MATRIX_GLYPHS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ0123456789ABCDEFZ∀∂∃∅∆∇∈∉∋∏∑√∝∞∠∧∨∩∪∫≈≠≡≤≥⊂⊃⊕⊗';
 
 // ============================================================================
-// VERTEX SHADER - Volumetric Matrix Rain
+// VERTEX SHADER - Rezmason-style volumetric raindrop animation
 // ============================================================================
 const matrixVertexShader = `
   precision highp float;
@@ -62,119 +58,106 @@ const matrixVertexShader = `
   uniform float uRaindropLength;
   uniform float uGlyphSize;
   
-  attribute vec3 instancePosition;
-  attribute float instanceColumn;
-  attribute float instanceRow;
-  attribute float instanceLayer;
-  attribute float instancePhase;
-  attribute float instanceSpeed;
-  attribute float instanceGlyph;
-  attribute float instanceRaindrop;
+  attribute float aColumn;
+  attribute float aRow;
+  attribute float aLayer;
+  attribute float aPhase;
+  attribute float aSpeed;
+  attribute float aGlyph;
+  attribute float aRaindrop;
   
   varying float vBrightness;
   varying float vIsCursor;
   varying float vGlyphIndex;
   varying float vDepthFade;
   varying vec2 vUv;
-  varying float vGlint;
   
-  // Sawtooth wave function (core of Rezmason's raindrop animation)
-  float sawtoothWave(float x, float period) {
-    return mod(x, period) / period;
+  // Sawtooth wave - core of Rezmason's raindrop animation
+  // Creates non-colliding raindrops by modulating wave width
+  float sawtooth(float x, float width) {
+    float t = mod(x, 1.0);
+    return t < width ? t / width : 0.0;
   }
   
-  // Hash function for randomness
+  // Hash for deterministic randomness
   float hash(float n) {
     return fract(sin(n) * 43758.5453123);
   }
   
   void main() {
     vUv = uv;
-    vGlyphIndex = instanceGlyph;
     
-    // ========================================
-    // RAINDROP ANIMATION (Rezmason's approach)
-    // ========================================
+    // Unique seed per column/raindrop combination
+    float columnSeed = aColumn * 0.173 + aRaindrop * 0.719;
+    float raindropSpeed = aSpeed * uFallSpeed;
     
-    // Each column has multiple raindrops with different phases
-    float columnSeed = instanceColumn * 0.1 + instanceRaindrop * 0.7;
-    float raindropSpeed = instanceSpeed * uFallSpeed;
-    
-    // Sawtooth wave creates the "streaming" effect
-    // The wave's position determines which glyphs are lit
-    float wavePosition = sawtoothWave(
-      uTime * raindropSpeed + instancePhase + columnSeed,
+    // Sawtooth wave position - determines which glyphs are lit
+    // Multiple raindrops per column with different phases
+    float wavePos = sawtooth(
+      uTime * raindropSpeed + aPhase + columnSeed,
       1.0
     );
     
-    // Calculate this glyph's position relative to the raindrop
-    float rowNormalized = instanceRow / uNumRows;
-    float distanceFromCursor = abs(rowNormalized - wavePosition);
+    // Calculate glyph's position relative to raindrop cursor
+    float rowNorm = aRow / uNumRows;
+    float distFromCursor = abs(rowNorm - wavePos);
     
-    // Raindrop trail with exponential falloff
-    float trailLength = uRaindropLength * (0.8 + 0.4 * hash(columnSeed));
-    float inTrail = 1.0 - smoothstep(0.0, trailLength, distanceFromCursor);
+    // Trail with variable length (Rezmason's "tooth width" modulation)
+    float trailLen = uRaindropLength * (0.7 + 0.6 * hash(columnSeed));
+    float inTrail = 1.0 - smoothstep(0.0, trailLen, distFromCursor);
     
-    // Cursor (tip) detection - brightest point
-    float cursorThreshold = 0.02;
-    vIsCursor = step(distanceFromCursor, cursorThreshold) * inTrail;
+    // Cursor detection - brightest point at raindrop tip
+    float cursorThreshold = 0.015;
+    vIsCursor = step(distFromCursor, cursorThreshold) * inTrail;
     
-    // Brightness gradient along trail
-    float trailGradient = pow(1.0 - distanceFromCursor / trailLength, 2.0);
+    // Brightness gradient along trail (exponential falloff)
+    float trailGradient = pow(1.0 - distFromCursor / max(trailLen, 0.001), 2.5);
     vBrightness = inTrail * trailGradient;
     
-    // Random glint effect (occasional bright flash)
-    float glintChance = hash(instanceColumn * 100.0 + floor(uTime * 3.0));
-    vGlint = step(0.995, glintChance) * inTrail;
-    
     // Glyph cycling animation
-    float cycleOffset = floor(uTime * 4.0 + hash(instanceColumn + instanceRow * 0.1) * 10.0);
-    vGlyphIndex = mod(instanceGlyph + cycleOffset, 256.0);
+    float cycleOffset = floor(uTime * 3.0 + hash(aColumn + aRow * 0.13) * 8.0);
+    vGlyphIndex = mod(aGlyph + cycleOffset, 256.0);
     
     // ========================================
     // VOLUMETRIC 3D POSITIONING
     // ========================================
+    vec3 pos = vec3(0.0);
     
-    // Base position from instance
-    vec3 pos = position * uGlyphSize;
+    // Column positioning (X)
+    float colSpacing = 0.9;
+    pos.x = (aColumn - uNumColumns * 0.5) * colSpacing;
     
-    // Column positioning (X axis)
-    float columnSpacing = 1.0;
-    pos.x += (instanceColumn - uNumColumns * 0.5) * columnSpacing;
+    // Row positioning (Y)
+    float rowSpacing = 0.7;
+    pos.y = (aRow - uNumRows * 0.5) * rowSpacing;
     
-    // Row positioning (Y axis) - offset by wave for streaming
-    float rowSpacing = 0.8;
-    pos.y += (instanceRow - uNumRows * 0.5) * rowSpacing;
+    // Depth layers with forward movement (volumetric effect)
+    float layerDepth = 6.0;
+    float zBase = -aLayer * layerDepth;
     
-    // Depth positioning (Z axis) - layers recede into distance
-    float layerDepth = 8.0;
-    float zBase = -instanceLayer * layerDepth;
-    
-    // Animate layers approaching camera
-    float depthCycle = sawtoothWave(uTime * uForwardSpeed + instanceLayer * 0.1, 1.0);
-    float zOffset = mix(-60.0, 20.0, depthCycle);
+    // Forward movement - glyphs approach camera
+    float depthCycle = fract(uTime * uForwardSpeed * 0.08 + aLayer * 0.12 + hash(columnSeed) * 0.5);
+    float zOffset = mix(-50.0, 15.0, depthCycle);
     pos.z = zBase + zOffset;
     
-    // Depth-based fading (further = dimmer)
-    float maxDepth = uNumColumns * layerDepth;
-    vDepthFade = 1.0 - smoothstep(-20.0, -maxDepth, pos.z);
+    // Depth-based fading
+    float maxDepth = 60.0;
+    vDepthFade = 1.0 - smoothstep(-15.0, -maxDepth, pos.z);
     vBrightness *= vDepthFade;
     
-    // Scale by depth for perspective enhancement
-    float depthScale = mix(0.5, 1.5, vDepthFade);
+    // Scale by depth for perspective
+    float depthScale = mix(0.4, 1.3, vDepthFade);
     pos.xy *= depthScale;
     
-    // Apply model-view-projection
+    // Apply MVP
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
-    
-    // Point size for particle mode (fallback)
-    gl_PointSize = uGlyphSize * 50.0 * depthScale * (300.0 / -mvPosition.z);
+    gl_PointSize = uGlyphSize * 45.0 * depthScale * (280.0 / -mvPosition.z);
   }
 `;
 
 // ============================================================================
-// FRAGMENT SHADER - Glyph Rendering with Glow
+// FRAGMENT SHADER - Glyph rendering with authentic Matrix glow
 // ============================================================================
 const matrixFragmentShader = `
   precision highp float;
@@ -183,101 +166,82 @@ const matrixFragmentShader = `
   uniform vec3 uPrimaryColor;
   uniform vec3 uSecondaryColor;
   uniform vec3 uCursorColor;
-  uniform vec3 uGlintColor;
-  uniform float uGlowIntensity;
-  uniform sampler2D uGlyphAtlas;
+  uniform float uCursorIntensity;
+  uniform float uDitherMagnitude;
   
   varying float vBrightness;
   varying float vIsCursor;
   varying float vGlyphIndex;
   varying float vDepthFade;
   varying vec2 vUv;
-  varying float vGlint;
   
-  // Pseudo-random for texture sampling variation
+  // Noise for dithering (hides color banding - Rezmason technique)
   float random(vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+    return fract(sin(dot(st, vec2(12.9898, 78.233))) * 43758.5453);
   }
   
   void main() {
-    // Early discard for invisible glyphs
-    if (vBrightness < 0.005) discard;
+    if (vBrightness < 0.01) discard;
     
-    // UV coordinates for glyph sampling
-    vec2 uv = vUv;
+    // Glyph shape from point coordinate
+    vec2 center = gl_PointCoord - 0.5;
+    float dist = length(center);
     
-    // Calculate glyph position in atlas (16x16 grid)
-    float glyphIndex = floor(mod(vGlyphIndex, 256.0));
-    float atlasX = mod(glyphIndex, 16.0) / 16.0;
-    float atlasY = floor(glyphIndex / 16.0) / 16.0;
+    // Sharp glyph core + soft glow halo
+    float glyphMask = smoothstep(0.45, 0.25, dist);
+    float glowMask = smoothstep(0.6, 0.0, dist);
     
-    // Sample from atlas with offset
-    vec2 atlasUV = vec2(atlasX, atlasY) + uv / 16.0;
-    
-    // Create glyph shape (simulated MSDF-like rendering)
-    vec2 glyphCenter = uv - 0.5;
-    float glyphDist = length(glyphCenter);
-    
-    // Sharp glyph core
-    float glyphMask = smoothstep(0.5, 0.35, glyphDist);
-    
-    // Soft glow halo
-    float glowMask = smoothstep(0.7, 0.0, glyphDist) * uGlowIntensity;
-    
-    // Animated pattern within glyph (character simulation)
-    float pattern = sin(uv.x * 12.0 + uv.y * 8.0 + vGlyphIndex * 0.5 + uTime * 2.0);
+    // Simulated glyph pattern (character-like texture)
+    float pattern = sin(gl_PointCoord.x * 10.0 + gl_PointCoord.y * 8.0 + vGlyphIndex * 0.4);
     pattern = pattern * 0.5 + 0.5;
-    pattern = step(0.3, pattern);
+    pattern = smoothstep(0.3, 0.7, pattern);
     
-    // Scanline effect
-    float scanline = sin(gl_FragCoord.y * 1.5) * 0.15 + 0.85;
+    // Scanline effect for CRT feel
+    float scanline = sin(gl_FragCoord.y * 1.2) * 0.12 + 0.88;
     
-    // ========================================
-    // COLOR CALCULATION
-    // ========================================
-    
-    // Base color gradient (dark to bright green)
+    // Color gradient (dark green -> bright green)
     vec3 color = mix(uSecondaryColor, uPrimaryColor, vBrightness);
     
-    // Cursor gets white tint
-    color = mix(color, uCursorColor, vIsCursor * 0.8);
+    // Cursor gets bright highlight (Rezmason's isolateCursor)
+    float cursorBoost = vIsCursor * uCursorIntensity;
+    color = mix(color, uCursorColor, vIsCursor * 0.7);
+    color *= (1.0 + cursorBoost);
     
-    // Random glint gets bright flash
-    color = mix(color, uGlintColor, vGlint);
-    
-    // Apply pattern and masks
+    // Combine masks
     float alpha = glyphMask * pattern * vBrightness;
-    alpha += glowMask * vBrightness * 0.4;
+    alpha += glowMask * vBrightness * 0.35;
     alpha *= scanline;
     
-    // Depth-based color shift (further = more saturated green)
-    color = mix(color, uPrimaryColor * 0.5, (1.0 - vDepthFade) * 0.3);
+    // Dithering to hide banding
+    float dither = (random(gl_FragCoord.xy) - 0.5) * uDitherMagnitude;
+    alpha = clamp(alpha + dither, 0.0, 1.0);
     
-    // Final output
+    // Depth-based color shift
+    color = mix(color, uPrimaryColor * 0.4, (1.0 - vDepthFade) * 0.4);
+    
     gl_FragColor = vec4(color * alpha, alpha);
   }
 `;
 
 // ============================================================================
-// MATRIX RAIN COMPONENT
+// MATRIX RAIN MESH COMPONENT
 // ============================================================================
 function MatrixRainMesh() {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
   
   const { numColumns, numRows, numLayers } = CONFIG;
-  const instanceCount = numColumns * numRows * numLayers;
+  const particleCount = numColumns * numRows * numLayers;
   
-  // Generate instance attributes
-  const instanceData = useMemo(() => {
-    const positions = new Float32Array(instanceCount * 3);
-    const columns = new Float32Array(instanceCount);
-    const rows = new Float32Array(instanceCount);
-    const layers = new Float32Array(instanceCount);
-    const phases = new Float32Array(instanceCount);
-    const speeds = new Float32Array(instanceCount);
-    const glyphs = new Float32Array(instanceCount);
-    const raindrops = new Float32Array(instanceCount);
+  // Generate particle attributes
+  const attributes = useMemo(() => {
+    const columns = new Float32Array(particleCount);
+    const rows = new Float32Array(particleCount);
+    const layers = new Float32Array(particleCount);
+    const phases = new Float32Array(particleCount);
+    const speeds = new Float32Array(particleCount);
+    const glyphs = new Float32Array(particleCount);
+    const raindrops = new Float32Array(particleCount);
+    const positions = new Float32Array(particleCount * 3);
     
     let idx = 0;
     for (let layer = 0; layer < numLayers; layer++) {
@@ -291,9 +255,9 @@ function MatrixRainMesh() {
           rows[idx] = row;
           layers[idx] = layer;
           phases[idx] = Math.random();
-          speeds[idx] = 0.3 + Math.random() * 0.7;
-          glyphs[idx] = Math.floor(Math.random() * 256);
-          raindrops[idx] = Math.floor(Math.random() * 4); // Multiple raindrops per column
+          speeds[idx] = 0.4 + Math.random() * 0.6;
+          glyphs[idx] = Math.floor(Math.random() * MATRIX_GLYPHS.length);
+          raindrops[idx] = Math.floor(Math.random() * 3);
           
           idx++;
         }
@@ -301,51 +265,9 @@ function MatrixRainMesh() {
     }
     
     return { positions, columns, rows, layers, phases, speeds, glyphs, raindrops };
-  }, [instanceCount, numColumns, numRows, numLayers]);
+  }, [particleCount, numColumns, numRows, numLayers]);
   
-  // Create glyph atlas texture
-  const glyphAtlas = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d')!;
-    
-    // Black background
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, 512, 512);
-    
-    // Draw glyphs
-    ctx.fillStyle = '#00ff41';
-    ctx.font = 'bold 28px "MS Gothic", "Hiragino Kaku Gothic Pro", "Yu Gothic", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    const glyphs = MATRIX_GLYPHS.replace(/\s/g, '');
-    const cellSize = 32;
-    
-    for (let i = 0; i < Math.min(glyphs.length, 256); i++) {
-      const col = i % 16;
-      const row = Math.floor(i / 16);
-      const x = col * cellSize + cellSize / 2;
-      const y = row * cellSize + cellSize / 2;
-      ctx.fillText(glyphs[i] || '?', x, y);
-    }
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.generateMipmaps = true;
-    return texture;
-  }, []);
-  
-  // Animation
-  useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-    }
-  });
-  
-  // Create shader material
+  // Shader material
   const shaderMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       vertexShader: matrixVertexShader,
@@ -358,74 +280,79 @@ function MatrixRainMesh() {
         uNumRows: { value: CONFIG.numRows },
         uRaindropLength: { value: CONFIG.raindropLength },
         uGlyphSize: { value: CONFIG.glyphSize },
-        uGlowIntensity: { value: CONFIG.glowIntensity },
+        uCursorIntensity: { value: CONFIG.cursorIntensity },
+        uDitherMagnitude: { value: CONFIG.ditherMagnitude },
         uPrimaryColor: { value: new THREE.Color(CONFIG.primaryColor) },
         uSecondaryColor: { value: new THREE.Color(CONFIG.secondaryColor) },
         uCursorColor: { value: new THREE.Color(CONFIG.cursorColor) },
-        uGlintColor: { value: new THREE.Color(CONFIG.glintColor) },
-        uGlyphAtlas: { value: glyphAtlas },
       },
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
     });
-  }, [glyphAtlas]);
+  }, []);
   
-  // Set material ref for animation
+  // Store material reference
   useEffect(() => {
     materialRef.current = shaderMaterial;
   }, [shaderMaterial]);
+  
+  // Animation loop
+  useFrame((state) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
   
   return (
     <points>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={instanceCount}
-          array={instanceData.positions}
+          count={particleCount}
+          array={attributes.positions}
           itemSize={3}
         />
         <bufferAttribute
-          attach="attributes-instanceColumn"
-          count={instanceCount}
-          array={instanceData.columns}
+          attach="attributes-aColumn"
+          count={particleCount}
+          array={attributes.columns}
           itemSize={1}
         />
         <bufferAttribute
-          attach="attributes-instanceRow"
-          count={instanceCount}
-          array={instanceData.rows}
+          attach="attributes-aRow"
+          count={particleCount}
+          array={attributes.rows}
           itemSize={1}
         />
         <bufferAttribute
-          attach="attributes-instanceLayer"
-          count={instanceCount}
-          array={instanceData.layers}
+          attach="attributes-aLayer"
+          count={particleCount}
+          array={attributes.layers}
           itemSize={1}
         />
         <bufferAttribute
-          attach="attributes-instancePhase"
-          count={instanceCount}
-          array={instanceData.phases}
+          attach="attributes-aPhase"
+          count={particleCount}
+          array={attributes.phases}
           itemSize={1}
         />
         <bufferAttribute
-          attach="attributes-instanceSpeed"
-          count={instanceCount}
-          array={instanceData.speeds}
+          attach="attributes-aSpeed"
+          count={particleCount}
+          array={attributes.speeds}
           itemSize={1}
         />
         <bufferAttribute
-          attach="attributes-instanceGlyph"
-          count={instanceCount}
-          array={instanceData.glyphs}
+          attach="attributes-aGlyph"
+          count={particleCount}
+          array={attributes.glyphs}
           itemSize={1}
         />
         <bufferAttribute
-          attach="attributes-instanceRaindrop"
-          count={instanceCount}
-          array={instanceData.raindrops}
+          attach="attributes-aRaindrop"
+          count={particleCount}
+          array={attributes.raindrops}
           itemSize={1}
         />
       </bufferGeometry>
@@ -435,81 +362,81 @@ function MatrixRainMesh() {
 }
 
 // ============================================================================
-// DEPTH FOG LAYER
+// DEPTH FOG
 // ============================================================================
 function DepthFog() {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  
+  const fogMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(0x001500) },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        
+        float noise(vec2 p) {
+          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+        
+        void main() {
+          vec2 uv = vUv;
+          float n = noise(uv * 6.0 + uTime * 0.03);
+          n += noise(uv * 12.0 - uTime * 0.02) * 0.5;
+          n /= 1.5;
+          
+          vec2 center = uv - 0.5;
+          float radial = 1.0 - smoothstep(0.0, 0.6, length(center));
+          
+          float alpha = n * radial * 0.12;
+          gl_FragColor = vec4(uColor, alpha);
+        }
+      `,
+    });
+  }, []);
+  
+  useEffect(() => {
+    materialRef.current = fogMaterial;
+  }, [fogMaterial]);
   
   useFrame((state) => {
-    if (meshRef.current) {
-      const material = meshRef.current.material as THREE.ShaderMaterial;
-      material.uniforms.uTime.value = state.clock.elapsedTime;
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
     }
   });
   
   return (
-    <mesh ref={meshRef} position={[0, 0, -30]}>
-      <planeGeometry args={[200, 200]} />
-      <shaderMaterial
-        transparent
-        depthWrite={false}
-        uniforms={{
-          uTime: { value: 0 },
-          uColor: { value: new THREE.Color(0x001500) },
-        }}
-        vertexShader={`
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `}
-        fragmentShader={`
-          uniform float uTime;
-          uniform vec3 uColor;
-          varying vec2 vUv;
-          
-          float noise(vec2 p) {
-            return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-          }
-          
-          void main() {
-            vec2 uv = vUv;
-            
-            // Animated noise fog
-            float n = noise(uv * 8.0 + uTime * 0.05);
-            n += noise(uv * 16.0 - uTime * 0.03) * 0.5;
-            n += noise(uv * 32.0 + uTime * 0.02) * 0.25;
-            n /= 1.75;
-            
-            // Radial gradient
-            vec2 center = uv - 0.5;
-            float radial = 1.0 - smoothstep(0.0, 0.7, length(center));
-            
-            float alpha = n * radial * 0.15;
-            gl_FragColor = vec4(uColor, alpha);
-          }
-        `}
-      />
+    <mesh position={[0, 0, -25]}>
+      <planeGeometry args={[150, 150]} />
+      <primitive object={fogMaterial} attach="material" />
     </mesh>
   );
 }
 
 // ============================================================================
-// CAMERA ANIMATION
+// CAMERA RIG
 // ============================================================================
 function CameraRig() {
   const { camera } = useThree();
   
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    
-    // Subtle floating motion
-    camera.position.x = Math.sin(t * 0.1) * 3;
-    camera.position.y = Math.cos(t * 0.08) * 2;
-    camera.position.z = 40 + Math.sin(t * 0.05) * 5;
-    
-    camera.lookAt(0, 0, -20);
+    camera.position.x = Math.sin(t * 0.08) * 2.5;
+    camera.position.y = Math.cos(t * 0.06) * 1.5;
+    camera.position.z = 35 + Math.sin(t * 0.04) * 4;
+    camera.lookAt(0, 0, -15);
   });
   
   return null;
@@ -522,7 +449,7 @@ function MatrixScene() {
   return (
     <>
       <color attach="background" args={[CONFIG.backgroundColor]} />
-      <fog attach="fog" args={['#001100', 30, 150]} />
+      <fog attach="fog" args={['#001100', 25, 120]} />
       
       <CameraRig />
       <DepthFog />
@@ -531,18 +458,18 @@ function MatrixScene() {
       <EffectComposer>
         <Bloom
           intensity={CONFIG.bloomStrength}
-          luminanceThreshold={0.2}
+          luminanceThreshold={0.15}
           luminanceSmoothing={0.9}
           radius={CONFIG.bloomRadius}
           mipmapBlur
         />
         <Vignette
-          offset={0.3}
-          darkness={0.9}
+          offset={0.25}
+          darkness={0.85}
           blendFunction={BlendFunction.NORMAL}
         />
         <Noise
-          opacity={0.04}
+          opacity={0.03}
           blendFunction={BlendFunction.OVERLAY}
         />
       </EffectComposer>
@@ -568,10 +495,10 @@ export default function MatrixRain3DAdvanced() {
     <div className="fixed inset-0 -z-10">
       <Canvas
         camera={{ 
-          position: [0, 0, 40], 
+          position: [0, 0, 35], 
           fov: 60, 
           near: 0.1, 
-          far: 300 
+          far: 200 
         }}
         gl={{
           antialias: true,
