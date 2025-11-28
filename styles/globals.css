@@ -3,258 +3,187 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   VITAEGIS VITALITY - Global Styles
-   Cyberpunk Neon + Matrix Rain Theme
+   VITAEGIS - Global Styles
+   Ancient Wisdom × Cyberpunk Aesthetics
+   Health • Stealth • Wealth
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --neon-primary: #00ff6a;
-  --neon-dim: #003318;
-  --neon-glow: rgba(0, 255, 106, 0.5);
+  /* Core palette */
+  --vitae-green: #00ff41;
+  --vitae-green-dim: #003311;
+  --vitae-green-glow: #00ff4180;
+  --vitae-black: #000000;
+  --vitae-white: #ffffff;
+  
+  /* Semantic colors */
+  --color-primary: var(--vitae-green);
+  --color-background: var(--vitae-black);
+  --color-text: var(--vitae-white);
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  
+  /* Glow effects */
+  --glow-sm: 0 0 10px var(--vitae-green-glow);
+  --glow-md: 0 0 20px var(--vitae-green-glow), 0 0 40px var(--vitae-green-glow);
+  --glow-lg: 0 0 40px var(--vitae-green), 0 0 80px var(--vitae-green-glow), 0 0 120px rgba(0, 255, 65, 0.25);
 }
 
-html,
-body,
-#__next {
-  height: 100%;
-  background: #000000;
-  color: white;
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Ensure body doesn't have competing backgrounds with Matrix rain */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: transparent;
-  position: relative;
-  overflow-x: hidden;
+  font-family: 'Century Gothic', 'Avant Garde', sans-serif;
+  background-color: var(--vitae-black);
+  color: var(--vitae-white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Typography
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.neon-text {
-  text-shadow: 
-    0 0 8px rgba(0, 255, 106, 0.9), 
-    0 0 24px rgba(0, 255, 106, 0.4),
-    0 0 48px rgba(0, 255, 106, 0.2);
+/* Ensure Century Gothic is applied everywhere */
+h1, h2, h3, h4, h5, h6,
+p, span, a, button, input, textarea, select, label {
+  font-family: 'Century Gothic', 'Avant Garde', sans-serif;
 }
 
-.neon-text-subtle {
-  text-shadow: 0 0 12px rgba(0, 255, 106, 0.6);
+/* Selection styling */
+::selection {
+  background-color: var(--vitae-green);
+  color: var(--vitae-black);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Buttons
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.btn-neon {
-  background: rgba(0, 255, 106, 0.08);
-  border: 1px solid rgba(0, 255, 106, 0.25);
-  color: #00ff6a;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  box-shadow: 
-    0 4px 20px rgba(0, 255, 106, 0.1),
-    inset 0 0 20px rgba(0, 255, 106, 0.05);
-  transition: all 0.25s ease;
-  cursor: pointer;
-  text-transform: uppercase;
+::-moz-selection {
+  background-color: var(--vitae-green);
+  color: var(--vitae-black);
 }
 
-.btn-neon:hover {
-  transform: translateY(-2px);
-  background: rgba(0, 255, 106, 0.12);
-  border-color: rgba(0, 255, 106, 0.4);
-  box-shadow: 
-    0 8px 30px rgba(0, 255, 106, 0.2),
-    inset 0 0 30px rgba(0, 255, 106, 0.08);
-}
-
-.btn-neon:active {
-  transform: translateY(0);
-}
-
-.btn-neon:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-neon-outline {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  transition: all 0.25s ease;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-
-.btn-neon-outline:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Navigation
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.nav-frost {
-  background: rgba(0, 0, 0, 0.6);
-  border-bottom: 1px solid rgba(0, 255, 106, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Cards & Containers
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.card-glass {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 255, 106, 0.1);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.card-glass:hover {
-  border-color: rgba(0, 255, 106, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 255, 106, 0.1);
-}
-
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 0 1.25rem;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Scanline Overlay (optional, add to layout if desired)
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.scanlines {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 255, 106, 0.015) 2px,
-    rgba(0, 255, 106, 0.015) 4px
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Animations
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 1;
-    filter: brightness(1);
-  }
-  50% {
-    opacity: 0.85;
-    filter: brightness(1.1);
-  }
-}
-
-@keyframes flicker {
-  0%, 100% { opacity: 1; }
-  92% { opacity: 1; }
-  93% { opacity: 0.8; }
-  94% { opacity: 1; }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
-}
-
-.animate-flicker {
-  animation: flicker 4s linear infinite;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   RainbowKit Overrides
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-[data-rk] {
-  --rk-colors-accentColor: #00ff6a !important;
-  --rk-colors-accentColorForeground: #000 !important;
-  --rk-colors-connectButtonBackground: rgba(0, 255, 106, 0.08) !important;
-  --rk-colors-connectButtonText: #00ff6a !important;
-  --rk-radii-connectButton: 8px !important;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Corner Decorations
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.corner-decoration {
-  position: fixed;
-  width: 40px;
-  height: 40px;
-  color: rgba(0, 255, 106, 0.25);
-  z-index: 10;
-  pointer-events: none;
-}
-
-.corner-decoration.top-left {
-  top: 16px;
-  left: 16px;
-}
-
-.corner-decoration.top-right {
-  top: 16px;
-  right: 16px;
-}
-
-.corner-decoration.bottom-left {
-  bottom: 16px;
-  left: 16px;
-}
-
-.corner-decoration.bottom-right {
-  bottom: 16px;
-  right: 16px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Scrollbar
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 106, 0.3);
+  background: var(--vitae-black);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 106, 0.5);
+::-webkit-scrollbar-thumb {
+  background: var(--vitae-green-dim);
+  border-radius: 4px;
+  transition: background 0.3s ease;
 }
 
-/* Selection */
-::selection {
-  background: #00ff6a;
-  color: #000;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vitae-green);
+}
+
+/* Focus states */
+:focus-visible {
+  outline: 2px solid var(--vitae-green);
+  outline-offset: 2px;
+}
+
+/* Link styles */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--vitae-green);
+}
+
+/* Button reset */
+button {
+  font-family: 'Century Gothic', 'Avant Garde', sans-serif;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/* Input reset */
+input, textarea, select {
+  font-family: 'Century Gothic', 'Avant Garde', sans-serif;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  color: var(--vitae-white);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--vitae-green);
+  box-shadow: var(--glow-sm);
+  outline: none;
+}
+
+/* Utility classes */
+.glass {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+.neon-text {
+  color: var(--vitae-green);
+  text-shadow: var(--glow-sm);
+}
+
+.neon-glow {
+  box-shadow: var(--glow-md);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--vitae-green-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--vitae-green), 0 0 60px var(--vitae-green-glow);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
 }
