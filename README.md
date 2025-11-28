@@ -42,3 +42,5 @@ NEXT_PUBLIC_WC_PROJECT_ID=...
 ---
 
 **Health • Stealth • Wealth**
+
+<!-- Rebuild trigger -->
