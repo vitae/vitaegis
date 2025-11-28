@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
-
-
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -10,16 +8,17 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VITAEGIS MATRIX RAIN PRO - Advanced Implementation
+// VITAEGIS MATRIX RAIN PRO - Cinema-Grade Implementation
 // ═══════════════════════════════════════════════════════════════════════════════
 // Enhanced features:
-// - Volumetric 3D depth effect
+// - Volumetric 3D depth effect with parallax layers
 // - Multiple raindrop streams with variable parameters
 // - Authentic glyph cycling based on Rezmason's research
 // - Advanced bloom with color-aware thresholding
-// - Chromatic aberration for depth
-// - Optional intro sequence
-// - Performance optimizations for mobile
+// - Chromatic aberration for depth perception
+// - Interactive ripple effects on click
+// - CRT scanline and film grain effects
+// - Performance optimizations for all devices
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Extended glyph set including Resurrections characters
@@ -70,6 +69,8 @@ const fragmentShader = `
   uniform float uRippleTime;
   uniform vec2 uRippleCenter;
   uniform float uRippleStrength;
+  uniform float uPulseIntensity;
+  uniform float uWaveAmplitude;
   
   varying vec2 vUv;
   
@@ -102,7 +103,7 @@ const fragmentShader = `
     return fract((p3.xx + p3.yz) * p3.zy);
   }
   
-  // Simplex-like noise
+  // Simplex-like noise for organic movement
   float noise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
@@ -116,16 +117,21 @@ const fragmentShader = `
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
   }
   
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Raindrop system - Core algorithm from Rezmason
-  // ─────────────────────────────────────────────────────────────────────────────
-  
-  // Sawtooth wave with modulated width (key insight from Rezmason)
-  float modulatedSawtooth(float x, float period, float seed) {
-    // Modulate the period slightly for organic feel
-    float modPeriod = period * (0.8 + 0.4 * noise(vec2(seed, x * 0.01)));
-    return fract(x / modPeriod);
+  // Fractal brownian motion for complex noise patterns
+  float fbm(vec2 p) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    for (int i = 0; i < 4; i++) {
+      value += amplitude * noise(p);
+      p *= 2.0;
+      amplitude *= 0.5;
+    }
+    return value;
   }
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Raindrop system - Core algorithm from Rezmason with enhancements
+  // ─────────────────────────────────────────────────────────────────────────────
   
   struct RaindropResult {
     float brightness;
@@ -142,8 +148,6 @@ const fragmentShader = `
     // Per-column seeds for consistent randomization
     float seed1 = hash21(vec2(col, layerDepth));
     float seed2 = hash21(vec2(col + 100.0, layerDepth));
-    float seed3 = hash21(vec2(col + 200.0, layerDepth));
-    float seed4 = hash21(vec2(col + 300.0, layerDepth));
     
     // Multiple raindrop streams per column (non-colliding via phase offset)
     const int NUM_STREAMS = 3;
@@ -152,8 +156,9 @@ const fragmentShader = `
       float streamSeed = hash21(vec2(col, float(i) + layerDepth * 10.0));
       float streamSeed2 = hash21(vec2(col + 50.0, float(i) + layerDepth * 10.0));
       
-      // Variable speed per stream
-      float speed = uFallSpeed * (0.4 + streamSeed * 0.8) * (1.0 - layerDepth * 0.3);
+      // Variable speed per stream with wave modulation
+      float waveOffset = sin(col * 0.1 + time * 0.5) * uWaveAmplitude;
+      float speed = uFallSpeed * (0.4 + streamSeed * 0.8) * (1.0 - layerDepth * 0.3) + waveOffset * 0.1;
       
       // Variable raindrop length (Rezmason's "tooth width")
       float dropLength = uTrailLength * (0.5 + streamSeed2 * 1.0);
@@ -168,15 +173,15 @@ const fragmentShader = `
       float sawPos = fract((row + time * speed + phase) / period);
       
       // Convert to raindrop brightness (bright at tip, fading trail)
-      float dropStart = 0.0;
       float dropEnd = dropLength / period;
       
       if (sawPos < dropEnd) {
         // Within the raindrop
         float normalized = sawPos / dropEnd;
         
-        // Exponential falloff for trail (Rezmason style)
-        float trail = exp(-normalized * 4.0);
+        // Exponential falloff for trail (Rezmason style) with pulse
+        float pulse = 1.0 + sin(time * 3.0 + col * 0.5) * uPulseIntensity;
+        float trail = exp(-normalized * 4.0) * pulse;
         
         // Intensity varies by stream
         float intensity = 1.0 - float(i) * 0.25;
@@ -204,7 +209,7 @@ const fragmentShader = `
   }
   
   // ─────────────────────────────────────────────────────────────────────────────
-  // Glyph system
+  // Glyph system with enhanced cycling
   // ─────────────────────────────────────────────────────────────────────────────
   
   float getGlyphIndex(float col, float row, float time, float brightness) {
@@ -219,7 +224,7 @@ const fragmentShader = `
   }
   
   // ─────────────────────────────────────────────────────────────────────────────
-  // Ripple effect (operator mode)
+  // Ripple effect (operator mode) - enhanced with multiple ripples
   // ─────────────────────────────────────────────────────────────────────────────
   
   float calculateRipple(vec2 uv) {
@@ -229,9 +234,16 @@ const fragmentShader = `
     float rippleRadius = uRippleTime * 0.5;
     float rippleWidth = 0.1;
     
+    // Primary ripple
     float ripple = smoothstep(rippleRadius - rippleWidth, rippleRadius, dist) *
                    smoothstep(rippleRadius + rippleWidth, rippleRadius, dist);
     
+    // Secondary echo ripple
+    float ripple2Radius = uRippleTime * 0.3;
+    float ripple2 = smoothstep(ripple2Radius - rippleWidth * 0.5, ripple2Radius, dist) *
+                    smoothstep(ripple2Radius + rippleWidth * 0.5, ripple2Radius, dist) * 0.5;
+    
+    ripple = max(ripple, ripple2);
     ripple *= exp(-uRippleTime * 2.0) * uRippleStrength;
     
     return ripple;
@@ -244,13 +256,14 @@ const fragmentShader = `
   void main() {
     vec2 uv = vUv;
     
-    // Apply slant
+    // Apply slant with subtle wave
     float slantOffset = (uv.y - 0.5) * tan(uSlant * 0.0174533);
+    slantOffset += sin(uv.y * 10.0 + uTime * 0.5) * 0.002 * uWaveAmplitude;
     uv.x = fract(uv.x + slantOffset);
     
     // Grid position
     float col = floor(uv.x * uColumns);
-    float row = floor((1.0 - uv.y) * uRows); // Flip Y so rain falls down
+    float row = floor((1.0 - uv.y) * uRows);
     
     // Cell-local UV
     vec2 cellUv = fract(vec2(uv.x * uColumns, (1.0 - uv.y) * uRows));
@@ -289,7 +302,7 @@ const fragmentShader = `
       float maskedCursor = glyph * rain.cursor;
       float maskedGlint = glyph * rain.glint;
       
-      // Color calculation
+      // Color calculation with gradient
       vec3 trailColor = mix(uSecondaryColor, uPrimaryColor, rain.brightness);
       vec3 cursorColor = uCursorColor;
       vec3 glintColor = uGlintColor;
@@ -330,11 +343,15 @@ const fragmentShader = `
     float noiseLines = 0.98 + 0.02 * noise(vec2(vUv.y * 500.0, uTime * 10.0));
     finalColor *= noiseLines;
     
+    // Breathing ambient glow
+    float ambientPulse = 0.02 * sin(uTime * 0.5) + 0.02;
+    finalColor += uPrimaryColor * ambientPulse * (1.0 - totalAlpha);
+    
     gl_FragColor = vec4(finalColor, 1.0);
   }
 `;
 
-// Post-processing: Chromatic aberration + vignette
+// Post-processing: Chromatic aberration + vignette + film grain
 const postProcessShader = {
   uniforms: {
     tDiffuse: { value: null },
@@ -343,6 +360,7 @@ const postProcessShader = {
     uScanlineIntensity: { value: 0.05 },
     uNoiseIntensity: { value: 0.02 },
     uTime: { value: 0 },
+    uGlowIntensity: { value: 0.1 },
   },
   vertexShader: `
     varying vec2 vUv;
@@ -358,6 +376,7 @@ const postProcessShader = {
     uniform float uScanlineIntensity;
     uniform float uNoiseIntensity;
     uniform float uTime;
+    uniform float uGlowIntensity;
     varying vec2 vUv;
     
     float hash(vec2 p) {
@@ -369,8 +388,8 @@ const postProcessShader = {
       vec2 center = uv - 0.5;
       float dist = length(center);
       
-      // Chromatic aberration
-      vec2 caOffset = center * uChromaticAberration * dist;
+      // Chromatic aberration with distance falloff
+      vec2 caOffset = center * uChromaticAberration * dist * (1.0 + sin(uTime * 0.5) * 0.2);
       
       float r = texture2D(tDiffuse, uv + caOffset).r;
       float g = texture2D(tDiffuse, uv).g;
@@ -378,13 +397,21 @@ const postProcessShader = {
       
       vec3 color = vec3(r, g, b);
       
-      // Vignette
-      float vignette = 1.0 - dist * dist * uVignette * 2.0;
+      // Subtle glow/bloom enhancement
+      vec3 glow = texture2D(tDiffuse, uv).rgb;
+      color += glow * uGlowIntensity * smoothstep(0.3, 1.0, length(glow));
+      
+      // Vignette with breathing
+      float vignetteStrength = uVignette * (1.0 + sin(uTime * 0.3) * 0.1);
+      float vignette = 1.0 - dist * dist * vignetteStrength * 2.0;
       color *= vignette;
       
       // Film grain
       float grain = (hash(uv * 1000.0 + uTime) - 0.5) * uNoiseIntensity;
       color += grain;
+      
+      // Ensure we don't clip
+      color = clamp(color, 0.0, 1.0);
       
       gl_FragColor = vec4(color, 1.0);
     }
@@ -392,12 +419,12 @@ const postProcessShader = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GLYPH TEXTURE GENERATOR (Enhanced)
+// GLYPH TEXTURE GENERATOR (Enhanced with better anti-aliasing)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function createGlyphTexture(glyphSet: string = MATRIX_GLYPHS): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
-  const size = 1024; // Higher resolution for crisp glyphs
+  const size = 1024;
   const glyphsPerRow = 8;
   const glyphSize = size / glyphsPerRow;
   
@@ -410,8 +437,8 @@ function createGlyphTexture(glyphSet: string = MATRIX_GLYPHS): THREE.CanvasTextu
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, size, size);
   
-  // Configure text rendering
-  ctx.font = `bold ${glyphSize * 0.75}px "MS Gothic", "Yu Gothic", "Noto Sans JP", monospace`;
+  // Configure text rendering with better quality
+  ctx.font = `bold ${glyphSize * 0.75}px "MS Gothic", "Yu Gothic", "Noto Sans JP", "Hiragino Kaku Gothic Pro", monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ffffff';
@@ -431,9 +458,9 @@ function createGlyphTexture(glyphSet: string = MATRIX_GLYPHS): THREE.CanvasTextu
     // Cycle through available glyphs
     const glyph = glyphArray[i % glyphArray.length];
     
-    // Draw with slight glow effect
+    // Draw with glow effect
     ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 2;
+    ctx.shadowBlur = 3;
     ctx.fillText(glyph, x, y);
     ctx.shadowBlur = 0;
   }
@@ -477,6 +504,8 @@ export interface MatrixRainProProps {
   chromaticAberration?: number;
   vignetteIntensity?: number;
   ditherMagnitude?: number;
+  pulseIntensity?: number;
+  waveAmplitude?: number;
   
   // Depth (volumetric)
   depthLayers?: number;
@@ -505,8 +534,8 @@ export interface MatrixRainProProps {
 
 export default function MatrixRainPro({
   columns = 80,
-  primaryColor = '#00ff41',
-  secondaryColor = '#003311',
+  primaryColor = '#00ff00',
+  secondaryColor = '#003300',
   backgroundColor = '#000000',
   cursorColor = '#ffffff',
   glintColor = '#88ffaa',
@@ -516,13 +545,15 @@ export default function MatrixRainPro({
   slant = 0,
   cursorIntensity = 2.0,
   glintIntensity = 0.5,
-  bloomStrength = 0.5,
-  bloomRadius = 0.3,
-  bloomThreshold = 0.2,
-  chromaticAberration = 0.002,
-  vignetteIntensity = 0.3,
+  bloomStrength = 0.6,
+  bloomRadius = 0.4,
+  bloomThreshold = 0.15,
+  chromaticAberration = 0.003,
+  vignetteIntensity = 0.35,
   ditherMagnitude = 0.04,
-  depthLayers = 1,
+  pulseIntensity = 0.15,
+  waveAmplitude = 0.5,
+  depthLayers = 2,
   depthFade = 0.5,
   skipIntro = true,
   introDuration = 3.0,
@@ -557,7 +588,7 @@ export default function MatrixRainPro({
         parseInt(match[3], 16) / 255
       );
     }
-    return new THREE.Vector3(0, 1, 0.25);
+    return new THREE.Vector3(0, 1, 0);
   }, []);
   
   // Memoize color conversions
@@ -600,9 +631,9 @@ export default function MatrixRainPro({
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
     camera.position.z = 1;
     
-    // Renderer
+    // Renderer with optimized settings
     const renderer = new THREE.WebGLRenderer({
-      antialias: false, // Disable for performance
+      antialias: false,
       alpha: false,
       powerPreference: 'high-performance',
       stencil: false,
@@ -645,6 +676,8 @@ export default function MatrixRainPro({
         uRippleTime: { value: 0 },
         uRippleCenter: { value: new THREE.Vector2(0.5, 0.5) },
         uRippleStrength: { value: 0 },
+        uPulseIntensity: { value: pulseIntensity },
+        uWaveAmplitude: { value: waveAmplitude },
       },
       vertexShader,
       fragmentShader,
@@ -766,7 +799,7 @@ export default function MatrixRainPro({
     enabled, columns, colors, fallSpeed, cycleSpeed, trailLength, slant,
     cursorIntensity, glintIntensity, bloomStrength, bloomRadius, bloomThreshold,
     chromaticAberration, vignetteIntensity, ditherMagnitude, depthLayers, depthFade,
-    skipIntro, introDuration, pixelRatio, onReady, handleClick
+    skipIntro, introDuration, pixelRatio, onReady, handleClick, pulseIntensity, waveAmplitude
   ]);
   
   // Update uniforms when props change
@@ -787,7 +820,9 @@ export default function MatrixRainPro({
     materialRef.current.uniforms.uDepthLayers.value = depthLayers;
     materialRef.current.uniforms.uDepthFade.value = depthFade;
     materialRef.current.uniforms.uSlant.value = slant;
-  }, [colors, fallSpeed, cycleSpeed, trailLength, cursorIntensity, glintIntensity, ditherMagnitude, depthLayers, depthFade, slant]);
+    materialRef.current.uniforms.uPulseIntensity.value = pulseIntensity;
+    materialRef.current.uniforms.uWaveAmplitude.value = waveAmplitude;
+  }, [colors, fallSpeed, cycleSpeed, trailLength, cursorIntensity, glintIntensity, ditherMagnitude, depthLayers, depthFade, slant, pulseIntensity, waveAmplitude]);
   
   if (!enabled) return null;
   
