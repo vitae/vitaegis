@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { HiMenuAlt4, HiX } from 'react-icons/hi';
+import { ConnectWalletButton } from '@/components/GlassButton';
 
 interface Section {
   id: string;
@@ -86,10 +87,7 @@ export default function GlassNav({ sections, activeSection, onNavigate }: GlassN
 
             {/* Connect Button - Desktop */}
             <div className="hidden md:block">
-              <button className="group relative px-6 py-2.5 rounded-xl bg-vitae-green/10 border border-vitae-green/50 text-vitae-green font-medium text-sm overflow-hidden transition-all duration-300 hover:bg-vitae-green hover:text-black hover:shadow-[0_0_30px_rgba(0,255,65,0.4)]">
-                <span className="relative z-10">Connect Wallet</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-vitae-green to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </button>
+              <ConnectWalletButton />
             </div>
 
             {/* Mobile Menu Button */}
@@ -153,9 +151,7 @@ export default function GlassNav({ sections, activeSection, onNavigate }: GlassN
 
           {/* Mobile Connect Button */}
           <div className="mt-6 pt-6 border-t border-white/10">
-            <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-vitae-green to-emerald-500 text-black font-semibold text-lg shadow-[0_0_30px_rgba(0,255,65,0.3)] hover:shadow-[0_0_40px_rgba(0,255,65,0.5)] transition-all duration-300">
-              Connect Wallet
-            </button>
+            <ConnectWalletButton className="w-full" />
           </div>
         </div>
       </div>
