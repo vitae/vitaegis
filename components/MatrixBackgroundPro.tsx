@@ -1,535 +1,846 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
-import { 
-  EffectComposer, 
-  Bloom, 
-  ChromaticAberration,
-  Vignette,
-  Noise
-} from '@react-three/postprocessing';
-import { BlendFunction } from 'postprocessing';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
-import { shaderMaterial } from '@react-three/drei';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CUSTOM SHADER MATERIAL FOR MATRIX GLYPHS WITH GLOW
+// VITAEGIS MATRIX RAIN PRO - Cinema-Grade Implementation
+// ═══════════════════════════════════════════════════════════════════════════════
+// Enhanced features:
+// - Volumetric 3D depth effect with parallax layers
+// - Multiple raindrop streams with variable parameters
+// - Authentic glyph cycling based on Rezmason's research
+// - Advanced bloom with color-aware thresholding
+// - Chromatic aberration for depth perception
+// - Interactive ripple effects on click
+// - CRT scanline and film grain effects
+// - Performance optimizations for all devices
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const MatrixGlyphMaterial = shaderMaterial(
-  {
-    time: 0,
-    color: new THREE.Color('#00ff00'),
-    opacity: 1.0,
-    glowIntensity: 2.0,
-  },
-  // Vertex Shader
-  `
-    varying vec2 vUv;
-    varying float vDepth;
+// Extended glyph set including Resurrections characters
+const MATRIX_GLYPHS = 
+  'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン' +
+  'ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ' +
+  '0123456789' +
+  '∀∂∃∄∅∆∇∈∉∊∋∌∍∎∏∐∑−∓∔∕∖∗∘∙√∛∜∝∞∟∠∡∢∣∤∥∦∧∨∩∪' +
+  '☰☱☲☳☴☵☶☷' +
+  '═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SHADER CODE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const vertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// Main rain shader with full Rezmason-style implementation
+const fragmentShader = `
+  precision highp float;
+  
+  uniform float uTime;
+  uniform vec2 uResolution;
+  uniform sampler2D uGlyphTexture;
+  uniform float uColumns;
+  uniform float uRows;
+  uniform float uFallSpeed;
+  uniform float uCycleSpeed;
+  uniform float uCursorIntensity;
+  uniform float uTrailLength;
+  uniform float uSlant;
+  uniform float uDepthLayers;
+  uniform float uDepthFade;
+  uniform vec3 uPrimaryColor;
+  uniform vec3 uSecondaryColor;
+  uniform vec3 uBackgroundColor;
+  uniform vec3 uCursorColor;
+  uniform vec3 uGlintColor;
+  uniform float uGlintIntensity;
+  uniform float uDitherMagnitude;
+  uniform float uIntroProgress;
+  uniform float uRippleTime;
+  uniform vec2 uRippleCenter;
+  uniform float uRippleStrength;
+  uniform float uPulseIntensity;
+  uniform float uWaveAmplitude;
+  
+  varying vec2 vUv;
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Noise and hash functions
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  float hash11(float p) {
+    p = fract(p * 0.1031);
+    p *= p + 33.33;
+    p *= p + p;
+    return fract(p);
+  }
+  
+  float hash21(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+  
+  float hash31(vec3 p) {
+    p = fract(p * 0.1031);
+    p += dot(p, p.zyx + 31.32);
+    return fract((p.x + p.y) * p.z);
+  }
+  
+  vec2 hash22(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.xx + p3.yz) * p3.zy);
+  }
+  
+  // Simplex-like noise for organic movement
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
     
+    float a = hash21(i);
+    float b = hash21(i + vec2(1.0, 0.0));
+    float c = hash21(i + vec2(0.0, 1.0));
+    float d = hash21(i + vec2(1.0, 1.0));
+    
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+  
+  // Fractal brownian motion for complex noise patterns
+  float fbm(vec2 p) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    for (int i = 0; i < 4; i++) {
+      value += amplitude * noise(p);
+      p *= 2.0;
+      amplitude *= 0.5;
+    }
+    return value;
+  }
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Raindrop system - Core algorithm from Rezmason with enhancements
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  struct RaindropResult {
+    float brightness;
+    float cursor;
+    float glint;
+  };
+  
+  RaindropResult calculateRaindrop(float row, float col, float time, float layerDepth) {
+    RaindropResult result;
+    result.brightness = 0.0;
+    result.cursor = 0.0;
+    result.glint = 0.0;
+    
+    // Per-column seeds for consistent randomization
+    float seed1 = hash21(vec2(col, layerDepth));
+    float seed2 = hash21(vec2(col + 100.0, layerDepth));
+    
+    // Multiple raindrop streams per column (non-colliding via phase offset)
+    const int NUM_STREAMS = 3;
+    
+    for (int i = 0; i < NUM_STREAMS; i++) {
+      float streamSeed = hash21(vec2(col, float(i) + layerDepth * 10.0));
+      float streamSeed2 = hash21(vec2(col + 50.0, float(i) + layerDepth * 10.0));
+      
+      // Variable speed per stream with wave modulation
+      float waveOffset = sin(col * 0.1 + time * 0.5) * uWaveAmplitude;
+      float speed = uFallSpeed * (0.4 + streamSeed * 0.8) * (1.0 - layerDepth * 0.3) + waveOffset * 0.1;
+      
+      // Variable raindrop length (Rezmason's "tooth width")
+      float dropLength = uTrailLength * (0.5 + streamSeed2 * 1.0);
+      
+      // Phase offset prevents collision
+      float phase = streamSeed * 50.0 + float(i) * 33.3;
+      
+      // Period between raindrops
+      float period = dropLength * 2.5 + 5.0 + streamSeed * 10.0;
+      
+      // Calculate sawtooth position
+      float sawPos = fract((row + time * speed + phase) / period);
+      
+      // Convert to raindrop brightness (bright at tip, fading trail)
+      float dropEnd = dropLength / period;
+      
+      if (sawPos < dropEnd) {
+        // Within the raindrop
+        float normalized = sawPos / dropEnd;
+        
+        // Exponential falloff for trail (Rezmason style) with pulse
+        float pulse = 1.0 + sin(time * 3.0 + col * 0.5) * uPulseIntensity;
+        float trail = exp(-normalized * 4.0) * pulse;
+        
+        // Intensity varies by stream
+        float intensity = 1.0 - float(i) * 0.25;
+        
+        result.brightness = max(result.brightness, trail * intensity);
+        
+        // Cursor at the very tip
+        float cursorWidth = 0.05;
+        if (sawPos < cursorWidth) {
+          float cursorIntensity = smoothstep(cursorWidth, 0.0, sawPos);
+          result.cursor = max(result.cursor, cursorIntensity * intensity);
+        }
+        
+        // Occasional glint (bright flash on random glyphs)
+        if (streamSeed > 0.7 && sawPos < 0.15 && sawPos > 0.05) {
+          float glintChance = hash31(vec3(col, row, floor(time * 2.0)));
+          if (glintChance > 0.95) {
+            result.glint = 1.0;
+          }
+        }
+      }
+    }
+    
+    return result;
+  }
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Glyph system with enhanced cycling
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  float getGlyphIndex(float col, float row, float time, float brightness) {
+    // Glyphs cycle at rate proportional to brightness (Rezmason observation)
+    float baseCycle = hash21(vec2(col, row)) * 64.0;
+    float cycleRate = uCycleSpeed * (0.3 + brightness * 0.7);
+    
+    // Stagger cycling based on position
+    float cycleOffset = hash21(vec2(col * 0.1, row * 0.1)) * 100.0;
+    
+    return mod(baseCycle + time * cycleRate + cycleOffset, 64.0);
+  }
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Ripple effect (operator mode) - enhanced with multiple ripples
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  float calculateRipple(vec2 uv) {
+    if (uRippleStrength <= 0.0) return 0.0;
+    
+    float dist = distance(uv, uRippleCenter);
+    float rippleRadius = uRippleTime * 0.5;
+    float rippleWidth = 0.1;
+    
+    // Primary ripple
+    float ripple = smoothstep(rippleRadius - rippleWidth, rippleRadius, dist) *
+                   smoothstep(rippleRadius + rippleWidth, rippleRadius, dist);
+    
+    // Secondary echo ripple
+    float ripple2Radius = uRippleTime * 0.3;
+    float ripple2 = smoothstep(ripple2Radius - rippleWidth * 0.5, ripple2Radius, dist) *
+                    smoothstep(ripple2Radius + rippleWidth * 0.5, ripple2Radius, dist) * 0.5;
+    
+    ripple = max(ripple, ripple2);
+    ripple *= exp(-uRippleTime * 2.0) * uRippleStrength;
+    
+    return ripple;
+  }
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Main shader
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  void main() {
+    vec2 uv = vUv;
+    
+    // Apply slant with subtle wave
+    float slantOffset = (uv.y - 0.5) * tan(uSlant * 0.0174533);
+    slantOffset += sin(uv.y * 10.0 + uTime * 0.5) * 0.002 * uWaveAmplitude;
+    uv.x = fract(uv.x + slantOffset);
+    
+    // Grid position
+    float col = floor(uv.x * uColumns);
+    float row = floor((1.0 - uv.y) * uRows);
+    
+    // Cell-local UV
+    vec2 cellUv = fract(vec2(uv.x * uColumns, (1.0 - uv.y) * uRows));
+    
+    // Accumulate layers for depth effect
+    vec3 finalColor = uBackgroundColor;
+    float totalAlpha = 0.0;
+    
+    int numLayers = int(uDepthLayers);
+    
+    for (int layer = 0; layer < 4; layer++) {
+      if (layer >= numLayers) break;
+      
+      float layerDepth = float(layer) / float(numLayers);
+      float layerScale = 1.0 - layerDepth * 0.3;
+      float layerAlpha = 1.0 - layerDepth * uDepthFade;
+      
+      // Offset columns per layer for parallax
+      float layerCol = col + float(layer) * 0.5;
+      float layerRow = row * layerScale;
+      
+      // Calculate raindrop
+      RaindropResult rain = calculateRaindrop(layerRow, layerCol, uTime, layerDepth);
+      
+      // Get glyph
+      float glyphIdx = getGlyphIndex(layerCol, row, uTime, rain.brightness);
+      
+      // Sample glyph texture (8x8 atlas)
+      float glyphRow = floor(glyphIdx / 8.0);
+      float glyphCol = mod(glyphIdx, 8.0);
+      vec2 glyphUv = (vec2(glyphCol, 7.0 - glyphRow) + cellUv) / 8.0;
+      float glyph = texture2D(uGlyphTexture, glyphUv).r;
+      
+      // Apply glyph mask
+      float maskedBrightness = glyph * rain.brightness;
+      float maskedCursor = glyph * rain.cursor;
+      float maskedGlint = glyph * rain.glint;
+      
+      // Color calculation with gradient
+      vec3 trailColor = mix(uSecondaryColor, uPrimaryColor, rain.brightness);
+      vec3 cursorColor = uCursorColor;
+      vec3 glintColor = uGlintColor;
+      
+      vec3 layerColor = trailColor * maskedBrightness +
+                        cursorColor * maskedCursor * uCursorIntensity +
+                        glintColor * maskedGlint * uGlintIntensity;
+      
+      // Depth-based dimming
+      layerColor *= layerAlpha;
+      
+      // Composite layer
+      float layerVisibility = max(maskedBrightness, max(maskedCursor, maskedGlint)) * layerAlpha;
+      finalColor = mix(finalColor, layerColor, layerVisibility * (1.0 - totalAlpha));
+      totalAlpha = min(1.0, totalAlpha + layerVisibility);
+    }
+    
+    // Ripple effect
+    float ripple = calculateRipple(vUv);
+    finalColor += uPrimaryColor * ripple;
+    
+    // Intro sequence (fade in from edges)
+    if (uIntroProgress < 1.0) {
+      float introMask = smoothstep(0.0, uIntroProgress, 1.0 - abs(vUv.x - 0.5) * 2.0);
+      introMask *= smoothstep(0.0, uIntroProgress, vUv.y);
+      finalColor *= introMask;
+    }
+    
+    // Dithering to hide color banding
+    float dither = (hash21(gl_FragCoord.xy + fract(uTime)) - 0.5) * uDitherMagnitude;
+    finalColor += dither;
+    
+    // Subtle scanlines
+    float scanline = 0.95 + 0.05 * sin(gl_FragCoord.y * 1.5);
+    finalColor *= scanline;
+    
+    // Subtle horizontal noise lines (CRT effect)
+    float noiseLines = 0.98 + 0.02 * noise(vec2(vUv.y * 500.0, uTime * 10.0));
+    finalColor *= noiseLines;
+    
+    // Breathing ambient glow
+    float ambientPulse = 0.02 * sin(uTime * 0.5) + 0.02;
+    finalColor += uPrimaryColor * ambientPulse * (1.0 - totalAlpha);
+    
+    gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
+
+// Post-processing: Chromatic aberration + vignette + film grain
+const postProcessShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uChromaticAberration: { value: 0.002 },
+    uVignette: { value: 0.4 },
+    uScanlineIntensity: { value: 0.05 },
+    uNoiseIntensity: { value: 0.02 },
+    uTime: { value: 0 },
+    uGlowIntensity: { value: 0.1 },
+  },
+  vertexShader: `
+    varying vec2 vUv;
     void main() {
       vUv = uv;
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      vDepth = -mvPosition.z;
-      gl_Position = projectionMatrix * mvPosition;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
-  // Fragment Shader with advanced glow
-  `
-    uniform float time;
-    uniform vec3 color;
-    uniform float opacity;
-    uniform float glowIntensity;
-    
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uChromaticAberration;
+    uniform float uVignette;
+    uniform float uScanlineIntensity;
+    uniform float uNoiseIntensity;
+    uniform float uTime;
+    uniform float uGlowIntensity;
     varying vec2 vUv;
-    varying float vDepth;
+    
+    float hash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+    }
     
     void main() {
-      vec2 center = vUv - 0.5;
+      vec2 uv = vUv;
+      vec2 center = uv - 0.5;
       float dist = length(center);
       
-      // Multi-layer glow effect
-      float innerGlow = 1.0 - smoothstep(0.0, 0.3, dist);
-      float outerGlow = 1.0 - smoothstep(0.0, 0.5, dist);
-      float glow = pow(innerGlow, 1.5) + pow(outerGlow, 3.0) * 0.5;
-      glow *= glowIntensity;
+      // Chromatic aberration with distance falloff
+      vec2 caOffset = center * uChromaticAberration * dist * (1.0 + sin(uTime * 0.5) * 0.2);
       
-      // Depth-based atmospheric fade
-      float depthFade = 1.0 - smoothstep(5.0, 30.0, vDepth);
+      float r = texture2D(tDiffuse, uv + caOffset).r;
+      float g = texture2D(tDiffuse, uv).g;
+      float b = texture2D(tDiffuse, uv - caOffset).b;
       
-      // Dynamic pulsing
-      float pulse = 0.85 + 0.15 * sin(time * 4.0 + vDepth * 0.3);
+      vec3 color = vec3(r, g, b);
       
-      // Chromatic edge
-      float edge = smoothstep(0.4, 0.5, dist);
-      vec3 chromaticColor = mix(color, color * 1.3, edge);
+      // Subtle glow/bloom enhancement
+      vec3 glow = texture2D(tDiffuse, uv).rgb;
+      color += glow * uGlowIntensity * smoothstep(0.3, 1.0, length(glow));
       
-      vec3 finalColor = chromaticColor * (1.0 + glow * 0.8);
-      float finalOpacity = opacity * depthFade * glow * pulse;
+      // Vignette with breathing
+      float vignetteStrength = uVignette * (1.0 + sin(uTime * 0.3) * 0.1);
+      float vignette = 1.0 - dist * dist * vignetteStrength * 2.0;
+      color *= vignette;
       
-      gl_FragColor = vec4(finalColor, finalOpacity);
+      // Film grain
+      float grain = (hash(uv * 1000.0 + uTime) - 0.5) * uNoiseIntensity;
+      color += grain;
+      
+      // Ensure we don't clip
+      color = clamp(color, 0.0, 1.0);
+      
+      gl_FragColor = vec4(color, 1.0);
     }
-  `
-);
+  `,
+};
 
-extend({ MatrixGlyphMaterial });
+// ═══════════════════════════════════════════════════════════════════════════════
+// GLYPH TEXTURE GENERATOR (Enhanced with better anti-aliasing)
+// ═══════════════════════════════════════════════════════════════════════════════
 
-// TypeScript declaration
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      matrixGlyphMaterial: any;
-    }
+function createGlyphTexture(glyphSet: string = MATRIX_GLYPHS): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  const size = 1024;
+  const glyphsPerRow = 8;
+  const glyphSize = size / glyphsPerRow;
+  
+  canvas.width = size;
+  canvas.height = size;
+  
+  const ctx = canvas.getContext('2d')!;
+  
+  // Black background
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, size, size);
+  
+  // Configure text rendering with better quality
+  ctx.font = `bold ${glyphSize * 0.75}px "MS Gothic", "Yu Gothic", "Noto Sans JP", "Hiragino Kaku Gothic Pro", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  
+  // Enable font smoothing
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  
+  const glyphArray = [...glyphSet];
+  
+  for (let i = 0; i < 64; i++) {
+    const row = Math.floor(i / glyphsPerRow);
+    const col = i % glyphsPerRow;
+    const x = col * glyphSize + glyphSize / 2;
+    const y = row * glyphSize + glyphSize / 2;
+    
+    // Cycle through available glyphs
+    const glyph = glyphArray[i % glyphArray.length];
+    
+    // Draw with glow effect
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 3;
+    ctx.fillText(glyph, x, y);
+    ctx.shadowBlur = 0;
   }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// OPTIMIZED RAIN COLUMN WITH INSTANCING
-// ═══════════════════════════════════════════════════════════════════════════════
-
-interface RainColumnProps {
-  position: [number, number, number];
-  speed: number;
-  length: number;
-  delay: number;
-  brightness: number;
-}
-
-function RainColumn({ position, speed, length, delay, brightness }: RainColumnProps) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const materialRef = useRef<any>(null);
-  const timeRef = useRef(delay);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  const glyphData = useMemo(() => {
-    return Array.from({ length }, (_, i) => ({
-      flickerSpeed: 2 + Math.random() * 5,
-      flickerOffset: Math.random() * Math.PI * 2,
-      baseScale: 0.7 + Math.random() * 0.5,
-      charChangeRate: 0.5 + Math.random() * 2,
-    }));
-  }, [length]);
-
-  useFrame((state, delta) => {
-    if (!meshRef.current || !materialRef.current) return;
-
-    timeRef.current += delta * speed;
-    materialRef.current.time = state.clock.elapsedTime;
-
-    const cyclePosition = (timeRef.current % 35) - 17;
-
-    for (let i = 0; i < length; i++) {
-      const glyph = glyphData[i];
-      const y = position[1] + cyclePosition - i * 0.55;
-      
-      // Head glyph is brighter and larger
-      const isHead = i === 0;
-      const headBoost = isHead ? 1.4 : 1.0;
-      
-      // Subtle flicker
-      const flicker = Math.sin(state.clock.elapsedTime * glyph.flickerSpeed + glyph.flickerOffset);
-      const flickerScale = glyph.baseScale * (0.95 + flicker * 0.05) * headBoost;
-
-      dummy.position.set(position[0], y, position[2]);
-      dummy.scale.setScalar(flickerScale);
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(i, dummy.matrix);
-    }
-
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
-
-  return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, length]} frustumCulled={false}>
-      <planeGeometry args={[0.35, 0.45]} />
-      <matrixGlyphMaterial
-        ref={materialRef}
-        transparent
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-        color="#00ff00"
-        opacity={brightness}
-        glowIntensity={2.0}
-      />
-    </instancedMesh>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MATRIX RAIN SYSTEM - LAYERED FOR DEPTH
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function MatrixRainSystem() {
-  const { viewport } = useThree();
-  const groupRef = useRef<THREE.Group>(null);
-
-  const columns = useMemo(() => {
-    const cols: RainColumnProps[] = [];
-    const spacing = 0.9;
-    const width = Math.min(viewport.width * 2.5, 50);
-    const layers = 4;
-    const count = Math.floor(width / spacing);
-
-    for (let i = 0; i < count; i++) {
-      for (let layer = 0; layer < layers; layer++) {
-        const x = (i - count / 2) * spacing + (Math.random() - 0.5) * 0.4;
-        const z = -layer * 6 + (Math.random() - 0.5) * 2;
-        const brightness = 1.0 - layer * 0.22;
-
-        cols.push({
-          position: [x, 18, z],
-          speed: 0.4 + Math.random() * 1.0 + layer * 0.15,
-          length: 12 + Math.floor(Math.random() * 18),
-          delay: Math.random() * 25,
-          brightness: brightness * (0.8 + Math.random() * 0.2),
-        });
-      }
-    }
-
-    return cols;
-  }, [viewport.width]);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.03) * 0.02;
-      groupRef.current.rotation.x = Math.cos(state.clock.elapsedTime * 0.02) * 0.008;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {columns.map((col, i) => (
-        <RainColumn key={i} {...col} />
-      ))}
-    </group>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// VOLUMETRIC ENERGY ORBS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function EnergyOrbs() {
-  const groupRef = useRef<THREE.Group>(null);
-
-  const orbs = useMemo(() => {
-    return Array.from({ length: 12 }, () => ({
-      position: [
-        (Math.random() - 0.5) * 30,
-        (Math.random() - 0.5) * 20,
-        -8 - Math.random() * 15,
-      ] as [number, number, number],
-      scale: 0.4 + Math.random() * 1.2,
-      speed: 0.08 + Math.random() * 0.25,
-      offset: Math.random() * Math.PI * 2,
-      pulseSpeed: 0.8 + Math.random() * 1.5,
-      color: Math.random() > 0.8 ? '#00ffaa' : '#00ff00',
-    }));
-  }, []);
-
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-
-    groupRef.current.children.forEach((child, i) => {
-      const orb = orbs[i];
-      const mesh = child as THREE.Mesh;
-      
-      mesh.position.y = orb.position[1] + Math.sin(clock.elapsedTime * orb.speed + orb.offset) * 4;
-      mesh.position.x = orb.position[0] + Math.cos(clock.elapsedTime * orb.speed * 0.6 + orb.offset) * 2.5;
-      mesh.position.z = orb.position[2] + Math.sin(clock.elapsedTime * orb.speed * 0.4) * 1;
-      
-      const pulse = 1 + Math.sin(clock.elapsedTime * orb.pulseSpeed + orb.offset) * 0.25;
-      mesh.scale.setScalar(orb.scale * pulse);
-    });
-  });
-
-  return (
-    <group ref={groupRef}>
-      {orbs.map((orb, i) => (
-        <mesh key={i} position={orb.position}>
-          <sphereGeometry args={[1, 32, 32]} />
-          <meshBasicMaterial
-            color={orb.color}
-            transparent
-            opacity={0.06}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ANIMATED CYBER GRID WITH PULSE WAVES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function CyberGrid() {
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-
-  const gridShader = useMemo(() => ({
-    uniforms: {
-      time: { value: 0 },
-      color: { value: new THREE.Color('#00ff00') },
-    },
-    vertexShader: `
-      varying vec2 vUv;
-      varying vec3 vPosition;
-      
-      void main() {
-        vUv = uv;
-        vPosition = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float time;
-      uniform vec3 color;
-      
-      varying vec2 vUv;
-      varying vec3 vPosition;
-      
-      void main() {
-        // Hex-inspired grid
-        vec2 gridA = abs(fract(vPosition.xz * 0.4 - 0.5) - 0.5) / fwidth(vPosition.xz * 0.4);
-        vec2 gridB = abs(fract(vPosition.xz * 0.1 - 0.5) - 0.5) / fwidth(vPosition.xz * 0.1);
-        
-        float lineA = min(gridA.x, gridA.y);
-        float lineB = min(gridB.x, gridB.y);
-        
-        float gridPattern = 1.0 - min(lineA, 1.0);
-        float gridPatternLarge = 1.0 - min(lineB, 1.0);
-        
-        // Distance fade with horizon glow
-        float dist = length(vPosition.xz);
-        float fade = 1.0 - smoothstep(5.0, 60.0, dist);
-        float horizonGlow = smoothstep(40.0, 60.0, dist) * 0.3;
-        
-        // Multiple pulse waves
-        float wave1 = sin(dist * 0.2 - time * 1.5) * 0.5 + 0.5;
-        float wave2 = sin(dist * 0.1 - time * 2.5) * 0.5 + 0.5;
-        float wave = wave1 * 0.7 + wave2 * 0.3;
-        
-        float alpha = (gridPattern * 0.8 + gridPatternLarge * 0.4) * fade * (0.08 + wave * 0.12) + horizonGlow;
-        
-        gl_FragColor = vec4(color, alpha);
-      }
-    `,
-  }), []);
-
-  useFrame(({ clock }) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.time.value = clock.elapsedTime;
-    }
-  });
-
-  return (
-    <group position={[0, -12, -5]} rotation={[-Math.PI / 2.2, 0, 0]}>
-      <mesh>
-        <planeGeometry args={[150, 150, 1, 1]} />
-        <shaderMaterial
-          ref={materialRef}
-          {...gridShader}
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// FLOATING PARTICLE DUST
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function ParticleDust() {
-  const pointsRef = useRef<THREE.Points>(null);
   
-  const particles = useMemo(() => {
-    const count = 800;
-    const positions = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-    const opacities = new Float32Array(count);
-    
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 60;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 40 - 5;
-      sizes[i] = Math.random() * 3 + 0.5;
-      opacities[i] = Math.random() * 0.5 + 0.2;
-    }
-    
-    return { positions, sizes, opacities };
-  }, []);
-
-  useFrame(({ clock }) => {
-    if (pointsRef.current) {
-      pointsRef.current.rotation.y = clock.elapsedTime * 0.015;
-      pointsRef.current.rotation.x = Math.sin(clock.elapsedTime * 0.008) * 0.08;
-      
-      // Gentle vertical drift
-      const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
-      for (let i = 0; i < positions.length / 3; i++) {
-        positions[i * 3 + 1] += Math.sin(clock.elapsedTime * 0.5 + i) * 0.001;
-      }
-      pointsRef.current.geometry.attributes.position.needsUpdate = true;
-    }
-  });
-
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={particles.positions.length / 3}
-          array={particles.positions}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        color="#00ff00"
-        size={0.04}
-        transparent
-        opacity={0.35}
-        blending={THREE.AdditiveBlending}
-        sizeAttenuation
-      />
-    </points>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// DATA STREAMS - HORIZONTAL FLYING LINES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function DataStreams() {
-  const groupRef = useRef<THREE.Group>(null);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearMipMapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
+  texture.needsUpdate = true;
   
-  const streams = useMemo(() => {
-    return Array.from({ length: 15 }, () => ({
-      y: (Math.random() - 0.5) * 20,
-      z: -5 - Math.random() * 15,
-      speed: 15 + Math.random() * 25,
-      length: 2 + Math.random() * 8,
-      offset: Math.random() * 100,
-      opacity: 0.1 + Math.random() * 0.2,
-    }));
-  }, []);
+  return texture;
+}
 
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-    
-    groupRef.current.children.forEach((child, i) => {
-      const stream = streams[i];
-      const mesh = child as THREE.Mesh;
-      
-      // Loop the stream across the screen
-      const x = ((clock.elapsedTime * stream.speed + stream.offset) % 80) - 40;
-      mesh.position.x = x;
-    });
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface MatrixRainProProps {
+  // Layout
+  columns?: number;
+  
+  // Colors (Vitaegis defaults)
+  primaryColor?: string;
+  secondaryColor?: string;
+  backgroundColor?: string;
+  cursorColor?: string;
+  glintColor?: string;
+  
+  // Animation
+  fallSpeed?: number;
+  cycleSpeed?: number;
+  trailLength?: number;
+  slant?: number;
+  
+  // Effects
+  cursorIntensity?: number;
+  glintIntensity?: number;
+  bloomStrength?: number;
+  bloomRadius?: number;
+  bloomThreshold?: number;
+  chromaticAberration?: number;
+  vignetteIntensity?: number;
+  ditherMagnitude?: number;
+  pulseIntensity?: number;
+  waveAmplitude?: number;
+  
+  // Depth (volumetric)
+  depthLayers?: number;
+  depthFade?: number;
+  
+  // Intro
+  skipIntro?: boolean;
+  introDuration?: number;
+  
+  // Display
+  opacity?: number;
+  zIndex?: number;
+  enabled?: boolean;
+  
+  // Performance
+  pixelRatio?: number;
+  
+  // Callbacks
+  onReady?: () => void;
+  onClick?: (x: number, y: number) => void;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export default function MatrixRainPro({
+  columns = 80,
+  primaryColor = '#00ff00',
+  secondaryColor = '#003300',
+  backgroundColor = '#000000',
+  cursorColor = '#ffffff',
+  glintColor = '#88ffaa',
+  fallSpeed = 1.0,
+  cycleSpeed = 0.5,
+  trailLength = 8.0,
+  slant = 0,
+  cursorIntensity = 2.0,
+  glintIntensity = 0.5,
+  bloomStrength = 0.6,
+  bloomRadius = 0.4,
+  bloomThreshold = 0.15,
+  chromaticAberration = 0.003,
+  vignetteIntensity = 0.35,
+  ditherMagnitude = 0.04,
+  pulseIntensity = 0.15,
+  waveAmplitude = 0.5,
+  depthLayers = 2,
+  depthFade = 0.5,
+  skipIntro = true,
+  introDuration = 3.0,
+  opacity = 1.0,
+  zIndex = -1,
+  enabled = true,
+  pixelRatio,
+  onReady,
+  onClick,
+}: MatrixRainProProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const composerRef = useRef<EffectComposer | null>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const postPassRef = useRef<ShaderPass | null>(null);
+  const frameIdRef = useRef<number>(0);
+  const startTimeRef = useRef<number>(Date.now());
+  const introStartRef = useRef<number>(Date.now());
+  const rippleRef = useRef<{ time: number; center: THREE.Vector2; strength: number }>({
+    time: 0,
+    center: new THREE.Vector2(0.5, 0.5),
+    strength: 0,
   });
-
-  return (
-    <group ref={groupRef}>
-      {streams.map((stream, i) => (
-        <mesh key={i} position={[-40, stream.y, stream.z]}>
-          <boxGeometry args={[stream.length, 0.02, 0.02]} />
-          <meshBasicMaterial
-            color="#00ff00"
-            transparent
-            opacity={stream.opacity}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MAIN 3D SCENE WITH POST-PROCESSING
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function Scene() {
-  return (
-    <>
-      <color attach="background" args={['#000000']} />
-      <fog attach="fog" args={['#001a00', 10, 40]} />
-
-      <MatrixRainSystem />
-      <EnergyOrbs />
-      <CyberGrid />
-      <ParticleDust />
-      <DataStreams />
-
-      <EffectComposer multisampling={0}>
-        <Bloom
-          intensity={2.0}
-          luminanceThreshold={0.05}
-          luminanceSmoothing={0.9}
-          mipmapBlur
-          radius={0.8}
-        />
-        <ChromaticAberration
-          blendFunction={BlendFunction.NORMAL}
-          offset={new THREE.Vector2(0.0008, 0.0008)}
-        />
-        <Vignette
-          offset={0.2}
-          darkness={0.85}
-          blendFunction={BlendFunction.NORMAL}
-        />
-        <Noise
-          opacity={0.025}
-          blendFunction={BlendFunction.OVERLAY}
-        />
-      </EffectComposer>
-    </>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// EXPORT
-// ═══════════════════════════════════════════════════════════════════════════════
-
-export default function MatrixBackgroundPro() {
-  return (
-    <div className="fixed inset-0 z-0">
-      <Canvas
-        camera={{ position: [0, 0, 14], fov: 60, near: 0.1, far: 100 }}
-        dpr={[1, 2]}
-        gl={{
-          antialias: true,
-          alpha: false,
-          powerPreference: 'high-performance',
-          stencil: false,
-          depth: true,
-        }}
-      >
-        <Scene />
-      </Canvas>
-
-      {/* CSS Overlays */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Scanlines */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.15) 2px, rgba(0,255,0,0.15) 4px)',
-          }}
-        />
+  
+  // Hex to Vec3 conversion
+  const hexToVec3 = useCallback((hex: string): THREE.Vector3 => {
+    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (match) {
+      return new THREE.Vector3(
+        parseInt(match[1], 16) / 255,
+        parseInt(match[2], 16) / 255,
+        parseInt(match[3], 16) / 255
+      );
+    }
+    return new THREE.Vector3(0, 1, 0);
+  }, []);
+  
+  // Memoize color conversions
+  const colors = useMemo(() => ({
+    primary: hexToVec3(primaryColor),
+    secondary: hexToVec3(secondaryColor),
+    background: hexToVec3(backgroundColor),
+    cursor: hexToVec3(cursorColor),
+    glint: hexToVec3(glintColor),
+  }), [primaryColor, secondaryColor, backgroundColor, cursorColor, glintColor, hexToVec3]);
+  
+  // Click handler for ripple effect
+  const handleClick = useCallback((e: MouseEvent) => {
+    if (!containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = 1.0 - (e.clientY - rect.top) / rect.height;
+    
+    rippleRef.current = {
+      time: 0,
+      center: new THREE.Vector2(x, y),
+      strength: 1.0,
+    };
+    
+    onClick?.(x, y);
+  }, [onClick]);
+  
+  useEffect(() => {
+    if (!containerRef.current || !enabled) return;
+    
+    const container = containerRef.current;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const aspect = width / height;
+    const rows = Math.floor(columns / aspect);
+    
+    // Scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+    camera.position.z = 1;
+    
+    // Renderer with optimized settings
+    const renderer = new THREE.WebGLRenderer({
+      antialias: false,
+      alpha: false,
+      powerPreference: 'high-performance',
+      stencil: false,
+      depth: false,
+    });
+    
+    const effectivePixelRatio = pixelRatio ?? Math.min(window.devicePixelRatio, 2);
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(effectivePixelRatio);
+    renderer.setClearColor(0x000000, 1);
+    container.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+    
+    // Glyph texture
+    const glyphTexture = createGlyphTexture();
+    
+    // Main material
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(width, height) },
+        uGlyphTexture: { value: glyphTexture },
+        uColumns: { value: columns },
+        uRows: { value: rows },
+        uFallSpeed: { value: fallSpeed },
+        uCycleSpeed: { value: cycleSpeed },
+        uCursorIntensity: { value: cursorIntensity },
+        uTrailLength: { value: trailLength },
+        uSlant: { value: slant },
+        uDepthLayers: { value: depthLayers },
+        uDepthFade: { value: depthFade },
+        uPrimaryColor: { value: colors.primary },
+        uSecondaryColor: { value: colors.secondary },
+        uBackgroundColor: { value: colors.background },
+        uCursorColor: { value: colors.cursor },
+        uGlintColor: { value: colors.glint },
+        uGlintIntensity: { value: glintIntensity },
+        uDitherMagnitude: { value: ditherMagnitude },
+        uIntroProgress: { value: skipIntro ? 1.0 : 0.0 },
+        uRippleTime: { value: 0 },
+        uRippleCenter: { value: new THREE.Vector2(0.5, 0.5) },
+        uRippleStrength: { value: 0 },
+        uPulseIntensity: { value: pulseIntensity },
+        uWaveAmplitude: { value: waveAmplitude },
+      },
+      vertexShader,
+      fragmentShader,
+      depthTest: false,
+      depthWrite: false,
+    });
+    materialRef.current = material;
+    
+    // Geometry
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+    
+    // Post-processing
+    const composer = new EffectComposer(renderer);
+    composerRef.current = composer;
+    
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    
+    // Bloom
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      bloomStrength,
+      bloomRadius,
+      bloomThreshold
+    );
+    composer.addPass(bloomPass);
+    
+    // Final post-processing
+    const postPass = new ShaderPass(postProcessShader);
+    postPass.uniforms.uChromaticAberration.value = chromaticAberration;
+    postPass.uniforms.uVignette.value = vignetteIntensity;
+    composer.addPass(postPass);
+    postPassRef.current = postPass;
+    
+    // Track intro start
+    introStartRef.current = Date.now();
+    startTimeRef.current = Date.now();
+    
+    // Animation loop
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = (now - startTimeRef.current) / 1000;
+      const introElapsed = (now - introStartRef.current) / 1000;
+      
+      if (materialRef.current) {
+        materialRef.current.uniforms.uTime.value = elapsed;
         
-        {/* Top gradient */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black to-transparent" />
+        // Intro progress
+        if (!skipIntro) {
+          materialRef.current.uniforms.uIntroProgress.value = 
+            Math.min(1.0, introElapsed / introDuration);
+        }
         
-        {/* Bottom gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
-      </div>
-    </div>
+        // Update ripple
+        if (rippleRef.current.strength > 0) {
+          rippleRef.current.time += 0.016;
+          materialRef.current.uniforms.uRippleTime.value = rippleRef.current.time;
+          materialRef.current.uniforms.uRippleCenter.value = rippleRef.current.center;
+          materialRef.current.uniforms.uRippleStrength.value = rippleRef.current.strength;
+          
+          // Fade out ripple
+          rippleRef.current.strength *= 0.98;
+          if (rippleRef.current.strength < 0.01) {
+            rippleRef.current.strength = 0;
+          }
+        }
+      }
+      
+      if (postPassRef.current) {
+        postPassRef.current.uniforms.uTime.value = elapsed;
+      }
+      
+      composer.render();
+      frameIdRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    onReady?.();
+    
+    // Event listeners
+    container.addEventListener('click', handleClick);
+    
+    const handleResize = () => {
+      const newWidth = window.innerWidth;
+      const newHeight = window.innerHeight;
+      const newAspect = newWidth / newHeight;
+      const newRows = Math.floor(columns / newAspect);
+      
+      renderer.setSize(newWidth, newHeight);
+      composer.setSize(newWidth, newHeight);
+      
+      if (materialRef.current) {
+        materialRef.current.uniforms.uResolution.value.set(newWidth, newHeight);
+        materialRef.current.uniforms.uRows.value = newRows;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      container.removeEventListener('click', handleClick);
+      cancelAnimationFrame(frameIdRef.current);
+      
+      if (rendererRef.current && containerRef.current) {
+        containerRef.current.removeChild(rendererRef.current.domElement);
+      }
+      
+      renderer.dispose();
+      geometry.dispose();
+      material.dispose();
+      glyphTexture.dispose();
+      composer.dispose();
+    };
+  }, [
+    enabled, columns, colors, fallSpeed, cycleSpeed, trailLength, slant,
+    cursorIntensity, glintIntensity, bloomStrength, bloomRadius, bloomThreshold,
+    chromaticAberration, vignetteIntensity, ditherMagnitude, depthLayers, depthFade,
+    skipIntro, introDuration, pixelRatio, onReady, handleClick, pulseIntensity, waveAmplitude
+  ]);
+  
+  // Update uniforms when props change
+  useEffect(() => {
+    if (!materialRef.current) return;
+    
+    materialRef.current.uniforms.uPrimaryColor.value = colors.primary;
+    materialRef.current.uniforms.uSecondaryColor.value = colors.secondary;
+    materialRef.current.uniforms.uBackgroundColor.value = colors.background;
+    materialRef.current.uniforms.uCursorColor.value = colors.cursor;
+    materialRef.current.uniforms.uGlintColor.value = colors.glint;
+    materialRef.current.uniforms.uFallSpeed.value = fallSpeed;
+    materialRef.current.uniforms.uCycleSpeed.value = cycleSpeed;
+    materialRef.current.uniforms.uTrailLength.value = trailLength;
+    materialRef.current.uniforms.uCursorIntensity.value = cursorIntensity;
+    materialRef.current.uniforms.uGlintIntensity.value = glintIntensity;
+    materialRef.current.uniforms.uDitherMagnitude.value = ditherMagnitude;
+    materialRef.current.uniforms.uDepthLayers.value = depthLayers;
+    materialRef.current.uniforms.uDepthFade.value = depthFade;
+    materialRef.current.uniforms.uSlant.value = slant;
+    materialRef.current.uniforms.uPulseIntensity.value = pulseIntensity;
+    materialRef.current.uniforms.uWaveAmplitude.value = waveAmplitude;
+  }, [colors, fallSpeed, cycleSpeed, trailLength, cursorIntensity, glintIntensity, ditherMagnitude, depthLayers, depthFade, slant, pulseIntensity, waveAmplitude]);
+  
+  if (!enabled) return null;
+  
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex,
+        opacity,
+        pointerEvents: onClick ? 'auto' : 'none',
+        cursor: onClick ? 'crosshair' : 'default',
+      }}
+      aria-hidden="true"
+    />
   );
 }
