@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { HiChevronDown } from 'react-icons/hi';
+import { HiChevronDown, HiArrowRight, HiDownload } from 'react-icons/hi';
+import GlassButton from '@/components/GlassButton';
 
 export default function HeroSection() {
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -75,44 +76,23 @@ export default function HeroSection() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 animate-fade-in-up animation-delay-600">
-          <button className="group relative w-full sm:w-auto px-8 py-4 rounded-2xl bg-vitae-green text-black font-semibold text-lg overflow-hidden transition-all duration-300 hover:shadow-[0_0_40px_rgba(0,255,65,0.4)]">
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              Enter the Matrix
-              <svg
-                className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-vitae-green via-emerald-400 to-vitae-green opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </button>
+          <GlassButton
+            variant="primary"
+            size="lg"
+            icon={<HiArrowRight className="w-5 h-5" />}
+            className="w-full sm:w-auto"
+          >
+            Enter the Matrix
+          </GlassButton>
 
-          <button className="group w-full sm:w-auto px-8 py-4 rounded-2xl border border-white/20 text-white font-medium text-lg transition-all duration-300 hover:bg-white/5 hover:border-white/40">
-            <span className="flex items-center justify-center gap-2">
-              Read Whitepaper
-              <svg
-                className="w-5 h-5 transition-transform duration-300 group-hover:translate-y-0.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </span>
-          </button>
+          <GlassButton
+            variant="secondary"
+            size="lg"
+            icon={<HiDownload className="w-5 h-5" />}
+            className="w-full sm:w-auto"
+          >
+            Read Whitepaper
+          </GlassButton>
         </div>
       </div>
 
