@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { HiSwitchVertical, HiCog, HiInformationCircle } from 'react-icons/hi';
 import { SiEthereum } from 'react-icons/si';
+import { ConnectWalletButton } from '@/components/GlassButton';
 
 export default function TokenSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -178,9 +179,7 @@ export default function TokenSection() {
               </div>
 
               {/* Swap Button */}
-              <button className="w-full mt-6 py-4 rounded-2xl bg-gradient-to-r from-vitae-green to-emerald-500 text-black font-semibold text-lg shadow-[0_0_30px_rgba(0,255,65,0.3)] hover:shadow-[0_0_40px_rgba(0,255,65,0.5)] transition-all duration-300">
-                Connect Wallet
-              </button>
+              <ConnectWalletButton className="w-full mt-6" />
 
               {/* Powered by */}
               <div className="mt-4 text-center text-xs text-white/30">
