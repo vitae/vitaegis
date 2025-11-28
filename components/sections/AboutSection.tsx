@@ -120,7 +120,7 @@ export default function AboutSection() {
                 </div>
 
                 {/* Corner accent */}
-                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-vitae-green/30 group-hover:bg-vitae-green group-hover:shadow-[0_0_10px_#00ff41] transition-all duration-300" />
+                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-vitae-green/30 group-hover:bg-vitae-green group-hover:shadow-[0_0_10px_#00ff00] transition-all duration-300" />
               </div>
             ))}
           </div>
