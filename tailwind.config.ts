@@ -15,12 +15,12 @@ const config: Config = {
       },
       colors: {
         vitae: {
-          green: '#00ff41',
+          green: '#00ff00',
           black: '#000000',
           white: '#ffffff',
         },
         matrix: {
-          green: '#00ff41',
+          green: '#00ff00',
           dark: '#003311',
           glow: 'rgba(0, 255, 65, 0.5)',
         },
@@ -28,7 +28,7 @@ const config: Config = {
       boxShadow: {
         'neon-sm': '0 0 10px rgba(0, 255, 65, 0.5)',
         'neon-md': '0 0 20px rgba(0, 255, 65, 0.5), 0 0 40px rgba(0, 255, 65, 0.3)',
-        'neon-lg': '0 0 40px #00ff41, 0 0 80px rgba(0, 255, 65, 0.5), 0 0 120px rgba(0, 255, 65, 0.25)',
+        'neon-lg': '0 0 40px #00ff00, 0 0 80px rgba(0, 255, 65, 0.5), 0 0 120px rgba(0, 255, 65, 0.25)',
         glass: '0 8px 32px rgba(0, 0, 0, 0.4)',
       },
       backdropBlur: {
@@ -44,7 +44,7 @@ const config: Config = {
       keyframes: {
         'pulse-glow': {
           '0%, 100%': { boxShadow: '0 0 20px rgba(0, 255, 65, 0.5)' },
-          '50%': { boxShadow: '0 0 40px #00ff41, 0 0 60px rgba(0, 255, 65, 0.5)' },
+          '50%': { boxShadow: '0 0 40px #00ff00, 0 0 60px rgba(0, 255, 65, 0.5)' },
         },
         'fade-in': {
           from: { opacity: '0' },
