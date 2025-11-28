@@ -1,6 +1,7 @@
 {
-  "name": "vitaegis-vitality",
-  "version": "0.1.0",
+  "name": "vitaegis",
+  "version": "2.0.0",
+  "description": "VITAEGIS - Ancient Wisdom × Cyberpunk Technology | Health • Stealth • Wealth",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,26 +10,27 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@rainbow-me/rainbowkit": "^1.3.0",
-    "@stripe/stripe-js": "^2.2.0",
-    "@types/three": "^0.181.0",
-    "clsx": "^2.0.0",
-    "framer-motion": "^10.16.0",
-    "next": "14.0.0",
+    "@react-three/fiber": "^8.15.12",
+    "@react-three/drei": "^9.92.7",
+    "next": "14.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "stripe": "^14.5.0",
-    "three": "^0.152.2",
-    "viem": "^1.19.0",
-    "wagmi": "^1.4.0"
+    "react-icons": "^5.0.1",
+    "three": "^0.160.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
+    "@types/three": "^0.160.0",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5.3.0"
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
