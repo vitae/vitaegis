@@ -59,7 +59,7 @@ function RainColumn({ position, speed, length, delay }: RainColumnProps) {
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, length]}>
       <planeGeometry args={[0.3, 0.4]} />
-      <meshBasicMaterial color="#00ff41" transparent opacity={0.8} side={THREE.DoubleSide} />
+      <meshBasicMaterial color="#00ff00" transparent opacity={0.8} side={THREE.DoubleSide} />
     </instancedMesh>
   );
 }
@@ -134,7 +134,7 @@ function GlowOrbs() {
       {orbs.map((orb, i) => (
         <mesh key={i} position={orb.position}>
           <sphereGeometry args={[orb.scale, 16, 16]} />
-          <meshBasicMaterial color="#00ff41" transparent opacity={0.1} />
+          <meshBasicMaterial color="#00ff00" transparent opacity={0.1} />
         </mesh>
       ))}
     </group>
