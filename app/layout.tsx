@@ -1,13 +1,41 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'VITAEGIS | Health • Stealth • Wealth',
-  description: 'Ancient wisdom meets cyberpunk technology. Zen, Kundalini Yoga, Tai Chi, Qi Gong - powered by Web3.',
-  keywords: ['Vitaegis', 'Web3', 'Zen', 'Kundalini', 'Tai Chi', 'Qi Gong', 'Wellness', 'Cyberpunk'],
-  icons: {
-    icon: '/favicon.ico',
+  description:
+    'Ancient wisdom meets cyberpunk technology. Transform your practice through Zen, Kundalini Yoga, Tai Chi, and Qi Gong—powered by Web3.',
+  keywords: [
+    'Vitaegis',
+    'Web3',
+    'Zen',
+    'Kundalini',
+    'Tai Chi',
+    'Qi Gong',
+    'Wellness',
+    'Cryptocurrency',
+    'DeFi',
+  ],
+  authors: [{ name: 'Vitaegis' }],
+  openGraph: {
+    title: 'VITAEGIS | Health • Stealth • Wealth',
+    description:
+      'Ancient wisdom meets cyberpunk technology. Transform your practice through Web3.',
+    type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'VITAEGIS | Health • Stealth • Wealth',
+    description:
+      'Ancient wisdom meets cyberpunk technology. Transform your practice through Web3.',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#000000',
 };
 
 export default function RootLayout({
@@ -16,13 +44,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
-        {/* Century Gothic is a system font - no external import needed */}
-        {/* Fallback fonts are Avant Garde and generic sans-serif */}
+        {/* Preconnect for performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body 
-        className="antialiased bg-black text-white overflow-x-hidden"
+      <body
+        className="antialiased bg-black text-white overflow-x-hidden selection:bg-vitae-green selection:text-black"
         style={{ fontFamily: "'Century Gothic', 'Avant Garde', sans-serif" }}
       >
         {children}
