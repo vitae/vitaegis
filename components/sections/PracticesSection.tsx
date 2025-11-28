@@ -11,7 +11,7 @@ const practices = [
     description:
       'Cultivate mindfulness through seated meditation. Find clarity in stillness and awareness in every breath.',
     icon: GiMeditation,
-    color: '#00ff41',
+    color: '#00ff00',
     benefits: ['Mental Clarity', 'Stress Relief', 'Present Awareness'],
   },
   {
