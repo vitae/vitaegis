@@ -1,144 +1,110 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { motion } from "framer-motion";
-import BuyButton from "../components/BuyButton";
-import WalletButton from "../components/WalletButton";
+import { useRef, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import GlassNav from '@/components/GlassNav';
+import HeroSection from '@/components/sections/HeroSection';
+import AboutSection from '@/components/sections/AboutSection';
+import PracticesSection from '@/components/sections/PracticesSection';
+import TokenSection from '@/components/sections/TokenSection';
+import CommunitySection from '@/components/sections/CommunitySection';
+import Footer from '@/components/Footer';
+
+// Dynamic import for Three.js to avoid SSR issues
+const MatrixBackground = dynamic(() => import('@/components/MatrixBackground'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />,
+});
 
 export default function Home() {
+  const [activeSection, setActiveSection] = useState('hero');
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const sections = [
+    { id: 'hero', label: 'Home' },
+    { id: 'about', label: 'About' },
+    { id: 'practices', label: 'Practices' },
+    { id: 'token', label: 'Token' },
+    { id: 'community', label: 'Community' },
+  ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (scrollTop / docHeight) * 100;
+      setScrollProgress(progress);
+
+      // Determine active section
+      const sectionElements = sections.map((s) => document.getElementById(s.id));
+      const viewportMiddle = scrollTop + window.innerHeight / 2;
+
+      for (let i = sectionElements.length - 1; i >= 0; i--) {
+        const el = sectionElements[i];
+        if (el && el.offsetTop <= viewportMiddle) {
+          setActiveSection(sections[i].id);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <main className="container">
-      {/* Hero Section */}
-      <section className="min-h-[80vh] flex flex-col items-center justify-center text-center py-20">
-        {/* Main Title */}
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <h1
-            className="text-5xl md:text-7xl font-light tracking-[0.15em] mb-2"
-            style={{
-              fontFamily: "Inter, system-ui, sans-serif",
-              textShadow:
-                "0 0 40px rgba(0, 255, 106, 0.6), 0 0 80px rgba(0, 255, 106, 0.3), 0 0 120px rgba(0, 255, 106, 0.15)",
-            }}
-          >
-            <span className="text-[#00ff6a]">Vitaegis</span>{" "}
-            <span className="text-white">Vitality</span>
-          </h1>
-        </motion.div>
+    <main ref={containerRef} className="relative min-h-screen bg-black text-white">
+      {/* 3D Matrix Background */}
+      <MatrixBackground />
 
-        {/* Tagline */}
-        <motion.p
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-xs tracking-[0.4em] text-[#00ff6a]/60 uppercase mt-4 mb-8"
-        >
-          Health • Stealth • Wealth
-        </motion.p>
+      {/* Scroll Progress Bar */}
+      <div className="fixed top-0 left-0 w-full h-[2px] z-[60] bg-black/50">
+        <div
+          className="h-full bg-gradient-to-r from-vitae-green via-emerald-400 to-vitae-green transition-all duration-150"
+          style={{ width: `${scrollProgress}%`, boxShadow: '0 0 20px #00ff41, 0 0 40px #00ff41' }}
+        />
+      </div>
 
-        {/* Description */}
-        <motion.p
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-gray-400 text-lg max-w-xl mx-auto mb-12 leading-relaxed"
-        >
-          A cyberpunk path to{" "}
-          <span className="text-[#00ff6a]/80">meditation</span>,{" "}
-          <span className="text-[#00ff6a]/80">breathwork</span>,{" "}
-          <span className="text-[#00ff6a]/80">movement</span> and{" "}
-          <span className="text-[#00ff6a]/80">sonic alchemy</span>.
-        </motion.p>
+      {/* Glassmorphic Navigation */}
+      <GlassNav
+        sections={sections}
+        activeSection={activeSection}
+        onNavigate={scrollToSection}
+      />
 
-        {/* Disciplines */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="flex flex-wrap justify-center gap-4 mb-12"
-        >
-          {["Zen", "Kundalini", "Tai Chi", "Qi Gong"].map((discipline, i) => (
-            <span
-              key={discipline}
-              className="px-4 py-2 text-sm text-[#00ff6a]/70 border border-[#00ff6a]/20 rounded-full bg-[#00ff6a]/5"
-            >
-              {discipline}
-            </span>
-          ))}
-        </motion.div>
+      {/* Content Sections */}
+      <div className="relative z-10">
+        <HeroSection />
+        <AboutSection />
+        <PracticesSection />
+        <TokenSection />
+        <CommunitySection />
+        <Footer />
+      </div>
 
-        {/* CTA Buttons */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="flex flex-wrap justify-center gap-4"
-        >
-          <BuyButton />
-          <Link href="/about" className="btn-neon-outline">
-            Learn More
-          </Link>
-          <WalletButton />
-        </motion.div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="grid md:grid-cols-3 gap-6"
-        >
-          <FeatureCard
-            title="Meditation"
-            description="Ancient Zen practices enhanced with binaural frequencies"
-            icon="◎"
+      {/* Mobile Bottom Nav Indicator */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex gap-2 md:hidden">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => scrollToSection(section.id)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              activeSection === section.id
+                ? 'bg-vitae-green w-6 shadow-[0_0_10px_#00ff41]'
+                : 'bg-white/30'
+            }`}
+            aria-label={`Go to ${section.label}`}
           />
-          <FeatureCard
-            title="Movement"
-            description="Yang-style Tai Chi flows for energy cultivation"
-            icon="☯"
-          />
-          <FeatureCard
-            title="Breathwork"
-            description="Kundalini awakening through sacred breathing"
-            icon="△"
-          />
-        </motion.div>
-      </section>
-
-      {/* Version Badge */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 text-[#00ff6a]/30 z-20">
-        <div className="w-16 h-px bg-gradient-to-r from-transparent to-[#00ff6a]/30" />
-        <span className="text-[10px] tracking-[0.3em] font-mono">v0.1.0</span>
-        <div className="w-16 h-px bg-gradient-to-l from-transparent to-[#00ff6a]/30" />
+        ))}
       </div>
     </main>
-  );
-}
-
-function FeatureCard({
-  title,
-  description,
-  icon,
-}: {
-  title: string;
-  description: string;
-  icon: string;
-}) {
-  return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      className="card-glass p-6 transition-all duration-300"
-    >
-      <div className="text-3xl text-[#00ff6a] mb-4">{icon}</div>
-      <h3 className="text-lg font-medium text-white mb-2">{title}</h3>
-      <p className="text-sm text-gray-500">{description}</p>
-    </motion.div>
   );
 }
