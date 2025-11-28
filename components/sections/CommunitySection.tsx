@@ -110,7 +110,7 @@ export default function CommunitySection() {
               <div
                 className="w-full h-full"
                 style={{
-                  backgroundImage: `radial-gradient(circle at 2px 2px, #00ff41 1px, transparent 0)`,
+                  backgroundImage: `radial-gradient(circle at 2px 2px, #00ff00 1px, transparent 0)`,
                   backgroundSize: '32px 32px',
                 }}
               />
