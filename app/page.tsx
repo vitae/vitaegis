@@ -63,7 +63,7 @@ export default function Home() {
   return (
     <main ref={containerRef} className="relative min-h-screen bg-black text-white">
       {/* 3D Matrix Background */}
-      <MatrixBackgroundPro />
+      <MatrixBackground />
 
       {/* Scroll Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-[2px] z-[60] bg-black/50">
