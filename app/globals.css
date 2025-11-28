@@ -1,0 +1,277 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   VITAEGIS - Global Styles
+   Ancient Wisdom × Cyberpunk Aesthetics
+   Health • Stealth • Wealth
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Core palette */
+  --vitae-green: #00ff41;
+  --vitae-green-dim: #003311;
+  --vitae-green-glow: rgba(0, 255, 65, 0.5);
+  --vitae-black: #000000;
+  --vitae-white: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Base Styles
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Century Gothic', 'Avant Garde', sans-serif;
+  background-color: var(--vitae-black);
+  color: var(--vitae-white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Ensure Century Gothic is applied everywhere */
+h1, h2, h3, h4, h5, h6,
+p, span, a, button, input, textarea, select, label, div {
+  font-family: 'Century Gothic', 'Avant Garde', sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Scrollbar Styling
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vitae-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vitae-green-dim);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vitae-green);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vitae-green-dim) var(--vitae-black);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Selection
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+::selection {
+  background-color: var(--vitae-green);
+  color: var(--vitae-black);
+}
+
+::-moz-selection {
+  background-color: var(--vitae-green);
+  color: var(--vitae-black);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Focus States
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:focus-visible {
+  outline: 2px solid var(--vitae-green);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--vitae-green-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--vitae-green), 0 0 60px var(--vitae-green-glow);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Animation Classes */
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Animation Delays */
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animation-delay-500 {
+  animation-delay: 500ms;
+}
+
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Glass Effect Utilities
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Neon Effects
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.neon-text {
+  color: var(--vitae-green);
+  text-shadow: 0 0 10px var(--vitae-green-glow), 0 0 20px var(--vitae-green-glow);
+}
+
+.neon-border {
+  border-color: var(--vitae-green);
+  box-shadow: 0 0 10px var(--vitae-green-glow), inset 0 0 10px rgba(0, 255, 65, 0.1);
+}
+
+.neon-glow {
+  box-shadow: 0 0 20px var(--vitae-green-glow), 0 0 40px rgba(0, 255, 65, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Custom Utilities
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--vitae-green) 0%, #4ade80 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hide scrollbar for specific elements */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Responsive Adjustments
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
