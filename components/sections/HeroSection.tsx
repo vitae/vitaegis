@@ -37,7 +37,7 @@ export default function HeroSection() {
       <div className="text-center max-w-5xl mx-auto">
         {/* Glowing badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-vitae-green/10 border border-vitae-green/30 mb-8 animate-fade-in-up">
-          <span className="w-2 h-2 bg-vitae-green rounded-full animate-pulse shadow-[0_0_10px_#00ff41]" />
+          <span className="w-2 h-2 bg-vitae-green rounded-full animate-pulse shadow-[0_0_10px_#00ff00]" />
           <span className="text-vitae-green text-sm font-medium tracking-wider">
             DECENTRALIZED VITALITY
           </span>
