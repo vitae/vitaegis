@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { FaDiscord, FaTwitter, FaTelegram, FaGithub, FaYoutube, FaMedium } from 'react-icons/fa';
+import GlassButton from '@/components/GlassButton';
 
 const socials = [
   { name: 'Discord', icon: FaDiscord, href: '#', members: '12.5K', color: '#5865F2' },
@@ -137,12 +138,12 @@ export default function CommunitySection() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
-                      className="w-full px-6 py-4 rounded-2xl bg-black/40 border border-white/10 text-white placeholder:text-white/30 outline-none focus:border-vitae-green/50 transition-colors"
+                      className="w-full px-6 py-4 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50 transition-colors"
                     />
                   </div>
-                  <button className="px-8 py-4 rounded-2xl bg-vitae-green text-black font-semibold hover:bg-vitae-green/90 transition-all shadow-[0_0_20px_rgba(0,255,65,0.3)] hover:shadow-[0_0_30px_rgba(0,255,65,0.4)]">
+                  <GlassButton variant="primary" size="lg">
                     Subscribe
-                  </button>
+                  </GlassButton>
                 </div>
                 <p className="mt-3 text-xs text-white/40">
                   By subscribing, you agree to our Privacy Policy. Unsubscribe anytime.
