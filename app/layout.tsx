@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import '@rainbow-me/rainbowkit/styles.css';
+import Providers from '@/components/Providers';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'VITAEGIS | Health • Stealth • Wealth',
@@ -54,7 +58,9 @@ export default function RootLayout({
         className="antialiased bg-black text-white overflow-x-hidden selection:bg-vitae-green selection:text-black"
         style={{ fontFamily: "'Century Gothic', 'Avant Garde', sans-serif" }}
       >
-        {children}
+        <Providers>{children}</Providers>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
