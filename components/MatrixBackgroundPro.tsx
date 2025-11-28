@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
@@ -227,8 +227,6 @@ const matrixFragmentShader = `
 // MATRIX RAIN MESH COMPONENT
 // ============================================================================
 function MatrixRainMesh() {
-  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
-  
   const { numColumns, numRows, numLayers } = CONFIG;
   const particleCount = numColumns * numRows * numLayers;
   
@@ -292,15 +290,10 @@ function MatrixRainMesh() {
     });
   }, []);
   
-  // Store material reference
-  useEffect(() => {
-    materialRef.current = shaderMaterial;
-  }, [shaderMaterial]);
-  
-  // Animation loop
+  // Animation loop - use the memoized material directly
   useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    if (shaderMaterial) {
+      shaderMaterial.uniforms.uTime.value = state.clock.elapsedTime;
     }
   });
   
@@ -365,8 +358,6 @@ function MatrixRainMesh() {
 // DEPTH FOG
 // ============================================================================
 function DepthFog() {
-  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
-  
   const fogMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       transparent: true,
@@ -407,13 +398,10 @@ function DepthFog() {
     });
   }, []);
   
-  useEffect(() => {
-    materialRef.current = fogMaterial;
-  }, [fogMaterial]);
-  
+  // Animation loop - use the memoized material directly
   useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    if (fogMaterial) {
+      fogMaterial.uniforms.uTime.value = state.clock.elapsedTime;
     }
   });
   
@@ -514,3 +502,4 @@ export default function MatrixRain3DAdvanced() {
     </div>
   );
 }
+
