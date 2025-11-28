@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { HiMenuAlt4, HiX } from 'react-icons/hi';
-import { ConnectWalletButton } from '@/components/GlassButton';
+import WalletButton from '@/components/WalletButton';
 
 interface Section {
   id: string;
@@ -87,7 +87,7 @@ export default function GlassNav({ sections, activeSection, onNavigate }: GlassN
 
             {/* Connect Button - Desktop */}
             <div className="hidden md:block">
-              <ConnectWalletButton />
+              <WalletButton />
             </div>
 
             {/* Mobile Menu Button */}
@@ -151,7 +151,7 @@ export default function GlassNav({ sections, activeSection, onNavigate }: GlassN
 
           {/* Mobile Connect Button */}
           <div className="mt-6 pt-6 border-t border-white/10">
-            <ConnectWalletButton className="w-full" />
+            <WalletButton />
           </div>
         </div>
       </div>
