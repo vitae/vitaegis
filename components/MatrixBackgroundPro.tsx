@@ -447,7 +447,7 @@ function createGlyphTexture(glyphSet: string = MATRIX_GLYPHS): THREE.CanvasTextu
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   
-  const glyphArray = [...glyphSet];
+  const glyphArray = Array.from(glyphSet);
   
   for (let i = 0; i < 64; i++) {
     const row = Math.floor(i / glyphsPerRow);
