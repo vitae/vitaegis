@@ -11,7 +11,7 @@ import CommunitySection from '@/components/sections/CommunitySection';
 import Footer from '@/components/Footer';
 
 // Dynamic import for Three.js to avoid SSR issues
-const MatrixBackground = dynamic(() => import('@/components/MatrixBackground'), {
+const MatrixBackground = dynamic(() => import('@/components/MatrixBackgroundPro'), {
   ssr: false,
   loading: () => <div className="fixed inset-0 bg-black" />,
 });
@@ -63,7 +63,7 @@ export default function Home() {
   return (
     <main ref={containerRef} className="relative min-h-screen bg-black text-white">
       {/* 3D Matrix Background */}
-      <MatrixBackground />
+      <MatrixBackgroundPro />
 
       {/* Scroll Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-[2px] z-[60] bg-black/50">
