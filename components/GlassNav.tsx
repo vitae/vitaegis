@@ -78,7 +78,7 @@ export default function GlassNav({ sections, activeSection, onNavigate }: GlassN
                 >
                   {section.label}
                   {activeSection === section.id && (
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-vitae-green rounded-full shadow-[0_0_10px_#00ff41]" />
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-vitae-green rounded-full shadow-[0_0_10px_#00ff00]" />
                   )}
                 </button>
               ))}
@@ -144,7 +144,7 @@ export default function GlassNav({ sections, activeSection, onNavigate }: GlassN
                 <span className="flex items-center justify-between">
                   {section.label}
                   {activeSection === section.id && (
-                    <span className="w-2 h-2 bg-vitae-green rounded-full shadow-[0_0_10px_#00ff41]" />
+                    <span className="w-2 h-2 bg-vitae-green rounded-full shadow-[0_0_10px_#00ff00]" />
                   )}
                 </span>
               </button>
