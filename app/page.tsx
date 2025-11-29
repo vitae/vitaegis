@@ -61,8 +61,8 @@ export default function Home() {
   };
 
   return (
-    <main ref={containerRef} className="relative min-h-screen bg-black text-white">
-      {/* 3D Matrix Background */}
+    <main ref={containerRef} className="relative min-h-screen text-white">
+      {/* 3D Matrix Background - renders behind all content */}
       <MatrixBackground />
 
       {/* Scroll Progress Bar */}
@@ -108,3 +108,4 @@ export default function Home() {
     </main>
   );
 }
+
