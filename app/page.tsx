@@ -58,12 +58,12 @@ export default function Home() {
   };
 
   return (
-    <main ref={containerRef} className="relative min-h-screen text-white">
+    <div className="app-container">
       {/* 3D Matrix Background - renders behind all content */}
       <MatrixBackground />
 
       {/* Scroll Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-[2px] z-[60] bg-black/50">
+      <div className="fixed top-0 left-0 right-0 h-[2px] z-[60] bg-black/50 pt-safe">
         <div
           className="h-full bg-gradient-to-r from-vitae-green via-emerald-400 to-vitae-green transition-all duration-150"
           style={{ width: `${scrollProgress}%`, boxShadow: '0 0 20px #00ff00, 0 0 40px #00ff00' }}
@@ -79,20 +79,20 @@ export default function Home() {
       </div>
 
       {/* Content Sections */}
-      <div className="relative z-10 pb-20 md:pb-8">
+      <main ref={containerRef} className="app-content relative z-10">
         <HeroSection />
         <AboutSection />
         <PracticesSection />
         <TokenSection />
         <CommunitySection />
         <Footer />
-      </div>
+      </main>
 
       {/* Glassmorphic Bottom Navigation - mobile only */}
       <BottomNav 
         activeSection={activeSection} 
         onNavigate={scrollToSection} 
       />
-    </main>
+    </div>
   );
 }
