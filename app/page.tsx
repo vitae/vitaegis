@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import GlassNav from '@/components/GlassNav';
+import BottomNav from '@/components/BottomNav';
 import HeroSection from '@/components/sections/HeroSection';
 import AboutSection from '@/components/sections/AboutSection';
 import PracticesSection from '@/components/sections/PracticesSection';
@@ -73,15 +74,17 @@ export default function Home() {
         />
       </div>
 
-      {/* Glassmorphic Navigation */}
-      <GlassNav
-        sections={sections}
-        activeSection={activeSection}
-        onNavigate={scrollToSection}
-      />
+      {/* Glassmorphic Top Navigation - hidden on mobile */}
+      <div className="hidden md:block">
+        <GlassNav
+          sections={sections}
+          activeSection={activeSection}
+          onNavigate={scrollToSection}
+        />
+      </div>
 
       {/* Content Sections */}
-      <div className="relative z-10">
+      <div className="relative z-10 pb-24">
         <HeroSection />
         <AboutSection />
         <PracticesSection />
@@ -90,22 +93,11 @@ export default function Home() {
         <Footer />
       </div>
 
-      {/* Mobile Bottom Nav Indicator */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex gap-2 md:hidden">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => scrollToSection(section.id)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              activeSection === section.id
-                ? 'bg-vitae-green w-6 shadow-[0_0_10px_#00ff00]'
-                : 'bg-white/30'
-            }`}
-            aria-label={`Go to ${section.label}`}
-          />
-        ))}
-      </div>
+      {/* Glassmorphic Bottom Navigation */}
+      <BottomNav 
+        activeSection={activeSection} 
+        onNavigate={scrollToSection} 
+      />
     </main>
   );
 }
-
