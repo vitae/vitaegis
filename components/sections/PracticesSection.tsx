@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { GiMeditation, GiYinYang, GiSpiralArrow, GiLotus } from 'react-icons/gi';
+import GlassContainer from '@/components/GlassContainer';
 
 const practices = [
   {
@@ -80,19 +81,19 @@ export default function PracticesSection() {
       className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16 sm:mb-20">
+        {/* Section Header in Glassmorphic Container */}
+        <GlassContainer variant="default" glow={true} className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto">
           <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
             The Four Pillars
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold">
             Ancient <span className="text-vitae-green">Practices</span>
           </h2>
-          <p className="mt-4 text-white/60 max-w-2xl mx-auto text-base sm:text-lg">
+          <p className="mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
             Master the four foundational disciplines that form the core of Vitaegis.
             Each practice earns unique rewards and unlocks deeper levels of engagement.
           </p>
-        </div>
+        </GlassContainer>
 
         {/* Practice Cards Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -108,7 +109,7 @@ export default function PracticesSection() {
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <div
-                  className="group relative h-full p-6 sm:p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer"
+                  className="group relative h-full p-6 sm:p-8 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer"
                   style={{
                     boxShadow: isHovered
                       ? `0 0 40px ${practice.color}20, inset 0 0 40px ${practice.color}05`
@@ -211,7 +212,7 @@ export default function PracticesSection() {
 
         {/* Bottom CTA */}
         <div className="mt-16 text-center">
-          <button className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+          <button className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 text-white font-medium hover:bg-black/50 hover:border-vitae-green/30 transition-all duration-300 shadow-[0_0_20px_rgba(0,255,65,0.1)]">
             <span>Explore All Practices</span>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
