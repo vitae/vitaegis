@@ -15,20 +15,33 @@
   --vitae-green-glow: rgba(0, 255, 65, 0.5);
   --vitae-black: #000000;
   --vitae-white: #ffffff;
+  
+  /* Safe area insets for notched devices */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Base Styles
+   Base Styles - Native App Feel
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Prevent text selection highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   scroll-behavior: smooth;
+  /* Use dynamic viewport height for mobile browsers */
+  height: 100%;
+  height: -webkit-fill-available;
+  /* Prevent overscroll bounce */
+  overscroll-behavior: none;
 }
 
 body {
@@ -39,7 +52,22 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal overflow */
   overflow-x: hidden;
+  /* Use dynamic viewport height */
+  min-height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior: none;
+  /* Prevent pull-to-refresh */
+  overscroll-behavior-y: contain;
+  /* Enable momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Padding for safe areas */
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-left: var(--sal);
 }
 
 /* Ensure Futura Medium is applied everywhere */
@@ -50,16 +78,42 @@ p, span, a, button, input, textarea, select, label, div {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+   Mobile App Container
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.app-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+}
+
+.app-content {
+  position: relative;
+  width: 100%;
+  /* Account for bottom nav on mobile */
+  padding-bottom: calc(72px + var(--sab));
+}
+
+@media (min-width: 768px) {
+  .app-content {
+    padding-bottom: 2rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
    Scrollbar Styling
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--vitae-black);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -71,10 +125,24 @@ p, span, a, button, input, textarea, select, label, div {
   background: var(--vitae-green);
 }
 
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 /* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--vitae-green-dim) var(--vitae-black);
+@media (min-width: 769px) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--vitae-green-dim) transparent;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -98,6 +166,30 @@ p, span, a, button, input, textarea, select, label, div {
 :focus-visible {
   outline: 2px solid var(--vitae-green);
   outline-offset: 2px;
+}
+
+/* Remove focus outline on touch devices */
+@media (hover: none) {
+  :focus-visible {
+    outline: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Touch Interactions
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+button, a, [role="button"] {
+  /* Minimum touch target size */
+  min-height: 44px;
+  /* Prevent double-tap zoom */
+  touch-action: manipulation;
+}
+
+/* Active state for touch feedback */
+button:active, a:active, [role="button"]:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -169,43 +261,26 @@ p, span, a, button, input, textarea, select, label, div {
 }
 
 /* Animation Delays */
-.animation-delay-100 {
-  animation-delay: 100ms;
-}
-
-.animation-delay-200 {
-  animation-delay: 200ms;
-}
-
-.animation-delay-300 {
-  animation-delay: 300ms;
-}
-
-.animation-delay-400 {
-  animation-delay: 400ms;
-}
-
-.animation-delay-500 {
-  animation-delay: 500ms;
-}
-
-.animation-delay-600 {
-  animation-delay: 600ms;
-}
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-600 { animation-delay: 600ms; }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    Glass Effect Utilities
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .glass {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-strong {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -250,17 +325,23 @@ p, span, a, button, input, textarea, select, label, div {
   scrollbar-width: none;
 }
 
+/* Safe area utilities */
+.pt-safe { padding-top: var(--sat); }
+.pb-safe { padding-bottom: var(--sab); }
+.pl-safe { padding-left: var(--sal); }
+.pr-safe { padding-right: var(--sar); }
+
 /* ═══════════════════════════════════════════════════════════════════════════════
    Responsive Adjustments
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
   html {
-    font-size: 15px;
+    font-size: 16px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 375px) {
   html {
     font-size: 14px;
   }
@@ -278,3 +359,16 @@ p, span, a, button, input, textarea, select, label, div {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Fix for iOS 100vh issue
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+}
