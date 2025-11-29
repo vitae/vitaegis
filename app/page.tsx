@@ -22,35 +22,31 @@ export default function Home() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const sections = [
-    { id: 'hero', label: 'Home' },
-    { id: 'about', label: 'About' },
-    { id: 'practices', label: 'Practices' },
-    { id: 'token', label: 'Token' },
-    { id: 'community', label: 'Community' },
-  ];
+  // Section IDs for scroll detection
+  const sectionIds = ['hero', 'about', 'practices', 'token', 'community'];
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (scrollTop / docHeight) * 100;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
       setScrollProgress(progress);
 
       // Determine active section
-      const sectionElements = sections.map((s) => document.getElementById(s.id));
+      const sectionElements = sectionIds.map((id) => document.getElementById(id));
       const viewportMiddle = scrollTop + window.innerHeight / 2;
 
       for (let i = sectionElements.length - 1; i >= 0; i--) {
         const el = sectionElements[i];
         if (el && el.offsetTop <= viewportMiddle) {
-          setActiveSection(sections[i].id);
+          setActiveSection(sectionIds[i]);
           break;
         }
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial call
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -74,17 +70,16 @@ export default function Home() {
         />
       </div>
 
-      {/* Glassmorphic Top Navigation - hidden on mobile */}
+      {/* Glassmorphic Top Navigation - desktop only */}
       <div className="hidden md:block">
         <GlassNav
-          sections={sections}
           activeSection={activeSection}
           onNavigate={scrollToSection}
         />
       </div>
 
       {/* Content Sections */}
-      <div className="relative z-10 pb-24">
+      <div className="relative z-10 pb-20 md:pb-8">
         <HeroSection />
         <AboutSection />
         <PracticesSection />
@@ -93,7 +88,7 @@ export default function Home() {
         <Footer />
       </div>
 
-      {/* Glassmorphic Bottom Navigation */}
+      {/* Glassmorphic Bottom Navigation - mobile only */}
       <BottomNav 
         activeSection={activeSection} 
         onNavigate={scrollToSection} 
