@@ -104,7 +104,7 @@ export default function AboutSection() {
             {stats.map((stat, index) => (
               <div
                 key={stat.label}
-                className={`reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 sm:p-8 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-black/50 hover:border-vitae-green/30 transition-all cursor-default ${
+                className={`reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-vitae-green/30 transition-all cursor-default ${
                   index % 2 === 1 ? 'lg:translate-y-8' : ''
                 }`}
               >
