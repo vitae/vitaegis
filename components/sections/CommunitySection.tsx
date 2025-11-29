@@ -74,7 +74,7 @@ export default function CommunitySection() {
               <a
                 key={social.name}
                 href={social.href}
-                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-black/50 hover:border-white/20 text-center"
+                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-white/20 text-center"
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
                 {/* Icon */}
@@ -106,7 +106,7 @@ export default function CommunitySection() {
 
         {/* Newsletter Section */}
         <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-          <div className="relative p-8 sm:p-12 rounded-3xl bg-black/40 backdrop-blur-xl border border-vitae-green/20 overflow-hidden shadow-[0_0_40px_rgba(0,255,65,0.1)]">
+          <div className="relative p-8 sm:p-12 rounded-3xl bg-black/20 backdrop-blur-xl border border-vitae-green/20 overflow-hidden shadow-[0_0_40px_rgba(0,255,65,0.1)]">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div
@@ -142,7 +142,7 @@ export default function CommunitySection() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
-                      className="w-full px-6 py-4 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50 transition-colors"
+                      className="w-full px-6 py-4 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50 transition-colors"
                     />
                   </div>
                   <GlassButton variant="primary" size="lg">
