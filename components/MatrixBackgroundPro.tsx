@@ -264,12 +264,12 @@ export default function MatrixBackground() {
 
   return (
     <>
-      {/* Three.js container */}
-      <div ref={containerRef} className="fixed inset-0 -z-10" />
+      {/* Three.js container - z-0 so it's behind content (z-10) but visible */}
+      <div ref={containerRef} className="fixed inset-0 z-0" />
       
       {/* Scanlines overlay */}
       <div 
-        className="fixed inset-0 pointer-events-none -z-5"
+        className="fixed inset-0 pointer-events-none z-[1]"
         style={{
           background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px)',
           opacity: 0.3,
