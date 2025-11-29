@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import GlassContainer from '@/components/GlassContainer';
 
 export default function AboutSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -43,8 +44,8 @@ export default function AboutSection() {
     >
       <div className="max-w-7xl mx-auto w-full">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left Column - Text Content */}
-          <div>
+          {/* Left Column - Text Content in Glassmorphic Container */}
+          <GlassContainer variant="default" glow={true} className="p-6 sm:p-8 lg:p-10">
             {/* Section Label */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
               <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
@@ -96,14 +97,14 @@ export default function AboutSection() {
                 </svg>
               </button>
             </div>
-          </div>
+          </GlassContainer>
 
-          {/* Right Column - Stats Grid */}
+          {/* Right Column - Stats Grid with enhanced glassmorphic style */}
           <div className="grid grid-cols-2 gap-4 sm:gap-6">
             {stats.map((stat, index) => (
               <div
                 key={stat.label}
-                className={`reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 sm:p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-sm hover:bg-white/[0.05] hover:border-vitae-green/30 transition-all cursor-default ${
+                className={`reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 sm:p-8 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-black/50 hover:border-vitae-green/30 transition-all cursor-default ${
                   index % 2 === 1 ? 'lg:translate-y-8' : ''
                 }`}
               >
