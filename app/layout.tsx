@@ -53,10 +53,14 @@ export default function RootLayout({
         {/* Preconnect for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Jost font - closest free alternative to Futura */}
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" 
+          rel="stylesheet" 
+        />
       </head>
       <body
-        className="antialiased text-white overflow-x-hidden selection:bg-vitae-green selection:text-black"
-        style={{ fontFamily: "'Century Gothic', 'Avant Garde', sans-serif" }}
+        className="antialiased text-white overflow-x-hidden selection:bg-vitae-green selection:text-black font-futura"
       >
         <Providers>{children}</Providers>
         <SpeedInsights />
