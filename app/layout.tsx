@@ -55,7 +55,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body
-        className="antialiased bg-black text-white overflow-x-hidden selection:bg-vitae-green selection:text-black"
+        className="antialiased text-white overflow-x-hidden selection:bg-vitae-green selection:text-black"
         style={{ fontFamily: "'Century Gothic', 'Avant Garde', sans-serif" }}
       >
         <Providers>{children}</Providers>
