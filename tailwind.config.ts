@@ -9,9 +9,37 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Century Gothic', 'Avant Garde', 'sans-serif'],
-        display: ['Century Gothic', 'Avant Garde', 'sans-serif'],
-        body: ['Century Gothic', 'Avant Garde', 'sans-serif'],
+        futura: [
+          'Futura',
+          'Futura Medium',
+          'Futura-Medium',
+          'Jost',
+          'Century Gothic',
+          'CenturyGothic',
+          'AppleGothic',
+          'sans-serif',
+        ],
+        sans: [
+          'Futura',
+          'Futura Medium',
+          'Jost',
+          'Century Gothic',
+          'sans-serif',
+        ],
+        display: [
+          'Futura',
+          'Futura Medium',
+          'Jost',
+          'Century Gothic',
+          'sans-serif',
+        ],
+        body: [
+          'Futura',
+          'Futura Medium',
+          'Jost',
+          'Century Gothic',
+          'sans-serif',
+        ],
       },
       colors: {
         vitae: {
