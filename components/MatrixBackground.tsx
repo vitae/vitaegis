@@ -70,7 +70,7 @@ const matrixVertexShader = `
   varying float vIsCursor;
   varying float vGlyphIndex;
   varying float vDepthFade;
-  varying vec2 vUv;
+  
   
   // Sawtooth wave - core of Rezmason's raindrop animation
   // Creates non-colliding raindrops by modulating wave width
@@ -85,7 +85,7 @@ const matrixVertexShader = `
   }
   
   void main() {
-    vUv = uv;
+    
     
     // Unique seed per column/raindrop combination
     float columnSeed = aColumn * 0.173 + aRaindrop * 0.719;
@@ -173,7 +173,7 @@ const matrixFragmentShader = `
   varying float vIsCursor;
   varying float vGlyphIndex;
   varying float vDepthFade;
-  varying vec2 vUv;
+  
   
   // Noise for dithering (hides color banding - Rezmason technique)
   float random(vec2 st) {
@@ -367,16 +367,16 @@ function DepthFog() {
         uColor: { value: new THREE.Color(0x001500) },
       },
       vertexShader: `
-        varying vec2 vUv;
+        
         void main() {
-          vUv = uv;
+          
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
       fragmentShader: `
         uniform float uTime;
         uniform vec3 uColor;
-        varying vec2 vUv;
+        
         
         float noise(vec2 p) {
           return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
