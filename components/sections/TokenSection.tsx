@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { HiSwitchVertical, HiCog, HiInformationCircle } from 'react-icons/hi';
 import { SiEthereum } from 'react-icons/si';
 import { ConnectWalletButton } from '@/components/GlassButton';
+import GlassContainer from '@/components/GlassContainer';
 
 export default function TokenSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -41,8 +42,8 @@ export default function TokenSection() {
     >
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left Column - Token Info */}
-          <div>
+          {/* Left Column - Token Info in Glassmorphic Container */}
+          <GlassContainer variant="default" glow={true} className="p-6 sm:p-8 lg:p-10">
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
               <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
                 $VTGIS Token
@@ -72,7 +73,7 @@ export default function TokenSection() {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="p-4 rounded-2xl bg-white/[0.02] border border-white/10"
+                  className="p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/10"
                 >
                   <div className="text-xl sm:text-2xl font-bold text-white">
                     {stat.value}
@@ -86,7 +87,7 @@ export default function TokenSection() {
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6">
               <div className="flex items-center gap-2 text-sm text-white/50">
                 <span>Contract:</span>
-                <code className="px-3 py-1 rounded-lg bg-white/5 text-vitae-green font-mono text-xs">
+                <code className="px-3 py-1 rounded-lg bg-black/30 text-vitae-green font-mono text-xs">
                   0x1234...5678
                 </code>
                 <button className="text-white/50 hover:text-vitae-green transition-colors">
@@ -96,7 +97,7 @@ export default function TokenSection() {
                 </button>
               </div>
             </div>
-          </div>
+          </GlassContainer>
 
           {/* Right Column - Swap Interface */}
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
@@ -113,7 +114,7 @@ export default function TokenSection() {
               </div>
 
               {/* From Input */}
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 mb-2">
+              <div className="p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/5 mb-2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-white/50">From</span>
                   <span className="text-sm text-white/50">Balance: 2.45</span>
@@ -144,7 +145,7 @@ export default function TokenSection() {
               </div>
 
               {/* To Input */}
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 mt-2">
+              <div className="p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/5 mt-2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-white/50">To</span>
                   <span className="text-sm text-white/50">Balance: 125,000</span>
