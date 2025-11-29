@@ -73,7 +73,7 @@ export default function TokenSection() {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/10"
+                  className="p-4 rounded-2xl bg-black/15 backdrop-blur-sm border border-white/10"
                 >
                   <div className="text-xl sm:text-2xl font-bold text-white">
                     {stat.value}
@@ -87,7 +87,7 @@ export default function TokenSection() {
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6">
               <div className="flex items-center gap-2 text-sm text-white/50">
                 <span>Contract:</span>
-                <code className="px-3 py-1 rounded-lg bg-black/30 text-vitae-green font-mono text-xs">
+                <code className="px-3 py-1 rounded-lg bg-black/15 text-vitae-green font-mono text-xs">
                   0x1234...5678
                 </code>
                 <button className="text-white/50 hover:text-vitae-green transition-colors">
@@ -101,7 +101,7 @@ export default function TokenSection() {
 
           {/* Right Column - Swap Interface */}
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-            <div className="relative p-6 sm:p-8 rounded-3xl bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[0_0_60px_rgba(0,255,65,0.1)]">
+            <div className="relative p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-[0_0_60px_rgba(0,255,65,0.1)]">
               {/* Decorative glow */}
               <div className="absolute -top-px left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
@@ -114,7 +114,7 @@ export default function TokenSection() {
               </div>
 
               {/* From Input */}
-              <div className="p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/5 mb-2">
+              <div className="p-4 rounded-2xl bg-black/15 backdrop-blur-sm border border-white/5 mb-2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-white/50">From</span>
                   <span className="text-sm text-white/50">Balance: 2.45</span>
@@ -145,7 +145,7 @@ export default function TokenSection() {
               </div>
 
               {/* To Input */}
-              <div className="p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/5 mt-2">
+              <div className="p-4 rounded-2xl bg-black/15 backdrop-blur-sm border border-white/5 mt-2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-white/50">To</span>
                   <span className="text-sm text-white/50">Balance: 125,000</span>
