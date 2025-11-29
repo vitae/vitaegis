@@ -16,9 +16,9 @@ export default function GlassContainer({
   glow = false,
 }: GlassContainerProps) {
   const variants = {
-    default: 'bg-black/40 border-white/10',
-    subtle: 'bg-black/20 border-white/5',
-    prominent: 'bg-black/60 border-vitae-green/20',
+    default: 'bg-black/20 border-white/10',
+    subtle: 'bg-black/10 border-white/5',
+    prominent: 'bg-black/30 border-vitae-green/20',
   };
 
   return (
