@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FaDiscord, FaTwitter, FaTelegram, FaGithub, FaYoutube, FaMedium } from 'react-icons/fa';
 import GlassButton from '@/components/GlassButton';
+import GlassContainer from '@/components/GlassContainer';
 
 const socials = [
   { name: 'Discord', icon: FaDiscord, href: '#', members: '12.5K', color: '#5865F2' },
@@ -47,8 +48,8 @@ export default function CommunitySection() {
       className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16 sm:mb-20">
+        {/* Section Header in Glassmorphic Container */}
+        <GlassContainer variant="default" glow={true} className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto">
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
             <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
               Join the Movement
@@ -59,11 +60,11 @@ export default function CommunitySection() {
             Our <span className="text-vitae-green">Community</span>
           </h2>
 
-          <p className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-white/60 max-w-2xl mx-auto text-base sm:text-lg">
+          <p className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
             Connect with practitioners worldwide. Share your journey, learn from masters,
             and grow together in our vibrant ecosystem.
           </p>
-        </div>
+        </GlassContainer>
 
         {/* Social Links Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-16">
@@ -73,7 +74,7 @@ export default function CommunitySection() {
               <a
                 key={social.name}
                 href={social.href}
-                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-sm hover:bg-white/[0.05] hover:border-white/20 text-center"
+                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-black/50 hover:border-white/20 text-center"
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
                 {/* Icon */}
@@ -105,7 +106,7 @@ export default function CommunitySection() {
 
         {/* Newsletter Section */}
         <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-          <div className="relative p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-vitae-green/10 to-transparent border border-vitae-green/20 overflow-hidden">
+          <div className="relative p-8 sm:p-12 rounded-3xl bg-black/40 backdrop-blur-xl border border-vitae-green/20 overflow-hidden shadow-[0_0_40px_rgba(0,255,65,0.1)]">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div
@@ -116,6 +117,9 @@ export default function CommunitySection() {
                 }}
               />
             </div>
+            
+            {/* Top edge glow */}
+            <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
             <div className="relative grid lg:grid-cols-2 gap-8 items-center">
               {/* Left - Text */}
@@ -153,22 +157,24 @@ export default function CommunitySection() {
           </div>
         </div>
 
-        {/* Community Stats */}
-        <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-16 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-          {[
-            { value: '50K+', label: 'Community Members' },
-            { value: '120+', label: 'Countries' },
-            { value: '1M+', label: 'Practice Sessions' },
-            { value: '24/7', label: 'Active Support' },
-          ].map((stat) => (
-            <div key={stat.label}>
-              <div className="text-3xl sm:text-4xl font-bold text-vitae-green mb-1">
-                {stat.value}
+        {/* Community Stats in Glassmorphic Container */}
+        <GlassContainer variant="subtle" className="mt-16 p-6 sm:p-8">
+          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+            {[
+              { value: '50K+', label: 'Community Members' },
+              { value: '120+', label: 'Countries' },
+              { value: '1M+', label: 'Practice Sessions' },
+              { value: '24/7', label: 'Active Support' },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <div className="text-3xl sm:text-4xl font-bold text-vitae-green mb-1">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-white/50">{stat.label}</div>
               </div>
-              <div className="text-sm text-white/50">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </GlassContainer>
       </div>
     </section>
   );
