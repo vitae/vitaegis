@@ -109,7 +109,7 @@ export default function PracticesSection() {
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <div
-                  className="group relative h-full p-6 sm:p-8 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer"
+                  className="group relative h-full p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer"
                   style={{
                     boxShadow: isHovered
                       ? `0 0 40px ${practice.color}20, inset 0 0 40px ${practice.color}05`
@@ -212,7 +212,7 @@ export default function PracticesSection() {
 
         {/* Bottom CTA */}
         <div className="mt-16 text-center">
-          <button className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 text-white font-medium hover:bg-black/50 hover:border-vitae-green/30 transition-all duration-300 shadow-[0_0_20px_rgba(0,255,65,0.1)]">
+          <button className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 text-white font-medium hover:bg-black/25 hover:border-vitae-green/30 transition-all duration-300 shadow-[0_0_20px_rgba(0,255,65,0.1)]">
             <span>Explore All Practices</span>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
