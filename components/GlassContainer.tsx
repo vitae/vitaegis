@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - GlassContainer Component
@@ -13,6 +13,7 @@ interface GlassContainerProps {
   variant?: 'default' | 'subtle' | 'prominent';
   glow?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  style?: CSSProperties;
 }
 
 export default function GlassContainer({
@@ -21,6 +22,7 @@ export default function GlassContainer({
   variant = 'default',
   glow = false,
   padding = 'md',
+  style,
 }: GlassContainerProps) {
   // Instagram spacing: 4, 8, 12, 16px
   const paddingClasses = {
@@ -50,6 +52,7 @@ export default function GlassContainer({
       style={{
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         backdropFilter: 'blur(20px) saturate(180%)',
+        ...style,
       }}
     >
       {/* Top edge glow effect */}
