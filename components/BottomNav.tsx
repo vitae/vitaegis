@@ -1,12 +1,7 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup } from 'react-icons/hi';
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   VITAEGIS - BottomNav Component
-   Instagram-Level Tab Bar with Physics Animations
-   ═══════════════════════════════════════════════════════════════════════════════ */
 
 interface NavItem {
   id: string;
@@ -14,7 +9,6 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string; size?: number }>;
 }
 
-// Navigation items - matching Instagram's 5-tab structure
 const navItems: NavItem[] = [
   { id: 'hero', label: 'HOME', icon: HiHome },
   { id: 'about', label: 'ABOUT', icon: HiInformationCircle },
@@ -29,28 +23,12 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ activeSection = 'hero', onNavigate }: BottomNavProps) {
-  const [pressedId, setPressedId] = useState<string | null>(null);
-  const [bounceId, setBounceId] = useState<string | null>(null);
-  const lastTapRef = useRef<number>(0);
+  const [ripple, setRipple] = useState<string | null>(null);
 
-  // Handle touch with haptic-like visual feedback
-  const handleTouchStart = useCallback((id: string) => {
-    setPressedId(id);
-  }, []);
-
-  const handleTouchEnd = useCallback((id: string) => {
-    setPressedId(null);
+  const handleClick = (id: string) => {
+    setRipple(id);
+    setTimeout(() => setRipple(null), 300);
     
-    // Prevent double-tap
-    const now = Date.now();
-    if (now - lastTapRef.current < 300) return;
-    lastTapRef.current = now;
-
-    // Trigger bounce animation
-    setBounceId(id);
-    setTimeout(() => setBounceId(null), 300);
-
-    // Navigate
     if (onNavigate) {
       onNavigate(id);
     } else {
@@ -59,95 +37,78 @@ export default function BottomNav({ activeSection = 'hero', onNavigate }: Bottom
         element.scrollIntoView({ behavior: 'smooth' });
       }
     }
-  }, [onNavigate]);
+  };
 
   return (
     <nav 
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
-      role="navigation"
-      aria-label="Main navigation"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {/* Glass container with safe area */}
-      <div 
-        className="glass-nav separator-top"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
-        {/* Tab items container */}
-        <div className="flex items-stretch h-[49px]">
+      {/* Glassmorphic container */}
+      <div className="relative mx-2 mb-2 overflow-hidden rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl">
+        {/* Top edge glow */}
+        <div className="absolute -top-px left-1/2 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
+        
+        {/* Nav items */}
+        <div className="flex items-stretch justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
-            const isPressed = pressedId === item.id;
-            const isBouncing = bounceId === item.id;
-
+            
             return (
               <button
                 key={item.id}
-                onTouchStart={() => handleTouchStart(item.id)}
-                onTouchEnd={() => handleTouchEnd(item.id)}
-                onMouseDown={() => handleTouchStart(item.id)}
-                onMouseUp={() => handleTouchEnd(item.id)}
-                onMouseLeave={() => setPressedId(null)}
-                className="tab-item"
-                style={{
-                  transform: isPressed 
-                    ? 'scale(0.85) translateZ(0)' 
-                    : isBouncing 
-                      ? 'scale(1.1) translateZ(0)' 
-                      : 'scale(1) translateZ(0)',
-                  transition: isPressed 
-                    ? 'transform 0.1s ease-out' 
-                    : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                }}
-                aria-label={item.label}
-                aria-current={isActive ? 'page' : undefined}
+                onClick={() => handleClick(item.id)}
+                className={`
+                  relative flex flex-col items-center justify-center
+                  flex-1 py-3 min-h-[56px]
+                  transition-all duration-200 ease-out
+                  active:scale-95 active:opacity-80
+                  ${isActive 
+                    ? 'text-vitae-green' 
+                    : 'text-white/50'
+                  }
+                `}
               >
-                {/* Icon - wrapped in span for glow effect */}
-                <span
-                  className={`
-                    transition-all duration-200
-                    ${isActive ? 'text-vitae-green' : 'text-white/60'}
-                  `}
-                  style={{
-                    filter: isActive ? 'drop-shadow(0 0 8px rgba(0, 255, 65, 0.5))' : 'none',
-                  }}
-                >
-                  <Icon size={24} />
-                </span>
+                {/* Active background */}
+                {isActive && (
+                  <div className="absolute inset-x-2 inset-y-1 rounded-xl bg-vitae-green/10" />
+                )}
                 
-                {/* Label - Instagram style: 10px, medium weight */}
+                {/* Ripple effect */}
+                {ripple === item.id && (
+                  <div className="absolute inset-2 animate-ping rounded-xl bg-vitae-green/20" />
+                )}
+                
+                {/* Icon */}
+                <div className="relative z-10">
+                  <Icon 
+                    size={22} 
+                    className={`
+                      transition-transform duration-200
+                      ${isActive ? 'scale-110' : 'scale-100'}
+                    `}
+                  />
+                </div>
+                
+                {/* Label */}
                 <span 
                   className={`
-                    mt-[2px] text-[10px] font-medium tracking-wide
-                    transition-colors duration-200
-                    ${isActive ? 'text-vitae-green' : 'text-white/50'}
+                    relative z-10 mt-1 text-[10px] font-medium tracking-wider
+                    transition-opacity duration-200
+                    ${isActive ? 'opacity-100' : 'opacity-70'}
                   `}
                 >
                   {item.label}
                 </span>
-
-                {/* Active indicator dot */}
-                {isActive && (
-                  <div 
-                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-vitae-green"
-                    style={{
-                      boxShadow: '0 0 6px rgba(0, 255, 65, 0.8)',
-                    }}
-                  />
-                )}
               </button>
             );
           })}
         </div>
       </div>
-
-      {/* Ambient underglow */}
-      <div 
-        className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(0, 255, 65, 0.1) 0%, transparent 70%)',
-        }}
-      />
+      
+      {/* Ambient glow */}
+      <div className="absolute bottom-0 left-1/2 h-12 w-1/2 -translate-x-1/2 -z-10 bg-vitae-green/5 blur-2xl rounded-full pointer-events-none" />
     </nav>
   );
 }
