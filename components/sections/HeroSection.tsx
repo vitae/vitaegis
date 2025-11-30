@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import GlassContainer from '@/components/GlassContainer';
-import { useTouchFeedback, useIntersectionPreload } from '@/hooks/useNativeScroll';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - HeroSection Component
@@ -11,40 +10,60 @@ import { useTouchFeedback, useIntersectionPreload } from '@/hooks/useNativeScrol
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const { hasBeenVisible } = useIntersectionPreload(sectionRef);
-  
-  // Touch feedback for CTA buttons
-  const primaryCta = useTouchFeedback();
-  const secondaryCta = useTouchFeedback();
+  const [hasBeenVisible, setHasBeenVisible] = useState(false);
+  const [primaryPressed, setPrimaryPressed] = useState(false);
+  const [secondaryPressed, setSecondaryPressed] = useState(false);
+
+  // Intersection observer for fade-in animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setHasBeenVisible(true);
+          }
+        });
+      },
+      { rootMargin: '100px 0px', threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex flex-col items-center justify-center px-ig-4 sm:px-ig-6"
+      className="relative flex flex-col items-center justify-center px-4 sm:px-6"
       style={{ minHeight: '100dvh' }}
     >
       {/* Content container with safe area padding */}
-      <div className="w-full max-w-2xl flex flex-col items-center pt-safe">
+      <div 
+        className="w-full max-w-2xl flex flex-col items-center"
+        style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}
+      >
         
         {/* Badge - Instagram style pill */}
         <div 
           className={`
-            flex items-center gap-ig-2
-            px-ig-3 sm:px-ig-4 py-[6px] sm:py-ig-2
+            flex items-center gap-2
+            px-3 sm:px-4 py-1.5 sm:py-2
             rounded-full
-            bg-vitae-green/10
-            border border-vitae-green/30
-            mb-ig-4 sm:mb-ig-6
-            ${hasBeenVisible ? 'animate-fade-in-up' : 'opacity-0'}
+            bg-[#00ff00]/10
+            border border-[#00ff00]/30
+            mb-4 sm:mb-6
+            transition-all duration-500
+            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
           `}
-          style={{ animationDelay: '100ms' }}
+          style={{ transitionDelay: '100ms' }}
         >
           {/* Pulsing dot indicator */}
-          <div 
-            className="w-[6px] h-[6px] sm:w-ig-2 sm:h-ig-2 rounded-full bg-vitae-green animate-pulse-glow"
-          />
-          <span className="text-ig-xs font-medium text-vitae-green tracking-wider">
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#00ff00] animate-pulse" />
+          <span className="text-xs font-medium text-[#00ff00] tracking-wider">
             DECENTRALIZED VITALITY
           </span>
         </div>
@@ -52,14 +71,17 @@ export default function HeroSection() {
         {/* Main title with text gradient */}
         <h1 
           className={`
-            text-[40px] sm:text-6xl md:text-7xl lg:text-8xl
+            text-4xl sm:text-6xl md:text-7xl lg:text-8xl
             font-bold tracking-tight
             bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent
-            mb-ig-3 sm:mb-ig-4
-            drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]
-            ${hasBeenVisible ? 'animate-fade-in-up' : 'opacity-0'}
+            mb-3 sm:mb-4
+            transition-all duration-500
+            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
           `}
-          style={{ animationDelay: '200ms' }}
+          style={{ 
+            transitionDelay: '200ms',
+            textShadow: '0 0 60px rgba(255, 255, 255, 0.3)',
+          }}
         >
           VITAEGIS
         </h1>
@@ -67,12 +89,14 @@ export default function HeroSection() {
         {/* Animated underline */}
         <div 
           className={`
-            w-24 sm:w-32 h-px
-            bg-gradient-to-r from-transparent via-vitae-green to-transparent
-            mb-ig-4 sm:mb-ig-6
-            ${hasBeenVisible ? 'animate-fade-in-up' : 'opacity-0'}
+            w-24 sm:w-32 h-px mb-4 sm:mb-6
+            transition-all duration-500
+            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
           `}
-          style={{ animationDelay: '300ms' }}
+          style={{ 
+            transitionDelay: '300ms',
+            background: 'linear-gradient(90deg, transparent, #00ff00, transparent)',
+          }}
         />
 
         {/* Glassmorphic content card */}
@@ -82,71 +106,81 @@ export default function HeroSection() {
           padding="lg"
           className={`
             w-full
-            ${hasBeenVisible ? 'animate-fade-in-up' : 'opacity-0'}
+            transition-all duration-500
+            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
           `}
-          style={{ animationDelay: '400ms' }}
+          style={{ transitionDelay: '400ms' }}
         >
           {/* Tagline with Instagram spacing */}
-          <div className="flex flex-wrap items-center justify-center gap-ig-2 sm:gap-ig-3 mb-ig-4 sm:mb-ig-5">
-            <span className="text-ig-lg sm:text-ig-xl font-light text-vitae-green tracking-[0.15em] sm:tracking-[0.2em]">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+            <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               HEALTH
             </span>
-            <span className="text-ig-lg sm:text-ig-xl text-white/30">•</span>
-            <span className="text-ig-lg sm:text-ig-xl font-light text-white tracking-[0.15em] sm:tracking-[0.2em]">
+            <span className="text-lg sm:text-xl text-white/30">•</span>
+            <span className="text-lg sm:text-xl font-light text-white tracking-[0.15em] sm:tracking-[0.2em]">
               STEALTH
             </span>
-            <span className="text-ig-lg sm:text-ig-xl text-white/30">•</span>
-            <span className="text-ig-lg sm:text-ig-xl font-light text-vitae-green tracking-[0.15em] sm:tracking-[0.2em]">
+            <span className="text-lg sm:text-xl text-white/30">•</span>
+            <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               WEALTH
             </span>
           </div>
 
           {/* Description with Instagram typography */}
-          <p className="text-ig-sm sm:text-ig-base text-white/70 text-center leading-relaxed mb-ig-5 sm:mb-ig-6">
+          <p className="text-sm sm:text-base text-white/70 text-center leading-relaxed mb-5 sm:mb-6">
             Ancient wisdom meets cyberpunk technology. Transform your practice through the 
             convergence of Zen, Kundalini, Tai Chi, and Qi Gong—powered by Web3.
           </p>
 
           {/* CTA Buttons with touch feedback */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-ig-3 sm:gap-ig-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             {/* Primary CTA */}
             <button
-              {...primaryCta.handlers}
+              onTouchStart={() => setPrimaryPressed(true)}
+              onTouchEnd={() => setPrimaryPressed(false)}
+              onMouseDown={() => setPrimaryPressed(true)}
+              onMouseUp={() => setPrimaryPressed(false)}
+              onMouseLeave={() => setPrimaryPressed(false)}
               className="
                 w-full sm:w-auto
-                px-ig-5 sm:px-ig-6 py-ig-3
-                bg-vitae-green text-black
-                font-medium text-ig-sm sm:text-ig-base
-                rounded-ig-md
-                shadow-neon
-                transition-all duration-200 ease-ios-spring
-                active:shadow-none
+                px-5 sm:px-6 py-3
+                bg-[#00ff00] text-black
+                font-medium text-sm sm:text-base
+                rounded-lg
                 min-h-[44px]
-                touch-manipulation
-                gpu-accelerate
+                transition-all duration-200
               "
-              style={primaryCta.style}
+              style={{
+                transform: primaryPressed ? 'scale(0.97)' : 'scale(1)',
+                boxShadow: primaryPressed 
+                  ? 'none' 
+                  : '0 0 20px rgba(0, 255, 65, 0.5)',
+              }}
             >
               Enter the Matrix
             </button>
 
             {/* Secondary CTA */}
             <button
-              {...secondaryCta.handlers}
+              onTouchStart={() => setSecondaryPressed(true)}
+              onTouchEnd={() => setSecondaryPressed(false)}
+              onMouseDown={() => setSecondaryPressed(true)}
+              onMouseUp={() => setSecondaryPressed(false)}
+              onMouseLeave={() => setSecondaryPressed(false)}
               className="
                 w-full sm:w-auto
-                px-ig-5 sm:px-ig-6 py-ig-3
+                px-5 sm:px-6 py-3
                 bg-white/10 text-white
                 border border-white/20
-                font-medium text-ig-sm sm:text-ig-base
-                rounded-ig-md
-                transition-all duration-200 ease-ios-spring
-                hover:bg-white/15
+                font-medium text-sm sm:text-base
+                rounded-lg
                 min-h-[44px]
-                touch-manipulation
-                gpu-accelerate
+                transition-all duration-200
+                hover:bg-white/15
               "
-              style={secondaryCta.style}
+              style={{
+                transform: secondaryPressed ? 'scale(0.97)' : 'scale(1)',
+              }}
             >
               Read Whitepaper
             </button>
@@ -157,13 +191,14 @@ export default function HeroSection() {
       {/* Scroll indicator - positioned above bottom nav on mobile */}
       <div 
         className={`
-          absolute bottom-24 md:bottom-ig-8 left-1/2 -translate-x-1/2
-          flex flex-col items-center gap-ig-1
-          ${hasBeenVisible ? 'animate-float' : 'opacity-0'}
+          absolute bottom-24 md:bottom-8 left-1/2 -translate-x-1/2
+          flex flex-col items-center gap-1
+          transition-all duration-500
+          ${hasBeenVisible ? 'opacity-100' : 'opacity-0'}
         `}
-        style={{ animationDelay: '600ms' }}
+        style={{ transitionDelay: '600ms' }}
       >
-        <span className="text-ig-xs text-white/50 tracking-widest uppercase">
+        <span className="text-xs text-white/50 tracking-widest uppercase">
           Scroll
         </span>
         <svg 
