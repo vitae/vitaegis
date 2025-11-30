@@ -4,12 +4,38 @@ import { useRef, useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import GlassNav from '@/components/GlassNav';
 import BottomNav from '@/components/BottomNav';
-import { SkeletonHero, SkeletonSection } from '@/components/Skeleton';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Main Page
    Native iOS App Experience with Preloading & Optimistic UI
    ═══════════════════════════════════════════════════════════════════════════════ */
+
+// Simple skeleton component inline to avoid import issues
+function SkeletonHero() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen px-4">
+      <div className="w-40 h-8 rounded-full mb-6 bg-white/5 animate-pulse" />
+      <div className="w-64 sm:w-80 h-12 sm:h-16 rounded-lg mb-4 bg-white/5 animate-pulse" />
+      <div className="w-32 h-px mb-8 bg-white/5" />
+      <div className="w-full max-w-md h-48 rounded-2xl bg-white/5 animate-pulse" />
+    </div>
+  );
+}
+
+function SkeletonSection({ className = '' }: { className?: string }) {
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex items-center justify-between">
+        <div className="w-36 h-5 bg-white/5 animate-pulse rounded" />
+        <div className="w-20 h-4 bg-white/5 animate-pulse rounded" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-40 bg-white/5 animate-pulse rounded-xl" />
+        <div className="h-40 bg-white/5 animate-pulse rounded-xl" />
+      </div>
+    </div>
+  );
+}
 
 // Dynamic imports with skeleton loading states
 const MatrixBackground = dynamic(() => import('@/components/MatrixBackgroundPro'), {
@@ -46,32 +72,10 @@ export default function Home() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Section IDs for scroll detection
   const sectionIds = ['hero', 'about', 'practices', 'token', 'community'];
-
-  // Preload sections above and below viewport
-  useEffect(() => {
-    const preloadSections = () => {
-      const currentIndex = sectionIds.indexOf(activeSection);
-      
-      // Preload adjacent sections
-      [-1, 1, 2].forEach((offset) => {
-        const targetIndex = currentIndex + offset;
-        if (targetIndex >= 0 && targetIndex < sectionIds.length) {
-          const sectionId = sectionIds[targetIndex];
-          const element = document.getElementById(sectionId);
-          if (element) {
-            // Trigger intersection observer by scrolling element into near-viewport
-            element.style.contentVisibility = 'visible';
-          }
-        }
-      });
-    };
-
-    preloadSections();
-  }, [activeSection]);
 
   // Scroll handler with momentum detection
   useEffect(() => {
@@ -170,31 +174,31 @@ export default function Home() {
       {/* Main Content */}
       <main ref={containerRef} className="app-content relative z-10">
         <Suspense fallback={<SkeletonHero />}>
-          <section id="hero" className="preload-above">
+          <section id="hero">
             <HeroSection />
           </section>
         </Suspense>
 
         <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-          <section id="about" className="preload-below">
+          <section id="about">
             <AboutSection />
           </section>
         </Suspense>
 
         <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-          <section id="practices" className="preload-below">
+          <section id="practices">
             <PracticesSection />
           </section>
         </Suspense>
 
         <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-          <section id="token" className="preload-below">
+          <section id="token">
             <TokenSection />
           </section>
         </Suspense>
 
         <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-          <section id="community" className="preload-below">
+          <section id="community">
             <CommunitySection />
           </section>
         </Suspense>
