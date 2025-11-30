@@ -102,17 +102,18 @@ export default function BottomNav({ activeSection = 'hero', onNavigate }: Bottom
                 aria-label={item.label}
                 aria-current={isActive ? 'page' : undefined}
               >
-                {/* Icon */}
-                <Icon 
-                  size={24}
+                {/* Icon - wrapped in span for glow effect */}
+                <span
                   className={`
-                    transition-colors duration-200
+                    transition-all duration-200
                     ${isActive ? 'text-vitae-green' : 'text-white/60'}
                   `}
                   style={{
                     filter: isActive ? 'drop-shadow(0 0 8px rgba(0, 255, 65, 0.5))' : 'none',
                   }}
-                />
+                >
+                  <Icon size={24} />
+                </span>
                 
                 {/* Label - Instagram style: 10px, medium weight */}
                 <span 
