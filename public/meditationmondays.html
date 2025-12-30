@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meditation Mondays</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .orbitron {
+            font-family: Arial, sans-serif;
+        }
+        
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            opacity: 0.35;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .glass {
+            background: rgba(220, 38, 38, 0.08);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(220, 38, 38, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(220, 38, 38, 0.3),
+                        0 0 60px rgba(220, 38, 38, 0.2);
+        }
+        
+        .glass-purple {
+            background: rgba(185, 28, 28, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(185, 28, 28, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(185, 28, 28, 0.1);
+        }
+        
+        .glass-blue {
+            background: rgba(239, 68, 68, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.1);
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 20px rgba(220, 38, 38, 0.5),
+                         0 0 40px rgba(220, 38, 38, 0.3);
+        }
+        
+        .glow-text-purple {
+            text-shadow: 0 0 20px rgba(185, 28, 28, 0.5),
+                         0 0 40px rgba(185, 28, 28, 0.3);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+    <!-- Matrix Rain Canvas -->
+    <canvas id="matrix-canvas"></canvas>
+    
+    <!-- Main Content -->
+    <div class="content min-h-screen">
+        <!-- Hero Section -->
+        <div class="container mx-auto px-4 py-16 text-center">
+            <div class="mb-8 float">
+                <div class="text-6xl mb-4">🧘‍♀️</div>
+            </div>
+            
+            <h1 class="orbitron text-7xl font-black mb-4 glow-text gradient-text">
+                MEDITATION MONDAYS
+            </h1>
+            
+            <p class="text-3xl text-red-500 mb-8 orbitron tracking-wider font-semibold">
+                SUNSET SESSIONS
+            </p>
+            
+            <p class="text-white max-w-2xl mx-auto mb-12 text-lg leading-relaxed">
+                Where ancient wisdom meets modern science. Join us every Monday<br>for a journey through Meditation and Yoga to find inner peace.
+            </p>
+            
+            <div class="glass rounded-full mb-4 w-[600px] h-[600px] flex flex-col items-center justify-center mx-auto opacity-90 text-center">
+                <p class="text-5xl font-bold text-red-500 mb-8 whitespace-nowrap">EVERY MONDAY</p>
+                <p class="text-4xl text-red-500 mb-2">Meditation: 4:30 PM</p>
+                <p class="text-4xl text-red-500 mb-8">Yoga: 5:30 PM</p>
+                <p class="text-2xl text-red-500 mt-6">Le'ahi Beach Park</p>
+                <p class="text-2xl text-red-500">Waikiki, Hawaii</p>
+            </div>
+        </div>
+        
+        <!-- What to Expect Section -->
+        <div class="container mx-auto px-4 py-16">
+            <h2 class="orbitron text-4xl font-bold text-center mb-12 glow-text-purple gradient-text">
+                THE EXPERIENCE
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Card 1 -->
+                <div class="glass rounded-3xl p-8 hover:scale-105 transition-transform duration-300 text-center">
+                    <div class="text-5xl mb-4">🧘</div>
+                    <h3 class="text-2xl font-bold text-red-500 mb-4">Breathing Meditation</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Journey inward with breathwork and mindfulness techniques. Cultivate inner peace and mental clarity.
+                    </p>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="glass rounded-3xl p-8 hover:scale-105 transition-transform duration-300 text-center">
+                    <div class="text-5xl mb-4">🕉️</div>
+                    <h3 class="text-2xl font-bold text-red-500 mb-4">Gentle Yoga Flow</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Move through mindful poses that harmonize body and spirit. Perfect for all experience levels.
+                    </p>
+                </div>
+                
+                <!-- Card 3 -->
+                <div class="glass rounded-3xl p-8 hover:scale-105 transition-transform duration-300 text-center">
+                    <div class="text-5xl mb-4">✨</div>
+                    <h3 class="text-2xl font-bold text-red-500 mb-4">Community Circle</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Connect with like-minded souls. Share insights and build lasting connections in our supportive space.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Benefits Section -->
+        <div class="container mx-auto px-4 py-16">
+            <div class="glass rounded-3xl p-12 max-w-4xl mx-auto">
+                <h2 class="orbitron text-3xl font-bold text-center mb-8 text-red-500">
+                    ELEVATE YOUR MONDAYS
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-6 text-gray-300">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-red-500 text-xl">✓</span>
+                        <span>Reduce stress and anxiety</span>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-red-500 text-xl">✓</span>
+                        <span>Improve focus and clarity</span>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-red-500 text-xl">✓</span>
+                        <span>Increase physical flexibility</span>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-red-500 text-xl">✓</span>
+                        <span>Cultivate inner peace</span>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-red-500 text-xl">✓</span>
+                        <span>Enhance awareness</span>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-red-500 text-xl">✓</span>
+                        <span>Join a supportive community</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CTA Section -->
+        <div class="container mx-auto px-4 py-16 text-center">
+            <div class="glass-purple rounded-3xl p-12 max-w-2xl mx-auto">
+                <h2 class="orbitron text-4xl font-bold mb-6 glow-text gradient-text">
+                    BEGIN YOUR JOURNEY
+                </h2>
+                
+                <p class="text-gray-300 mb-8 text-lg">
+                    No experience necessary. Bring a mat, wear comfortable clothes, and come with an open heart.
+                </p>
+                
+                <div class="space-y-4">
+                    <div class="glass rounded-2xl p-6 inline-block">
+                        <p class="text-2xl font-bold text-red-500 mb-2">RSVP TODAY</p>
+                        <p class="text-gray-400">Call: (555) 123-4567</p>
+                        <p class="text-gray-400">Email: hello@meditationmondays.com</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="container mx-auto px-4 py-8 text-center text-gray-500 text-sm">
+            <p class="orbitron">PEACE • PRESENCE • POWER</p>
+            <p class="mt-2">© 2025 Meditation Mondays. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン禅meditation॰';
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = [];
+        
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * canvas.height / fontSize);
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#dc2626';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(draw, 33);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const newColumns = Math.floor(canvas.width / fontSize);
+            drops.length = 0;
+            for (let i = 0; i < newColumns; i++) {
+                drops[i] = Math.floor(Math.random() * canvas.height / fontSize);
+            }
+        });
+    </script>
+</body>
+</html>
