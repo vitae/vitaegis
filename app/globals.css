@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   VITAEGIS - Native App Experience
-   Instagram-Level Polish • iOS Native Feel
+   VITAEGIS - Global Styles
+   Ancient Wisdom × Cyberpunk Aesthetics
+   Health • Stealth • Wealth
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -15,473 +16,117 @@
   --vitae-black: #000000;
   --vitae-white: #ffffff;
   
-  /* Instagram spacing system (4px base) */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  
-  /* Instagram typography scale */
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-lg: 20px;
-  --text-xl: 24px;
-  --text-2xl: 28px;
-  
-  /* Instagram separator */
-  --separator: rgba(255, 255, 255, 0.15);
-  
-  /* Safe area insets */
+  /* Safe area insets for notched devices */
   --sat: env(safe-area-inset-top, 0px);
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
-  
-  /* Physics-based animation curves */
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
-  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ios-spring: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Base Reset - Native App Foundation
+   Base Styles - Native App Feel
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-*, *::before, *::after {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* Disable tap highlight */
+  /* Prevent text selection highlight on mobile */
   -webkit-tap-highlight-color: transparent;
-  /* GPU acceleration for all transforms */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 
 html {
-  /* Smooth scroll with iOS momentum */
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  /* Dynamic viewport height */
+  /* Use dynamic viewport height for mobile browsers */
   height: 100%;
   height: -webkit-fill-available;
-  /* Prevent overscroll bounce on html */
+  /* Prevent overscroll bounce */
   overscroll-behavior: none;
-  /* Text size adjust */
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
 }
 
 body {
-  font-family: 'Futura', 'Futura Medium', 'Jost', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  font-family: 'Futura', 'Futura Medium', 'Futura-Medium', 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
   font-weight: 500;
-  font-size: var(--text-base);
-  line-height: 1.5;
   background-color: var(--vitae-black);
   color: var(--vitae-white);
-  /* Font rendering */
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
   /* Prevent horizontal overflow */
   overflow-x: hidden;
-  /* Dynamic viewport */
+  /* Use dynamic viewport height */
   min-height: 100%;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
-  /* iOS-style overscroll - rubber band effect on content, not body */
-  overscroll-behavior-y: none;
-  /* Enable momentum scrolling */
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior: none;
+  /* Prevent pull-to-refresh */
+  overscroll-behavior-y: contain;
+  /* Enable momentum scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  /* Safe area padding */
-  padding: var(--sat) var(--sar) 0 var(--sal);
+  /* Padding for safe areas */
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-left: var(--sal);
 }
 
-/* Ensure font applied everywhere */
-h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select, label, div {
-  font-family: inherit;
+/* Ensure Futura Medium is applied everywhere */
+h1, h2, h3, h4, h5, h6,
+p, span, a, button, input, textarea, select, label, div {
+  font-family: 'Futura', 'Futura Medium', 'Futura-Medium', 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
   font-weight: 500;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   GPU-Accelerated Transforms & Transitions
+   Mobile App Container
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-.gpu-accelerate {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Promote elements to compositor layer */
-.will-change-transform {
-  will-change: transform;
-}
-
-.will-change-opacity {
-  will-change: opacity;
-}
-
-.will-change-scroll {
-  will-change: scroll-position;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   App Container - Native App Shell
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.app-shell {
+.app-container {
   position: relative;
   width: 100%;
+  min-height: 100vh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
-  display: flex;
-  flex-direction: column;
-  /* GPU layer */
-  transform: translateZ(0);
+  overflow-x: hidden;
 }
 
 .app-content {
-  flex: 1;
   position: relative;
   width: 100%;
-  /* iOS momentum scrolling */
-  -webkit-overflow-scrolling: touch;
-  /* Smooth rubber-band scroll */
-  overscroll-behavior-y: auto;
-  /* Bottom padding for tab bar */
+  /* Account for bottom nav on mobile */
   padding-bottom: calc(72px + var(--sab));
 }
 
 @media (min-width: 768px) {
   .app-content {
-    padding-bottom: var(--space-8);
-    overscroll-behavior-y: none;
+    padding-bottom: 2rem;
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Instagram Spacing Utilities
+   Scrollbar Styling
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-.space-1 { margin: var(--space-1); }
-.space-2 { margin: var(--space-2); }
-.space-3 { margin: var(--space-3); }
-.space-4 { margin: var(--space-4); }
-
-.p-ig-1 { padding: var(--space-1); }
-.p-ig-2 { padding: var(--space-2); }
-.p-ig-3 { padding: var(--space-3); }
-.p-ig-4 { padding: var(--space-4); }
-
-.gap-ig-1 { gap: var(--space-1); }
-.gap-ig-2 { gap: var(--space-2); }
-.gap-ig-3 { gap: var(--space-3); }
-.gap-ig-4 { gap: var(--space-4); }
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Instagram Typography Scale
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.text-ig-xs { font-size: var(--text-xs); line-height: 1.33; }
-.text-ig-sm { font-size: var(--text-sm); line-height: 1.43; }
-.text-ig-base { font-size: var(--text-base); line-height: 1.5; }
-.text-ig-lg { font-size: var(--text-lg); line-height: 1.4; }
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Instagram Separators (1px at 15% opacity)
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.separator {
-  height: 1px;
-  background-color: var(--separator);
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
-.separator-top {
-  border-top: 1px solid var(--separator);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.separator-bottom {
-  border-bottom: 1px solid var(--separator);
-}
-
-.separator-left {
-  border-left: 1px solid var(--separator);
-}
-
-.separator-right {
-  border-right: 1px solid var(--separator);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Physics-Based Animations
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-/* iOS Spring Animation */
-@keyframes ios-spring-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes ios-spring-out {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-}
-
-/* Tab bar bounce */
-@keyframes tab-bounce {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.92); }
-  100% { transform: scale(1); }
-}
-
-/* Rubber band effect */
-@keyframes rubber-band {
-  0% { transform: scaleY(1); }
-  30% { transform: scaleY(1.05); }
-  40% { transform: scaleY(0.95); }
-  50% { transform: scaleY(1.02); }
-  65% { transform: scaleY(0.98); }
-  75% { transform: scaleY(1.01); }
-  100% { transform: scaleY(1); }
-}
-
-/* Skeleton shimmer */
-@keyframes skeleton-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Pulse glow */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px var(--vitae-green-glow);
-  }
-  50% {
-    box-shadow: 0 0 40px var(--vitae-green), 0 0 60px var(--vitae-green-glow);
-  }
-}
-
-/* Float animation */
-@keyframes float {
-  0%, 100% { transform: translateY(0) translateZ(0); }
-  50% { transform: translateY(-10px) translateZ(0); }
-}
-
-/* Fade in up */
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px) translateZ(0);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) translateZ(0);
-  }
-}
-
-/* Animation classes */
-.animate-ios-spring-in {
-  animation: ios-spring-in 0.5s var(--ios-spring) forwards;
-}
-
-.animate-tab-bounce {
-  animation: tab-bounce 0.3s var(--spring);
-}
-
-.animate-rubber-band {
-  animation: rubber-band 0.6s var(--ease-out-expo);
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.6s var(--ease-out-expo) forwards;
-}
-
-/* Animation delays */
-.delay-75 { animation-delay: 75ms; }
-.delay-100 { animation-delay: 100ms; }
-.delay-150 { animation-delay: 150ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-500 { animation-delay: 500ms; }
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Skeleton Loaders
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+::-webkit-scrollbar-thumb {
+  background: var(--vitae-green-dim);
   border-radius: 4px;
 }
 
-.skeleton-text {
-  height: 14px;
-  width: 100%;
-  margin-bottom: 8px;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vitae-green);
 }
 
-.skeleton-text-sm {
-  height: 12px;
-  width: 80%;
-}
-
-.skeleton-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-}
-
-.skeleton-card {
-  height: 200px;
-  border-radius: 12px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Touch Interactions - Native Feel
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-/* Base interactive element */
-.touchable {
-  /* Minimum touch target (44pt iOS HIG) */
-  min-height: 44px;
-  min-width: 44px;
-  /* Prevent text selection on long press */
-  -webkit-user-select: none;
-  user-select: none;
-  /* Disable callouts on long press */
-  -webkit-touch-callout: none;
-  /* Prevent double-tap zoom */
-  touch-action: manipulation;
-  /* GPU layer for smooth transforms */
-  transform: translateZ(0);
-  /* Transition */
-  transition: transform 0.15s var(--ios-spring), opacity 0.15s ease;
-}
-
-/* Active/pressed state */
-.touchable:active {
-  transform: scale(0.97) translateZ(0);
-  opacity: 0.8;
-}
-
-/* Tab bar item */
-.tab-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  min-height: 49px;
-  padding: var(--space-2) var(--space-1);
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: manipulation;
-  transform: translateZ(0);
-  transition: transform 0.2s var(--spring);
-}
-
-.tab-item:active {
-  transform: scale(0.9) translateZ(0);
-}
-
-.tab-item.active {
-  color: var(--vitae-green);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Glass Effects
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.glass {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--separator);
-}
-
-.glass-heavy {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid var(--separator);
-}
-
-.glass-nav {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Neon Effects
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.neon-text {
-  color: var(--vitae-green);
-  text-shadow: 
-    0 0 5px var(--vitae-green-glow),
-    0 0 10px var(--vitae-green-glow),
-    0 0 20px var(--vitae-green-glow);
-}
-
-.neon-border {
-  border: 1px solid var(--vitae-green);
-  box-shadow: 
-    0 0 5px var(--vitae-green-glow),
-    inset 0 0 5px rgba(0, 255, 65, 0.1);
-}
-
-.neon-glow {
-  box-shadow: 
-    0 0 10px var(--vitae-green-glow),
-    0 0 20px var(--vitae-green-glow),
-    0 0 40px rgba(0, 255, 65, 0.3);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Scrollbar - Hidden on Mobile, Styled on Desktop
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-@media (max-width: 767px) {
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 768px) {
   ::-webkit-scrollbar {
     display: none;
   }
@@ -492,25 +137,8 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select, label, div 
   }
 }
 
-@media (min-width: 768px) {
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: var(--vitae-green-dim);
-    border-radius: 3px;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--vitae-green);
-  }
-  
+/* Firefox */
+@media (min-width: 769px) {
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--vitae-green-dim) transparent;
@@ -532,18 +160,15 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select, label, div 
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Focus States - Touch Device Optimized
+   Focus States
    ═══════════════════════════════════════════════════════════════════════════════ */
-
-:focus {
-  outline: none;
-}
 
 :focus-visible {
   outline: 2px solid var(--vitae-green);
   outline-offset: 2px;
 }
 
+/* Remove focus outline on touch devices */
 @media (hover: none) {
   :focus-visible {
     outline: none;
@@ -551,46 +176,191 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select, label, div 
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Safe Area Utilities
+   Touch Interactions
    ═══════════════════════════════════════════════════════════════════════════════ */
 
+button, a, [role="button"] {
+  /* Minimum touch target size */
+  min-height: 44px;
+  /* Prevent double-tap zoom */
+  touch-action: manipulation;
+}
+
+/* Active state for touch feedback */
+button:active, a:active, [role="button"]:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--vitae-green-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--vitae-green), 0 0 60px var(--vitae-green-glow);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Animation Classes */
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Animation Delays */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Glass Effect Utilities
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Neon Effects
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.neon-text {
+  color: var(--vitae-green);
+  text-shadow: 0 0 10px var(--vitae-green-glow), 0 0 20px var(--vitae-green-glow);
+}
+
+.neon-border {
+  border-color: var(--vitae-green);
+  box-shadow: 0 0 10px var(--vitae-green-glow), inset 0 0 10px rgba(0, 255, 65, 0.1);
+}
+
+.neon-glow {
+  box-shadow: 0 0 20px var(--vitae-green-glow), 0 0 40px rgba(0, 255, 65, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Custom Utilities
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--vitae-green) 0%, #4ade80 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hide scrollbar for specific elements */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area utilities */
 .pt-safe { padding-top: var(--sat); }
 .pb-safe { padding-bottom: var(--sab); }
 .pl-safe { padding-left: var(--sal); }
 .pr-safe { padding-right: var(--sar); }
 
-.mt-safe { margin-top: var(--sat); }
-.mb-safe { margin-bottom: var(--sab); }
-
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Optimistic UI States
+   Responsive Adjustments
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-.optimistic-loading {
-  opacity: 0.6;
-  pointer-events: none;
+@media (max-width: 768px) {
+  html {
+    font-size: 16px;
+  }
 }
 
-.optimistic-success {
-  animation: ios-spring-in 0.3s var(--ios-spring);
+@media (max-width: 375px) {
+  html {
+    font-size: 14px;
+  }
 }
 
-.optimistic-error {
-  animation: rubber-band 0.4s var(--ease-out-expo);
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Preload Hints
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-.preload-above,
-.preload-below {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 500px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   iOS 100vh Fix
+   Fix for iOS 100vh issue
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 @supports (-webkit-touch-callout: none) {
@@ -600,20 +370,5 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select, label, div 
   
   .h-screen {
     height: -webkit-fill-available;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Reduced Motion
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
