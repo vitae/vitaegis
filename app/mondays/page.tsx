@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import BuyTicketsButton from '@/components/BuyTicketsButton';
 
 export default function MondaysPage() {
   const [activeSection, setActiveSection] = useState('hero');
@@ -17,7 +16,10 @@ export default function MondaysPage() {
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 22 : 28;
-    const words = ['♥ MEDITATION ', '♥ MONDAYS ', '♥ ALOHA ', '♥ PEACE ', '♥ ZEN ', '♥ YOGA ', '♥ ENERGY ', '♥ BALANCE '];
+    const words = [
+      '♥ MEDITATION ', '♥ MONDAYS ', '♥ ALOHA ', '♥ PEACE ',
+      '♥ ZEN ', '♥ YOGA ', '♥ ENERGY ', '♥ BALANCE '
+    ];
 
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -25,7 +27,7 @@ export default function MondaysPage() {
     let drops = Array.from({ length: columns }, () => ({
       y: Math.random() * height / fontSize,
       word: words[Math.floor(Math.random() * words.length)],
-      index: Math.floor(Math.random() * words.length),
+      index: 0,
     }));
 
     const resize = () => {
@@ -44,7 +46,7 @@ export default function MondaysPage() {
       drops = Array.from({ length: columns }, () => ({
         y: Math.random() * height / fontSize,
         word: words[Math.floor(Math.random() * words.length)],
-        index: Math.floor(Math.random() * words.length),
+        index: 0,
       }));
     };
 
@@ -56,7 +58,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.7; // matrix speed
+        d.y += 0.7; // adjust speed
         if (d.y * fontSize > height && Math.random() > 0.9) d.y = 0;
       });
 
@@ -70,28 +72,6 @@ export default function MondaysPage() {
     return () => window.removeEventListener('resize', resize);
   }, []);
 
-  /* ================= NAV SYNC ================= */
-  useEffect(() => {
-    const sections = document.querySelectorAll('section[id]');
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) setActiveSection(entry.target.id);
-        });
-      },
-      { threshold: 0.6 }
-    );
-
-    sections.forEach(section => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
-
-  const handleNavigate = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   return (
     <>
       {/* Background */}
@@ -104,21 +84,21 @@ export default function MondaysPage() {
       />
 
       {/* Main Content */}
-      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+48px)] space-y-4">
+      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+48px)] space-y-4 flex flex-col items-center">
 
         {/* HERO */}
         <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow animate-pulse">
             <div className="p-6">
               <h1 className="text-6xl sm:text-6xl md:text-6xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
               </h1>
 
-              <p className="text-4xl sm:text-4xl text-red-400 tracking-wider mb-2">
+              <p className="text-3xl sm:text-4xl text-red-400 tracking-wider mb-2">
                 SUNSET SESSIONS
               </p>
 
-              <p className="text-xl sm:text-base text-white/80">
+              <p className="text-lg sm:text-base text-white/80">
                 Ancient wisdom. Aloha spirit.
               </p>
             </div>
@@ -127,12 +107,12 @@ export default function MondaysPage() {
 
         {/* PRACTICES */}
         <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow animate-pulse">
             <div className="p-6">
-              <h2 className="text-5xl sm:text-5xl font-bold mb-2 text-red-400">
+              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
                 EVERY MONDAY
               </h2>
-              <div className="space-y-1 text-lg sm:text-base">
+              <div className="space-y-1 text-base sm:text-lg">
                 <p>🧘 Meditation — 4:30 PM</p>
                 <p>🕉️ Yoga — 5:30 PM</p>
                 <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
@@ -145,17 +125,27 @@ export default function MondaysPage() {
 
         {/* COMMUNITY */}
         <section id="community" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
-            <div className="p-6">
-              <h2 className="text-5xl sm:text-5xl font-bold mb-2 text-red-400">
+          <div className="relative flex flex-col items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow animate-pulse">
+            <div className="p-6 flex flex-col items-center">
+              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
                 COMMUNITY CIRCLE
               </h2>
-              <p className="text-lg sm:text-base text-white/80 mb-4">
+              <p className="text-base sm:text-lg text-white/80 mb-4">
                 Open to all. Come as you are.
               </p>
 
               {/* Stripe Buy Tickets Button */}
-              <BuyTicketsButton />
+              <button
+                onClick={async () => {
+                  const res = await fetch('/api/checkout', { method: 'POST' });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                  else console.error('No URL returned from Stripe');
+                }}
+                className="rounded-xl border border-red-500/40 px-6 py-3 text-red-400 hover:bg-red-500/10 transition"
+              >
+                Buy Tickets!
+              </button>
             </div>
           </div>
         </section>
