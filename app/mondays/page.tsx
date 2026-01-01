@@ -17,7 +17,7 @@ export default function MondaysPage() {
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 22 : 28;
-    const words = ['♥ MEDITATION', '♥ MONDAYS', '♥ ALOHA', '♥ PEACE', '♥ MEDITATION', '♥ MONDAYS', '♥ ZEN', '♥ YOGA', '♥ ENERGY', '♥ BALANCE'];
+    const words = ['♥ MEDITATION ', '♥ MONDAYS ', '♥ ALOHA ', '♥ PEACE ', '♥ MEDITATION ', '♥ MONDAYS ', '♥ ZEN ', '♥ YOGA ', '♥ ENERGY ', '♥ BALANCE '];
 
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -56,7 +56,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.5; // matrix speed
+        d.y += 0.7; // matrix speed
         if (d.y * fontSize > height && Math.random() > 0.98) d.y = 0;
       });
 
@@ -110,15 +110,15 @@ export default function MondaysPage() {
         <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h1 className="text-6xl sm:text-6xl md:text-6xl font-black mb-2 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
+              <h1 className="text-6xl sm:text-6xl md:text-6xl font-black mb-2 bg-gradient-to-r from-red-600 to-red-300 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
               </h1>
 
-              <p className="text-lg sm:text-xl text-red-400 tracking-wider mb-2">
+              <p className="text-4x1 sm:text-xl text-red-400 tracking-wider mb-2">
                 Sunset Sessions
               </p>
 
-              <p className="text-sm sm:text-base text-white/80">
+              <p className="text-2x1 sm:text-base text-white/80">
                 Ancient wisdom. Aloha spirit.
               </p>
             </div>
@@ -132,7 +132,7 @@ export default function MondaysPage() {
               <h2 className="text-6xl sm:text-6xl font-bold mb-2 text-red-400">
                 EVERY MONDAY
               </h2>
-              <div className="space-y-1 text-sm sm:text-base">
+              <div className="space-y-1 text-4x1 sm:text-base">
                 <p>🧘 Meditation — 4:30 PM</p>
                 <p>🕉️ Yoga — 5:30 PM</p>
                 <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
@@ -147,10 +147,10 @@ export default function MondaysPage() {
         <section id="community" className="flex justify-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h2 className="text-6xl sm:text-3xl font-bold mb-2 text-red-400">
+              <h2 className="text-6xl sm:text-6xl font-bold mb-2 text-red-400">
                 Community Circle
               </h2>
-              <p className="text-sm sm:text-base text-white/80 mb-2">
+              <p className="text-4x1 sm:text-base text-white/80 mb-2">
                 Open to all. Come as you are.
               </p>
 
