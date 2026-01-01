@@ -56,7 +56,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.8; // matrix speed .75
+        d.y += 0.7; // matrix speed .75
         if (d.y * fontSize > height && Math.random() > 0.9) d.y = 0; //.98 og value
       });
 
@@ -110,15 +110,15 @@ export default function MondaysPage() {
         <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-600 to-red-300 bg-clip-text text-transparent">
+              <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
               </h1>
 
-              <p className="text-3x1 sm:text-4xl text-red-400 tracking-wider mb-2">
-                Sunset Sessions
+              <p className="text-5x1 sm:text-4xl text-red-400 tracking-wider mb-2">
+                SUNSET SESSIONS
               </p>
 
-              <p className="text-2x1 sm:text-base text-white/80">
+              <p className="text-3x1 sm:text-base text-white/80">
                 Ancient wisdom. Aloha spirit.
               </p>
             </div>
@@ -132,11 +132,11 @@ export default function MondaysPage() {
               <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
                 EVERY MONDAY
               </h2>
-              <div className="space-y-1 text-4x1 sm:text-base">
+              <div className="space-y-1 text-5x1 sm:text-base">
                 <p>🧘 Meditation — 4:30 PM</p>
                 <p>🕉️ Yoga — 5:30 PM</p>
                 <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
-                <p>Bring a mat and water.</p>
+                <p>Bring a mat and water</p>
                 <p>FREE</p>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function MondaysPage() {
               <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
                 COMMUNITY CIRCLE
               </h2>
-              <p className="text-4x1 sm:text-base text-white/80 mb-2">
+              <p className="text-5x1 sm:text-base text-white/80 mb-2">
                 Open to all. Come as you are.
               </p>
 
