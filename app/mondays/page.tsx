@@ -50,7 +50,6 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      // subtle motion trail
       ctx.fillStyle = 'rgba(0,0,0,0.05)';
       ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = '#ff4d4d';
@@ -58,7 +57,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.75; // 25% slower
+        d.y += 0.375; // 50% slower than before
         if (d.y * fontSize > height && Math.random() > 0.98) d.y = 0;
       });
 
@@ -113,7 +112,7 @@ export default function MondaysPage() {
 
         {/* HERO */}
         <section id="hero" className="min-h-[90vh] flex flex-col items-center justify-center px-4 text-center">
-          <div className="relative mx-auto p-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 max-w-3xl">
+          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-6 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
               MEDITATION MONDAYS
             </h1>
@@ -130,7 +129,7 @@ export default function MondaysPage() {
 
         {/* ABOUT */}
         <section id="about" className="flex justify-center px-6 text-center">
-          <div className="relative mx-auto p-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 max-w-3xl">
+          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
             <h2 className="text-3xl font-bold mb-6 text-red-400">
               The Experience
             </h2>
@@ -143,7 +142,7 @@ export default function MondaysPage() {
 
         {/* PRACTICES */}
         <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative mx-auto p-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 max-w-3xl">
+          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
             <h2 className="text-3xl font-bold mb-6 text-red-400">
               Mondays Schedule
             </h2>
@@ -157,7 +156,7 @@ export default function MondaysPage() {
 
         {/* COMMUNITY */}
         <section id="community" className="flex justify-center px-6 text-center">
-          <div className="relative mx-auto p-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 max-w-3xl">
+          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
             <h2 className="text-3xl font-bold mb-6 text-red-400">
               Community
             </h2>
