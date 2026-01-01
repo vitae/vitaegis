@@ -112,7 +112,7 @@ export default function MondaysPage() {
 
         {/* HERO */}
         <section id="hero" className="flex flex-col items-center justify-start px-4 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-2 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
@@ -131,7 +131,7 @@ export default function MondaysPage() {
 
         {/* PRACTICES */}
         <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
               <h2 className="text-4xl sm:text-3xl font-bold mb-2 text-red-400">
                 EVERY MONDAY
@@ -149,7 +149,7 @@ export default function MondaysPage() {
 
         {/* COMMUNITY */}
         <section id="community" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
               <h2 className="text-4xl sm:text-3xl font-bold mb-2 text-red-400">
                 Community Circle
