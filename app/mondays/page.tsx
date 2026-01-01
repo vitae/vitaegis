@@ -190,8 +190,8 @@ export default function MondaysPage() {
         <section id="community" className="flex flex-col items-center px-6 text-center space-y-4">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow p-6">
             <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
-            
-            {/* Stripe checkout form embedded */}
+            Buy Tickets
+            </h2>
             <CheckoutForm />
           </div>
         </section>
