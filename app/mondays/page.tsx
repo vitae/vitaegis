@@ -56,8 +56,8 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.7; // matrix speed
-        if (d.y * fontSize > height && Math.random() > 0.98) d.y = 0;
+        d.y += 0.8; // matrix speed .75
+        if (d.y * fontSize > height && Math.random() > 0.9) d.y = 0; //.98 og value
       });
 
       requestAnimationFrame(draw);
