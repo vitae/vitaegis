@@ -160,21 +160,38 @@ export default function MondaysPage() {
       <main className="relative z-10 text-white pt-20 space-y-8">
 
         {/* HERO */}
-        <section className="flex justify-center">
-          <div className="rounded-full w-80 h-80 md:w-[28rem] md:h-[28rem] red-glow flex items-center justify-center backdrop-blur-md border border-white/30">
-            <h1 className="text-4xl font-black bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
-              MEDITATION MONDAYS
-            </h1>
+        <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
+            <div className="p-6">
+              <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
+                MEDITATION MONDAYS
+              </h1>
+
+              <p className="text-5x1 sm:text-4xl text-red-400 tracking-wider mb-2">
+                SUNSET SESSIONS
+              </p>
+
+              <p className="text-3x1 sm:text-base text-white/80">
+                Ancient wisdom. Aloha spirit.
+              </p>
+            </div>
           </div>
         </section>
 
         {/* PRACTICES */}
-        <section className="flex justify-center">
-          <div className="rounded-full w-80 h-80 md:w-[28rem] md:h-[28rem] red-glow flex items-center justify-center backdrop-blur-md border border-white/30 text-center">
-            <div>
-              <p>🧘 Meditation — 4:30 PM</p>
-              <p>🕉️ Yoga — 5:30 PM</p>
-              <p className="text-red-400">Waikīkī</p>
+        <section id="practices" className="flex justify-center px-6 text-center">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
+            <div className="p-6">
+              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
+                EVERY MONDAY
+              </h2>
+              <div className="space-y-1 text-5x1 sm:text-base">
+                <p>🧘 Meditation — 4:30 PM</p>
+                <p>🕉️ Yoga — 5:30 PM</p>
+                <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
+                <p>Bring a mat and water</p>
+                <p>FREE</p>
+              </div>
             </div>
           </div>
         </section>
@@ -188,7 +205,7 @@ export default function MondaysPage() {
             className="
               relative flex flex-col items-center justify-center
               rounded-full red-glow backdrop-blur-md border border-white/30
-              w-80 sm:w-96 md:w-[28rem]
+              w-96 sm:w-96 md:w-[28rem]
               min-h-[28rem] sm:min-h-[32rem] md:min-h-[36rem]
               p-6
             "
