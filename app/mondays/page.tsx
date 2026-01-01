@@ -105,16 +105,7 @@ export default function MondaysPage() {
       {/* Matrix Canvas */}
       <canvas
         ref={canvasRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 0,
-          pointerEvents: 'none',
-          opacity: 0.3,
-        }}
+        className="fixed inset-0 w-screen h-screen z-0 opacity-30 pointer-events-none"
       />
 
       {/* Glass Navigation */}
