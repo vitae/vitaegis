@@ -190,11 +190,7 @@ export default function MondaysPage() {
         <section id="community" className="flex flex-col items-center px-6 text-center space-y-4">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow p-6">
             <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
-              COMMUNITY CIRCLE
-            </h2>
-            <p className="text-5x1 sm:text-base text-white/80 mb-2">
-              Open to all. Come as you are.
-            </p>
+            
             {/* Stripe checkout form embedded */}
             <CheckoutForm />
           </div>
