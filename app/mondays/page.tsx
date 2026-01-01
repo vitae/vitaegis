@@ -16,19 +16,23 @@ export default function MondaysPage() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const DPR = Math.min(window.devicePixelRatio || 1, 2); // cap for iPhone
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 22 : 28;
     const words = ['♥ MEDITATION', '♥ MONDAYS'];
 
-    let width = 0;
-    let height = 0;
-    let columns = 0;
-    let drops: { y: number; word: string; index: number }[] = [];
-    let raf: number;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let columns = Math.floor(width / fontSize);
+    let drops = Array.from({ length: columns }, () => ({
+      y: Math.random() * height / fontSize,
+      word: words[Math.floor(Math.random() * words.length)],
+      index: Math.floor(Math.random() * words.length),
+    }));
 
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
+      columns = Math.floor(width / fontSize);
 
       canvas.width = width * DPR;
       canvas.height = height * DPR;
@@ -38,21 +42,17 @@ export default function MondaysPage() {
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       ctx.font = `${fontSize}px monospace`;
 
-      columns = Math.floor(width / fontSize);
-      drops = Array.from({ length: columns }, () => {
-        const word = words[Math.floor(Math.random() * words.length)];
-        return {
-          y: Math.random() * height / fontSize,
-          word,
-          index: Math.floor(Math.random() * word.length),
-        };
-      });
+      drops = Array.from({ length: columns }, () => ({
+        y: Math.random() * height / fontSize,
+        word: words[Math.floor(Math.random() * words.length)],
+        index: Math.floor(Math.random() * words.length),
+      }));
     };
 
     let lastTime = 0;
     const draw = (time: number) => {
       if (time - lastTime < 90) {
-        raf = requestAnimationFrame(draw);
+        requestAnimationFrame(draw);
         return;
       }
       lastTime = time;
@@ -68,17 +68,14 @@ export default function MondaysPage() {
         if (d.y * fontSize > height && Math.random() > 0.975) d.y = 0;
       });
 
-      raf = requestAnimationFrame(draw);
+      requestAnimationFrame(draw);
     };
 
     resize();
     window.addEventListener('resize', resize);
-    raf = requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
 
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(raf);
-    };
+    return () => window.removeEventListener('resize', resize);
   }, []);
 
   /* ================= NAV SYNC ================= */
@@ -108,7 +105,16 @@ export default function MondaysPage() {
       {/* Matrix Canvas */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 z-0 opacity-30 pointer-events-none"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 0,
+          pointerEvents: 'none',
+          opacity: 0.3,
+        }}
       />
 
       {/* Glass Navigation */}
