@@ -57,7 +57,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.75; // original speed
+        d.y += 0.75; // matrix speed
         if (d.y * fontSize > height && Math.random() > 0.98) d.y = 0;
       });
 
@@ -108,21 +108,21 @@ export default function MondaysPage() {
       <GlassNav activeSection={activeSection} onNavigate={handleNavigate} />
 
       {/* Main Content */}
-      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+96px)] space-y-8">
+      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+48px)] space-y-4">
 
         {/* HERO */}
-        <section id="hero" className="min-h-[90vh] flex flex-col items-center justify-center px-4 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
-            <div className="p-4">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-2 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
+        <section id="hero" className="flex flex-col items-center justify-start px-4 text-center">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
+            <div className="p-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-2 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
               </h1>
 
-              <p className="text-sm sm:text-lg text-red-400 tracking-wider mb-2">
+              <p className="text-lg sm:text-xl text-red-400 tracking-wider mb-2">
                 Sunset Sessions
               </p>
 
-              <p className="text-xs sm:text-sm text-white/80">
+              <p className="text-sm sm:text-base text-white/80">
                 Ancient wisdom. Modern science. Presence by the sea.
               </p>
             </div>
@@ -131,12 +131,12 @@ export default function MondaysPage() {
 
         {/* ABOUT */}
         <section id="about" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
-            <div className="p-4">
-              <h2 className="text-xl sm:text-2xl font-bold mb-2 text-red-400">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
+            <div className="p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
                 The Experience
               </h2>
-              <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+              <p className="text-sm sm:text-base text-white/80 leading-relaxed">
                 Breath-led meditation, gentle yoga flow, and intentional
                 community connection in one of Oʻahu’s most beautiful settings.
               </p>
@@ -146,12 +146,12 @@ export default function MondaysPage() {
 
         {/* PRACTICES */}
         <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
-            <div className="p-4">
-              <h2 className="text-xl sm:text-2xl font-bold mb-2 text-red-400">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
+            <div className="p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
                 Mondays Schedule
               </h2>
-              <div className="space-y-1 text-xs sm:text-sm">
+              <div className="space-y-1 text-sm sm:text-base">
                 <p>🧘 Meditation — 4:30 PM</p>
                 <p>🕉️ Yoga — 5:30 PM</p>
                 <p className="text-red-400">Lē&apos;ahi Beach Park · Waikīkī</p>
@@ -162,12 +162,12 @@ export default function MondaysPage() {
 
         {/* COMMUNITY */}
         <section id="community" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
-            <div className="p-4">
-              <h2 className="text-xl sm:text-2xl font-bold mb-2 text-red-400">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
+            <div className="p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
                 Community
               </h2>
-              <p className="text-xs sm:text-sm text-white/80 mb-2">
+              <p className="text-sm sm:text-base text-white/80 mb-2">
                 Open to all levels. Free. Come as you are.
               </p>
 
