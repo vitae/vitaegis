@@ -49,15 +49,9 @@ export default function MondaysPage() {
       }));
     };
 
-    let lastTime = 0;
-    const draw = (time: number) => {
-      if (time - lastTime < 90) {
-        requestAnimationFrame(draw);
-        return;
-      }
-      lastTime = time;
-
-      ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    const draw = () => {
+      // subtle clear for motion trail
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
       ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = '#dc2626';
 
@@ -102,10 +96,10 @@ export default function MondaysPage() {
 
   return (
     <>
-      {/* Matrix Canvas */}
+      {/* Matrix Canvas - z-index between background and content */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 w-screen h-screen z-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-30"
       />
 
       {/* Glass Navigation */}
