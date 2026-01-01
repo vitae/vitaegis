@@ -1,21 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import GlassNav from '@/components/GlassNav';
 
 export default function MondaysPage() {
   const [activeSection, setActiveSection] = useState('hero');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   /* ================= MATRIX CANVAS ================= */
   useEffect(() => {
-    const canvas = document.getElementById('matrix') as HTMLCanvasElement | null;
+    const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const DPR = Math.min(window.devicePixelRatio || 1, 2); // cap DPR for iPhone heat
+    const DPR = Math.min(window.devicePixelRatio || 1, 2); // cap for iPhone
     const fontSize = window.innerWidth < 768 ? 22 : 28;
     const words = ['♥ MEDITATION', '♥ MONDAYS'];
 
@@ -86,9 +87,7 @@ export default function MondaysPage() {
     const observer = new IntersectionObserver(
       entries => {
         entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
         });
       },
       { threshold: 0.6 }
@@ -106,16 +105,16 @@ export default function MondaysPage() {
 
   return (
     <>
-      {/* Matrix */}
+      {/* Matrix Canvas */}
       <canvas
-        id="matrix"
+        ref={canvasRef}
         className="fixed inset-0 z-0 opacity-30 pointer-events-none"
       />
 
       {/* Glass Navigation */}
       <GlassNav activeSection={activeSection} onNavigate={handleNavigate} />
 
-      {/* Content */}
+      {/* Main Content */}
       <main className="relative z-10 bg-black text-white pt-[calc(env(safe-area-inset-top)+96px)]">
 
         {/* HERO */}
@@ -177,6 +176,7 @@ export default function MondaysPage() {
             ← Back to Home
           </Link>
         </section>
+
       </main>
     </>
   );
