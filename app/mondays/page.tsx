@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
+import BuyTicketsButton from '@/components/BuyTicketsButton';
 
 export default function MondaysPage() {
   const [activeSection, setActiveSection] = useState('hero');
@@ -17,7 +17,7 @@ export default function MondaysPage() {
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 22 : 28;
-    const words = ['♥ MEDITATION ', '♥ MONDAYS ', '♥ ALOHA ', '♥ PEACE ', '♥ MEDITATION ', '♥ MONDAYS ', '♥ ZEN ', '♥ YOGA ', '♥ ENERGY ', '♥ BALANCE '];
+    const words = ['♥ MEDITATION ', '♥ MONDAYS ', '♥ ALOHA ', '♥ PEACE ', '♥ ZEN ', '♥ YOGA ', '♥ ENERGY ', '♥ BALANCE '];
 
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -56,7 +56,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.7;
+        d.y += 0.7; // matrix speed
         if (d.y * fontSize > height && Math.random() > 0.9) d.y = 0;
       });
 
@@ -92,17 +92,6 @@ export default function MondaysPage() {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  /* ================= STRIPE BUTTON HANDLER ================= */
-  const handleBuyTickets = async () => {
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity: 1 }),
-    });
-    const data = await res.json();
-    window.location.href = data.url;
-  };
-
   return (
     <>
       {/* Background */}
@@ -121,15 +110,15 @@ export default function MondaysPage() {
         <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
+              <h1 className="text-6xl sm:text-6xl md:text-6xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
               </h1>
 
-              <p className="text-5x1 sm:text-4xl text-red-400 tracking-wider mb-2">
+              <p className="text-4xl sm:text-4xl text-red-400 tracking-wider mb-2">
                 SUNSET SESSIONS
               </p>
 
-              <p className="text-3x1 sm:text-base text-white/80">
+              <p className="text-xl sm:text-base text-white/80">
                 Ancient wisdom. Aloha spirit.
               </p>
             </div>
@@ -140,10 +129,10 @@ export default function MondaysPage() {
         <section id="practices" className="flex justify-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
+              <h2 className="text-5xl sm:text-5xl font-bold mb-2 text-red-400">
                 EVERY MONDAY
               </h2>
-              <div className="space-y-1 text-5x1 sm:text-base">
+              <div className="space-y-1 text-lg sm:text-base">
                 <p>🧘 Meditation — 4:30 PM</p>
                 <p>🕉️ Yoga — 5:30 PM</p>
                 <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
@@ -158,20 +147,15 @@ export default function MondaysPage() {
         <section id="community" className="flex justify-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
+              <h2 className="text-5xl sm:text-5xl font-bold mb-2 text-red-400">
                 COMMUNITY CIRCLE
               </h2>
-              <p className="text-5x1 sm:text-base text-white/80 mb-2">
+              <p className="text-lg sm:text-base text-white/80 mb-4">
                 Open to all. Come as you are.
               </p>
 
               {/* Stripe Buy Tickets Button */}
-              <button
-                onClick={handleBuyTickets}
-                className="inline-block rounded-xl border border-red-500/40 px-4 py-2 text-red-400 hover:bg-red-500/10 transition"
-              >
-                Buy Tickets!
-              </button>
+              <BuyTicketsButton />
             </div>
           </div>
         </section>
