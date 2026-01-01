@@ -2,13 +2,14 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import '@rainbow-me/rainbowkit/styles.css';
 import Providers from '@/components/Providers';
+import MatrixRainPro from '@/components/MatrixRainPro';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'VITAEGIS | Health • Stealth • Wealth',
   description:
-    'Ancient wisdom meets cyberpunk technology. Transform your practice through Zen, Kundalini Yoga, Tai Chi, and Qi Gong—powered by Web3.',
+    'Ancient wisdom meets Cyberspirituality. Evolve your energy through the convergence of Zen Meditation, Kundalini Yoga, Yang Tai Chi, and Qi Gong.',
   keywords: [
     'Vitaegis',
     'Web3',
@@ -33,14 +34,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'VITAEGIS | Health • Stealth • Wealth',
     description:
-      'Ancient wisdom meets cyberpunk technology. Transform your practice through Web3.',
+      'Ancient wisdom meets Cyberspirituality. Evolve your energy through the convergence of Zen Meditation, Kundalini Yoga, Yang Tai Chi, and Qi Gong.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'VITAEGIS | Health • Stealth • Wealth',
     description:
-      'Ancient wisdom meets cyberpunk technology. Transform your practice through Web3.',
+      'Ancient wisdom meets Cyberspirituality. Evolve your energy through the convergence of Zen Meditation, Kundalini Yoga, Yang Tai Chi, and Qi Gong.',
   },
 };
 
@@ -77,9 +78,16 @@ export default function RootLayout({
         <meta name="x-ua-compatible" content="IE=edge" />
       </head>
       <body className="antialiased text-white selection:bg-vitae-green selection:text-black font-futura">
-        <Providers>{children}</Providers>
-        <SpeedInsights />
-        <Analytics />
+        {/* MatrixRainPro background */}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+          <MatrixRainPro opacity={0.5} />
+        </div>
+        {/* Main app content */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Providers>{children}</Providers>
+          <SpeedInsights />
+          <Analytics />
+        </div>
       </body>
     </html>
   );

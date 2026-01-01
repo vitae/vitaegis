@@ -102,11 +102,11 @@ export default function Home() {
           // Track scrolling state for UI effects
           setIsScrolling(true);
           if (scrollTimeoutRef.current) {
-            clearTimeout(scrollTimeoutRef.current);
+            clearTimeout(scrollTimeoutRef.current as unknown as number);
           }
           scrollTimeoutRef.current = setTimeout(() => {
             setIsScrolling(false);
-          }, 150);
+          }, 150) as unknown as NodeJS.Timeout;
 
           ticking = false;
         });

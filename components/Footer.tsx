@@ -1,12 +1,12 @@
 'use client';
 
-import { FaDiscord, FaTwitter, FaTelegram, FaGithub } from 'react-icons/fa';
+import { FaDiscord, FaTwitter, FaTelegram, FaGithub, FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa';
 
 const footerLinks = {
-  Product: ['Features', 'Token', 'Roadmap', 'Whitepaper'],
-  Practices: ['Zen', 'Kundalini', 'Tai Chi', 'Qi Gong'],
-  Resources: ['Documentation', 'API', 'Tutorials', 'Blog'],
-  Company: ['About', 'Careers', 'Press', 'Contact'],
+  Products: ['Features', 'Green Tea', 'Books'],
+  Practices: ['Meditation', 'Yoga', 'Tai Chi'],
+  Resources: ['Documentation', 'Videos', 'Tutorials'],
+  Company: ['About', 'Mission', 'Contact'],
 };
 
 export default function Footer() {
@@ -24,17 +24,17 @@ export default function Footer() {
               <span className="text-xl font-semibold tracking-wider">VITAEGIS</span>
             </div>
             <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
-              Ancient wisdom meets cyberpunk technology. Transform your practice
-              through the power of Web3.
+              Ancient wisdom meets Cyberspirituality. Evolve your energy with Meditation, Yoga, and Tai Chi.
             </p>
 
             {/* Social Links */}
             <div className="flex gap-3">
               {[
+                { icon: FaFacebook, href: 'https://facebook.com/vitaegis' },
+                { icon: FaInstagram, href: 'https://instagram.com/vitaegis' },
+                { icon: FaYoutube, href: 'https://youtube.com/vitaegis' },
+                { icon: FaTwitter, href: 'https://x.com/vitaegis' },
                 { icon: FaDiscord, href: '#' },
-                { icon: FaTwitter, href: '#' },
-                { icon: FaTelegram, href: '#' },
-                { icon: FaGithub, href: '#' },
               ].map((social, i) => {
                 const Icon = social.icon;
                 return (
@@ -91,7 +91,7 @@ export default function Footer() {
 
         {/* Decorative element */}
         <div className="mt-8 flex justify-center">
-          <div className="text-vitae-green/20 text-xs tracking-[0.5em] uppercase">
+          <div className="text-[#00ff00]/80 text-xs tracking-[0.5em] uppercase">
             Health • Stealth • Wealth
           </div>
         </div>

@@ -1,7 +1,9 @@
 "use client";
 
+
 import Link from "next/link";
 import { motion } from "framer-motion";
+import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   return (
@@ -24,10 +26,10 @@ export default function Navbar() {
           </div>
           <div className="flex flex-col">
             <span className="font-semibold text-[#00ff6a] neon-text-subtle tracking-wide">
-              Vitaegis
+              
             </span>
             <span className="text-[10px] text-gray-500 tracking-[0.2em] uppercase">
-              Vitality
+      
             </span>
           </div>
         </Link>
@@ -37,24 +39,11 @@ export default function Navbar() {
           <NavLink href="/shop">Shop</NavLink>
           <NavLink href="/about">About</NavLink>
           <NavLink href="/contact">Contact</NavLink>
+          <NavLink href="/classes">Classes</NavLink>
         </nav>
 
-        {/* Mobile Menu Button */}
-        <button className="md:hidden text-gray-400 hover:text-white">
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
+        {/* Mobile Menu Button & Menu */}
+        <MobileMenu />
       </div>
     </motion.header>
   );

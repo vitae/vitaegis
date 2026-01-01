@@ -5,14 +5,7 @@ const nextConfig = {
   images: {
     domains: [],
   },
-  // Optimize for Three.js
-  webpack: (config) => {
-    config.externals.push({
-      'utf-8-validate': 'commonjs utf-8-validate',
-      bufferutil: 'commonjs bufferutil',
-    });
-    return config;
-  },
+  // No custom experimental options needed for Turbopack in Next.js 14+
 };
 
 module.exports = nextConfig;

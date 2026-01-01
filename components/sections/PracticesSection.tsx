@@ -1,50 +1,40 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { GiMeditation, GiYinYang, GiSpiralArrow, GiLotus } from 'react-icons/gi';
+import { GiMeditation, GiYinYang, GiLotus, GiLotusFlower } from 'react-icons/gi';
 import GlassContainer from '@/components/GlassContainer';
 
 const practices = [
   {
     id: 'zen',
-    name: 'Zen',
+    name: 'Zen Meditation',
     subtitle: '禅',
     description:
-      'Cultivate mindfulness through seated meditation. Find clarity in stillness and awareness in every breath.',
+      'Cultivate awareness through breathing exercises. Find clarity in stillness and peace in every breath.',
     icon: GiMeditation,
     color: '#00ff00',
-    benefits: ['Mental Clarity', 'Stress Relief', 'Present Awareness'],
+    benefits: ['Mental Clarity', 'Stress Relief', 'Inner Peace'],
   },
   {
-    id: 'kundalini',
-    name: 'Kundalini',
+    id: 'yoga',
+    name: 'Kundalini Yoga',
     subtitle: 'कुण्डलिनी',
     description:
-      'Awaken dormant energy through dynamic breathwork and movement. Unlock your spiritual potential.',
-    icon: GiSpiralArrow,
-    color: '#ff6b35',
-    benefits: ['Energy Activation', 'Chakra Balance', 'Spiritual Growth'],
+      'Awaken dormant energy through dynamic movement. Unlock your spiritual potential.',
+    icon: GiLotus,
+    color: '#ff00ff',
+    benefits: ['Flexibility', 'Chakra Tuning', 'Spiritual Growth'],
   },
   {
     id: 'taichi',
-    name: 'Tai Chi',
+    name: 'Yang Tai Chi',
     subtitle: '太極',
     description:
-      'Flow through ancient movements that harmonize body and mind. Experience moving meditation.',
+      'Master the Art of Energy. Flow through ancient movements that harmonize body and mind.',
     icon: GiYinYang,
     color: '#4ecdc4',
-    benefits: ['Balance', 'Flexibility', 'Inner Peace'],
-  },
-  {
-    id: 'qigong',
-    name: 'Qi Gong',
-    subtitle: '氣功',
-    description:
-      'Master the art of energy cultivation. Strengthen your life force through intentional practice.',
-    icon: GiLotus,
-    color: '#a855f7',
-    benefits: ['Vitality', 'Healing', 'Longevity'],
-  },
+    benefits: ['Balance', 'Energy', 'Vitality'],
+  }
 ];
 
 export default function PracticesSection() {
@@ -84,32 +74,32 @@ export default function PracticesSection() {
         {/* Section Header in Glassmorphic Container */}
         <GlassContainer variant="default" glow={true} className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto">
           <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
-            The Four Pillars
+            The Three Pillars
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold">
             Ancient <span className="text-vitae-green">Practices</span>
           </h2>
           <p className="mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
-            Master the four foundational disciplines that form the core of Vitaegis.
-            Each practice earns unique rewards and unlocks deeper levels of engagement.
+            Master the foundational disciplines that form the core of Vitaegis.
+            Each practice provides unique rewards and unlocks higher levels of evolution.
           </p>
         </GlassContainer>
 
         {/* Practice Cards Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-12">
           {practices.map((practice) => {
-            const Icon = practice.icon;
+            const Icon = practice.icon as React.ComponentType<any>;
             const isHovered = hoveredCard === practice.id;
 
             return (
               <div
                 key={practice.id}
-                className="practice-card opacity-0 translate-y-8 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0"
-                onMouseEnter={() => setHoveredCard(practice.id)}
+                className="practice-card flex justify-center items-center opacity-0 translate-y-8 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0"
+                onMouseEnter={() => setHoveredCard(practice.id ?? null)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <div
-                  className="group relative h-full p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer"
+                  className="group relative flex flex-col items-center justify-center w-[440px] h-[440px] sm:w-[440px] sm:h-[440px] rounded-full bg-black/3 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer text-center"
                   style={{
                     boxShadow: isHovered
                       ? `0 0 40px ${practice.color}20, inset 0 0 40px ${practice.color}05`
@@ -125,30 +115,28 @@ export default function PracticesSection() {
                   />
 
                   {/* Icon */}
-                  <div className="relative mb-6">
+                  <div className="relative mb-6 flex flex-col items-center justify-center">
                     <div
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 border-2"
                       style={{
                         background: `linear-gradient(135deg, ${practice.color}20 0%, transparent 100%)`,
-                        border: `1px solid ${practice.color}30`,
+                        border: `2px solid ${practice.color}30`,
                       }}
                     >
-                      <Icon
-                        className="w-8 h-8 sm:w-10 sm:h-10 transition-all duration-500"
-                        style={{ color: practice.color }}
-                      />
+                      <Icon size={48} color={practice.color} />
                     </div>
 
                     {/* Floating glow */}
+
                     <div
-                      className="absolute inset-0 rounded-2xl blur-2xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"
+                      className="absolute inset-0 rounded-full blur-2xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"
                       style={{ background: practice.color }}
                     />
                   </div>
 
                   {/* Content */}
-                  <div className="relative">
-                    <div className="flex items-baseline gap-3 mb-2">
+                  <div className="relative flex flex-col items-center justify-center">
+                    <div className="flex flex-col items-center justify-center gap-1 mb-2">
                       <h3 className="text-xl sm:text-2xl font-bold text-white group-hover:text-white transition-colors">
                         {practice.name}
                       </h3>
@@ -160,12 +148,12 @@ export default function PracticesSection() {
                       </span>
                     </div>
 
-                    <p className="text-white/60 text-sm sm:text-base leading-relaxed mb-6">
+                    <p className="text-white/60 text-sm sm:text-base leading-relaxed mb-6 text-center">
                       {practice.description}
                     </p>
 
                     {/* Benefits */}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-center gap-2">
                       {practice.benefits.map((benefit) => (
                         <span
                           key={benefit}

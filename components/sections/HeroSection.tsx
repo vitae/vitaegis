@@ -62,16 +62,16 @@ export default function HeroSection() {
           style={{ transitionDelay: '100ms' }}
         >
           {/* Pulsing dot indicator */}
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#00ff00] animate-pulse" />
-          <span className="text-xs font-medium text-[#00ff00] tracking-wider">
-            DECENTRALIZED VITALITY
+          <div className="w-3 h-3 sm:w-3 sm:h-3 rounded-full bg-[#00ff00] animate-pulse" />
+          <span className="text-xs font-large text-[#00ff00] tracking-wider">
+            VITALITY
           </span>
         </div>
 
         {/* Main title with text gradient */}
         <h1 
           className={`
-            text-4xl sm:text-6xl md:text-7xl lg:text-8xl
+            text-6xl sm:text-6xl md:text-7xl lg:text-8xl
             font-bold tracking-tight
             bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent
             mb-3 sm:mb-4
@@ -80,7 +80,7 @@ export default function HeroSection() {
           `}
           style={{ 
             transitionDelay: '200ms',
-            textShadow: '0 0 60px rgba(255, 255, 255, 0.3)',
+            textShadow: '0 0 60px rgba(255, 255, 255, 0.1)',
           }}
         >
           VITAEGIS
@@ -116,11 +116,11 @@ export default function HeroSection() {
             <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               HEALTH
             </span>
-            <span className="text-lg sm:text-xl text-white/30">•</span>
-            <span className="text-lg sm:text-xl font-light text-white tracking-[0.15em] sm:tracking-[0.2em]">
+            <span className="text-lg sm:text-xl text-[#00ff00]/50">•</span>
+            <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               STEALTH
             </span>
-            <span className="text-lg sm:text-xl text-white/30">•</span>
+            <span className="text-lg sm:text-xl text-[#00ff00]/50">•</span>
             <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               WEALTH
             </span>
@@ -128,8 +128,10 @@ export default function HeroSection() {
 
           {/* Description with Instagram typography */}
           <p className="text-sm sm:text-base text-white/70 text-center leading-relaxed mb-5 sm:mb-6">
-            Ancient wisdom meets cyberpunk technology. Transform your practice through the 
-            convergence of Zen, Kundalini, Tai Chi, and Qi Gong—powered by Web3.
+            Ancient wisdom meets Cyberspirituality:
+          </p>
+          <p className="text-sm sm:text-base text-green/70 text-center leading-relaxed mb-5 sm:mb-6">
+             Evolve your energy with Meditation, Yoga, Tai Chi.
           </p>
 
           {/* CTA Buttons with touch feedback */}
@@ -157,7 +159,7 @@ export default function HeroSection() {
                   : '0 0 20px rgba(0, 255, 65, 0.5)',
               }}
             >
-              Enter the Matrix
+              Enter Vitaegis
             </button>
 
             {/* Secondary CTA */}
@@ -182,7 +184,7 @@ export default function HeroSection() {
                 transform: secondaryPressed ? 'scale(0.97)' : 'scale(1)',
               }}
             >
-              Read Whitepaper
+              Buy Our Book
             </button>
           </div>
         </GlassContainer>
@@ -213,9 +215,9 @@ export default function HeroSection() {
 
       {/* Ambient glow effect */}
       <div 
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] pointer-events-none"
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(0, 255, 65, 0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(0, 255, 0, 0.5) 0%, transparent 50%)',
         }}
       />
     </section>

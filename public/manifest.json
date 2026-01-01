@@ -1,0 +1,21 @@
+{
+  "name": "VITAEGIS",
+  "short_name": "VITAEGIS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ff6a",
+  "description": "Ancient wisdom meets Cyberspirituality. Evolve your energy through Zen Meditation, Kundalini Yoga, Tai Chi, and Qi Gong.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

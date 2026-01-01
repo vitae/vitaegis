@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FaDiscord, FaTwitter, FaTelegram, FaGithub, FaYoutube, FaMedium } from 'react-icons/fa';
+import { FaDiscord, FaTwitter, FaTelegram, FaGithub, FaYoutube, FaTwitch, FaInstagram, FaFacebook } from 'react-icons/fa';
 import GlassButton from '@/components/GlassButton';
 import GlassContainer from '@/components/GlassContainer';
 
 const socials = [
-  { name: 'Discord', icon: FaDiscord, href: '#', members: '12.5K', color: '#5865F2' },
-  { name: 'Twitter', icon: FaTwitter, href: '#', members: '45K', color: '#1DA1F2' },
-  { name: 'Telegram', icon: FaTelegram, href: '#', members: '8.2K', color: '#0088cc' },
-  { name: 'GitHub', icon: FaGithub, href: '#', members: '2.1K', color: '#ffffff' },
-  { name: 'YouTube', icon: FaYoutube, href: '#', members: '15K', color: '#FF0000' },
-  { name: 'Medium', icon: FaMedium, href: '#', members: '5.8K', color: '#ffffff' },
+  { name: 'Facebook', icon: FaFacebook, href: '#', members: '1M', color: '#00ff00' },
+  { name: 'Instagram', icon: FaInstagram, href: '#', members: '5M', color: '#00ff00' },
+  { name: 'YouTube', icon: FaYoutube, href: '#', members: '3M', color: '#FF0000' },
+  { name: 'Twitter', icon: FaTwitter, href: '#', members: '2.5M', color: '#00ff00' },
+  { name: 'Twitch', icon: FaTwitch, href: '#', members: '5.8K', color: '#ff00ff' },
+   { name: 'Discord', icon: FaDiscord, href: '#', members: '20K', color: '#7289DA' },
 ];
 
 export default function CommunitySection() {
@@ -125,10 +125,10 @@ export default function CommunitySection() {
               {/* Left - Text */}
               <div>
                 <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                  Stay in the <span className="text-vitae-green">Loop</span>
+                  Stay <span className="text-vitae-green">Connected</span>
                 </h3>
                 <p className="text-white/70">
-                  Get weekly insights on practice techniques, token updates, and exclusive
+                  Get weekly insights on practice techniques, skill updates, and exclusive
                   community events. No spam, just value.
                 </p>
               </div>
@@ -150,7 +150,6 @@ export default function CommunitySection() {
                   </GlassButton>
                 </div>
                 <p className="mt-3 text-xs text-white/40">
-                  By subscribing, you agree to our Privacy Policy. Unsubscribe anytime.
                 </p>
               </div>
             </div>
@@ -161,7 +160,7 @@ export default function CommunitySection() {
         <GlassContainer variant="subtle" className="mt-16 p-6 sm:p-8">
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             {[
-              { value: '50K+', label: 'Community Members' },
+              { value: '99K', label: 'Community Members' },
               { value: '120+', label: 'Countries' },
               { value: '1M+', label: 'Practice Sessions' },
               { value: '24/7', label: 'Active Support' },

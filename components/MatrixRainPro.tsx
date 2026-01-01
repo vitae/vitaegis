@@ -553,7 +553,7 @@ export default function MatrixRainPro({
   ditherMagnitude = 0.04,
   pulseIntensity = 0.15,
   waveAmplitude = 0.5,
-  depthLayers = 2,
+  depthLayers = 6, // Increased for deeper 3D effect
   depthFade = 0.5,
   skipIntro = true,
   introDuration = 3.0,

@@ -30,9 +30,9 @@ export default function AboutSection() {
   }, []);
 
   const stats = [
-    { value: '10K+', label: 'Active Users' },
+    { value: '3M+', label: 'Active Users' },
     { value: '$2.5M', label: 'TVL Locked' },
-    { value: '4', label: 'Ancient Practices' },
+    { value: '3', label: 'Ancient Practices' },
     { value: '∞', label: 'Potential' },
   ];
 
@@ -58,30 +58,26 @@ export default function AboutSection() {
               Where Ancient{' '}
               <span className="text-vitae-green">Wisdom</span>
               <br />
-              Meets Digital{' '}
+              Meets Cyber{' '}
               <span className="bg-gradient-to-r from-vitae-green to-emerald-400 bg-clip-text text-transparent">
-                Innovation
+                Spirituality
               </span>
             </h2>
 
             {/* Description */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
               <p>
-                Vitaegis bridges millennia of spiritual practice with cutting-edge 
-                blockchain technology. We believe that true wellness extends beyond 
-                the physical—it encompasses mind, body, spirit, and now, digital sovereignty.
-              </p>
+                Vitaegis is a portmanteau of the words Vitae and Aegis, which means the protection of life. Vitaegis bridges millennia of spiritual wisdom with modern cyber technology. True wellness extends beyond the physical: it encompasses mind, body, spirit, and now; cyber presence. <br />
+                </p> 
               <p>
-                Our platform tokenizes your journey through four foundational practices,
-                rewarding dedication and creating a community of practitioners united
-                in their pursuit of holistic well-being.
+                We will help you to look within and find inner peace through foundational practices and secret knowledge. Join our community united in our shared pursuit of wellness and enhanced life experiences. <br />
               </p>
             </div>
 
             {/* CTA Link */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8">
               <button className="group inline-flex items-center gap-2 text-vitae-green font-medium hover:gap-4 transition-all duration-300">
-                Learn our philosophy
+                Learn our secrets
                 <svg
                   className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
                   fill="none"
