@@ -57,7 +57,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.375; // 50% slower than before
+        d.y += 0.75; // restored original speed before slowdowns
         if (d.y * fontSize > height && Math.random() > 0.98) d.y = 0;
       });
 
@@ -112,64 +112,72 @@ export default function MondaysPage() {
 
         {/* HERO */}
         <section id="hero" className="min-h-[90vh] flex flex-col items-center justify-center px-4 text-center">
-          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-6 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
-              MEDITATION MONDAYS
-            </h1>
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+            <div className="p-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
+                MEDITATION MONDAYS
+              </h1>
 
-            <p className="text-xl sm:text-2xl text-red-400 tracking-wider mb-6">
-              Sunset Sessions
-            </p>
+              <p className="text-lg sm:text-xl text-red-400 tracking-wider mb-4">
+                Sunset Sessions
+              </p>
 
-            <p className="max-w-xl text-base sm:text-lg text-white/80">
-              Ancient wisdom. Modern science. Presence by the sea.
-            </p>
+              <p className="text-sm sm:text-base text-white/80">
+                Ancient wisdom. Modern science. Presence by the sea.
+              </p>
+            </div>
           </div>
         </section>
 
         {/* ABOUT */}
         <section id="about" className="flex justify-center px-6 text-center">
-          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
-            <h2 className="text-3xl font-bold mb-6 text-red-400">
-              The Experience
-            </h2>
-            <p className="max-w-2xl mx-auto text-white/80 leading-relaxed">
-              Breath-led meditation, gentle yoga flow, and intentional
-              community connection in one of Oʻahu’s most beautiful settings.
-            </p>
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+            <div className="p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-red-400">
+                The Experience
+              </h2>
+              <p className="text-sm sm:text-base text-white/80 leading-relaxed">
+                Breath-led meditation, gentle yoga flow, and intentional
+                community connection in one of Oʻahu’s most beautiful settings.
+              </p>
+            </div>
           </div>
         </section>
 
         {/* PRACTICES */}
         <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
-            <h2 className="text-3xl font-bold mb-6 text-red-400">
-              Mondays Schedule
-            </h2>
-            <div className="space-y-4 text-lg">
-              <p>🧘 Meditation — 4:30 PM</p>
-              <p>🕉️ Yoga — 5:30 PM</p>
-              <p className="text-red-400">Lē&apos;ahi Beach Park · Waikīkī</p>
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+            <div className="p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-red-400">
+                Mondays Schedule
+              </h2>
+              <div className="space-y-2 text-sm sm:text-base">
+                <p>🧘 Meditation — 4:30 PM</p>
+                <p>🕉️ Yoga — 5:30 PM</p>
+                <p className="text-red-400">Lē&apos;ahi Beach Park · Waikīkī</p>
+              </div>
             </div>
           </div>
         </section>
 
         {/* COMMUNITY */}
         <section id="community" className="flex justify-center px-6 text-center">
-          <div className="relative mx-auto p-8 rounded-full border border-white/30 backdrop-blur-md flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg md:max-w-xl">
-            <h2 className="text-3xl font-bold mb-6 text-red-400">
-              Community
-            </h2>
-            <p className="max-w-xl mx-auto text-white/80">
-              Open to all levels. Free. Come as you are.
-            </p>
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+            <div className="p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-red-400">
+                Community
+              </h2>
+              <p className="text-sm sm:text-base text-white/80 mb-4">
+                Open to all levels. Free. Come as you are.
+              </p>
 
-            <Link
-              href="/"
-              className="inline-block mt-10 rounded-xl border border-red-500/40 px-6 py-3 text-red-400 hover:bg-red-500/10 transition"
-            >
-              ← Back to Home
-            </Link>
+              <Link
+                href="/"
+                className="inline-block rounded-xl border border-red-500/40 px-6 py-2 text-red-400 hover:bg-red-500/10 transition"
+              >
+                ← Back to Home
+              </Link>
+            </div>
           </div>
         </section>
 
