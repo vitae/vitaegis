@@ -50,16 +50,16 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      // subtle clear for motion trail
+      // subtle motion trail
       ctx.fillStyle = 'rgba(0,0,0,0.05)';
       ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = '#dc2626';
+      ctx.fillStyle = '#ff4d4d';
 
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
         d.y++;
-        if (d.y * fontSize > height && Math.random() > 0.975) d.y = 0;
+        if (d.y * fontSize > height && Math.random() > 0.98) d.y = 0;
       });
 
       requestAnimationFrame(draw);
@@ -96,17 +96,20 @@ export default function MondaysPage() {
 
   return (
     <>
-      {/* Matrix Canvas - z-index between background and content */}
+      {/* Background */}
+      <div className="absolute inset-0 bg-black z-0" />
+
+      {/* Matrix Canvas */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-30"
+        className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-60"
       />
 
       {/* Glass Navigation */}
       <GlassNav activeSection={activeSection} onNavigate={handleNavigate} />
 
       {/* Main Content */}
-      <main className="relative z-10 bg-black text-white pt-[calc(env(safe-area-inset-top)+96px)]">
+      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+96px)]">
 
         {/* HERO */}
         <section
