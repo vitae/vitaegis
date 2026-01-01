@@ -103,9 +103,6 @@ export default function MondaysPage() {
         className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-50"
       />
 
-      {/* Glass Navigation */}
-      <GlassNav activeSection={activeSection} onNavigate={handleNavigate} />
-
       {/* Main Content */}
       <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+48px)] space-y-4">
 
