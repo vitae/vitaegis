@@ -15,7 +15,6 @@ const stripePromise = loadStripe(
 function CheckoutForm() {
   const stripe = useStripe();
   const elements = useElements();
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -27,7 +26,6 @@ function CheckoutForm() {
     setLoading(true);
     setMessage('');
 
-    // Create PaymentIntent on the server
     const res = await fetch('/api/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -46,7 +44,7 @@ function CheckoutForm() {
       elements,
       clientSecret,
       confirmParams: {
-        receipt_email: undefined, // Stripe collects email automatically
+        // Stripe automatically collects email for receipts
       },
       redirect: 'if_required',
     });
@@ -61,15 +59,10 @@ function CheckoutForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col items-center gap-4 w-full"
-    >
+    <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
       {/* Ticket Quantity */}
       <div className="w-full text-left">
-        <label className="block text-sm mb-1 text-white/80">
-          Tickets
-        </label>
+        <label className="block text-sm mb-1 text-white/80">Tickets</label>
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
@@ -99,9 +92,7 @@ function CheckoutForm() {
       </button>
 
       {message && (
-        <p className="text-white text-sm mt-2 text-center">
-          {message}
-        </p>
+        <p className="text-white text-sm mt-2 text-center">{message}</p>
       )}
     </form>
   );
@@ -109,6 +100,7 @@ function CheckoutForm() {
 
 export default function MondaysPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   /* ================= MATRIX CANVAS ================= */
   useEffect(() => {
@@ -174,83 +166,95 @@ export default function MondaysPage() {
     return () => window.removeEventListener('resize', resize);
   }, []);
 
+  // fetch clientSecret when page loads
+  useEffect(() => {
+    fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity: 1 }),
+    })
+      .then((res) => res.json())
+      .then((data) => setClientSecret(data.clientSecret));
+  }, []);
+
   return (
-    <Elements
-  stripe={stripePromise}
-  options={{
-    appearance: {
-      theme: 'night',
-      variables: {
-        colorPrimary: '#ef4444',
-      },
-    },
-  }}
->
-      <div className="absolute inset-0 bg-black z-0" />
-
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-50"
-      />
-
-      <main className="relative z-10 text-white pt-20 space-y-8">
-
-        {/* HERO */}
-        <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
-            <div className="p-6">
-              <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
-                MEDITATION MONDAYS
-              </h1>
-
-              <p className="text-5x1 sm:text-4xl text-red-400 tracking-wider mb-2">
-                SUNSET SESSIONS
-              </p>
-
-              <p className="text-3x1 sm:text-base text-white/80">
-                Ancient wisdom. Aloha spirit.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* PRACTICES */}
-        <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
-            <div className="p-6">
-              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
-                EVERY MONDAY
-              </h2>
-              <div className="space-y-1 text-5x1 sm:text-base">
-                <p>🧘 Meditation — 4:30 PM</p>
-                <p>🕉️ Yoga — 5:30 PM</p>
-                <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
-                <p>Bring a mat and water</p>
-                <p>FREE</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* COMMUNITY / PAYMENT */}
-        <section
-          id="community"
-          className="flex justify-center px-6"
+    <>
+      {clientSecret && (
+        <Elements
+          stripe={stripePromise}
+          options={{
+            clientSecret,
+            appearance: {
+              theme: 'night',
+              variables: { colorPrimary: '#ef4444' },
+            },
+          }}
         >
-          <div
-            className="
-              relative flex flex-col items-center justify-center
-              rounded-full red-glow backdrop-blur-md border border-white/30
-              w-96 sm:w-96 md:w-[28rem]
-              min-h-[28rem] sm:min-h-[32rem] md:min-h-[36rem]
-              p-6
-            "
-          >
-            <CheckoutForm />
-          </div>
-        </section>
+          <div className="absolute inset-0 bg-black z-0" />
 
-      </main>
-    </Elements>
+          <canvas
+            ref={canvasRef}
+            className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-50"
+          />
+
+          <main className="relative z-10 text-white pt-20 space-y-8">
+            {/* HERO */}
+            <section
+              id="hero"
+              className="flex flex-col items-center justify-start px-8 text-center"
+            >
+              <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
+                <div className="p-6">
+                  <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
+                    MEDITATION MONDAYS
+                  </h1>
+
+                  <p className="text-5x1 sm:text-4xl text-red-400 tracking-wider mb-2">
+                    SUNSET SESSIONS
+                  </p>
+
+                  <p className="text-3x1 sm:text-base text-white/80">
+                    Ancient wisdom. Aloha spirit.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* PRACTICES */}
+            <section id="practices" className="flex justify-center px-6 text-center">
+              <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
+                <div className="p-6">
+                  <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
+                    EVERY MONDAY
+                  </h2>
+                  <div className="space-y-1 text-5x1 sm:text-base">
+                    <p>🧘 Meditation — 4:30 PM</p>
+                    <p>🕉️ Yoga — 5:30 PM</p>
+                    <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
+                    <p>Bring a mat and water</p>
+                    <p>FREE</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* COMMUNITY / PAYMENT */}
+            <section id="community" className="flex justify-center px-6">
+              <div
+                className="
+                  relative flex flex-col items-center justify-center
+                  rounded-full red-glow backdrop-blur-md border border-white/30
+                  w-96 sm:w-96 md:w-[28rem]
+                  min-h-[28rem] sm:min-h-[32rem] md:min-h-[36rem]
+                  p-6
+                "
+              >
+                <CheckoutForm />
+              </div>
+            </section>
+          </main>
+        </Elements>
+      )}
+    </>
   );
 }
