@@ -133,7 +133,7 @@ export default function MondaysPage() {
         <section id="practices" className="flex justify-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
+              <h2 className="text-4xl sm:text-3xl font-bold mb-2 text-red-400">
                 EVERY MONDAY
               </h2>
               <div className="space-y-1 text-sm sm:text-base">
@@ -151,7 +151,7 @@ export default function MondaysPage() {
         <section id="community" className="flex justify-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
+              <h2 className="text-4xl sm:text-3xl font-bold mb-2 text-red-400">
                 Community Circle
               </h2>
               <p className="text-sm sm:text-base text-white/80 mb-2">
