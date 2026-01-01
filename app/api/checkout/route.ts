@@ -1,38 +1,34 @@
-// app/api/checkout/route.ts
 import Stripe from 'stripe';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16', // updated to the allowed API version
+  apiVersion: '2023-10-16', // update to latest
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const { quantity } = await req.json();
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      mode: 'payment',
       line_items: [
         {
           price_data: {
             currency: 'usd',
-            product_data: {
-              name: 'Meditation Mondays Ticket',
-              description: 'Access to the Sunset Meditation and Yoga Session',
-            },
-            unit_amount: 2500, // $25.00 in cents
+            product_data: { name: 'Yoga Ticket' },
+            unit_amount: 1000, // $10.00
           },
-          quantity: quantity || 1,
+          quantity: 1,
         },
       ],
-      mode: 'payment',
-      success_url: `${req.headers.get('origin')}/?success=true`,
-      cancel_url: `${req.headers.get('origin')}/?canceled=true`,
+      success_url: `${req.headers.get('origin')}/success`,
+      cancel_url: `${req.headers.get('origin')}/cancel`,
     });
 
-    return NextResponse.json({ url: session.url });
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return new Response('Stripe checkout session failed', { status: 500 });
   }
 }
