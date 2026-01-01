@@ -110,11 +110,11 @@ export default function MondaysPage() {
         <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h1 className="text-6xl sm:text-6xl md:text-6xl font-black mb-2 bg-gradient-to-r from-red-600 to-red-300 bg-clip-text text-transparent">
+              <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-600 to-red-300 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
               </h1>
 
-              <p className="text-4x1 sm:text-xl text-red-400 tracking-wider mb-2">
+              <p className="text-3x1 sm:text-4xl text-red-400 tracking-wider mb-2">
                 Sunset Sessions
               </p>
 
@@ -129,7 +129,7 @@ export default function MondaysPage() {
         <section id="practices" className="flex justify-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h2 className="text-6xl sm:text-6xl font-bold mb-2 text-red-400">
+              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
                 EVERY MONDAY
               </h2>
               <div className="space-y-1 text-4x1 sm:text-base">
@@ -147,8 +147,8 @@ export default function MondaysPage() {
         <section id="community" className="flex justify-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
             <div className="p-6">
-              <h2 className="text-6xl sm:text-6xl font-bold mb-2 text-red-400">
-                Community Circle
+              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
+                COMMUNITY CIRCLE
               </h2>
               <p className="text-4x1 sm:text-base text-white/80 mb-2">
                 Open to all. Come as you are.
