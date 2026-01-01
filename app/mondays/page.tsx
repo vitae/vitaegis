@@ -1,9 +1,8 @@
 'use client';
-
 import { useEffect, useState, useRef } from 'react';
 import {
   Elements,
-  CardElement,
+  PaymentElement,
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
@@ -16,27 +15,40 @@ const stripePromise = loadStripe(
 function CheckoutForm() {
   const stripe = useStripe();
   const elements = useElements();
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [quantity, setQuantity] = useState(1);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
     setLoading(true);
+    setMessage('');
 
+    // Create PaymentIntent on the server
     const res = await fetch('/api/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: 2000 }), // $20 ticket
+      body: JSON.stringify({ quantity }),
     });
 
-    const { clientSecret } = await res.json();
+    const { clientSecret, error } = await res.json();
 
-    const result = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: elements.getElement(CardElement)!,
+    if (error) {
+      setMessage(error);
+      setLoading(false);
+      return;
+    }
+
+    const result = await stripe.confirmPayment({
+      elements,
+      clientSecret,
+      confirmParams: {
+        receipt_email: undefined, // Stripe collects email automatically
       },
+      redirect: 'if_required',
     });
 
     if (result.error) {
@@ -53,30 +65,44 @@ function CheckoutForm() {
       onSubmit={handleSubmit}
       className="flex flex-col items-center gap-4 w-full"
     >
+      {/* Ticket Quantity */}
+      <div className="w-full text-left">
+        <label className="block text-sm mb-1 text-white/80">
+          Tickets
+        </label>
+        <select
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          className="w-full rounded-lg bg-black/40 border border-white/30 p-3 text-white"
+        >
+          {[1, 2, 3, 4, 5].map((q) => (
+            <option key={q} value={q}>
+              {q} × $20
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Stripe Payment Element */}
       <div className="w-full">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#ffffff',
-                '::placeholder': { color: '#aaaaaa' },
-              },
-            },
-          }}
-          className="p-4 rounded border border-white/30 bg-black/40"
-        />
+        <div className="p-4 rounded-xl border border-white/30 bg-black/40">
+          <PaymentElement />
+        </div>
       </div>
 
       <button
         type="submit"
         disabled={!stripe || loading}
-        className="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition w-full"
+        className="w-full px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition"
       >
         {loading ? 'Processing…' : 'Buy Tickets'}
       </button>
 
-      {message && <p className="text-white text-sm mt-2">{message}</p>}
+      {message && (
+        <p className="text-white text-sm mt-2 text-center">
+          {message}
+        </p>
+      )}
     </form>
   );
 }
@@ -149,7 +175,17 @@ export default function MondaysPage() {
   }, []);
 
   return (
-    <Elements stripe={stripePromise}>
+    <Elements
+  stripe={stripePromise}
+  options={{
+    appearance: {
+      theme: 'night',
+      variables: {
+        colorPrimary: '#ef4444',
+      },
+    },
+  }}
+>
       <div className="absolute inset-0 bg-black z-0" />
 
       <canvas
