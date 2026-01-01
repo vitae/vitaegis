@@ -48,12 +48,12 @@ function CheckoutForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
       <CardElement className="p-4 border rounded w-full max-w-md" />
       <button
         type="submit"
         disabled={!stripe || loading}
-        className="px-6 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition"
+        className="px-6 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition w-full max-w-md"
       >
         {loading ? 'Processing...' : 'Buy Tickets'}
       </button>
@@ -63,7 +63,6 @@ function CheckoutForm() {
 }
 
 export default function MondaysPage() {
-  const [activeSection, setActiveSection] = useState('hero');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   /* ================= MATRIX CANVAS ================= */
@@ -149,49 +148,11 @@ export default function MondaysPage() {
       />
 
       {/* Main Content */}
-      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+48px)] space-y-4">
+      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+48px)] flex flex-col items-center space-y-4">
 
-        {/* HERO */}
-        <section id="hero" className="flex flex-col items-center justify-start px-8 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
-            <div className="p-6">
-              <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
-                MEDITATION MONDAYS
-              </h1>
-              <p className="text-5x1 sm:text-4xl text-red-400 tracking-wider mb-2">
-                SUNSET SESSIONS
-              </p>
-              <p className="text-3x1 sm:text-base text-white/80">
-                Ancient wisdom. Aloha spirit.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* PRACTICES */}
-        <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
-            <div className="p-6">
-              <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
-                EVERY MONDAY
-              </h2>
-              <div className="space-y-1 text-5x1 sm:text-base">
-                <p>🧘 Meditation — 4:30 PM</p>
-                <p>🕉️ Yoga — 5:30 PM</p>
-                <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
-                <p>Bring a mat and water</p>
-                <p>FREE</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* COMMUNITY / TICKETS */}
-        <section id="community" className="flex flex-col items-center px-6 text-center space-y-4">
+        {/* TICKETS */}
+        <section id="tickets" className="flex flex-col items-center px-6 text-center">
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow p-6">
-            <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
-            Buy Tickets
-            </h2>
             <CheckoutForm />
           </div>
         </section>
