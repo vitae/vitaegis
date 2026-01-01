@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup } from 'react-icons/hi';
-import WalletButton from '@/components/WalletButton';
 
 interface NavItem {
   id: string;
@@ -97,10 +96,9 @@ export default function GlassNav({ activeSection, onNavigate }: GlassNavProps) {
             })}
           </div>
 
-          {/* Connect Wallet Button */}
-          <WalletButton />
         </div>
       </div>
     </nav>
   );
-}
+}   
+

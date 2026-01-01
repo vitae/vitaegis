@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import '@rainbow-me/rainbowkit/styles.css';
-import Providers from '@/components/Providers';
 import MatrixRainPro from '@/components/MatrixRainPro';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
@@ -84,7 +82,7 @@ export default function RootLayout({
         </div>
         {/* Main app content */}
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <Providers>{children}</Providers>
+          {children}
           <SpeedInsights />
           <Analytics />
         </div>
