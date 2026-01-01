@@ -123,22 +123,7 @@ export default function MondaysPage() {
               </p>
 
               <p className="text-sm sm:text-base text-white/80">
-                Ancient wisdom. Modern science. Presence by the sea.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ABOUT */}
-        <section id="about" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
-            <div className="p-6">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
-                The Experience
-              </h2>
-              <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-                Breath-led meditation, gentle yoga flow, and intentional
-                community connection in one of Oʻahu’s most beautiful settings.
+                Ancient wisdom. Aloha spirit.
               </p>
             </div>
           </div>
@@ -149,12 +134,14 @@ export default function MondaysPage() {
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
               <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
-                Mondays Schedule
+                EVERY MONDAY
               </h2>
               <div className="space-y-1 text-sm sm:text-base">
                 <p>🧘 Meditation — 4:30 PM</p>
                 <p>🕉️ Yoga — 5:30 PM</p>
-                <p className="text-red-400">Lē&apos;ahi Beach Park · Waikīkī</p>
+                <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
+                <p>Bring a mat and water.</p>
+                <p>FREE</p>
               </div>
             </div>
           </div>
@@ -165,10 +152,10 @@ export default function MondaysPage() {
           <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
               <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-red-400">
-                Community
+                Community Circle
               </h2>
               <p className="text-sm sm:text-base text-white/80 mb-2">
-                Open to all levels. Free. Come as you are.
+                Open to all. Come as you are.
               </p>
 
               <Link
