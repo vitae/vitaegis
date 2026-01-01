@@ -57,7 +57,7 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.75; // restored original speed before slowdowns
+        d.y += 0.75; // original speed
         if (d.y * fontSize > height && Math.random() > 0.98) d.y = 0;
       });
 
@@ -108,11 +108,11 @@ export default function MondaysPage() {
       <GlassNav activeSection={activeSection} onNavigate={handleNavigate} />
 
       {/* Main Content */}
-      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+96px)] space-y-24">
+      <main className="relative z-10 text-white pt-[calc(env(safe-area-inset-top)+96px)] space-y-12">
 
         {/* HERO */}
         <section id="hero" className="min-h-[90vh] flex flex-col items-center justify-center px-4 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">
                 MEDITATION MONDAYS
@@ -131,7 +131,7 @@ export default function MondaysPage() {
 
         {/* ABOUT */}
         <section id="about" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-red-400">
                 The Experience
@@ -146,7 +146,7 @@ export default function MondaysPage() {
 
         {/* PRACTICES */}
         <section id="practices" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-red-400">
                 Mondays Schedule
@@ -162,7 +162,7 @@ export default function MondaysPage() {
 
         {/* COMMUNITY */}
         <section id="community" className="flex justify-center px-6 text-center">
-          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+          <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem]">
             <div className="p-6">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-red-400">
                 Community
