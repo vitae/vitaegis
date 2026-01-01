@@ -56,8 +56,8 @@ export default function MondaysPage() {
       drops.forEach((d, i) => {
         ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
         d.index = (d.index + 1) % d.word.length;
-        d.y += 0.7; // matrix speed .75
-        if (d.y * fontSize > height && Math.random() > 0.9) d.y = 0; //.98 og value
+        d.y += 0.7;
+        if (d.y * fontSize > height && Math.random() > 0.9) d.y = 0;
       });
 
       requestAnimationFrame(draw);
@@ -90,6 +90,17 @@ export default function MondaysPage() {
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  /* ================= STRIPE BUTTON HANDLER ================= */
+  const handleBuyTickets = async () => {
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity: 1 }),
+    });
+    const data = await res.json();
+    window.location.href = data.url;
   };
 
   return (
@@ -154,12 +165,13 @@ export default function MondaysPage() {
                 Open to all. Come as you are.
               </p>
 
-              <Link
-                href="/"
+              {/* Stripe Buy Tickets Button */}
+              <button
+                onClick={handleBuyTickets}
                 className="inline-block rounded-xl border border-red-500/40 px-4 py-2 text-red-400 hover:bg-red-500/10 transition"
               >
-                ← Back to Home
-              </Link>
+                Buy Tickets!
+              </button>
             </div>
           </div>
         </section>
