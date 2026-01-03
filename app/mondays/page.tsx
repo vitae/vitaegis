@@ -150,8 +150,8 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      // Semi-transparent black overlay - balanced for visible trails that fade to black
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+      // Semi-transparent black overlay - 0.08 ensures complete fade to black
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       ctx.fillRect(0, 0, width, height);
 
       // Bright red text, no glow/shadow to prevent red accumulation
