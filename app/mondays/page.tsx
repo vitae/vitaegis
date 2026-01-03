@@ -204,17 +204,9 @@ export default function MondaysPage() {
           }
         }
       } else {
-        // When paused, still draw the current trails without updating
-        for (let i = 0; i < trails.length; i++) {
-          for (let j = 0; j < trails[i].length; j++) {
-            const t = trails[i][j];
-            const opacity = 1 - (t.age / trailLength);
-            if (opacity > 0) {
-              ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
-              ctx.fillText(t.char, i * columnWidth, t.y);
-            }
-          }
-        }
+        // When paused, fill the canvas with black only
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
       }
 
       animationId = requestAnimationFrame(draw);
