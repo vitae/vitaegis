@@ -67,7 +67,7 @@ function CheckoutForm() {
         >
           {[1, 2, 3, 4, 5].map((q) => (
             <option key={q} value={q}>
-              {q} × $20
+              {q} × $9
             </option>
           ))}
         </select>
@@ -211,16 +211,16 @@ export default function MondaysPage() {
               
               {/* Header */}
               <div className="px-6 pt-8 pb-4 text-center border-b border-white/10">
-                <p className="text-red-400 text-sm tracking-[0.3em] uppercase mb-2">Vitaegis Presents</p>
-                <h1 className="text-5xl sm:text-6xl font-black bg-gradient-to-b from-white via-red-200 to-red-500 bg-clip-text text-transparent leading-tight">
+                <p className="text-red-400 text-base tracking-[0.3em] uppercase mb-2">Vitaegis Presents</p>
+                <h1 className="text-[2.75rem] sm:text-5xl font-black bg-gradient-to-b from-white via-red-200 to-red-500 bg-clip-text text-transparent leading-tight">
                   MEDITATION
                 </h1>
-                <h1 className="text-5xl sm:text-6xl font-black bg-gradient-to-b from-red-400 to-red-600 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-[2.75rem] sm:text-5xl font-black bg-gradient-to-b from-red-400 to-red-600 bg-clip-text text-transparent leading-tight">
                   MONDAYS
                 </h1>
                 <div className="mt-4 flex items-center justify-center gap-2">
                   <span className="h-px w-12 bg-red-500/50" />
-                  <span className="text-red-400 text-lg">✦ SUNSET SESSIONS ✦</span>
+                  <span className="text-red-400 text-xl">✦ SUNSET SESSIONS ✦</span>
                   <span className="h-px w-12 bg-red-500/50" />
                 </div>
               </div>
@@ -228,35 +228,35 @@ export default function MondaysPage() {
               {/* Event Details */}
               <div className="px-6 py-6 text-center space-y-4">
                 <div className="inline-block px-6 py-3 border border-white/10 rounded-2xl bg-black/20 backdrop-blur-sm">
-                  <p className="text-2xl font-bold text-white">EVERY MONDAY</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">EVERY MONDAY</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 text-left">
                   <div className="p-4 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
-                    <p className="text-red-400 text-xs uppercase tracking-wider">Session 1</p>
-                    <p className="text-white font-bold">🧘 Meditation</p>
-                    <p className="text-white/70 text-sm">4:30 PM</p>
+                    <p className="text-red-400 text-sm uppercase tracking-wider">Session 1</p>
+                    <p className="text-white font-bold text-lg">🧘 Meditation</p>
+                    <p className="text-white/70 text-base">4:30 PM</p>
                   </div>
                   <div className="p-4 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
-                    <p className="text-red-400 text-xs uppercase tracking-wider">Session 2</p>
-                    <p className="text-white font-bold">🕉️ Yoga</p>
-                    <p className="text-white/70 text-sm">5:30 PM</p>
+                    <p className="text-red-400 text-sm uppercase tracking-wider">Session 2</p>
+                    <p className="text-white font-bold text-lg">🕉️ Yoga</p>
+                    <p className="text-white/70 text-base">5:30 PM</p>
                   </div>
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-red-400 font-bold text-lg">📍 Lē'ahi Beach Park</p>
-                  <p className="text-white/60 text-sm">Waikīkī, Honolulu</p>
+                  <p className="text-red-400 font-bold text-xl">📍 Lē'ahi Beach Park</p>
+                  <p className="text-white/60 text-base">Waikīkī, Honolulu</p>
                 </div>
 
-                <div className="flex items-center justify-center gap-4 text-sm text-white/70">
+                <div className="flex items-center justify-center gap-4 text-base text-white/70">
                   <span>🧘‍♀️ Bring a mat</span>
                   <span>💧 Bring water</span>
                 </div>
 
                 <div className="pt-2">
-                  <span className="inline-block px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-xl rounded-full shadow-lg shadow-red-500/40 border border-white/20">
-                    FREE ENTRY
+                  <span className="text-white/80 text-xl font-semibold">
+                    TICKETS ONLY $9
                   </span>
                 </div>
               </div>

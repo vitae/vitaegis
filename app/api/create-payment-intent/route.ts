@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const ticketQuantity = Math.max(1, Math.min(quantity || 1, 10));
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: ticketQuantity * 2000, // $20 per ticket
+      amount: ticketQuantity * 900, // $9 per ticket
       currency: 'usd',
 
       // THIS ENABLES:
