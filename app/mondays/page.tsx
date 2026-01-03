@@ -111,19 +111,29 @@ export default function MondaysPage() {
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 18 : 22;
-    const chars = '♥MEDITAONYS♥PEACE♥ZEN♥YOGA♥ALOHA♥BALANCE♥ENERGY';
+    const words = [' ♥ MEDITATION', ' ♥ MONDAYS', ' ♥ PEACE', ' ♥ ZEN', ' ♥ YOGA', ' ♥ ALOHA', ' ♥ BALANCE', ' ♥ ENERGY', ' ♥ LOVE', ' ♥ BREATH'];
     const speed = 0.3; // Slow, smooth movement
 
     let width = window.innerWidth;
     let height = window.innerHeight;
     let columns = Math.floor(width / fontSize);
-    let drops = Array.from({ length: columns }, () => Math.random() * -50);
+    
+    // Each column has: y position, current word, and current letter index
+    let drops = Array.from({ length: columns }, () => ({
+      y: Math.random() * -50,
+      word: words[Math.floor(Math.random() * words.length)],
+      letterIndex: 0,
+    }));
 
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
       columns = Math.floor(width / fontSize);
-      drops = Array.from({ length: columns }, () => Math.random() * -50);
+      drops = Array.from({ length: columns }, () => ({
+        y: Math.random() * -50,
+        word: words[Math.floor(Math.random() * words.length)],
+        letterIndex: 0,
+      }));
 
       canvas.width = width * DPR;
       canvas.height = height * DPR;
@@ -135,27 +145,36 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      // Semi-transparent black to create fade trail
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      // Semi-transparent black to create fade trail (lower = longer trails)
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
       ctx.fillRect(0, 0, width, height);
 
       ctx.fillStyle = '#ff4d4d';
 
       for (let i = 0; i < drops.length; i++) {
-        // Only draw when at a whole number position (grid-aligned)
-        if (Math.floor(drops[i]) !== Math.floor(drops[i] - speed)) {
-          const char = chars[Math.floor(Math.random() * chars.length)];
+        const d = drops[i];
+        const prevY = Math.floor(d.y - speed);
+        const currY = Math.floor(d.y);
+        
+        // Only draw when crossing to a new grid row
+        if (currY !== prevY && d.y > 0) {
+          const char = d.word[d.letterIndex];
           const x = i * fontSize;
-          const y = Math.floor(drops[i]) * fontSize;
+          const y = currY * fontSize;
           ctx.fillText(char, x, y);
+          
+          // Move to next letter in the word
+          d.letterIndex = (d.letterIndex + 1) % d.word.length;
         }
 
         // Move drop down smoothly
-        drops[i] += speed;
+        d.y += speed;
 
         // Reset to top with random delay when off screen
-        if (drops[i] * fontSize > height && Math.random() > 0.98) {
-          drops[i] = Math.random() * -20;
+        if (d.y * fontSize > height && Math.random() > 0.98) {
+          d.y = Math.random() * -10;
+          d.word = words[Math.floor(Math.random() * words.length)];
+          d.letterIndex = 0;
         }
       }
 
@@ -269,7 +288,7 @@ export default function MondaysPage() {
 
               {/* Payment Section */}
               <div className="mx-4 my-6 p-6 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/10">
-                <p className="text-center text-white/60 text-sm mb-4">Optional donation to support our community</p>
+                <p className="text-center text-white/60 text-sm mb-4">Support Our Community</p>
                 <CheckoutForm />
               </div>
 
