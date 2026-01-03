@@ -71,24 +71,13 @@ function CheckoutForm() {
         return;
       }
 
-      // Detect if Cash App Pay is selected
-      const paymentElement = elements.getElement('payment');
-      let paymentMethodType = '';
-      if (paymentElement) {
-        const elementType = paymentElement._componentName || paymentElement._component || '';
-        paymentMethodType = elementType.toLowerCase();
-      }
-
-      // Always set return_url for Cash App Pay, otherwise omit
-      const confirmParams: any = {};
-      if (paymentMethodType.includes('cashapp')) {
-        confirmParams.return_url = window.location.origin + "/mondays?payment=success";
-      }
-
+      // Always set return_url for compatibility with Cash App Pay and other redirect-based methods
       const result = await stripe.confirmPayment({
         elements,
         clientSecret,
-        confirmParams,
+        confirmParams: {
+          return_url: window.location.origin + "/mondays?payment=success",
+        },
         redirect: 'if_required',
       });
 
