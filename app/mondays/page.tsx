@@ -59,11 +59,11 @@ function CheckoutForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
       <div className="w-full text-left">
-        <label className="block text-sm mb-2 text-white">Number of Tickets</label>
+        <label className="block text-sm mb-2 text-red-500">Number of Tickets</label>
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="w-full rounded-2xl bg-black/20 backdrop-blur-[2px] border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)]"
+          className="w-full rounded-2xl bg-black/10 border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)]"
         >
           {[1, 2, 3, 4, 5].map((q) => (
             <option key={q} value={q}>
@@ -74,7 +74,7 @@ function CheckoutForm() {
       </div>
 
       <div className="w-full">
-        <div className="p-5 rounded-2xl border border-red-500/50 bg-black/20 backdrop-blur-[2px] shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+        <div className="p-5 rounded-2xl border border-red-500/50 bg-black/10 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
           <PaymentElement options={{
             wallets: {
               applePay: 'auto',
@@ -93,7 +93,7 @@ function CheckoutForm() {
       </button>
 
       {message && (
-        <p className="text-white text-sm mt-2 text-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20">{message}</p>
+        <p className="text-red-500 text-sm mt-2 text-center bg-black/10 px-4 py-2 rounded-xl border border-red-500/50">{message}</p>
       )}
     </form>
   );
@@ -246,46 +246,46 @@ export default function MondaysPage() {
           {/* EDM FLYER STYLE */}
           <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-8 font-['Jost']">
             {/* Glassmorphic Flyer Container */}
-            <div className="w-full max-w-md backdrop-blur-[2px] bg-black/20 border border-red-500/50 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_30px_rgba(255,0,0,0.4)]">
+            <div className="w-full max-w-md bg-black/10 border border-red-500/50 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_30px_rgba(255,0,0,0.4)]">
               
               {/* Top Accent Bar */}
               <div className="h-1 bg-gradient-to-r from-transparent via-red-500/80 to-transparent" />
               
               {/* Header */}
               <div className="px-6 pt-8 pb-4 text-center border-b border-white/10">
-                <p className="text-red-400 text-base tracking-[0.3em] uppercase mb-2">Vitaegis Presents</p>
-                <h1 className="text-[2.75rem] sm:text-5xl font-black bg-gradient-to-b from-white via-red-200 to-red-500 bg-clip-text text-transparent leading-tight">
+                <p className="text-red-500 text-base tracking-[0.3em] uppercase mb-2">Vitaegis Presents</p>
+                <h1 className="text-[2.75rem] sm:text-5xl font-black text-red-500 leading-tight">
                   MEDITATION
                 </h1>
-                <h1 className="text-[2.75rem] sm:text-5xl font-black bg-gradient-to-b from-red-400 to-red-600 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-[2.75rem] sm:text-5xl font-black text-red-500 leading-tight">
                   MONDAYS
                 </h1>
                 <div className="mt-4 flex items-center justify-center gap-2">
                   <span className="h-px w-12 bg-red-500/50" />
-                  <span className="text-red-400 text-xl">✦ SUNSET SESSIONS ✦</span>
+                  <span className="text-red-500 text-lg">✦ SUNSET SESSIONS ✦</span>
                   <span className="h-px w-12 bg-red-500/50" />
                 </div>
               </div>
 
               {/* Event Details */}
               <div className="px-6 py-6 text-center space-y-5">
-                <div className="inline-block px-6 py-3 border border-red-500/50 rounded-2xl bg-black/10 backdrop-blur-[2px] shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                  <p className="text-3xl sm:text-4xl font-bold text-white">EVERY MONDAY</p>
+                <div className="inline-block px-6 py-3 border border-red-500/50 rounded-2xl bg-black/10 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+                  <p className="text-3xl sm:text-4xl font-bold text-red-500">EVERY MONDAY</p>
                 </div>
                 
                 <div className="space-y-4">
-                  <p className="text-2xl sm:text-3xl text-white font-semibold">🧘 Meditation</p>
-                  <p className="text-red-400 font-bold text-xl sm:text-2xl">4:30 PM</p>
-                  <p className="text-2xl sm:text-3xl text-white font-semibold pt-2">🕉️ Yoga</p>
-                  <p className="text-red-400 font-bold text-xl sm:text-2xl">5:30 PM</p>
+                  <p className="text-2xl sm:text-3xl text-red-500 font-semibold">🧘 Meditation</p>
+                  <p className="text-red-500 font-bold text-xl sm:text-2xl">4:30 PM</p>
+                  <p className="text-2xl sm:text-3xl text-red-500 font-semibold pt-2">🕉️ Yoga</p>
+                  <p className="text-red-500 font-bold text-xl sm:text-2xl">5:30 PM</p>
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-red-400 font-bold text-2xl">📍 Lē'ahi Beach Park</p>
-                  <p className="text-white text-lg">Waikīkī, Honolulu</p>
+                  <p className="text-red-500 font-bold text-2xl">📍 Lē'ahi Beach Park</p>
+                  <p className="text-red-500 text-lg">Waikīkī, Honolulu</p>
                 </div>
 
-                <div className="space-y-1 text-lg text-white">
+                <div className="space-y-1 text-lg text-red-500">
                   <p>🧘‍♀️ Bring a mat</p>
                   <p>💧 Bring water</p>
                 </div>
@@ -308,8 +308,8 @@ export default function MondaysPage() {
               </div>
 
               {/* Payment Section */}
-              <div id="payment-section" className="mx-4 my-6 p-6 rounded-2xl bg-black/10 backdrop-blur-[2px] border border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                <p className="text-center text-white text-sm mb-4">Support Our Community</p>
+              <div id="payment-section" className="mx-4 my-6 p-6 rounded-2xl bg-black/10 border border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+                <p className="text-center text-red-500 text-sm mb-4">Support Our Community</p>
                 <CheckoutForm />
               </div>
 
@@ -318,7 +318,7 @@ export default function MondaysPage() {
             </div>
 
             {/* Tagline */}
-            <p className="mt-6 text-white text-sm tracking-wider">
+            <p className="mt-6 text-red-500 text-sm tracking-wider">
               Ancient wisdom. Aloha spirit.
             </p>
           </main>
