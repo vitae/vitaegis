@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const ticketQuantity = Math.max(1, Math.min(quantity || 1, 10));
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: ticketQuantity * 900, // $9 per ticket
+      amount: ticketQuantity * 100, // $1 per ticket
       currency: 'usd',
 
       // THIS ENABLES:
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         event: 'Meditation Mondays',
         tickets: String(ticketQuantity),
-        product_id: 'prod_Timd3yKsXo8rI1',
+        product_id: 'price_1SlN7M3N18AMdcvy9MzMFkru',
       },
     });
 

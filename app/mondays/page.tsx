@@ -67,7 +67,7 @@ function CheckoutForm() {
         >
           {[1, 2, 3, 4, 5].map((q) => (
             <option key={q} value={q}>
-              {q} × $9
+              {q} × $1
             </option>
           ))}
         </select>
@@ -321,7 +321,7 @@ export default function MondaysPage() {
                     onClick={() => document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth' })}
                     className="inline-block px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20 hover:from-red-500 hover:to-red-400 transition cursor-pointer"
                   >
-                    TICKETS ONLY $9
+                    TICKETS ONLY $1
                   </button>
                 </div>
               </div>
