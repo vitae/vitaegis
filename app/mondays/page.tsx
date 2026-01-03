@@ -255,7 +255,7 @@ export default function MondaysPage() {
                 </div>
 
                 <div className="pt-2">
-                  <span className="text-white/80 text-xl font-semibold">
+                  <span className="inline-block px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20">
                     TICKETS ONLY $9
                   </span>
                 </div>
