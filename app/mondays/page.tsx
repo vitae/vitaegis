@@ -63,10 +63,10 @@ function CheckoutForm() {
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="w-full max-w-xs rounded-2xl bg-black/10 border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)] text-center"
+          className="w-full max-w-xs rounded-2xl bg-black/10 border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)] text-center appearance-none"
         >
           {[1, 2, 3, 4, 5].map((q) => (
-            <option key={q} value={q}>
+            <option key={q} value={q} className="text-center">
               {q} × $1
             </option>
           ))}
