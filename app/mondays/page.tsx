@@ -338,17 +338,19 @@ export default function MondaysPage() {
                 <CheckoutForm />
               </div>
 
+              {/* Tagline and Copyright inside flyer border */}
+              <div className="px-6 pb-4 text-center">
+                <p className="mt-6 text-white text-sm tracking-wider drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">
+                  Ancient wisdom. Aloha spirit.
+                </p>
+                <p className="mt-2 text-white text-xs tracking-wider drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">
+                  © 2026 VITAEGIS. All Rights Reserved.
+                </p>
+              </div>
+
               {/* Bottom Accent */}
               <div className="h-1 bg-gradient-to-r from-transparent via-red-500/60 to-transparent" />
             </div>
-
-            {/* Tagline */}
-            <p className="mt-6 text-white text-sm tracking-wider drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">
-              Ancient wisdom. Aloha spirit.
-            </p>
-            <p className="mt-2 text-white text-xs tracking-wider drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">
-              © 2026 VITAEGIS. All Rights Reserved.
-            </p>
           </main>
         </Elements>
       )}
