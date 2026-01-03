@@ -329,7 +329,7 @@ export default function MondaysPage() {
               {/* Divider */}
               <div className="flex items-center px-6">
                 <span className="flex-1 h-px bg-red-500" />
-                <span className="px-4 text-red-500 text-xs uppercase tracking-wider">Support the Movement</span>
+                <span className="px-4 text-red-500 text-base uppercase tracking-wider">Support the Movement</span>
                 <span className="flex-1 h-px bg-red-500" />
               </div>
 
