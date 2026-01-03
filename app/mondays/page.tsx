@@ -26,33 +26,49 @@ function CheckoutForm() {
     setLoading(true);
     setMessage('');
 
-    const res = await fetch('/api/create-payment-intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    });
+    try {
+      const res = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      });
 
-    const { clientSecret, error } = await res.json();
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Network/API error:', text);
+        setMessage('Server error: ' + text);
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
-      setMessage(error);
-      setLoading(false);
-      return;
+      const { clientSecret, error } = await res.json();
+
+      if (error) {
+        console.error('Stripe API error:', error);
+        setMessage('Stripe error: ' + error);
+        setLoading(false);
+        return;
+      }
+
+      const result = await stripe.confirmPayment({
+        elements,
+        clientSecret,
+        confirmParams: {},
+        redirect: 'if_required',
+      });
+
+      if (result.error) {
+        console.error('PaymentElement error:', result.error);
+        setMessage('Payment failed: ' + (result.error.message || 'Unknown error'));
+      } else if (result.paymentIntent?.status === 'succeeded') {
+        setMessage('Payment successful! Thank you 🙏');
+      } else {
+        setMessage('Payment status: ' + (result.paymentIntent?.status || 'Unknown'));
+      }
+    } catch (err: any) {
+      console.error('Unexpected error:', err);
+      setMessage('Unexpected error: ' + (err.message || err.toString()));
     }
-
-    const result = await stripe.confirmPayment({
-      elements,
-      clientSecret,
-      confirmParams: {},
-      redirect: 'if_required',
-    });
-
-    if (result.error) {
-      setMessage(result.error.message || 'Payment failed');
-    } else if (result.paymentIntent?.status === 'succeeded') {
-      setMessage('Payment successful! Thank you 🙏');
-    }
-
     setLoading(false);
   };
 

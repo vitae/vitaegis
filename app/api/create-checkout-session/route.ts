@@ -8,38 +8,32 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: NextRequest) {
   try {
     const { quantity } = await req.json();
-
-    // Safety check
     const ticketQuantity = Math.max(1, Math.min(quantity || 1, 10));
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: ticketQuantity * 100, // $1 per ticket
-      currency: 'usd',
-
-      // THIS ENABLES:
-      // Apple Pay, Google Pay, Link, cards, etc.
-      automatic_payment_methods: {
-        enabled: true,
-      },
-
-      // Optional but recommended
-      description: `Meditation Mondays — ${ticketQuantity} ticket(s)`,
-
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [
+        {
+          price: 'prod_TipeQSvjJhKRuz', // This should be a price ID, not a product ID
+          quantity: ticketQuantity,
+        },
+      ],
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`,
       metadata: {
         event: 'Meditation Mondays',
         tickets: String(ticketQuantity),
-        product_id: 'prod_TipeQSvjJhKRuz',
       },
     });
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
+      url: session.url,
     });
   } catch (err: any) {
     console.error('Stripe error:', err);
-    // Return more details for debugging (do not expose stack in production)
     return NextResponse.json(
-      { error: err.message, stack: err.stack },
+      { error: err.message },
       { status: 500 }
     );
   }
