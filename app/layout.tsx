@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import MatrixRainPro from '@/components/MatrixRainPro';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 
@@ -76,16 +75,9 @@ export default function RootLayout({
         <meta name="x-ua-compatible" content="IE=edge" />
       </head>
       <body className="antialiased text-white selection:bg-vitae-green selection:text-black font-futura">
-        {/* MatrixRainPro background */}
-        <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-          <MatrixRainPro opacity={0.5} />
-        </div>
-        {/* Main app content */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          {children}
-          <SpeedInsights />
-          <Analytics />
-        </div>
+        {children}
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );

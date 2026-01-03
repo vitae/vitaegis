@@ -184,11 +184,12 @@ export default function MondaysPage() {
             },
           }}
         >
-          <div className="absolute inset-0 bg-black z-0" />
+          {/* Black background to cover global MatrixRainPro from layout */}
+          <div className="fixed inset-0 bg-black z-[1]" />
 
           <canvas
             ref={canvasRef}
-            className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-50"
+            className="fixed inset-0 w-screen h-screen z-[2] pointer-events-none opacity-50"
           />
 
           {/* ⬇️ ONLY CHANGE IS HERE: pt-20 REMOVED */}
