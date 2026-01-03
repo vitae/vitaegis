@@ -59,11 +59,11 @@ function CheckoutForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
       <div className="w-full text-left">
-        <label className="block text-sm mb-2 text-white drop-shadow-[0_0_8px_red]">Number of Tickets</label>
+        <label className="block text-sm mb-2 text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">Number of Tickets</label>
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="w-full rounded-2xl bg-black/10 border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)] drop-shadow-[0_0_8px_red]"
+          className="w-full rounded-2xl bg-black/10 border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)]"
         >
           {[1, 2, 3, 4, 5].map((q) => (
             <option key={q} value={q}>
@@ -87,13 +87,13 @@ function CheckoutForm() {
       <button
         type="submit"
         disabled={!stripe || loading}
-        className="w-full px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20 hover:from-red-500 hover:to-red-400 transition disabled:opacity-50 uppercase drop-shadow-[0_0_8px_red]"
+        className="w-full px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20 hover:from-red-500 hover:to-red-400 transition disabled:opacity-50 uppercase"
       >
         {loading ? 'PROCESSING…' : 'BUY TICKETS'}
       </button>
 
       {message && (
-        <p className="text-red-500 text-sm mt-2 text-center bg-black/10 px-4 py-2 rounded-xl border border-red-500/50 drop-shadow-[0_0_8px_white]">{message}</p>
+        <p className="text-red-500 text-sm mt-2 text-center bg-black/10 px-4 py-2 rounded-xl border border-red-500/50">{message}</p>
       )}
     </form>
   );
@@ -319,7 +319,7 @@ export default function MondaysPage() {
                 <div className="pt-2">
                   <button
                     onClick={() => document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="inline-block px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20 hover:from-red-500 hover:to-red-400 transition cursor-pointer drop-shadow-[0_0_8px_red]"
+                    className="inline-block px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20 hover:from-red-500 hover:to-red-400 transition cursor-pointer"
                   >
                     TICKETS ONLY $9
                   </button>
@@ -329,13 +329,13 @@ export default function MondaysPage() {
               {/* Divider */}
               <div className="flex items-center px-6">
                 <span className="flex-1 h-px bg-red-500" />
-                <span className="px-4 text-red-500 text-xs uppercase tracking-wider drop-shadow-[0_0_8px_white]">Support the Movement</span>
+                <span className="px-4 text-red-500 text-xs uppercase tracking-wider">Support the Movement</span>
                 <span className="flex-1 h-px bg-red-500" />
               </div>
 
               {/* Payment Section */}
               <div id="payment-section" className="mx-4 my-6 p-6 rounded-2xl bg-black/10 border border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                <p className="text-center text-white text-sm mb-4 drop-shadow-[0_0_8px_red]">Support Our Community</p>
+                <p className="text-center text-white text-sm mb-4 drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">Support Our Community</p>
                 <CheckoutForm />
               </div>
 
@@ -344,10 +344,10 @@ export default function MondaysPage() {
             </div>
 
             {/* Tagline */}
-            <p className="mt-6 text-white text-sm tracking-wider drop-shadow-[0_0_8px_red]">
+            <p className="mt-6 text-white text-sm tracking-wider drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">
               Ancient wisdom. Aloha spirit.
             </p>
-            <p className="mt-2 text-white text-xs tracking-wider drop-shadow-[0_0_8px_red]">
+            <p className="mt-2 text-white text-xs tracking-wider drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">
               © 2026 VITAEGIS. All Rights Reserved.
             </p>
           </main>
