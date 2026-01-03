@@ -150,13 +150,14 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      // Semi-transparent black to create fade trail - higher alpha = faster fade to pure black
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      // Semi-transparent black overlay - higher alpha = faster complete fade to black
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
       ctx.fillRect(0, 0, width, height);
 
+      // Bright red text, no glow/shadow to prevent red accumulation
       ctx.fillStyle = '#ff0000';
-      ctx.shadowColor = '#ff0000';
-      ctx.shadowBlur = 2;
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
