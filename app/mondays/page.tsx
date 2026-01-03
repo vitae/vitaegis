@@ -143,16 +143,20 @@ export default function MondaysPage() {
 
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       ctx.font = `bold ${fontSize}px Jost, sans-serif`;
+      
+      // Fill canvas with solid black initially
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, width, height);
     };
 
     const draw = () => {
       // Semi-transparent black to create fade trail - higher alpha = faster fade to pure black
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
       ctx.fillRect(0, 0, width, height);
 
       ctx.fillStyle = '#ff0000';
       ctx.shadowColor = '#ff0000';
-      ctx.shadowBlur = 4;
+      ctx.shadowBlur = 2;
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
