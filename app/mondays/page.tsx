@@ -146,11 +146,13 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      // Semi-transparent black to create fade trail (lower = longer trails)
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+      // Semi-transparent black to create fade trail - higher alpha = faster fade to pure black
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       ctx.fillRect(0, 0, width, height);
 
-      ctx.fillStyle = '#ff4d4d';
+      ctx.fillStyle = '#ff0000';
+      ctx.shadowColor = '#ff0000';
+      ctx.shadowBlur = 8;
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
