@@ -270,7 +270,7 @@ export default function MondaysPage() {
           }}
         >
           {/* EDM FLYER STYLE */}
-          <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-8 font-['Jost']">
+          <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-8 font-['Jost'] select-none">
             {/* Glassmorphic Flyer Container */}
             <div className="w-full max-w-md bg-black/10 border border-red-500/50 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_30px_rgba(255,0,0,0.4)]">
               
