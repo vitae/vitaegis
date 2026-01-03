@@ -296,7 +296,7 @@ export default function MondaysPage() {
               {/* Event Details */}
               <div className="px-6 py-6 text-center space-y-5">
                 <div className="inline-block px-6 py-3 border border-red-500/50 rounded-2xl bg-black/10 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                  <p className="text-2xl sm:text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">EVERY MONDAY</p>
+                  <p className="text-[1.625rem] sm:text-[2rem] font-bold text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">EVERY MONDAY</p>
                 </div>
                 
                 <div className="space-y-4">
