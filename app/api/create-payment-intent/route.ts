@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         event: 'Meditation Mondays',
         tickets: String(ticketQuantity),
+        product_id: 'prod_Timd3yKsXo8rI1',
       },
     });
 

@@ -278,9 +278,12 @@ export default function MondaysPage() {
                 </div>
 
                 <div className="pt-2">
-                  <span className="inline-block px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20">
+                  <button
+                    onClick={() => document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="inline-block px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20 hover:from-red-500 hover:to-red-400 transition cursor-pointer"
+                  >
                     TICKETS ONLY $9
-                  </span>
+                  </button>
                 </div>
               </div>
 
@@ -292,7 +295,7 @@ export default function MondaysPage() {
               </div>
 
               {/* Payment Section */}
-              <div className="mx-4 my-6 p-6 rounded-2xl bg-black/10 backdrop-blur-[2px] border border-white/10">
+              <div id="payment-section" className="mx-4 my-6 p-6 rounded-2xl bg-black/10 backdrop-blur-[2px] border border-white/10">
                 <p className="text-center text-white text-sm mb-4">Support Our Community</p>
                 <CheckoutForm />
               </div>
