@@ -111,18 +111,17 @@ export default function MondaysPage() {
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 18 : 22;
-    const words = ['♥MEDITATION', '♥MONDAYS', '♥PEACE', '♥ZEN', '♥YOGA', '♥ALOHA', '♥BALANCE', '♥ENERGY', '♥LOVE', '♥BREATH'];
+    const words = [' ♥ MEDITATION', ' ♥ MONDAYS', ' ♥ PEACE', ' ♥ ZEN', ' ♥ YOGA', ' ♥ ALOHA', ' ♥ BALANCE', ' ♥ ENERGY', ' ♥ LOVE', ' ♥ BREATH'];
     const speed = 0.3; // Slow, smooth movement
 
     let width = window.innerWidth;
     let height = window.innerHeight;
     let columns = Math.floor(width / fontSize);
     
-    // Each column has: y position, current word index, and current letter index
-    // Stagger start positions based on column index (no randomization)
-    let drops = Array.from({ length: columns }, (_, i) => ({
-      y: -(i % 20) * 3, // Staggered start based on column index
-      wordIndex: i % words.length, // Cycle through words based on column
+    // Each column has: y position, current word, and current letter index
+    let drops = Array.from({ length: columns }, () => ({
+      y: Math.random() * -50,
+      word: words[Math.floor(Math.random() * words.length)],
       letterIndex: 0,
     }));
 
@@ -130,9 +129,9 @@ export default function MondaysPage() {
       width = window.innerWidth;
       height = window.innerHeight;
       columns = Math.floor(width / fontSize);
-      drops = Array.from({ length: columns }, (_, i) => ({
-        y: -(i % 20) * 3,
-        wordIndex: i % words.length,
+      drops = Array.from({ length: columns }, () => ({
+        y: Math.random() * -50,
+        word: words[Math.floor(Math.random() * words.length)],
         letterIndex: 0,
       }));
 
@@ -154,28 +153,27 @@ export default function MondaysPage() {
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
-        const word = words[d.wordIndex];
         const prevY = Math.floor(d.y - speed);
         const currY = Math.floor(d.y);
         
         // Only draw when crossing to a new grid row
         if (currY !== prevY && d.y > 0) {
-          const char = word[d.letterIndex];
+          const char = d.word[d.letterIndex];
           const x = i * fontSize;
           const y = currY * fontSize;
           ctx.fillText(char, x, y);
           
           // Move to next letter in the word
-          d.letterIndex = (d.letterIndex + 1) % word.length;
+          d.letterIndex = (d.letterIndex + 1) % d.word.length;
         }
 
         // Move drop down smoothly
         d.y += speed;
 
-        // Reset to top when off screen (deterministic, no random)
-        if (d.y * fontSize > height) {
-          d.y = -5;
-          d.wordIndex = (d.wordIndex + 1) % words.length; // Next word in sequence
+        // Reset to top with random delay when off screen
+        if (d.y * fontSize > height && Math.random() > 0.98) {
+          d.y = Math.random() * -10;
+          d.word = words[Math.floor(Math.random() * words.length)];
           d.letterIndex = 0;
         }
       }
