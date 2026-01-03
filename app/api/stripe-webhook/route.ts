@@ -6,11 +6,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
 });
 
-export const config = {
-  api: {
-    bodyParser: false, // Stripe requires the raw body
-  },
-};
 
 // Helper to buffer the raw request body
 async function buffer(readable: ReadableStream<Uint8Array>) {
