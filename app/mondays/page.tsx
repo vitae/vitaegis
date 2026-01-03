@@ -310,7 +310,7 @@ export default function MondaysPage() {
                 </h1>
                 <div className="mt-4 flex items-center justify-center gap-2">
                   <span className="h-px w-12 bg-red-500/50" />
-                  <span className="text-red-500 text-base">✦ SUNSET SESSIONS ✦</span>
+                  <span className="text-red-500" style={{fontSize: '17px'}}>✦ SUNSET SESSIONS ✦</span>
                   <span className="h-px w-12 bg-red-500/50" />
                 </div>
               </div>
