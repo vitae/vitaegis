@@ -17,6 +17,18 @@ function CheckoutForm() {
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  // Show success if redirected with ?payment=success
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('payment') === 'success') {
+        setMessage('Payment Success! Thank you 🙏');
+        setTimeout(() => {
+          document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []);
   const [quantity, setQuantity] = useState(1);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,10 +71,24 @@ function CheckoutForm() {
         return;
       }
 
+      // Detect if Cash App Pay is selected
+      const paymentElement = elements.getElement('payment');
+      let paymentMethodType = '';
+      if (paymentElement) {
+        const elementType = paymentElement._componentName || paymentElement._component || '';
+        paymentMethodType = elementType.toLowerCase();
+      }
+
+      // Always set return_url for Cash App Pay, otherwise omit
+      const confirmParams: any = {};
+      if (paymentMethodType.includes('cashapp')) {
+        confirmParams.return_url = window.location.origin + "/mondays?payment=success";
+      }
+
       const result = await stripe.confirmPayment({
         elements,
         clientSecret,
-        confirmParams: {},
+        confirmParams,
         redirect: 'if_required',
       });
 
