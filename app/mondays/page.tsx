@@ -118,10 +118,11 @@ export default function MondaysPage() {
     let height = window.innerHeight;
     let columns = Math.floor(width / fontSize);
     
-    // Each column has: y position, current word, and current letter index
-    let drops = Array.from({ length: columns }, () => ({
-      y: Math.random() * -50,
-      word: words[Math.floor(Math.random() * words.length)],
+    // Each column has: y position, word index, and current letter index
+    // Scatter start positions using a prime multiplier to avoid diagonal pattern
+    let drops = Array.from({ length: columns }, (_, i) => ({
+      y: -((i * 7) % 30) * 2,
+      wordIndex: i % words.length,
       letterIndex: 0,
     }));
 
@@ -129,9 +130,9 @@ export default function MondaysPage() {
       width = window.innerWidth;
       height = window.innerHeight;
       columns = Math.floor(width / fontSize);
-      drops = Array.from({ length: columns }, () => ({
-        y: Math.random() * -50,
-        word: words[Math.floor(Math.random() * words.length)],
+      drops = Array.from({ length: columns }, (_, i) => ({
+        y: -((i * 7) % 30) * 2,
+        wordIndex: i % words.length,
         letterIndex: 0,
       }));
 
@@ -153,27 +154,28 @@ export default function MondaysPage() {
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
+        const word = words[d.wordIndex];
         const prevY = Math.floor(d.y - speed);
         const currY = Math.floor(d.y);
         
         // Only draw when crossing to a new grid row
         if (currY !== prevY && d.y > 0) {
-          const char = d.word[d.letterIndex];
+          const char = word[d.letterIndex];
           const x = i * fontSize;
           const y = currY * fontSize;
           ctx.fillText(char, x, y);
           
           // Move to next letter in the word
-          d.letterIndex = (d.letterIndex + 1) % d.word.length;
+          d.letterIndex = (d.letterIndex + 1) % word.length;
         }
 
         // Move drop down smoothly
         d.y += speed;
 
-        // Reset to top with random delay when off screen
-        if (d.y * fontSize > height && Math.random() > 0.98) {
-          d.y = Math.random() * -10;
-          d.word = words[Math.floor(Math.random() * words.length)];
+        // Reset to top when off screen (deterministic, no random)
+        if (d.y * fontSize > height) {
+          d.y = -5;
+          d.wordIndex = (d.wordIndex + 1) % words.length;
           d.letterIndex = 0;
         }
       }
