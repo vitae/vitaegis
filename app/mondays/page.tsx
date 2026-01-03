@@ -126,6 +126,10 @@ export default function MondaysPage() {
       letterIndex: 0,
     }));
 
+    // Track recent characters for each column with their fade state
+    const trailLength = 8; // Number of trailing characters per column
+    let trails: { char: string; y: number; age: number }[][] = Array.from({ length: columns }, () => []);
+
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -135,6 +139,7 @@ export default function MondaysPage() {
         wordIndex: i % words.length,
         letterIndex: 0,
       }));
+      trails = Array.from({ length: columns }, () => []);
 
       canvas.width = width * DPR;
       canvas.height = height * DPR;
@@ -143,21 +148,12 @@ export default function MondaysPage() {
 
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       ctx.font = `bold ${fontSize}px Jost, sans-serif`;
-      
-      // Fill canvas with solid black initially
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
     };
 
     const draw = () => {
-      // Semi-transparent black overlay - 0.08 ensures complete fade to black
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      // Clear to pure black each frame
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, width, height);
-
-      // Bright red text, no glow/shadow to prevent red accumulation
-      ctx.fillStyle = '#ff0000';
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
@@ -165,21 +161,37 @@ export default function MondaysPage() {
         const prevY = Math.floor(d.y - speed);
         const currY = Math.floor(d.y);
         
-        // Only draw when crossing to a new grid row
+        // Add new character when crossing to a new grid row
         if (currY !== prevY && d.y > 0) {
           const char = word[d.letterIndex];
-          const x = i * fontSize;
-          const y = currY * fontSize;
-          ctx.fillText(char, x, y);
+          trails[i].unshift({ char, y: currY * fontSize, age: 0 });
           
-          // Move to next letter in the word
+          // Limit trail length
+          if (trails[i].length > trailLength) {
+            trails[i].pop();
+          }
+          
           d.letterIndex = (d.letterIndex + 1) % word.length;
         }
+
+        // Draw trail with fading opacity
+        for (let j = 0; j < trails[i].length; j++) {
+          const t = trails[i][j];
+          const opacity = 1 - (t.age / trailLength);
+          if (opacity > 0) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
+            ctx.fillText(t.char, i * fontSize, t.y);
+          }
+          t.age += 0.15; // Fade speed
+        }
+        
+        // Remove fully faded characters
+        trails[i] = trails[i].filter(t => t.age < trailLength);
 
         // Move drop down smoothly
         d.y += speed;
 
-        // Reset to top when off screen (deterministic, no random)
+        // Reset to top when off screen
         if (d.y * fontSize > height) {
           d.y = -5;
           d.wordIndex = (d.wordIndex + 1) % words.length;
