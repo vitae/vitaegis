@@ -63,7 +63,7 @@ function CheckoutForm() {
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="w-full rounded-2xl bg-black/30 backdrop-blur-sm border border-white/10 p-4 text-white focus:border-red-400 focus:outline-none transition"
+          className="w-full rounded-2xl bg-black/20 backdrop-blur-[2px] border border-white/10 p-4 text-white focus:border-red-400 focus:outline-none transition"
         >
           {[1, 2, 3, 4, 5].map((q) => (
             <option key={q} value={q}>
@@ -74,7 +74,7 @@ function CheckoutForm() {
       </div>
 
       <div className="w-full">
-        <div className="p-5 rounded-2xl border border-white/10 bg-black/30 backdrop-blur-sm">
+        <div className="p-5 rounded-2xl border border-white/10 bg-black/20 backdrop-blur-[2px]">
           <PaymentElement options={{
             wallets: {
               applePay: 'auto',
@@ -229,7 +229,7 @@ export default function MondaysPage() {
           {/* EDM FLYER STYLE */}
           <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-8 font-['Jost']">
             {/* Glassmorphic Flyer Container */}
-            <div className="w-full max-w-md backdrop-blur-sm bg-black/30 border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_40px_rgba(239,68,68,0.15)]">
+            <div className="w-full max-w-md backdrop-blur-[2px] bg-black/20 border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_40px_rgba(239,68,68,0.15)]">
               
               {/* Top Accent Bar */}
               <div className="h-1 bg-gradient-to-r from-transparent via-red-500/80 to-transparent" />
@@ -252,7 +252,7 @@ export default function MondaysPage() {
 
               {/* Event Details */}
               <div className="px-6 py-6 text-center space-y-5">
-                <div className="inline-block px-6 py-3 border border-white/10 rounded-2xl bg-black/20 backdrop-blur-sm">
+                <div className="inline-block px-6 py-3 border border-white/10 rounded-2xl bg-black/10 backdrop-blur-[2px]">
                   <p className="text-3xl sm:text-4xl font-bold text-white">EVERY MONDAY</p>
                 </div>
                 
@@ -288,7 +288,7 @@ export default function MondaysPage() {
               </div>
 
               {/* Payment Section */}
-              <div className="mx-4 my-6 p-6 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/10">
+              <div className="mx-4 my-6 p-6 rounded-2xl bg-black/10 backdrop-blur-[2px] border border-white/10">
                 <p className="text-center text-white text-sm mb-4">Support Our Community</p>
                 <CheckoutForm />
               </div>
