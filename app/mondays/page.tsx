@@ -59,7 +59,7 @@ function CheckoutForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
       <div className="w-full text-left">
-        <label className="block text-sm mb-2 text-white/80">Number of Tickets</label>
+        <label className="block text-sm mb-2 text-white">Number of Tickets</label>
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
@@ -152,7 +152,7 @@ export default function MondaysPage() {
 
       ctx.fillStyle = '#ff0000';
       ctx.shadowColor = '#ff0000';
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 4;
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
@@ -203,10 +203,13 @@ export default function MondaysPage() {
 
   return (
     <>
+      {/* Solid black background */}
+      <div className="fixed inset-0 bg-black z-0" />
+      
       {/* Red Matrix Rain - always rendered */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 w-screen h-screen z-[5] pointer-events-none opacity-80"
+        className="fixed inset-0 w-screen h-screen z-[5] pointer-events-none"
       />
 
       {clientSecret && (
@@ -262,10 +265,10 @@ export default function MondaysPage() {
 
                 <div className="pt-2">
                   <p className="text-red-400 font-bold text-2xl">📍 Lē'ahi Beach Park</p>
-                  <p className="text-white/60 text-lg">Waikīkī, Honolulu</p>
+                  <p className="text-white text-lg">Waikīkī, Honolulu</p>
                 </div>
 
-                <div className="space-y-1 text-lg text-white/70">
+                <div className="space-y-1 text-lg text-white">
                   <p>🧘‍♀️ Bring a mat</p>
                   <p>💧 Bring water</p>
                 </div>
@@ -286,7 +289,7 @@ export default function MondaysPage() {
 
               {/* Payment Section */}
               <div className="mx-4 my-6 p-6 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/10">
-                <p className="text-center text-white/60 text-sm mb-4">Support Our Community</p>
+                <p className="text-center text-white text-sm mb-4">Support Our Community</p>
                 <CheckoutForm />
               </div>
 
@@ -295,7 +298,7 @@ export default function MondaysPage() {
             </div>
 
             {/* Tagline */}
-            <p className="mt-6 text-white/50 text-sm tracking-wider">
+            <p className="mt-6 text-white text-sm tracking-wider">
               Ancient wisdom. Aloha spirit.
             </p>
           </main>
