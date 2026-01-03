@@ -59,7 +59,7 @@ function CheckoutForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
       <div className="w-full text-left">
-        <label className="block text-sm mb-2 text-red-500">Number of Tickets</label>
+        <label className="block text-sm mb-2 text-white">Number of Tickets</label>
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
@@ -254,10 +254,10 @@ export default function MondaysPage() {
               {/* Header */}
               <div className="px-6 pt-8 pb-4 text-center border-b border-white/10">
                 <p className="text-red-500 text-base tracking-[0.3em] uppercase mb-2">Vitaegis Presents</p>
-                <h1 className="text-[2.75rem] sm:text-5xl font-black text-red-500 leading-tight">
+                <h1 className="text-[2.75rem] sm:text-5xl font-black text-white leading-tight drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">
                   MEDITATION
                 </h1>
-                <h1 className="text-[2.75rem] sm:text-5xl font-black text-red-500 leading-tight">
+                <h1 className="text-[2.75rem] sm:text-5xl font-black text-white leading-tight drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">
                   MONDAYS
                 </h1>
                 <div className="mt-4 flex items-center justify-center gap-2">
@@ -270,22 +270,22 @@ export default function MondaysPage() {
               {/* Event Details */}
               <div className="px-6 py-6 text-center space-y-5">
                 <div className="inline-block px-6 py-3 border border-red-500/50 rounded-2xl bg-black/10 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                  <p className="text-3xl sm:text-4xl font-bold text-red-500">EVERY MONDAY</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-white">EVERY MONDAY</p>
                 </div>
                 
                 <div className="space-y-4">
-                  <p className="text-2xl sm:text-3xl text-red-500 font-semibold">🧘 Meditation</p>
-                  <p className="text-red-500 font-bold text-xl sm:text-2xl">4:30 PM</p>
-                  <p className="text-2xl sm:text-3xl text-red-500 font-semibold pt-2">🕉️ Yoga</p>
-                  <p className="text-red-500 font-bold text-xl sm:text-2xl">5:30 PM</p>
+                  <p className="text-2xl sm:text-3xl text-white font-semibold">🧘 Meditation</p>
+                  <p className="text-white font-bold text-xl sm:text-2xl">4:30 PM</p>
+                  <p className="text-2xl sm:text-3xl text-white font-semibold pt-2">🕉️ Yoga</p>
+                  <p className="text-white font-bold text-xl sm:text-2xl">5:30 PM</p>
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-red-500 font-bold text-2xl">📍 Lē'ahi Beach Park</p>
-                  <p className="text-red-500 text-lg">Waikīkī, Honolulu</p>
+                  <p className="text-white font-bold text-2xl">📍 Lē'ahi Beach Park</p>
+                  <p className="text-white text-lg">Waikīkī, Honolulu</p>
                 </div>
 
-                <div className="space-y-1 text-lg text-red-500">
+                <div className="space-y-1 text-lg text-white">
                   <p>🧘‍♀️ Bring a mat</p>
                   <p>💧 Bring water</p>
                 </div>
@@ -309,7 +309,7 @@ export default function MondaysPage() {
 
               {/* Payment Section */}
               <div id="payment-section" className="mx-4 my-6 p-6 rounded-2xl bg-black/10 border border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                <p className="text-center text-red-500 text-sm mb-4">Support Our Community</p>
+                <p className="text-center text-white text-sm mb-4">Support Our Community</p>
                 <CheckoutForm />
               </div>
 
@@ -318,8 +318,11 @@ export default function MondaysPage() {
             </div>
 
             {/* Tagline */}
-            <p className="mt-6 text-red-500 text-sm tracking-wider">
+            <p className="mt-6 text-white text-sm tracking-wider">
               Ancient wisdom. Aloha spirit.
+            </p>
+            <p className="mt-2 text-white text-xs tracking-wider">
+              © 2026 VITAEGIS. All Rights Reserved.
             </p>
           </main>
         </Elements>
