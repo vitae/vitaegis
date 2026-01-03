@@ -58,12 +58,12 @@ function CheckoutForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
-      <div className="w-full text-left">
-        <label className="block text-sm mb-2 text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">Number of Tickets</label>
+      <div className="w-full flex flex-col items-center">
+        <label className="block text-sm mb-2 text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)] text-center">Number of Tickets</label>
         <select
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="w-full rounded-2xl bg-black/10 border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)]"
+          className="w-full max-w-xs rounded-2xl bg-black/10 border border-red-500/50 p-4 text-white focus:border-red-400 focus:outline-none transition shadow-[0_0_15px_rgba(255,0,0,0.3)] text-center"
         >
           {[1, 2, 3, 4, 5].map((q) => (
             <option key={q} value={q}>
@@ -307,8 +307,8 @@ export default function MondaysPage() {
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-white font-bold text-2xl drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">📍 Lē'ahi Beach Park</p>
-                  <p className="text-white text-lg drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">Waikīkī, Honolulu</p>
+                  <p className="text-white font-bold text-2xl drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">📍 Le'ahi Beach Park</p>
+                  <p className="text-white text-lg drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">Waikiki, Honolulu</p>
                 </div>
 
                 <div className="space-y-1 text-lg text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">
@@ -335,7 +335,6 @@ export default function MondaysPage() {
 
               {/* Payment Section */}
               <div id="payment-section" className="mx-4 my-6 p-6 rounded-2xl bg-black/10 border border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                <p className="text-center text-white text-sm mb-4 drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">Support Our Community</p>
                 <CheckoutForm />
               </div>
 
