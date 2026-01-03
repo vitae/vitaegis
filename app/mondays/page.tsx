@@ -178,6 +178,12 @@ export default function MondaysPage() {
 
   return (
     <>
+      {/* Red Matrix Rain - always rendered */}
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 w-screen h-screen z-[5] pointer-events-none opacity-80"
+      />
+
       {clientSecret && (
         <Elements
           stripe={stripePromise}
@@ -192,19 +198,10 @@ export default function MondaysPage() {
             },
           }}
         >
-          {/* Black background */}
-          <div className="fixed inset-0 bg-black z-[1]" />
-
-          {/* Red Matrix Rain */}
-          <canvas
-            ref={canvasRef}
-            className="fixed inset-0 w-screen h-screen z-[2] pointer-events-none opacity-60"
-          />
-
           {/* EDM FLYER STYLE */}
           <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-8 font-['Jost']">
             {/* Glassmorphic Flyer Container */}
-            <div className="w-full max-w-md backdrop-blur-md bg-black/20 border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_40px_rgba(239,68,68,0.15)]">
+            <div className="w-full max-w-md backdrop-blur-sm bg-black/30 border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_40px_rgba(239,68,68,0.15)]">
               
               {/* Top Accent Bar */}
               <div className="h-1 bg-gradient-to-r from-transparent via-red-500/80 to-transparent" />
