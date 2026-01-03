@@ -50,6 +50,15 @@ function CheckoutForm() {
         return;
       }
 
+      // Submit PaymentElement data before confirming payment
+      try {
+        await elements.submit();
+      } catch (submitError: any) {
+        setMessage('Error submitting payment details: ' + (submitError.message || submitError.toString()));
+        setLoading(false);
+        return;
+      }
+
       const result = await stripe.confirmPayment({
         elements,
         clientSecret,
