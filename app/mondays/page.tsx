@@ -251,9 +251,11 @@ export default function MondaysPage() {
                   <p className="text-3xl sm:text-4xl font-bold text-white">EVERY MONDAY</p>
                 </div>
                 
-                <div className="space-y-3 text-xl sm:text-2xl">
-                  <p className="text-white">🧘 Meditation — <span className="text-red-400 font-bold">4:30 PM</span></p>
-                  <p className="text-white">🕉️ Yoga — <span className="text-red-400 font-bold">5:30 PM</span></p>
+                <div className="space-y-4">
+                  <p className="text-2xl sm:text-3xl text-white font-semibold">🧘 Meditation</p>
+                  <p className="text-red-400 font-bold text-xl sm:text-2xl">4:30 PM</p>
+                  <p className="text-2xl sm:text-3xl text-white font-semibold pt-2">🕉️ Yoga</p>
+                  <p className="text-red-400 font-bold text-xl sm:text-2xl">5:30 PM</p>
                 </div>
 
                 <div className="pt-2">
