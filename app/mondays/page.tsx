@@ -87,9 +87,9 @@ function CheckoutForm() {
       <button
         type="submit"
         disabled={!stripe || loading}
-        className="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold rounded-2xl hover:from-red-500 hover:to-red-400 transition shadow-lg shadow-red-500/30 border border-white/10 disabled:opacity-50"
+        className="w-full px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-2xl rounded-full shadow-lg shadow-red-500/40 border border-white/20 hover:from-red-500 hover:to-red-400 transition disabled:opacity-50 uppercase"
       >
-        {loading ? 'Processing…' : 'Buy Tickets'}
+        {loading ? 'PROCESSING…' : 'BUY TICKETS'}
       </button>
 
       {message && (
@@ -110,31 +110,19 @@ export default function MondaysPage() {
     if (!ctx) return;
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
-    const fontSize = window.innerWidth < 768 ? 22 : 28;
-    const words = [
-      '♥ MEDITATION ',
-      '♥ MONDAYS ',
-      '♥ ALOHA ',
-      '♥ PEACE ',
-      '♥ ZEN ',
-      '♥ YOGA ',
-      '♥ ENERGY ',
-      '♥ BALANCE ',
-    ];
+    const fontSize = window.innerWidth < 768 ? 18 : 22;
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン♥MEDITAONYS';
 
     let width = window.innerWidth;
     let height = window.innerHeight;
     let columns = Math.floor(width / fontSize);
-    let drops = Array.from({ length: columns }, () => ({
-      y: Math.random() * height / fontSize,
-      word: words[Math.floor(Math.random() * words.length)],
-      index: 0,
-    }));
+    let drops = Array.from({ length: columns }, () => Math.random() * -100);
 
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
       columns = Math.floor(width / fontSize);
+      drops = Array.from({ length: columns }, () => Math.random() * -100);
 
       canvas.width = width * DPR;
       canvas.height = height * DPR;
@@ -146,16 +134,28 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      // Semi-transparent black to create fade trail
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       ctx.fillRect(0, 0, width, height);
+
       ctx.fillStyle = '#ff4d4d';
 
-      drops.forEach((d, i) => {
-        ctx.fillText(d.word[d.index], i * fontSize, d.y * fontSize);
-        d.index = (d.index + 1) % d.word.length;
-        d.y += 0.7;
-        if (d.y * fontSize > height && Math.random() > 0.9) d.y = 0;
-      });
+      for (let i = 0; i < drops.length; i++) {
+        // Random character
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+
+        ctx.fillText(char, x, y);
+
+        // Move drop down
+        drops[i]++;
+
+        // Reset to top with random delay when off screen
+        if (drops[i] * fontSize > height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+      }
 
       requestAnimationFrame(draw);
     };
