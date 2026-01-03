@@ -57,13 +57,18 @@ function CheckoutForm() {
         redirect: 'if_required',
       });
 
+      // Log the full result for debugging
+      console.log('Stripe confirmPayment result:', result);
+
       if (result.error) {
         console.error('PaymentElement error:', result.error);
         setMessage('Payment failed: ' + (result.error.message || 'Unknown error'));
       } else if (result.paymentIntent?.status === 'succeeded') {
         setMessage('Payment successful! Thank you 🙏');
+      } else if (result.paymentIntent) {
+        setMessage('Payment status: ' + result.paymentIntent.status + '\n' + JSON.stringify(result.paymentIntent, null, 2));
       } else {
-        setMessage('Payment status: ' + (result.paymentIntent?.status || 'Unknown'));
+        setMessage('No error, but no PaymentIntent returned. Full result: ' + JSON.stringify(result, null, 2));
       }
     } catch (err: any) {
       console.error('Unexpected error:', err);
