@@ -111,18 +111,19 @@ export default function MondaysPage() {
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 18 : 22;
-    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン♥MEDITAONYS';
+    const chars = '♥MEDITAONYS♥PEACE♥ZEN♥YOGA♥ALOHA♥BALANCE♥ENERGY';
+    const speed = 0.3; // Slow, smooth movement
 
     let width = window.innerWidth;
     let height = window.innerHeight;
     let columns = Math.floor(width / fontSize);
-    let drops = Array.from({ length: columns }, () => Math.random() * -100);
+    let drops = Array.from({ length: columns }, () => Math.random() * -50);
 
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
       columns = Math.floor(width / fontSize);
-      drops = Array.from({ length: columns }, () => Math.random() * -100);
+      drops = Array.from({ length: columns }, () => Math.random() * -50);
 
       canvas.width = width * DPR;
       canvas.height = height * DPR;
@@ -135,25 +136,26 @@ export default function MondaysPage() {
 
     const draw = () => {
       // Semi-transparent black to create fade trail
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, width, height);
 
       ctx.fillStyle = '#ff4d4d';
 
       for (let i = 0; i < drops.length; i++) {
-        // Random character
-        const char = chars[Math.floor(Math.random() * chars.length)];
-        const x = i * fontSize;
-        const y = drops[i] * fontSize;
+        // Only draw when at a whole number position (grid-aligned)
+        if (Math.floor(drops[i]) !== Math.floor(drops[i] - speed)) {
+          const char = chars[Math.floor(Math.random() * chars.length)];
+          const x = i * fontSize;
+          const y = Math.floor(drops[i]) * fontSize;
+          ctx.fillText(char, x, y);
+        }
 
-        ctx.fillText(char, x, y);
-
-        // Move drop down
-        drops[i]++;
+        // Move drop down smoothly
+        drops[i] += speed;
 
         // Reset to top with random delay when off screen
-        if (drops[i] * fontSize > height && Math.random() > 0.975) {
-          drops[i] = 0;
+        if (drops[i] * fontSize > height && Math.random() > 0.98) {
+          drops[i] = Math.random() * -20;
         }
       }
 
