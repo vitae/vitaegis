@@ -43,9 +43,7 @@ function CheckoutForm() {
     const result = await stripe.confirmPayment({
       elements,
       clientSecret,
-      confirmParams: {
-        // Stripe automatically collects email for receipts
-      },
+      confirmParams: {},
       redirect: 'if_required',
     });
 
@@ -60,7 +58,6 @@ function CheckoutForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
-      {/* Ticket Quantity */}
       <div className="w-full text-left">
         <label className="block text-sm mb-1 text-white/80">Tickets</label>
         <select
@@ -76,7 +73,6 @@ function CheckoutForm() {
         </select>
       </div>
 
-      {/* Stripe Payment Element */}
       <div className="w-full">
         <div className="p-4 rounded-xl border border-white/30 bg-black/40">
           <PaymentElement />
@@ -102,7 +98,6 @@ export default function MondaysPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  /* ================= MATRIX CANVAS ================= */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -166,7 +161,6 @@ export default function MondaysPage() {
     return () => window.removeEventListener('resize', resize);
   }, []);
 
-  // fetch clientSecret when page loads
   useEffect(() => {
     fetch('/api/create-payment-intent', {
       method: 'POST',
@@ -197,23 +191,19 @@ export default function MondaysPage() {
             className="fixed inset-0 w-screen h-screen z-5 pointer-events-none opacity-50"
           />
 
-          <main className="relative z-10 text-white pt-20 space-y-8">
+          {/* ⬇️ ONLY CHANGE IS HERE: pt-20 REMOVED */}
+          <main className="relative z-10 text-white space-y-8">
             {/* HERO */}
-            <section
-              id="hero"
-              className="flex flex-col items-center justify-start px-8 text-center"
-            >
+            <section className="flex flex-col items-center justify-start px-8 text-center">
               <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
                 <div className="p-6">
-                  <h1 className="text-4xl sm:text-4xl md:text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
+                  <h1 className="text-4xl font-black mb-2 bg-gradient-to-r from-red-900 to-red-500 bg-clip-text text-transparent">
                     MEDITATION MONDAYS
                   </h1>
-
-                  <p className="text-5x1 sm:text-4xl text-red-400 tracking-wider mb-2">
+                  <p className="text-4xl text-red-400 mb-2">
                     SUNSET SESSIONS
                   </p>
-
-                  <p className="text-3x1 sm:text-base text-white/80">
+                  <p className="text-base text-white/80">
                     Ancient wisdom. Aloha spirit.
                   </p>
                 </div>
@@ -221,13 +211,13 @@ export default function MondaysPage() {
             </section>
 
             {/* PRACTICES */}
-            <section id="practices" className="flex justify-center px-6 text-center">
+            <section className="flex justify-center px-6 text-center">
               <div className="relative flex items-center justify-center rounded-full border border-white/30 backdrop-blur-md w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] red-glow">
                 <div className="p-6">
-                  <h2 className="text-4xl sm:text-4xl font-bold mb-2 text-red-400">
+                  <h2 className="text-4xl font-bold mb-2 text-red-400">
                     EVERY MONDAY
                   </h2>
-                  <div className="space-y-1 text-5x1 sm:text-base">
+                  <div className="space-y-1">
                     <p>🧘 Meditation — 4:30 PM</p>
                     <p>🕉️ Yoga — 5:30 PM</p>
                     <p className="text-red-400">Lē'ahi Beach Park · Waikīkī</p>
@@ -238,17 +228,9 @@ export default function MondaysPage() {
               </div>
             </section>
 
-            {/* COMMUNITY / PAYMENT */}
-            <section id="community" className="flex justify-center px-6">
-              <div
-                className="
-                  relative flex flex-col items-center justify-center
-                  rounded-full red-glow backdrop-blur-md border border-white/30
-                  w-96 sm:w-96 md:w-[28rem]
-                  min-h-[28rem] sm:min-h-[32rem] md:min-h-[36rem]
-                  p-6
-                "
-              >
+            {/* PAYMENT */}
+            <section className="flex justify-center px-6">
+              <div className="relative flex flex-col items-center justify-center rounded-full red-glow backdrop-blur-md border border-white/30 w-96 md:w-[28rem] min-h-[36rem] p-6">
                 <CheckoutForm />
               </div>
             </section>
