@@ -111,17 +111,18 @@ export default function MondaysPage() {
 
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 18 : 22;
-    const words = [' ♥ MEDITATION', ' ♥ MONDAYS', ' ♥ PEACE', ' ♥ ZEN', ' ♥ YOGA', ' ♥ ALOHA', ' ♥ BALANCE', ' ♥ ENERGY', ' ♥ LOVE', ' ♥ BREATH'];
+    const words = ['♥MEDITATION', '♥MONDAYS', '♥PEACE', '♥ZEN', '♥YOGA', '♥ALOHA', '♥BALANCE', '♥ENERGY', '♥LOVE', '♥BREATH'];
     const speed = 0.3; // Slow, smooth movement
 
     let width = window.innerWidth;
     let height = window.innerHeight;
     let columns = Math.floor(width / fontSize);
     
-    // Each column has: y position, current word, and current letter index
-    let drops = Array.from({ length: columns }, () => ({
-      y: Math.random() * -50,
-      word: words[Math.floor(Math.random() * words.length)],
+    // Each column has: y position, current word index, and current letter index
+    // Stagger start positions based on column index (no randomization)
+    let drops = Array.from({ length: columns }, (_, i) => ({
+      y: -(i % 20) * 3, // Staggered start based on column index
+      wordIndex: i % words.length, // Cycle through words based on column
       letterIndex: 0,
     }));
 
@@ -129,9 +130,9 @@ export default function MondaysPage() {
       width = window.innerWidth;
       height = window.innerHeight;
       columns = Math.floor(width / fontSize);
-      drops = Array.from({ length: columns }, () => ({
-        y: Math.random() * -50,
-        word: words[Math.floor(Math.random() * words.length)],
+      drops = Array.from({ length: columns }, (_, i) => ({
+        y: -(i % 20) * 3,
+        wordIndex: i % words.length,
         letterIndex: 0,
       }));
 
@@ -153,27 +154,28 @@ export default function MondaysPage() {
 
       for (let i = 0; i < drops.length; i++) {
         const d = drops[i];
+        const word = words[d.wordIndex];
         const prevY = Math.floor(d.y - speed);
         const currY = Math.floor(d.y);
         
         // Only draw when crossing to a new grid row
         if (currY !== prevY && d.y > 0) {
-          const char = d.word[d.letterIndex];
+          const char = word[d.letterIndex];
           const x = i * fontSize;
           const y = currY * fontSize;
           ctx.fillText(char, x, y);
           
           // Move to next letter in the word
-          d.letterIndex = (d.letterIndex + 1) % d.word.length;
+          d.letterIndex = (d.letterIndex + 1) % word.length;
         }
 
         // Move drop down smoothly
         d.y += speed;
 
-        // Reset to top with random delay when off screen
-        if (d.y * fontSize > height && Math.random() > 0.98) {
-          d.y = Math.random() * -10;
-          d.word = words[Math.floor(Math.random() * words.length)];
+        // Reset to top when off screen (deterministic, no random)
+        if (d.y * fontSize > height) {
+          d.y = -5;
+          d.wordIndex = (d.wordIndex + 1) % words.length; // Next word in sequence
           d.letterIndex = 0;
         }
       }
@@ -244,32 +246,24 @@ export default function MondaysPage() {
               </div>
 
               {/* Event Details */}
-              <div className="px-6 py-6 text-center space-y-4">
+              <div className="px-6 py-6 text-center space-y-5">
                 <div className="inline-block px-6 py-3 border border-white/10 rounded-2xl bg-black/20 backdrop-blur-sm">
-                  <p className="text-2xl sm:text-3xl font-bold text-white">EVERY MONDAY</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-white">EVERY MONDAY</p>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 text-left">
-                  <div className="p-4 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
-                    <p className="text-red-400 text-sm uppercase tracking-wider">Session 1</p>
-                    <p className="text-white font-bold text-lg">🧘 Meditation</p>
-                    <p className="text-white/70 text-base">4:30 PM</p>
-                  </div>
-                  <div className="p-4 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
-                    <p className="text-red-400 text-sm uppercase tracking-wider">Session 2</p>
-                    <p className="text-white font-bold text-lg">🕉️ Yoga</p>
-                    <p className="text-white/70 text-base">5:30 PM</p>
-                  </div>
+                <div className="space-y-3 text-xl sm:text-2xl">
+                  <p className="text-white">🧘 Meditation — <span className="text-red-400 font-bold">4:30 PM</span></p>
+                  <p className="text-white">🕉️ Yoga — <span className="text-red-400 font-bold">5:30 PM</span></p>
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-red-400 font-bold text-xl">📍 Lē'ahi Beach Park</p>
-                  <p className="text-white/60 text-base">Waikīkī, Honolulu</p>
+                  <p className="text-red-400 font-bold text-2xl">📍 Lē'ahi Beach Park</p>
+                  <p className="text-white/60 text-lg">Waikīkī, Honolulu</p>
                 </div>
 
-                <div className="flex items-center justify-center gap-4 text-base text-white/70">
-                  <span>🧘‍♀️ Bring a mat</span>
-                  <span>💧 Bring water</span>
+                <div className="space-y-1 text-lg text-white/70">
+                  <p>🧘‍♀️ Bring a mat</p>
+                  <p>💧 Bring water</p>
                 </div>
 
                 <div className="pt-2">
