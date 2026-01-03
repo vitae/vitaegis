@@ -150,8 +150,8 @@ export default function MondaysPage() {
     };
 
     const draw = () => {
-      // Semi-transparent black overlay - higher alpha = faster complete fade to black
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+      // Semi-transparent black overlay - lower alpha = letters stay red longer
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
       ctx.fillRect(0, 0, width, height);
 
       // Bright red text, no glow/shadow to prevent red accumulation
