@@ -70,7 +70,7 @@ export default function PracticesSection() {
       ref={sectionRef}
       className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center px-4">
         {/* Section Header in Glassmorphic Container */}
         <GlassContainer variant="default" glow={true} className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto">
           <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">

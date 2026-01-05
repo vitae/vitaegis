@@ -12,7 +12,7 @@ const footerLinks = {
 export default function Footer() {
   return (
     <footer className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10 flex flex-col items-center justify-center">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center px-4">
         {/* Main Footer Content */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 lg:gap-12">
           {/* Brand Column */}
