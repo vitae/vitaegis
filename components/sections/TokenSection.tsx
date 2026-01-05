@@ -41,25 +41,24 @@ export default function TokenSection() {
       className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-stretch">
           {/* Left Column - Token Info in Glassmorphic Container */}
-          <GlassContainer variant="default" glow={true} className="p-6 sm:p-8 lg:p-10">
+          <GlassContainer variant="default" glow={true} className="p-6 sm:p-8 lg:p-10 h-full min-h-[400px] flex flex-col justify-between">
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
               <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
-                $VTGIS Token
+                $VITCOIN
               </span>
             </div>
 
             <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-              Fuel Your{' '}
-              <span className="text-vitae-green">Journey</span>
+              CHANGE YOUR{' '}
+              <span className="text-vitae-green">LIFE</span>
             </h2>
 
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
               <p>
-                The VTGIS token powers the entire Vitaegis ecosystem. Earn through 
-                consistent practice, stake for passive rewards, and unlock premium 
-                content and exclusive community features.
+                VITCOIN powers the entire blockchain ecosystem. Earn through stake for passive rewards, and unlock premium 
+                content and access to exclusive community events. 
               </p>
             </div>
 
@@ -88,7 +87,7 @@ export default function TokenSection() {
               <div className="flex items-center gap-2 text-sm text-white/50">
                 <span>Contract:</span>
                 <code className="px-3 py-1 rounded-lg bg-black/15 text-vitae-green font-mono text-xs">
-                  0x1234...5678
+                  0x1234...1337
                 </code>
                 <button className="text-white/50 hover:text-vitae-green transition-colors">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,8 +99,8 @@ export default function TokenSection() {
           </GlassContainer>
 
           {/* Right Column - Swap Interface */}
-          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-            <div className="relative p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-[0_0_60px_rgba(0,255,65,0.1)]">
+          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 h-full min-h-[400px] flex flex-col justify-between">
+            <div className="relative p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-[0_0_60px_rgba(0,255,65,0.1)] h-full flex flex-col justify-between">
               {/* Decorative glow */}
               <div className="absolute -top-px left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
@@ -148,7 +147,7 @@ export default function TokenSection() {
               <div className="p-4 rounded-2xl bg-black/15 backdrop-blur-sm border border-white/5 mt-2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-white/50">To</span>
-                  <span className="text-sm text-white/50">Balance: 125,000</span>
+                  <span className="text-sm text-white/50">Balance: 1,300,000</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <input
@@ -162,7 +161,7 @@ export default function TokenSection() {
                     <div className="w-5 h-5 rounded-full bg-vitae-green flex items-center justify-center text-black text-xs font-bold">
                       V
                     </div>
-                    <span className="font-medium text-vitae-green">VTGIS</span>
+                    <span className="font-medium text-vitae-green">VIT</span>
                     <svg className="w-4 h-4 text-vitae-green/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -174,9 +173,9 @@ export default function TokenSection() {
               <div className="flex items-center justify-between mt-4 px-2 text-sm text-white/50">
                 <div className="flex items-center gap-1">
                   <HiInformationCircle size={16} />
-                  <span>1 ETH = 42,000 VTGIS</span>
+                  <span>1 ETH = 1 VIT</span>
                 </div>
-                <span>~$2,450</span>
+                <span>~$3,450</span>
               </div>
 
               {/* Swap Button */}
@@ -184,7 +183,7 @@ export default function TokenSection() {
 
               {/* Powered by */}
               <div className="mt-4 text-center text-xs text-white/30">
-                Powered by Uniswap V3
+                Powered by VITAEGIS V3
               </div>
             </div>
           </div>
