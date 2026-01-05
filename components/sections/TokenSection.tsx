@@ -38,12 +38,12 @@ export default function TokenSection() {
     <section
       id="token"
       ref={sectionRef}
-      className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
+      className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center"
     >
-      <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-stretch">
+      <div className="max-w-7xl mx-auto w-full">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-stretch w-full justify-center text-center">
           {/* Left Column - Token Info in Glassmorphic Container */}
-          <GlassContainer variant="default" glow={true} className="p-6 sm:p-8 lg:p-10 h-full min-h-[400px] flex flex-col justify-between">
+          <GlassContainer variant="default" glow={true} className="w-full h-full min-h-[400px] flex flex-col justify-between">
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
               <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
                 $VITCOIN
@@ -99,7 +99,7 @@ export default function TokenSection() {
           </GlassContainer>
 
           {/* Right Column - Swap Interface */}
-          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 h-full min-h-[400px] flex flex-col justify-between">
+          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 w-full h-full min-h-[400px] flex flex-col justify-between">
             <div className="relative p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-[0_0_60px_rgba(0,255,65,0.1)] h-full flex flex-col justify-between">
               {/* Decorative glow */}
               <div className="absolute -top-px left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
