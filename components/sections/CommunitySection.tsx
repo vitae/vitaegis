@@ -45,9 +45,9 @@ export default function CommunitySection() {
     <section
       id="community"
       ref={sectionRef}
-      className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
+      className="relative min-h-screen flex flex-col items-center justify-center py-24 sm:py-32 px-4 sm:px-6 lg:px-8 text-center w-full"
     >
-      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center px-4">
+      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center px-4 text-center w-full">
         {/* Section Header in Glassmorphic Container */}
         <GlassContainer variant="default" glow={true} className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto">
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">

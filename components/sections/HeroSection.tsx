@@ -38,12 +38,12 @@ export default function HeroSection() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex flex-col items-center justify-center px-4 sm:px-6"
+      className="relative flex flex-col items-center justify-center px-4 sm:px-6 text-center w-full min-h-screen"
       style={{ minHeight: '100dvh' }}
     >
       {/* Content container with safe area padding */}
       <div 
-        className="w-full max-w-2xl flex flex-col items-center"
+        className="w-full max-w-2xl flex flex-col items-center justify-center mx-auto text-center"
         style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}
       >
         

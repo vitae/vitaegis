@@ -43,7 +43,7 @@ export default function GlassNav({ activeSection, onNavigate }: GlassNavProps) {
         isScrolled ? 'py-2' : 'py-4'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center w-full text-center">
         <div
           className={`relative flex items-center justify-between px-4 lg:px-6 py-2 lg:py-3 rounded-2xl transition-all duration-500 ${
             isScrolled
