@@ -16,19 +16,19 @@ export default function Footer() {
         {/* Main Footer Content */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 lg:gap-12">
           {/* Brand Column */}
-          <div className="col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vitae-green/20 to-transparent border border-vitae-green/50 flex items-center justify-center">
+          <div className="col-span-2 flex flex-col items-center justify-center text-justify">
+            <div className="flex flex-col items-center justify-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vitae-green/20 to-transparent border border-vitae-green/50 flex items-center justify-center mx-auto">
                 <span className="text-vitae-green font-bold text-lg">V</span>
               </div>
-              <span className="text-xl font-semibold tracking-wider">VITAEGIS</span>
+              <span className="text-xl font-semibold tracking-wider mx-auto">VITAEGIS</span>
             </div>
-            <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xs mx-auto text-justify">
               Ancient wisdom meets Cyberspirituality. Evolve your energy with Meditation, Yoga, and Tai Chi.
             </p>
 
             {/* Social Links */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-center w-full">
               {[
                 { icon: FaFacebook, href: 'https://facebook.com/vitaegis' },
                 { icon: FaInstagram, href: 'https://instagram.com/vitaegis' },
@@ -91,7 +91,7 @@ export default function Footer() {
 
         {/* Decorative element */}
         <div className="mt-8 flex justify-center">
-          <div className="text-[#00ff00]/80 text-xs tracking-[0.5em] uppercase">
+          <div className="text-[#00ff00]/80 text-[0.7rem] sm:text-xs tracking-[0.5em] uppercase">
             Health • Stealth • Wealth
           </div>
         </div>
