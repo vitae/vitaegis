@@ -95,35 +95,15 @@ export default function Home() {
             const el = document.getElementById(sectionIds[i]);
             if (el && el.offsetTop <= viewportMiddle) {
               setActiveSection(sectionIds[i]);
-              return (
-                <>
-                  <MatrixBackground />
-                  <div ref={containerRef} className="app-container app-content w-full max-w-7xl mx-auto px-4 flex flex-col min-h-screen justify-center">
-                    <GlassNav activeSection={activeSection} scrollProgress={scrollProgress} />
-                    <main className="flex-1 flex flex-col w-full items-center justify-center">
-                      <Suspense fallback={<SkeletonHero />}>
-                        <HeroSection />
-                      </Suspense>
-                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-                        <AboutSection />
-                      </Suspense>
-                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-                        <PracticesSection />
-                      </Suspense>
-                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-                        <TokenSection />
-                      </Suspense>
-                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
-                        <CommunitySection />
-                      </Suspense>
-                    </main>
-                    <Footer />
-                    <BottomNav />
-                  </div>
-                </>
-              );
+              break;
+            }
+          }
+        });
+      }
     };
-  }, []);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [sectionIds]);
 
   // Smooth scroll to section with iOS-like behavior
   const scrollToSection = (id: string) => {
