@@ -130,9 +130,9 @@ export default function HeroSection() {
           <p className="text-sm sm:text-base text-white/70 text-center leading-relaxed mb-5 sm:mb-6">
             Ancient wisdom meets Cyberspirituality:
           </p>
-          <p className="text-sm sm:text-base text-green/70 text-center leading-relaxed mb-5 sm:mb-6">
+           <p className="text-xs sm:text-sm text-green/70 text-center leading-relaxed mb-5 sm:mb-6">
              Evolve your energy with Meditation, Yoga, Tai Chi.
-          </p>
+           </p>
 
           {/* CTA Buttons with touch feedback */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
