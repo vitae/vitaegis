@@ -104,16 +104,16 @@ export default function Home() {
                       <Suspense fallback={<SkeletonHero />}>
                         <HeroSection />
                       </Suspense>
-                      <Suspense fallback={<SkeletonSection className=\"min-h-screen p-8\" />}>
+                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
                         <AboutSection />
                       </Suspense>
-                      <Suspense fallback={<SkeletonSection className=\"min-h-screen p-8\" />}>
+                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
                         <PracticesSection />
                       </Suspense>
-                      <Suspense fallback={<SkeletonSection className=\"min-h-screen p-8\" />}>
+                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
                         <TokenSection />
                       </Suspense>
-                      <Suspense fallback={<SkeletonSection className=\"min-h-screen p-8\" />}>
+                      <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
                         <CommunitySection />
                       </Suspense>
                     </main>
