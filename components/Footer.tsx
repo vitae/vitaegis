@@ -19,11 +19,11 @@ export default function Footer() {
           <div className="col-span-2 flex flex-col items-center justify-center text-justify">
             <div className="flex flex-col items-center justify-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vitae-green/20 to-transparent border border-vitae-green/50 flex items-center justify-center mx-auto">
-                <span className="text-vitae-green font-bold text-lg">V</span>
+                <span className="text-vitae-green font-bold text-lg font-[Jost]">V</span>
               </div>
-              <span className="text-xl font-semibold tracking-wider mx-auto">VITAEGIS</span>
+              <span className="text-xl font-semibold tracking-wider mx-auto font-[Jost]">VITAEGIS</span>
             </div>
-            <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xs mx-auto text-justify">
+            <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xs mx-auto text-justify text-center [text-align-last:center]">
               Ancient wisdom meets Cyberspirituality. Evolve your energy with Meditation, Yoga, and Tai Chi.
             </p>
 
