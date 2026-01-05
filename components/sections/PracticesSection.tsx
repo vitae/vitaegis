@@ -10,10 +10,10 @@ const practices = [
     name: 'Zen Meditation',
     subtitle: '禅',
     description:
-      'Cultivate awareness through breathing exercises. Find clarity in stillness and peace in every breath.',
+      'Cultivate awareness through breathing exercises. Find stillness and peace in every breath.',
     icon: GiMeditation,
     color: '#00ff00',
-    benefits: ['Mental Clarity', 'Stress Relief', 'Inner Peace'],
+    benefits: ['Clarity', 'Stress Relief', 'Peace'],
   },
   {
     id: 'yoga',
@@ -23,7 +23,7 @@ const practices = [
       'Awaken dormant energy through dynamic movement. Unlock your spiritual potential.',
     icon: GiLotus,
     color: '#ff00ff',
-    benefits: ['Flexibility', 'Chakra Tuning', 'Spiritual Growth'],
+    benefits: ['Flexibility', 'Strength', 'Growth'],
   },
   {
     id: 'taichi',

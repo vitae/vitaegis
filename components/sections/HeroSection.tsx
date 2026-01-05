@@ -113,15 +113,15 @@ export default function HeroSection() {
         >
           {/* Tagline with Instagram spacing */}
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-5">
-            <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
+            <span className="text-sm sm:text-base font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               HEALTH
             </span>
-            <span className="text-lg sm:text-xl text-[#00ff00]/50">•</span>
-            <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
+            <span className="text-sm sm:text-base text-[#00ff00]/50">•</span>
+            <span className="text-sm sm:text-base font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               STEALTH
             </span>
-            <span className="text-lg sm:text-xl text-[#00ff00]/50">•</span>
-            <span className="text-lg sm:text-xl font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
+            <span className="text-sm sm:text-base text-[#00ff00]/50">•</span>
+            <span className="text-sm sm:text-base font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               WEALTH
             </span>
           </div>
