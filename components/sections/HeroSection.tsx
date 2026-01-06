@@ -134,30 +134,36 @@ export default function HeroSection() {
           {/* CTA Buttons with touch feedback */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             {/* Primary CTA */}
-            <button
-              onTouchStart={() => setPrimaryPressed(true)}
-              onTouchEnd={() => setPrimaryPressed(false)}
-              onMouseDown={() => setPrimaryPressed(true)}
-              onMouseUp={() => setPrimaryPressed(false)}
-              onMouseLeave={() => setPrimaryPressed(false)}
-              className="
-                w-full sm:w-auto
-                px-5 sm:px-6 py-3
-                bg-[#00ff00] text-black
-                font-medium text-sm sm:text-base
-                rounded-lg
-                min-h-[44px]
-                transition-all duration-200
-              "
-              style={{
-                transform: primaryPressed ? 'scale(0.97)' : 'scale(1)',
-                boxShadow: primaryPressed 
-                  ? 'none' 
-                  : '0 0 20px rgba(0, 255, 65, 0.5)',
-              }}
+            <a
+              href="/about"
+              tabIndex={-1}
+              className="w-full sm:w-auto"
             >
-              Enter Vitaegis
-            </button>
+              <button
+                onTouchStart={() => setPrimaryPressed(true)}
+                onTouchEnd={() => setPrimaryPressed(false)}
+                onMouseDown={() => setPrimaryPressed(true)}
+                onMouseUp={() => setPrimaryPressed(false)}
+                onMouseLeave={() => setPrimaryPressed(false)}
+                className="
+                  w-full sm:w-auto
+                  px-5 sm:px-6 py-3
+                  bg-[#00ff00] text-black
+                  font-medium text-sm sm:text-base
+                  rounded-lg
+                  min-h-[44px]
+                  transition-all duration-200
+                "
+                style={{
+                  transform: primaryPressed ? 'scale(0.97)' : 'scale(1)',
+                  boxShadow: primaryPressed 
+                    ? 'none' 
+                    : '0 0 20px rgba(0, 255, 65, 0.5)',
+                }}
+              >
+                Enter Vitaegis
+              </button>
+            </a>
 
             {/* Secondary CTA */}
             <button
