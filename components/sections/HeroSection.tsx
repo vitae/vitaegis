@@ -72,7 +72,7 @@ export default function HeroSection() {
         <h1 
           className={`
             text-6xl sm:text-6xl md:text-7xl lg:text-8xl
-            font-bold tracking-tight
+            font-bold tracking-tight font-[Jost]
             bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent
             mb-3 sm:mb-4
             transition-all duration-500
