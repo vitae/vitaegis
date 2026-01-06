@@ -67,14 +67,14 @@ export default function CommunitySection() {
         </GlassContainer>
 
         {/* Social Links Grid */}
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-12 w-full">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-12 w-full max-w-full">
           {socials.map((social, index) => {
             const Icon = social.icon;
             return (
               <a
                 key={social.name}
                 href={social.href}
-                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-white/20 text-center"
+                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-3 sm:p-6 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-white/20 text-center"
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
                 {/* Icon */}

@@ -43,7 +43,7 @@ export default function AboutSection() {
       className="relative min-h-screen flex flex-col items-center justify-center text-center"
     >
       <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ width: '100%' }}>
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center w-full max-w-full">
           {/* Left Column - Text Content in Glassmorphic Container */}
           <GlassContainer variant="default" glow={true} className="p-6 sm:p-8 lg:p-10">
             {/* Section Label */}
@@ -96,11 +96,11 @@ export default function AboutSection() {
           </GlassContainer>
 
           {/* Right Column - Stats Grid with enhanced glassmorphic style */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full max-w-full">
             {stats.map((stat, index) => (
               <div
                 key={stat.label}
-                className={`reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-6 sm:p-8 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-vitae-green/30 transition-all cursor-default ${
+                className={`reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-3 sm:p-6 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-vitae-green/30 transition-all cursor-default ${
                   index % 2 === 1 ? 'lg:translate-y-8' : ''
                 }`}
               >
