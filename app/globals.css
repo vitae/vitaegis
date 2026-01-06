@@ -1,3 +1,12 @@
+@media (max-width: 768px) {
+  html, body {
+    max-width: 430px;
+    width: 100vw;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -40,10 +49,6 @@
 }
 
 html {
-      max-width: 430px;
-      width: 100vw;
-      margin-left: auto;
-      margin-right: auto;
     overflow-x: hidden !important;
     user-select: none !important;
     -webkit-user-select: none !important;
@@ -58,11 +63,6 @@ html {
 }
 
 body {
-      max-width: 430px;
-      width: 100vw;
-      margin-left: auto;
-      margin-right: auto;
-      box-sizing: border-box;
     overflow-x: hidden !important;
     user-select: none !important;
     -webkit-user-select: none !important;
@@ -128,12 +128,6 @@ p, span, a, button, input, textarea, select, label, div {
 }
 
 @media (min-width: 768px) {
-    html, body {
-      max-width: 700px;
-      width: 100vw;
-      margin-left: auto;
-      margin-right: auto;
-    }
   .app-content {
     padding-bottom: 2rem;
   }
