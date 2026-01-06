@@ -52,6 +52,8 @@ export default function GlassContainer({
       style={{
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         backdropFilter: 'blur(20px) saturate(180%)',
+        width: '100%',
+        maxWidth: '100%',
         ...style,
       }}
     >
