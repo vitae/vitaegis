@@ -62,11 +62,11 @@
 
   @media (min-width: 1024px) {
     .section-container {
-      max-width: none;
+      max-width: 1400px;
       padding-left: 2rem;
       padding-right: 2rem;
-      margin-left: 0;
-      margin-right: 0;
+      margin-left: auto;
+      margin-right: auto;
     }
   }
   /* Safe area insets for notched devices */
