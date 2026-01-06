@@ -82,15 +82,22 @@ export default function MatrixBackground() {
           currentSpeed = CONFIG.speed;
         }, 1200);
       };
+      const restoreSpeed = () => {
+        currentSpeed = CONFIG.speed;
+        if (speedRestoreTimeout) {
+          clearTimeout(speedRestoreTimeout);
+          speedRestoreTimeout = null;
+        }
+      };
       window.addEventListener('touchstart', slowDown, { passive: true });
       window.addEventListener('mousedown', slowDown);
-      window.addEventListener('touchend', () => { currentSpeed = CONFIG.speed; });
-      window.addEventListener('mouseup', () => { currentSpeed = CONFIG.speed; });
+      window.addEventListener('touchend', restoreSpeed);
+      window.addEventListener('mouseup', restoreSpeed);
       return () => {
         window.removeEventListener('touchstart', slowDown);
         window.removeEventListener('mousedown', slowDown);
-        window.removeEventListener('touchend', () => { currentSpeed = CONFIG.speed; });
-        window.removeEventListener('mouseup', () => { currentSpeed = CONFIG.speed; });
+        window.removeEventListener('touchend', restoreSpeed);
+        window.removeEventListener('mouseup', restoreSpeed);
       };
     }, []);
   const containerRef = useRef<HTMLDivElement>(null);
