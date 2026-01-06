@@ -86,6 +86,7 @@ export default function MatrixRain({
     // --- Interactive speed handlers ---
     const slowDown = () => {
       targetSpeed.current = fallSpeed * 0.25;
+      currentSpeed.current = fallSpeed * 0.25; // Instantly slow down
       isSlowed.current = true;
     };
     const speedUp = () => {
@@ -111,13 +112,8 @@ export default function MatrixRain({
     window.addEventListener("resize", resize);
 
     const animate = () => {
-      // Instantly restore speed if not slowed, otherwise interpolate
-      if (!isSlowed.current) {
-        currentSpeed.current = targetSpeed.current;
-      } else {
-        currentSpeed.current += (targetSpeed.current - currentSpeed.current) * 0.08;
-      }
-
+      // No interpolation: always use currentSpeed
+      // (currentSpeed is set instantly in slowDown/speedUp)
       const width = canvas.width;
       const height = canvas.height;
 
