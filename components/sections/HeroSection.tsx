@@ -42,7 +42,7 @@ export default function HeroSection() {
       style={{ minHeight: '100dvh' }}
     >
       {/* Content container with safe area padding and global alignment */}
-      <div className="section-container" style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}>
+      <div className="section-container w-full max-w-full flex flex-col items-center justify-center mx-auto" style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}>
         
         {/* Badge - Instagram style pill */}
         <div 
