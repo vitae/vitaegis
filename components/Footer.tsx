@@ -72,7 +72,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-white/10 w-full flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:justify-between pb-4">
-          <div className="text-white/40 text-sm">
+          <div className="text-white/40 text-sm pb-6">
             © 2026 Vitaegis. All rights reserved.
           </div>
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6 text-sm">
