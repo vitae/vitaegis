@@ -10,7 +10,7 @@ const practices = [
     name: 'Zen Meditation',
     subtitle: '禅',
     description:
-      'Cultivate awareness through breathing exercises. Find stillness and peace in every breath.',
+      'Cultivate awareness through breathing exercises. Find stillness in every breath.',
     icon: GiMeditation,
     color: '#00ff00',
     benefits: ['Clarity', 'Breath', 'Peace'],
@@ -20,7 +20,7 @@ const practices = [
     name: 'Kundalini Yoga',
     subtitle: 'कुण्डलिनी',
     description:
-      'Awaken dormant energy through dynamic movement. Unlock your spiritual potential.',
+      'Awaken dormant energy with movement. Unlock your hidden power.',
     icon: GiLotus,
     color: '#ff00ff',
     benefits: ['Flexibility', 'Strength', 'Love'],

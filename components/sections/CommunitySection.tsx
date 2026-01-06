@@ -128,8 +128,7 @@ export default function CommunitySection() {
                   Stay <span className="text-vitae-green">Connected</span>
                 </h3>
                 <p className="text-white/70">
-                  Get weekly insights on practice techniques, skill updates, and exclusive
-                  community events.
+                  Get weekly insights on practice techniques, skill updates, and exclusive community events.
                 </p>
               </div>
 
