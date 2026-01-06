@@ -135,10 +135,10 @@ body {
   overscroll-behavior-y: contain;
   /* Enable momentum scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  /* Padding for safe areas */
-  padding-top: var(--sat);
-  padding-right: var(--sar);
-  padding-left: var(--sal);
+  /* Remove extra paddings for perfect centering */
+  padding-top: 0;
+  padding-right: 0;
+  padding-left: 0;
 }
 
 /* Ensure Futura Medium is applied everywhere */
