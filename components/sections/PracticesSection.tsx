@@ -13,7 +13,7 @@ const practices = [
       'Cultivate awareness through breathing exercises. Find stillness and peace in every breath.',
     icon: GiMeditation,
     color: '#00ff00',
-    benefits: ['Clarity', 'Stress Relief', 'Peace'],
+    benefits: ['Clarity', 'Breath', 'Peace'],
   },
   {
     id: 'yoga',
