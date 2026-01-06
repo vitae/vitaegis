@@ -117,13 +117,13 @@ export default function PracticesSection() {
                   {/* Icon */}
                   <div className="relative mb-6 flex flex-col items-center justify-center">
                     <div
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 border-2"
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 border-2"
                       style={{
                         background: `linear-gradient(135deg, ${practice.color}20 0%, transparent 100%)`,
                         border: `2px solid ${practice.color}30`,
                       }}
                     >
-                      <Icon size={48} color={practice.color} />
+                      <Icon size={60} color={practice.color} />
                     </div>
 
                     {/* Floating glow */}
