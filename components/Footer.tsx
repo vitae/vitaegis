@@ -40,7 +40,7 @@ export default function Footer() {
                   <a
                     key={i}
                     href={social.href}
-                    className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-vitae-green hover:border-vitae-green/30 transition-all"
+                    className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-vitae-green hover:border-vitae-green/30 transition-all aspect-square"
                   >
                     <Icon size={18} />
                   </a>
