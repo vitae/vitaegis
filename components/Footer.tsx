@@ -72,13 +72,13 @@ export default function Footer() {
 
 
         {/* Bottom Bar */}
-        <div className="mt-8 pt-4 border-t border-white/10 w-full flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:justify-between pb-2">
+        <div className="mt-8 pt-4 border-t border-white/10 w-full flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:justify-center pb-2">
           <div className="text-white/40 text-sm sm:self-center">
             © 2026 VITAEGIS. All rights reserved.
           </div>
           {/* Add gap only on mobile, none on desktop */}
           <div className="h-4 sm:hidden" />
-          <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6 text-sm flex-1 sm:self-center">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6 text-sm sm:ml-6">
             <a href="#" className="text-white/40 hover:text-white transition-colors">
               Privacy Policy
             </a>

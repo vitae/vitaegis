@@ -99,7 +99,7 @@ export default function PracticesSection() {
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <div
-                  className="group relative flex flex-col items-center justify-center w-[90vw] h-[90vw] max-w-[320px] max-h-[320px] sm:w-[400px] sm:h-[400px] rounded-full bg-black/3 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer text-center p-3 sm:p-6"
+                  className="group relative flex flex-col items-center justify-center w-[90vw] max-w-[320px] aspect-square sm:w-[400px] sm:max-w-[400px] aspect-square rounded-full bg-black/3 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer text-center p-3 sm:p-6"
                   style={{
                     boxShadow: isHovered
                       ? `0 0 40px ${practice.color}20, inset 0 0 40px ${practice.color}05`
