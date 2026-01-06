@@ -45,7 +45,7 @@ html {
 }
 
 body {
-  font-family: 'Futura', 'Futura Medium', 'Futura-Medium', 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
+  font-family: 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
   font-weight: 500;
   background-color: var(--vitae-black);
   color: var(--vitae-white);
@@ -72,8 +72,7 @@ body {
 
 /* Ensure Futura Medium is applied everywhere */
 h1, h2, h3, h4, h5, h6,
-p, span, a, button, input, textarea, select, label, div {
-  font-family: 'Futura', 'Futura Medium', 'Futura-Medium', 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
+  font-family: 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
   font-weight: 500;
 }
 
