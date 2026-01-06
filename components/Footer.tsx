@@ -14,20 +14,20 @@ export default function Footer() {
     <footer className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10 flex flex-col items-center justify-center">
       <div className="max-w-5xl mx-auto flex flex-col items-center justify-center px-4">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-8 lg:gap-12 w-full items-start">
-          {/* Brand Column - now first column, vertically centered with links */}
-          <div className="flex flex-col items-start justify-start md:items-start md:justify-start col-span-1">
-            <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:gap-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vitae-green/20 to-transparent border border-vitae-green/50 flex items-center justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 lg:gap-12 w-full items-start">
+          {/* Brand Column - perfectly aligned and unified */}
+          <div className="flex flex-col md:items-start md:justify-start col-span-1">
+            <div className="flex flex-col items-center md:flex-row md:items-center md:gap-3 mb-4 md:mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vitae-green/20 to-transparent border border-vitae-green/50 flex items-center justify-center mb-2 md:mb-0 md:mr-2">
                 <span className="text-vitae-green font-bold text-lg font-[Jost]">V</span>
               </div>
-              <span className="text-xl font-semibold tracking-wider font-[Jost]">VITAEGIS</span>
+              <span className="text-xl font-semibold tracking-wider font-[Jost] md:ml-1">VITAEGIS</span>
             </div>
-            <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xs text-left">
+            <p className="text-white/50 text-sm leading-relaxed mb-4 md:mb-6 max-w-xs text-center md:text-left">
               Ancient wisdom meets Cyberspirituality. Evolve your energy with Meditation, Yoga, and Tai Chi.
             </p>
             {/* Social Links */}
-            <div className="flex gap-3 justify-start w-full">
+            <div className="flex gap-3 justify-center md:justify-start w-full">
               {[ 
                 { icon: FaFacebook, href: 'https://facebook.com/vitaegis' },
                 { icon: FaInstagram, href: 'https://instagram.com/vitaegis' },
@@ -49,9 +49,9 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link Columns - next 4 columns */}
+          {/* Link Columns - next 4 columns, top-aligned */}
           {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title} className="col-span-1">
+            <div key={title} className="col-span-1 flex flex-col items-center md:items-start">
               <h4 className="text-white font-semibold mb-4">{title}</h4>
               <ul className="space-y-3">
                 {links.map((link) => (
