@@ -17,7 +17,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-8 lg:gap-12 w-full items-start">
           {/* Brand Column - now first column, vertically centered with links */}
           <div className="flex flex-col items-start justify-start md:items-start md:justify-start col-span-1">
-            <div className="flex flex-col items-start justify-start gap-3 mb-4">
+            <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:gap-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vitae-green/20 to-transparent border border-vitae-green/50 flex items-center justify-center">
                 <span className="text-vitae-green font-bold text-lg font-[Jost]">V</span>
               </div>
