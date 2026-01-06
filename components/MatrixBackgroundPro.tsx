@@ -8,8 +8,6 @@ const CHARS = 'アイウエオカキクケコサシスセソタチツテトナ�
 const CHAR_ARRAY = CHARS.split('');
 
 // Configuration
-let currentSpeed = CONFIG.speed;
-let speedRestoreTimeout: number | null = null;
 const CONFIG = {
   speed: 3,
   fadeRate: 0.0027,
@@ -19,6 +17,8 @@ const CONFIG = {
   depthLayers: 5,
   depthRange: 15,
 };
+let currentSpeed = CONFIG.speed;
+let speedRestoreTimeout: number | null = null;
 
 // Texture cache for character textures
 const textureCache = new Map<string, THREE.CanvasTexture>();
