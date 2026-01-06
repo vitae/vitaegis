@@ -45,11 +45,11 @@ export default function CommunitySection() {
     <section
       id="community"
       ref={sectionRef}
-      className="relative min-h-screen flex flex-col items-center justify-center py-24 sm:py-32 px-4 sm:px-6 lg:px-8 text-center w-full"
+      className="relative min-h-screen flex flex-col items-center justify-center py-20 sm:py-32 px-2 sm:px-6 lg:px-8 text-center w-full"
     >
-      <div className="max-w-2xl mx-auto flex flex-col items-center justify-center px-4 text-center">
+      <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center px-2 sm:px-4 text-center">
         {/* Section Header in Glassmorphic Container */}
-        <GlassContainer variant="default" glow={true} className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto">
+        <GlassContainer variant="default" glow={true} className="text-center mb-12 sm:mb-20 p-4 sm:p-8 w-full max-w-3xl mx-auto">
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
             <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
               Join the Movement
@@ -67,7 +67,7 @@ export default function CommunitySection() {
         </GlassContainer>
 
         {/* Social Links Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-16">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-12 w-full">
           {socials.map((social, index) => {
             const Icon = social.icon;
             return (
@@ -105,8 +105,8 @@ export default function CommunitySection() {
         </div>
 
         {/* Newsletter Section */}
-        <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-          <div className="relative p-8 sm:p-12 rounded-3xl bg-black/20 backdrop-blur-xl border border-vitae-green/20 overflow-hidden shadow-[0_0_40px_rgba(0,255,65,0.1)]">
+        <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 w-full">
+          <div className="relative p-4 sm:p-12 rounded-3xl bg-black/20 backdrop-blur-xl border border-vitae-green/20 overflow-hidden shadow-[0_0_40px_rgba(0,255,65,0.1)] w-full">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div
@@ -157,7 +157,7 @@ export default function CommunitySection() {
         </div>
 
         {/* Community Stats in Glassmorphic Container */}
-        <GlassContainer variant="subtle" className="mt-16 p-6 sm:p-8">
+        <GlassContainer variant="subtle" className="mt-12 p-4 sm:p-8 w-full">
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             {[
               { value: '99K', label: 'Community Members' },
