@@ -59,6 +59,10 @@ export default function MatrixRain({
   const startTimeRef = useRef<number>(Date.now());
   const columnsRef = useRef<ColumnData[]>([]);
   const lastColumnsCount = useRef<number>(0);
+  // Interactive speed state
+  const targetSpeed = useRef<number>(fallSpeed);
+  const currentSpeed = useRef<number>(fallSpeed);
+  const isSlowed = useRef<boolean>(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -79,6 +83,23 @@ export default function MatrixRain({
         : { r: 0, g: 255, b: 106 };
     };
 
+    // --- Interactive speed handlers ---
+    const slowDown = () => {
+      targetSpeed.current = fallSpeed * 0.25;
+      isSlowed.current = true;
+    };
+    const speedUp = () => {
+      targetSpeed.current = fallSpeed;
+      currentSpeed.current = fallSpeed; // Instantly restore speed
+      isSlowed.current = false;
+    };
+    // Touch/mouse event listeners
+    window.addEventListener("touchstart", slowDown, { passive: true });
+    window.addEventListener("touchend", speedUp, { passive: true });
+    window.addEventListener("mousedown", slowDown);
+    window.addEventListener("mouseup", speedUp);
+    window.addEventListener("mouseleave", speedUp);
+
     const color = hexToRgb(primaryColor);
 
     const resize = () => {
@@ -90,6 +111,13 @@ export default function MatrixRain({
     window.addEventListener("resize", resize);
 
     const animate = () => {
+      // Instantly restore speed if not slowed, otherwise interpolate
+      if (!isSlowed.current) {
+        currentSpeed.current = targetSpeed.current;
+      } else {
+        currentSpeed.current += (targetSpeed.current - currentSpeed.current) * 0.08;
+      }
+
       const width = canvas.width;
       const height = canvas.height;
 
@@ -109,7 +137,7 @@ export default function MatrixRain({
 
           for (let s = 0; s < numStreams; s++) {
             streams.push({
-              speed: (0.3 + hash(i, s * 100) * 0.7) * fallSpeed,
+              speed: (0.3 + hash(i, s * 100) * 0.7) * currentSpeed.current,
               length: 8 + hash(i, s * 200) * 12,
               phase: hash(i, s * 300) * 100,
               period: 15 + hash(i, s * 400) * 20,
@@ -152,6 +180,7 @@ export default function MatrixRain({
           let isCursor = false;
 
           for (const stream of columnData.streams) {
+            // Use currentSpeed for animation
             const sawPos = sawtooth(
               row + elapsed * stream.speed * 10 + stream.phase,
               stream.period
@@ -234,6 +263,11 @@ export default function MatrixRain({
 
     return () => {
       window.removeEventListener("resize", resize);
+      window.removeEventListener("touchstart", slowDown);
+      window.removeEventListener("touchend", speedUp);
+      window.removeEventListener("mousedown", slowDown);
+      window.removeEventListener("mouseup", speedUp);
+      window.removeEventListener("mouseleave", speedUp);
       cancelAnimationFrame(animationRef.current);
     };
   }, [fallSpeed, density, glowIntensity, primaryColor]);
