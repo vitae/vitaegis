@@ -50,8 +50,11 @@ export default function Footer() {
           </div>
 
           {/* Link Columns - next 4 columns, top-aligned */}
-          {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title} className="col-span-1 flex flex-col items-center md:items-start">
+          {Object.entries(footerLinks).map(([title, links], idx, arr) => (
+            <div
+              key={title}
+              className={`col-span-1 flex flex-col items-center md:items-start${idx === arr.length - 1 ? ' mb-8 md:mb-0' : ''}`}
+            >
               <h4 className="text-white font-semibold mb-4">{title}</h4>
               <ul className="space-y-3">
                 {links.map((link) => (
