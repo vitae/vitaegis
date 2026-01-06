@@ -38,14 +38,11 @@ export default function HeroSection() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex flex-col items-center justify-center px-4 sm:px-6 text-center min-h-screen max-w-screen-md mx-auto"
+      className="relative min-h-screen flex flex-col items-center justify-center text-center"
       style={{ minHeight: '100dvh' }}
     >
-      {/* Content container with safe area padding */}
-      <div 
-        className="max-w-2xl flex flex-col items-center justify-center mx-auto text-center"
-        style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}
-      >
+      {/* Content container with safe area padding and global alignment */}
+      <div className="section-container" style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}>
         
         {/* Badge - Instagram style pill */}
         <div 
