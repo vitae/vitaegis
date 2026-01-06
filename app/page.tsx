@@ -122,7 +122,7 @@ export default function Home() {
   };
 
   return (
-    <div className="app-shell flex flex-col items-center justify-center w-full min-h-screen px-4">
+    <div className="app-shell flex flex-col items-center justify-center min-h-screen px-4 max-w-screen-md mx-auto">
       {/* 3D Matrix Background */}
       <MatrixBackground />
 
@@ -152,7 +152,7 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <main ref={containerRef} className="app-content relative z-10 flex flex-col items-center justify-center w-full">
+      <main ref={containerRef} className="app-content relative z-10 flex flex-col items-center justify-center w-full max-w-screen-md mx-auto px-2">
         <Suspense fallback={<SkeletonHero />}>
           <section id="hero">
             <HeroSection />

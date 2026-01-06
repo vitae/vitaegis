@@ -42,7 +42,7 @@ export default function AboutSection() {
       ref={sectionRef}
       className="relative min-h-screen flex flex-col items-center justify-center py-24 sm:py-32 px-4 sm:px-6 lg:px-8 text-center w-full"
     >
-      <div className="max-w-7xl mx-auto w-full flex flex-col items-center justify-center px-4 text-center">
+      <div className="max-w-2xl mx-auto flex flex-col items-center justify-center px-4 text-center">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left Column - Text Content in Glassmorphic Container */}
           <GlassContainer variant="default" glow={true} className="p-6 sm:p-8 lg:p-10">

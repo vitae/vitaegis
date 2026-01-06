@@ -74,7 +74,7 @@ export default function RootLayout({
         {/* Prevent text size adjustment on orientation change */}
         <meta name="x-ua-compatible" content="IE=edge" />
       </head>
-      <body className="antialiased text-white selection:bg-vitae-green selection:text-black font-futura w-full min-h-screen flex flex-col text-center">
+      <body className="antialiased text-white selection:bg-vitae-green selection:text-black font-futura min-h-screen flex flex-col text-center">
         {children}
         <SpeedInsights />
         <Analytics />

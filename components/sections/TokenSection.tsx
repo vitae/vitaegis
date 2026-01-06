@@ -40,7 +40,7 @@ export default function TokenSection() {
       ref={sectionRef}
       className="relative min-h-screen py-24 sm:py-32 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center"
     >
-      <div className="max-w-7xl mx-auto w-full flex flex-col items-center justify-center px-4">
+      <div className="max-w-2xl mx-auto flex flex-col items-center justify-center px-4">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-stretch w-full justify-center text-center justify-center">
           {/* Left Column - Token Info in Glassmorphic Container */}
           <GlassContainer variant="default" glow={true} className="w-full h-full min-h-[400px] max-w-[95vw] sm:max-w-full flex flex-col justify-between">
