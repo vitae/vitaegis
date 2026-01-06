@@ -40,10 +40,10 @@ export default function TokenSection() {
       ref={sectionRef}
       className="relative min-h-screen flex flex-col items-center justify-center text-center"
     >
-      <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ width: '100%' }}>
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-stretch w-full justify-center text-center justify-center">
+      <div className="section-container flex flex-col items-center justify-center mx-auto w-full max-w-full min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-20 items-stretch w-full max-w-full min-w-0 justify-center text-center">
           {/* Left Column - Token Info in Glassmorphic Container */}
-          <GlassContainer variant="default" glow={true} className="w-full h-full min-h-[400px] max-w-[95vw] sm:max-w-full flex flex-col justify-between">
+          <GlassContainer variant="default" glow={true} className="w-full max-w-full min-w-0 h-full min-h-[400px] sm:max-w-full flex flex-col justify-between">
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
               <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
                 $VITCOIN
@@ -63,7 +63,7 @@ export default function TokenSection() {
             </div>
 
             {/* Token Stats */}
-            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8 grid grid-cols-2 gap-4">
+            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8 grid grid-cols-2 gap-2 w-full max-w-full min-w-0">
               {[
                 { label: 'Total Supply', value: '100M' },
                 { label: 'Circulating', value: '42M' },
@@ -72,7 +72,7 @@ export default function TokenSection() {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="p-4 rounded-2xl bg-black/15 backdrop-blur-sm border border-white/10"
+                  className="p-2 sm:p-4 rounded-2xl bg-black/15 backdrop-blur-sm border border-white/10 w-full max-w-full min-w-0"
                 >
                   <div className="text-xl sm:text-2xl font-bold text-white">
                     {stat.value}
