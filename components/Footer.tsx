@@ -71,7 +71,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-16 pt-8 border-t border-white/10 w-full flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:justify-between pb-4">
+        <div className="mt-8 pt-4 border-t border-white/10 w-full flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:justify-between pb-2">
           <div className="text-white/40 text-sm">
             © 2026 VITAEGIS. All rights reserved.
           </div>
@@ -89,7 +89,7 @@ export default function Footer() {
         </div>
 
         {/* Decorative element */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <div className="text-[#00ff00]/80 text-[0.6rem] sm:text-xs tracking-[0.3em] uppercase whitespace-nowrap">
             Health • Stealth • Wealth
           </div>
