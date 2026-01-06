@@ -72,6 +72,7 @@ body {
 
 /* Ensure Futura Medium is applied everywhere */
 h1, h2, h3, h4, h5, h6,
+p, span, a, button, input, textarea, select, label, div {
   font-family: 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
   font-weight: 500;
 }
