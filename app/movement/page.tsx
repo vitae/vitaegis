@@ -158,7 +158,7 @@ export default function MovementPage() {
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const fontSize = window.innerWidth < 768 ? 18 : 22;
     const columnWidth = fontSize * 1.2; // Slightly wider than font to prevent overlap
-    const words = [' ♥ MEDITATION', ' ♥ MONDAYS', ' ♥ PEACE', ' ♥ ZEN', ' ♥ YOGA', ' ♥ ALOHA', ' ♥ BALANCE', ' ♥ ENERGY', ' ♥ LOVE', ' ♥ BREATH'];
+    const words = [' ♥ MOVEMENT', ' ♥ PEACE', ' ♥ ZEN', ' ♥ YOGA', ' ♥ ALOHA', ' ♥ BALANCE', ' ♥ ENERGY', ' ♥ LOVE', ' ♥ BREATH'];
     const speed = 0.3; // Slow, smooth movement
 
     let width = window.innerWidth;
@@ -327,10 +327,7 @@ export default function MovementPage() {
               <div className="px-6 pt-8 pb-4 text-center border-b border-white/10">
                 <p className="text-red-500 text-base tracking-[0.3em] uppercase mb-2">Vitaegis Presents</p>
                 <h1 className="text-[2.75rem] sm:text-5xl font-black text-white leading-tight drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">
-                  MEDITATION
-                </h1>
-                <h1 className="text-[2.75rem] sm:text-5xl font-black text-white leading-tight drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">
-                  MONDAYS
+                  MOVEMENT
                 </h1>
                 <div className="mt-4 flex items-center justify-center gap-2">
                   <span className="h-px w-12 bg-red-500/50" />
@@ -342,11 +339,11 @@ export default function MovementPage() {
               {/* Event Details */}
               <div className="px-6 py-6 text-center space-y-5">
                 <div className="inline-block px-6 py-3 border border-red-500/50 rounded-2xl bg-black/10 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                  <p className="text-[1.625rem] sm:text-[2rem] font-bold text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">EVERY MONDAY</p>
+                  <p className="text-[1.625rem] sm:text-[2rem] font-bold text-white drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">EVERY WEEK</p>
                 </div>
                 
                 <div className="space-y-4">
-                  <p className="text-2xl sm:text-3xl text-white font-semibold drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">🧘 Meditation</p>
+                  <p className="text-2xl sm:text-3xl text-white font-semibold drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">🧘 Movement</p>
                   <p className="text-white font-bold text-xl sm:text-2xl drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">4:30 PM</p>
                   <p className="text-2xl sm:text-3xl text-white font-semibold pt-2 drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">🕉️ Yoga</p>
                   <p className="text-white font-bold text-xl sm:text-2xl drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">5:30 PM</p>
