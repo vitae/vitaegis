@@ -76,7 +76,7 @@ function CheckoutForm() {
         elements,
         clientSecret,
         confirmParams: {
-          return_url: window.location.origin + "/mondays?payment=success",
+          return_url: window.location.origin + "/movement?payment=success",
         },
         redirect: 'if_required',
       });
@@ -145,7 +145,7 @@ function CheckoutForm() {
   );
 }
 
-export default function MondaysPage() {
+export default function MovementPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
