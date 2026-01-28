@@ -61,8 +61,7 @@ export default function CommunitySection() {
           </h2>
 
           <p className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
-            Connect with practitioners worldwide. Share your journey, learn from masters,
-            and grow together in our vibrant ecosystem.
+            Connect with practitioners worldwide. Share your journey, learn from masters, and grow together.
           </p>
         </GlassContainer>
 
@@ -128,7 +127,7 @@ export default function CommunitySection() {
                   Stay <span className="text-vitae-green">Connected</span>
                 </h3>
                 <p className="text-white/70">
-                  Get weekly insights on practice techniques, skill updates, andcommunity events.
+                  Get weekly insights on practice techniques, skill updates, community events.
                 </p>
               </div>
 

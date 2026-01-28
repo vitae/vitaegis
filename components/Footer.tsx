@@ -51,7 +51,7 @@ export default function Footer() {
           </div>
 
           {/* Link Columns - below brand box */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12 w-full items-start">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12 w-full items-start pb-8 md:pb-12">
             {Object.entries(footerLinks).map(([title, links], idx, arr) => (
               <div
                 key={title}
