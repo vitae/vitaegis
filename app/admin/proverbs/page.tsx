@@ -18,12 +18,12 @@ interface ExtractedQuote {
   selected: boolean;
 }
 
-const TAGS = ['Zen','Stoic','Taoist','Kundalini','Hip-Hop','Ancient','Personal','Modern','Cyberpunk'];
+const TAGS = ['Zen','Stoic','Taoist','Kundalini','Hip-Hop','Ancient','Personal','Modern','Cyberpunk','Love'];
 
 const TAG_COLORS: Record<string, string> = {
   Zen: '#00ff9d', Stoic: '#00cfff', Taoist: '#a78bfa',
   Kundalini: '#f97316', 'Hip-Hop': '#fbbf24', Ancient: '#e879f9',
-  Personal: '#34d399', Modern: '#60a5fa', Cyberpunk: '#ff0080',
+  Personal: '#34d399', Modern: '#60a5fa', Cyberpunk: '#ff0080', Love: '#ff00ff',
 };
 
 export default function AdminProverbsPage() {

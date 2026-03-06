@@ -26,6 +26,7 @@ const TAG_COLORS: Record<string, string> = {
   Personal: '#34d399',
   Modern: '#60a5fa',
   Cyberpunk: '#ff0080',
+  Love: '#ff00ff',
 };
 
 export default function ProverbsPage() {
