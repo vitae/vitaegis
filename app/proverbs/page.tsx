@@ -113,11 +113,13 @@ export default function ProverbsPage() {
         body: JSON.stringify({ message: userMsg }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: 'assistant', text: data.reply }]);
-    } catch {
+      setMessages((prev) => [...prev, { role: 'assistant', text: data.reply || data.error || 'No response received.' }]);
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Oracle fetch failed:', detail);
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', text: 'CONNECTION INTERRUPTED. The signal was lost in the noise.' },
+        { role: 'assistant', text: `CONNECTION INTERRUPTED. ${detail}` },
       ]);
     }
     setLoading(false);

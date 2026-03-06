@@ -13,6 +13,25 @@ function getAnthropic() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 }
 
+async function logConsultation(
+  supabase: ReturnType<typeof getSupabase>,
+  question: string,
+  reply: string | null,
+  error: string | null
+) {
+  try {
+    await supabase.from('oracle_logs').insert({
+      question,
+      reply,
+      error,
+    });
+  } catch {
+    // Logging should never block the response
+  }
+}
+
+export const maxDuration = 30;
+
 export async function POST(req: Request) {
   const { message } = await req.json();
 
@@ -23,27 +42,36 @@ export async function POST(req: Request) {
   const supabase = getSupabase();
   const anthropic = getAnthropic();
 
-  const { data: proverbs } = await supabase
-    .from('proverbs')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const { data: proverbs, error: dbError } = await supabase
+      .from('proverbs')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  const library = (proverbs || [])
-    .map(
-      (
-        p: { text: string; source: string; tag: string; note?: string },
-        i: number
-      ) =>
-        `[${i + 1}] "${p.text}" — ${p.source} [${p.tag}]${
-          p.note ? ` | Note: ${p.note}` : ''
-        }`
-    )
-    .join('\n');
+    if (dbError) {
+      await logConsultation(supabase, message, null, `Supabase error: ${dbError.message}`);
+      return NextResponse.json(
+        { reply: 'ARCHIVE OFFLINE. The vaults are sealed — try again shortly.' },
+        { status: 200 }
+      );
+    }
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1000,
-    system: `You are PROVERBS — a cyberpunk AI oracle embedded in the Vitaegis wellness platform. You speak ONLY through wisdom from a sacred personal library curated by Vitae.
+    const library = (proverbs || [])
+      .map(
+        (
+          p: { text: string; source: string; tag: string; note?: string },
+          i: number
+        ) =>
+          `[${i + 1}] "${p.text}" — ${p.source} [${p.tag}]${
+            p.note ? ` | Note: ${p.note}` : ''
+          }`
+      )
+      .join('\n');
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: `You are PROVERBS — a cyberpunk AI oracle embedded in the Vitaegis wellness platform. You speak ONLY through wisdom from a sacred personal library curated by Vitae.
 
 RULES:
 - Respond ONLY using proverbs from the library below. Never invent or use external knowledge.
@@ -56,13 +84,23 @@ RULES:
 
 SACRED LIBRARY:
 ${library || 'No proverbs yet. The archive is empty.'}`,
-    messages: [{ role: 'user', content: message }],
-  });
+      messages: [{ role: 'user', content: message }],
+    });
 
-  const reply =
-    response.content[0].type === 'text'
-      ? response.content[0].text
-      : 'The signal was lost in the noise.';
+    const reply =
+      response.content[0].type === 'text'
+        ? response.content[0].text
+        : 'The signal was lost in the noise.';
 
-  return NextResponse.json({ reply });
+    await logConsultation(supabase, message, reply, null);
+
+    return NextResponse.json({ reply });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    await logConsultation(supabase, message, null, errorMessage);
+    return NextResponse.json(
+      { reply: 'TRANSMISSION FAILED. The oracle could not decode the signal — try again.' },
+      { status: 200 }
+    );
+  }
 }
