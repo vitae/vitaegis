@@ -30,6 +30,8 @@ async function logConsultation(
   }
 }
 
+export const maxDuration = 30;
+
 export async function POST(req: Request) {
   const { message } = await req.json();
 
