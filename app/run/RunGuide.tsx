@@ -39,7 +39,7 @@ export default function RunGuide() {
     <>
       {/* Route picker */}
       <nav aria-label="Routes" className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
-        <ul className="flex min-w-max gap-2 sm:grid sm:min-w-0 sm:grid-cols-5">
+        <ul className="flex min-w-max gap-2 sm:grid sm:min-w-0 sm:grid-cols-3 lg:grid-cols-6">
           {routes.map((r) => {
             const on = r.slug === selected;
             return (
