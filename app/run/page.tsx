@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import RunGuide from './RunGuide';
 import LiveStrava from './LiveStrava';
+import RunLog from './RunLog';
 import { routes } from './routes';
 import './run.css';
 
@@ -66,6 +67,8 @@ export default function RunPage() {
         <RunGuide />
 
         <LiveStrava />
+
+        <RunLog />
 
         {/* How they fit */}
         <section className={`${glass} mt-12 p-6 sm:p-10`}>

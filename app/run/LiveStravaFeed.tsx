@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   decodePolyline,
   durationLabel,
@@ -25,7 +26,7 @@ function Stat({ value, unit }: { value: string; unit: string }) {
 }
 
 /** Tiny SVG of the activity's summary polyline. */
-function Trace({ polyline, color = '#fc4c02' }: { polyline: string | null; color?: string }) {
+function Trace({ polyline, color = '#00ff41' }: { polyline: string | null; color?: string }) {
   if (!polyline) return null;
   const pts = decodePolyline(polyline);
   if (pts.length < 2) return null;
@@ -61,6 +62,7 @@ function when(iso: string) {
 const sportLabel = (s: string) => s.replace(/([a-z])([A-Z])/g, '$1 $2');
 
 export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] }) {
+  const router = useRouter();
   const [activities, setActivities] = useState(initial);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 
@@ -72,10 +74,13 @@ export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] 
         const res = await fetch('/api/strava/activities', { cache: 'no-store' });
         if (!res.ok) return;
         const { activities: next } = (await res.json()) as { activities: StravaActivity[] };
-        if (alive && next?.length) {
-          setActivities(next);
-          setUpdatedAt(new Date());
-        }
+        if (!alive || !next?.length) return;
+        setUpdatedAt(new Date());
+        setActivities((prev) => {
+          // A new top activity means the training log below is stale too.
+          if (next[0].id !== prev[0]?.id) router.refresh();
+          return next;
+        });
       } catch {
         /* keep the last good list */
       }
@@ -87,9 +92,9 @@ export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] 
       clearInterval(id);
       document.removeEventListener('visibilitychange', tick);
     };
-  }, []);
+  }, [router]);
 
-  const [latest, ...rest] = activities;
+  const [latest] = activities;
   if (!latest) return null;
   const miles = metersToMiles(latest.distance_m);
   const pace = paceMinPerMile(latest.distance_m, latest.moving_time_s);
@@ -118,31 +123,6 @@ export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] 
           <Trace polyline={latest.summary_polyline} />
         </div>
       </div>
-
-      {rest.length > 0 && (
-        <ul className="mx-auto mt-8 max-w-3xl divide-y divide-vitae-green/15">
-          {rest.map((a) => {
-            const p = paceMinPerMile(a.distance_m, a.moving_time_s);
-            return (
-              <li key={a.id} className="flex items-center gap-4 py-3">
-                <span className="h-10 w-10 shrink-0">
-                  <Trace polyline={a.summary_polyline} color="#ffffff" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-white">{a.name}</span>
-                  <span className="block text-xs font-light text-white/50">
-                    {sportLabel(a.sport_type)} · {when(a.start_date)}
-                  </span>
-                </span>
-                <span className="shrink-0 text-right text-sm tabular-nums text-white/80">
-                  <span className="block">{metersToMiles(a.distance_m).toFixed(1)} mi</span>
-                  <span className="block text-xs text-white/50">{p ? `${p} /mi` : durationLabel(a.moving_time_s)}</span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
 
       <p className="mt-6 text-center text-xs font-light text-white/40">
         Pushed by Strava webhooks the moment the watch uploads; this page re-checks every minute.

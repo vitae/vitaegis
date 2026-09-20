@@ -167,15 +167,20 @@ export async function deleteActivity(activityId: number) {
   await db.from('strava_activities').delete().eq('id', activityId);
 }
 
-/** Pull the athlete's most recent activities (used once after connecting). */
-export async function backfill(athleteId: number, perPage = 50) {
-  const list = await api<ApiActivity[]>(athleteId, `/athlete/activities?per_page=${perPage}`);
+/** Pull the athlete's activity history, newest first, a page at a time. */
+export async function backfill(athleteId: number, maxPages = 10, perPage = 200) {
   const db = supabaseAdmin();
   if (!db) throw new Error('Supabase is not configured');
-  if (!list.length) return 0;
-  const { error } = await db.from('strava_activities').upsert(list.map(toRow));
-  if (error) throw new Error(error.message);
-  return list.length;
+  let total = 0;
+  for (let page = 1; page <= maxPages; page++) {
+    const list = await api<ApiActivity[]>(athleteId, `/athlete/activities?per_page=${perPage}&page=${page}`);
+    if (!list.length) break;
+    const { error } = await db.from('strava_activities').upsert(list.map(toRow));
+    if (error) throw new Error(error.message);
+    total += list.length;
+    if (list.length < perPage) break;
+  }
+  return total;
 }
 
 /** Latest activities for the site (any athlete that has connected). */
@@ -226,4 +231,96 @@ export function decodePolyline(str: string): [number, number][] {
     out.push([lat / 1e5, lon / 1e5]);
   }
   return out;
+}
+
+// ── training log ────────────────────────────────────────────────────────────
+
+export interface WeekBucket { start: string; label: string; miles: number; runs: number; current: boolean }
+export interface ActivityStats {
+  week: number; month: number; year: number;
+  totalRuns: number; totalMiles: number;
+  longest: { miles: number; name: string; date: string } | null;
+  weeks: WeekBucket[];
+  history: StravaActivity[];
+}
+
+/**
+ * Strava sends start_date_local as local wall time carrying a Z suffix, so the UTC
+ * getters on that value are the athlete's own clock. All bucketing uses them.
+ */
+const localParts = (iso: string) => {
+  const d = new Date(iso);
+  return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate(), date: d };
+};
+
+/** Midnight on the Monday of that value's week, in the athlete's local clock. */
+function weekStart(iso: string) {
+  const { date } = localParts(iso);
+  const day = (date.getUTCDay() + 6) % 7; // Monday = 0
+  const s = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - day));
+  return s;
+}
+
+export async function activityStats(weeksBack = 12, historyLimit = 20): Promise<ActivityStats | null> {
+  const db = supabaseAdmin();
+  if (!db) return null;
+  const { data } = await db
+    .from('strava_activities')
+    .select(
+      'id, athlete_id, name, sport_type, distance_m, moving_time_s, elapsed_time_s, elevation_gain_m, start_date, start_date_local, timezone, average_speed, average_heartrate, max_heartrate, device_name, summary_polyline',
+    )
+    .order('start_date', { ascending: false })
+    .limit(1000);
+  const all = (data ?? []) as StravaActivity[];
+  if (!all.length) return null;
+
+  const now = new Date();
+  const todayLocal = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const thisWeek = weekStart(todayLocal.toISOString());
+
+  // Twelve consecutive week buckets ending with the current one, so gaps stay visible.
+  const buckets = new Map<string, WeekBucket>();
+  for (let i = weeksBack - 1; i >= 0; i--) {
+    const s = new Date(thisWeek);
+    s.setUTCDate(s.getUTCDate() - i * 7);
+    const key = s.toISOString().slice(0, 10);
+    buckets.set(key, {
+      start: key,
+      label: `${s.getUTCMonth() + 1}/${s.getUTCDate()}`,
+      miles: 0,
+      runs: 0,
+      current: i === 0,
+    });
+  }
+
+  let week = 0, month = 0, year = 0, totalMiles = 0;
+  let longest: ActivityStats['longest'] = null;
+  const nowParts = localParts(todayLocal.toISOString());
+
+  for (const a of all) {
+    const mi = metersToMiles(a.distance_m);
+    const p = localParts(a.start_date_local);
+    totalMiles += mi;
+    if (p.y === nowParts.y) {
+      year += mi;
+      if (p.m === nowParts.m) month += mi;
+    }
+    const key = weekStart(a.start_date_local).toISOString().slice(0, 10);
+    const b = buckets.get(key);
+    if (b) {
+      b.miles += mi;
+      b.runs += 1;
+      if (key === thisWeek.toISOString().slice(0, 10)) week += mi;
+    }
+    if (!longest || mi > longest.miles) longest = { miles: mi, name: a.name, date: a.start_date_local };
+  }
+
+  return {
+    week, month, year,
+    totalRuns: all.length,
+    totalMiles,
+    longest,
+    weeks: [...buckets.values()],
+    history: all.slice(0, historyLimit),
+  };
 }
