@@ -8,6 +8,8 @@ import { greatCircleMiles, legMiles, type Airports, type Leg, type Overview } fr
 
 export interface Sector {
   key: string;
+  /** URL segment under /travel. */
+  slug: string;
   label: string;
   /** HUD header when this sector is lit. */
   sector: string;
@@ -27,32 +29,32 @@ export const ASIA_RED = '#ff3b3b';
 
 const sectorList: Sector[] = [
   {
-    key: 'asia', label: 'Asia', sector: 'Pacific sector', color: ASIA_RED,
+    key: 'asia', slug: 'asia', label: 'Asia', sector: 'Pacific sector', color: ASIA_RED,
     blurb: 'Hawaiian flies the two nonstop doors, Tokyo and Seoul. Deeper in, JAL and Korean Air — both Alaska partners — carry the second leg.',
     overview: { lat: 24, lon: 170, dist: 4.4 },
   },
   {
-    key: 'south-america', label: 'South America', sector: 'Andean sector',
+    key: 'south-america', slug: 'sa', label: 'South America', sector: 'Andean sector',
     blurb: 'No nonstop exists. American’s Dallas hub is the door: one stop to Bogotá, Lima, Santiago, Buenos Aires and São Paulo, two to Rio.',
     overview: { lat: 2, lon: -105, dist: 4.4 },
   },
   {
-    key: 'alaska', label: 'Alaska', sector: 'Arctic sector',
+    key: 'alaska', slug: 'alaska', label: 'Alaska', sector: 'Arctic sector',
     blurb: 'Nonstop only: Alaska Airlines’ summer seasonal to Anchorage, straight up the Pacific. Nothing else flies it direct.',
     overview: { lat: 42, lon: -145, dist: 3.9 },
   },
   {
-    key: 'dallas', label: 'Dallas', sector: 'Central sector', color: DALLAS_BLUE,
+    key: 'dallas', slug: 'dallas', label: 'Dallas', sector: 'Central sector', color: DALLAS_BLUE,
     blurb: 'American’s daily nonstop makes DFW the one-stop gateway to the East Coast, the Gulf, London and beyond.',
     overview: { lat: 30, lon: -122, dist: 4.2 },
   },
   {
-    key: 'switzerland', label: 'Switzerland', sector: 'Alpine sector',
+    key: 'switzerland', slug: 'switzerland', label: 'Switzerland', sector: 'Alpine sector',
     blurb: 'Two stops, all oneworld: a mainland gateway on Alaska or American, British Airways across the Atlantic, then the short hop from London.',
     overview: { lat: 44, lon: -78, dist: 4.4 },
   },
   {
-    key: 'reykjavik', label: 'Reykjavik', sector: 'North Atlantic sector',
+    key: 'reykjavik', slug: 'reykjavik', label: 'Reykjavik', sector: 'North Atlantic sector',
     blurb: 'Icelandair is an Alaska partner. Seattle, New York and Boston put Keflavík one stop from Honolulu, and Europe one more.',
     overview: { lat: 50, lon: -95, dist: 4.2 },
   },
@@ -174,3 +176,53 @@ export const sectors: (Sector & { rank: number; miles: number; nonstop: boolean 
   .map((s) => ({ ...s, rank: 0, miles: sectorMiles(s.key), nonstop: sectorNonstop(s.key) }))
   .sort((a, b) => Number(b.nonstop) - Number(a.nonstop) || a.miles - b.miles)
   .map((s, i) => ({ ...s, rank: i + 1 }));
+
+// ─── Sub pages ───────────────────────────────────────────────────────────────
+// /travel/<slug>: one scope per sector, plus destination pages that pull a single city's tracks.
+
+export interface TravelPage {
+  slug: string;
+  /** Other URL segments that resolve to this page. */
+  aliases?: string[];
+  title: string;
+  /** HUD header. */
+  sector: string;
+  blurb: string;
+  overview: Overview;
+  color?: string;
+  /** Which tracks the page shows. */
+  match: (l: Leg) => boolean;
+  /** Served by its own page under app/travel, not the [slug] route. */
+  static?: boolean;
+}
+
+export const travelPages: TravelPage[] = [
+  ...sectors.map<TravelPage>((s) => ({
+    slug: s.slug,
+    aliases: s.slug === s.key ? undefined : [s.key],
+    title: s.label,
+    sector: s.sector,
+    blurb: s.blurb,
+    overview: s.overview,
+    color: s.color,
+    match: (l) => l.region === s.key,
+    // /travel/asia is the Pacific Circuit guide — the Asia sector, in full.
+    static: s.key === 'asia' || undefined,
+  })),
+  {
+    slug: 'rio',
+    aliases: ['gig', 'rio-de-janeiro'],
+    title: 'Rio de Janeiro',
+    sector: 'Andean sector · GIG',
+    blurb: 'Honolulu to Rio on one American ticket: Dallas, then Miami, then the overnight south. The Brazil e-visa is the only paperwork.',
+    overview: { lat: 0, lon: -100, dist: 4.4 },
+    color: DALLAS_BLUE,
+    match: (l) => l.to === 'GIG',
+  },
+];
+
+export const findTravelPage = (slug: string) =>
+  travelPages.find((p) => p.slug === slug || p.aliases?.includes(slug));
+
+/** Every segment the [slug] route should prebuild. */
+export const travelSlugs = travelPages.filter((p) => !p.static).flatMap((p) => [p.slug, ...(p.aliases ?? [])]);

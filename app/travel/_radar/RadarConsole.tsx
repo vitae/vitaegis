@@ -5,6 +5,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { legMiles, waypoints, type Airports, type Leg, type Overview, type Rejected } from './geo';
 
 const RadarGlobe = dynamic(() => import('./RadarGlobe'), {
@@ -85,7 +86,19 @@ export interface RadarConsoleProps {
   /** HUD header, e.g. "Scope 01". */
   scope: string;
   /** Optional sector selector. Legs carry a matching `region` key. A region's own `overview` re-frames the scope and its `sector` replaces the HUD header when it is picked. */
-  regions?: { key: string; label: string; blurb?: string; sector?: string; overview?: Overview; rank?: number; miles?: number; color?: string; nonstop?: boolean }[];
+  regions?: {
+    key: string;
+    label: string;
+    blurb?: string;
+    sector?: string;
+    overview?: Overview;
+    rank?: number;
+    miles?: number;
+    color?: string;
+    nonstop?: boolean;
+    /** With an href the box is a link to the sector's own page; hovering it previews the sector on this scope. */
+    href?: string;
+  }[];
   /** Extra legend swatches, for colour-coded tracks (legs with a `hue`). */
   legend?: { color: string; label: string }[];
 }
@@ -181,19 +194,14 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
             {regions.map((r) => {
               const on = region === r.key;
               const count = legs.filter((l) => l.region === r.key).length;
-              return (
-                <button
-                  key={r.key}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => filter(on ? null : r.key)}
-                  style={on && r.color ? { borderColor: r.color, boxShadow: `0 0 24px ${r.color}33`, backgroundColor: `${r.color}14` } : undefined}
-                  className={`group rounded-xl border px-3 py-3 text-left transition ${
-                    on
-                      ? 'border-[#ff00ff]/70 bg-[#ff00ff]/[0.07] shadow-[0_0_24px_rgba(255,0,255,0.12)]'
-                      : 'border-vitae-green/20 bg-white/[0.025] hover:border-vitae-green/60 hover:bg-vitae-green/[0.05]'
-                  }`}
-                >
+              const style = on && r.color ? { borderColor: r.color, boxShadow: `0 0 24px ${r.color}33`, backgroundColor: `${r.color}14` } : undefined;
+              const className = `group block rounded-xl border px-3 py-3 text-left transition ${
+                on
+                  ? 'border-[#ff00ff]/70 bg-[#ff00ff]/[0.07] shadow-[0_0_24px_rgba(255,0,255,0.12)]'
+                  : 'border-vitae-green/20 bg-white/[0.025] hover:border-vitae-green/60 hover:bg-vitae-green/[0.05]'
+              }`;
+              const body = (
+                <>
                   <span
                     style={r.color ? { color: r.color } : undefined}
                     className={`flex justify-between tabular-nums ${on ? 'text-[#ff00ff]' : 'text-vitae-green/70'} ${hud}`}
@@ -208,6 +216,35 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
                     </span>
                   )}
                   {r.blurb && <span className="mt-1.5 hidden text-xs font-light leading-relaxed text-white/55 lg:block">{r.blurb}</span>}
+                  {r.href && (
+                    <span className={`mt-2 block ${on ? 'text-white' : 'text-white/40 group-hover:text-white'} ${hud}`}>Open →</span>
+                  )}
+                </>
+              );
+              return r.href ? (
+                <Link
+                  key={r.key}
+                  href={r.href}
+                  aria-current={on ? 'true' : undefined}
+                  onMouseEnter={() => filter(r.key)}
+                  onMouseLeave={() => filter(null)}
+                  onFocus={() => filter(r.key)}
+                  onBlur={() => filter(null)}
+                  style={style}
+                  className={className}
+                >
+                  {body}
+                </Link>
+              ) : (
+                <button
+                  key={r.key}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => filter(on ? null : r.key)}
+                  style={style}
+                  className={className}
+                >
+                  {body}
                 </button>
               );
             })}

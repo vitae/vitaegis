@@ -56,7 +56,7 @@ export default function TravelRadarPage() {
             Every track starts in Honolulu, on Alaska Airlines, Hawaiian, American and their oneworld
             partners. Common flight paths through Asia, South America, Alaska, Dallas, Switzerland and
             Reykjavik — nonstops first, then ranked nearest to farthest. Pick a sector to light its
-            tracks, then pick a strip to lock onto a flight.{' '}
+            tracks; click it to open that sector’s own page. Pick a strip to lock onto a flight.{' '}
             <span style={{ color: ASIA_RED }}>Red tracks are the Asia sector.</span>{' '}
             <span style={{ color: DALLAS_BLUE }}>Blue tracks route through Dallas.</span>
           </p>
@@ -70,7 +70,7 @@ export default function TravelRadarPage() {
             overview={worldOverview}
             sector="All sectors"
             scope="Scope 00"
-            regions={sectors}
+            regions={sectors.map((s) => ({ ...s, href: `/travel/${s.slug}` }))}
             legend={legend}
           />
         </section>
@@ -116,11 +116,16 @@ export default function TravelRadarPage() {
                 </p>
                 <p className="mt-2 font-light leading-relaxed text-white/70">{s.blurb}</p>
                 <p className="mt-4 text-xs uppercase tracking-[0.18em] text-white/45">HNL · {codes.join(' · ')}</p>
-                {s.key === 'asia' && (
-                  <Link href="/travel/asia" className={`${label} mt-4 inline-block hover:text-white`}>
-                    Full Pacific Circuit guide →
+                <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1">
+                  <Link href={`/travel/${s.slug}`} className={`${label} hover:text-white`} style={s.color ? { color: s.color } : undefined}>
+                    {s.key === 'asia' ? 'The Pacific Circuit guide →' : `Open ${s.label} scope →`}
                   </Link>
-                )}
+                  {s.key === 'south-america' && (
+                    <Link href="/travel/rio" className={`${label} hover:text-white`} style={{ color: DALLAS_BLUE }}>
+                      Rio →
+                    </Link>
+                  )}
+                </p>
               </li>
             );
           })}

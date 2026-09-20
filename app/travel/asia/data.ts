@@ -4,19 +4,20 @@
 // Macrons (kahako) are omitted on purpose: Jost has no precomposed macron vowels.
 
 import { legMiles as chainMiles, type Airports, type Leg, type Overview, type Rejected } from '../_radar/geo';
+import { ASIA_RED } from '../sectors';
 
 export const airports: Airports = {
-  HNL: { code: 'HNL', city: 'Honolulu', country: 'Hawaiʻi', lat: 21.3187, lon: -157.9225, tz: 'Pacific/Honolulu', labelSide: 'right' },
-  NRT: { code: 'NRT', city: 'Tokyo', country: 'Japan', lat: 35.772, lon: 140.3929, tz: 'Asia/Tokyo', labelSide: 'right' },
-  PVG: { code: 'PVG', city: 'Shanghai', country: 'China', lat: 31.1443, lon: 121.8083, tz: 'Asia/Shanghai', labelSide: 'left' },
-  BKK: { code: 'BKK', city: 'Bangkok', country: 'Thailand', lat: 13.69, lon: 100.7501, tz: 'Asia/Bangkok', labelSide: 'left' },
-  HAN: { code: 'HAN', city: 'Hanoi', country: 'Vietnam', lat: 21.2187, lon: 105.8042, tz: 'Asia/Ho_Chi_Minh', labelSide: 'left', minor: true },
-  SGN: { code: 'SGN', city: 'Ho Chi Minh City', country: 'Vietnam', lat: 10.8188, lon: 106.6519, tz: 'Asia/Ho_Chi_Minh', labelSide: 'right', minor: true },
-  DPS: { code: 'DPS', city: 'Denpasar', country: 'Bali', lat: -8.7482, lon: 115.1672, tz: 'Asia/Makassar', labelSide: 'right' },
-  ICN: { code: 'ICN', city: 'Seoul', country: 'South Korea', lat: 37.4602, lon: 126.4407, tz: 'Asia/Seoul', labelSide: 'left' },
+  HNL: { code: 'HNL', city: 'Honolulu', country: 'Hawaiʻi', lat: 21.3187, lon: -157.9225, tz: 'Pacific/Honolulu', labelSide: 'right', hue: ASIA_RED },
+  NRT: { code: 'NRT', city: 'Tokyo', country: 'Japan', lat: 35.772, lon: 140.3929, tz: 'Asia/Tokyo', labelSide: 'right', hue: ASIA_RED },
+  PVG: { code: 'PVG', city: 'Shanghai', country: 'China', lat: 31.1443, lon: 121.8083, tz: 'Asia/Shanghai', labelSide: 'left', hue: ASIA_RED },
+  BKK: { code: 'BKK', city: 'Bangkok', country: 'Thailand', lat: 13.69, lon: 100.7501, tz: 'Asia/Bangkok', labelSide: 'left', hue: ASIA_RED },
+  HAN: { code: 'HAN', city: 'Hanoi', country: 'Vietnam', lat: 21.2187, lon: 105.8042, tz: 'Asia/Ho_Chi_Minh', labelSide: 'left', minor: true, hue: ASIA_RED },
+  SGN: { code: 'SGN', city: 'Ho Chi Minh City', country: 'Vietnam', lat: 10.8188, lon: 106.6519, tz: 'Asia/Ho_Chi_Minh', labelSide: 'right', minor: true, hue: ASIA_RED },
+  DPS: { code: 'DPS', city: 'Denpasar', country: 'Bali', lat: -8.7482, lon: 115.1672, tz: 'Asia/Makassar', labelSide: 'right', hue: ASIA_RED },
+  ICN: { code: 'ICN', city: 'Seoul', country: 'South Korea', lat: 37.4602, lon: 126.4407, tz: 'Asia/Seoul', labelSide: 'left', hue: ASIA_RED },
 };
 
-export const legs: Leg[] = [
+const circuit: Leg[] = [
   {
     n: '01', from: 'HNL', to: 'NRT', toLabel: 'NRT/HND', farePP: 200, time: 'Nonstop · ~8h',
     carriers: 'Hawaiian / Alaska · JAL · ANA · ZIPAIR',
@@ -62,6 +63,8 @@ export const legs: Leg[] = [
     note: 'Closing the loop. You land in Honolulu before you left Seoul — same calendar day.',
   },
 ];
+
+export const legs: Leg[] = circuit.map((l) => ({ ...l, hue: ASIA_RED }));
 
 export const travelers = 2;
 export const loopTotal = legs.reduce((sum, l) => sum + l.farePP, 0) * travelers;

@@ -4,6 +4,7 @@ import RadarConsole from '../_radar/RadarConsole';
 import {
   airports, legs, loopTotal, monthLetters, overview, paperwork, rejected, seasons, stops, tactics, tigers, totalMiles, travelers,
 } from './data';
+import { ASIA_RED, travelPages } from '../sectors';
 import '../_radar/radar.css';
 
 export const metadata: Metadata = {
@@ -52,16 +53,23 @@ export default function TravelPage() {
       <div className="travel-grid pointer-events-none absolute inset-x-0 top-0 h-[900px]" aria-hidden />
 
       <div className="relative mx-auto max-w-6xl px-4 pb-32 pt-10 sm:px-6">
-        <Link href="/" className={`${label} hover:text-white`}>
-          ← Vitaegis
-        </Link>
+        <nav className="flex flex-wrap gap-x-6 gap-y-2">
+          <Link href="/" className={`${label} hover:text-white`}>
+            ← Vitaegis
+          </Link>
+          <Link href="/travel" className={`${label} hover:text-white`}>
+            ← All sectors
+          </Link>
+        </nav>
 
         {/* Hero */}
         <header className="pb-10 pt-12 text-center sm:pt-16">
-          <p className={label}>Travel · Flight routing guide · HNL origin · September 2026</p>
+          <p className={label} style={{ color: ASIA_RED }}>
+            Travel · Asia sector · Flight routing guide · HNL origin · September 2026
+          </p>
           <h1
-            className="mt-4 text-5xl font-bold uppercase tracking-[0.12em] text-vitae-green sm:text-7xl"
-            style={{ textShadow: '0 0 24px rgba(0,255,0,0.45)' }}
+            className="mt-4 text-5xl font-bold uppercase tracking-[0.12em] sm:text-7xl"
+            style={{ color: ASIA_RED, textShadow: `0 0 24px ${ASIA_RED}` }}
           >
             The Pacific
             <br />
@@ -345,6 +353,25 @@ export default function TravelPage() {
             </div>
           </section>
         </div>
+
+        <nav aria-label="Other sectors" className="mt-12">
+          <p className={`${label} text-center`}>Other scopes</p>
+          <ul className="mt-4 flex flex-wrap justify-center gap-2">
+            {travelPages
+              .filter((p) => p.slug !== 'asia')
+              .map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/travel/${p.slug}`}
+                    className="inline-block rounded-full border border-white/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/70 transition hover:border-vitae-green hover:text-vitae-green"
+                    style={p.color ? { borderColor: `${p.color}66`, color: p.color } : undefined}
+                  >
+                    {p.title}
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        </nav>
 
         <footer className="mt-16 text-center text-sm font-light text-white/40">
           <p className="mx-auto max-w-3xl">
