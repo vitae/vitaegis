@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock, HiGlobeAlt } from 'react-icons/hi';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock, HiGlobeAlt, HiLightningBolt } from 'react-icons/hi';
 
 interface NavItem {
   id: string;
@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
 const pageLinks = [
   { href: '/happy-hour', label: 'HAPPY HOUR', icon: HiClock },
   { href: '/travel', label: 'TRAVEL', icon: HiGlobeAlt },
+  { href: '/run', label: 'RUN', icon: HiLightningBolt },
 ];
 
 interface GlassNavProps {

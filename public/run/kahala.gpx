@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="vitaegis.com/run" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>Kahala Errand - Planet Fitness and Whole Foods</name><desc>Start: 2947 Kalakaua Ave, Honolulu. Route traced on OpenStreetMap data (ODbL).</desc></metadata>
+  <trk><name>Kahala Errand - Planet Fitness and Whole Foods</name><trkseg>
+      <trkpt lat="21.261892" lon="-157.820374"><ele>1</ele></trkpt>
+      <trkpt lat="21.261486" lon="-157.820256"><ele>1</ele></trkpt>
+      <trkpt lat="21.260135" lon="-157.819382"><ele>1</ele></trkpt>
+      <trkpt lat="21.26018" lon="-157.819321"><ele>1</ele></trkpt>
+      <trkpt lat="21.260005" lon="-157.819106"><ele>1</ele></trkpt>
+      <trkpt lat="21.259981" lon="-157.818866"><ele>1</ele></trkpt>
+      <trkpt lat="21.260168" lon="-157.818178"><ele>2</ele></trkpt>
+      <trkpt lat="21.26051" lon="-157.818232"><ele>1</ele></trkpt>
+      <trkpt lat="21.261229" lon="-157.818236"><ele>1</ele></trkpt>
+      <trkpt lat="21.263303" lon="-157.818571"><ele>2</ele></trkpt>
+      <trkpt lat="21.263551" lon="-157.818555"><ele>3</ele></trkpt>
+      <trkpt lat="21.263788" lon="-157.818456"><ele>3</ele></trkpt>
+      <trkpt lat="21.264951" lon="-157.817542"><ele>2</ele></trkpt>
+      <trkpt lat="21.265915" lon="-157.817111"><ele>2</ele></trkpt>
+      <trkpt lat="21.26727" lon="-157.816259"><ele>2</ele></trkpt>
+      <trkpt lat="21.267821" lon="-157.816087"><ele>2</ele></trkpt>
+      <trkpt lat="21.269127" lon="-157.815853"><ele>3</ele></trkpt>
+      <trkpt lat="21.269046" lon="-157.813187"><ele>9</ele></trkpt>
+      <trkpt lat="21.269155" lon="-157.812678"><ele>9</ele></trkpt>
+      <trkpt lat="21.269593" lon="-157.811346"><ele>13</ele></trkpt>
+      <trkpt lat="21.269794" lon="-157.808878"><ele>23</ele></trkpt>
+      <trkpt lat="21.269784" lon="-157.80782"><ele>28</ele></trkpt>
+      <trkpt lat="21.269602" lon="-157.806732"><ele>33</ele></trkpt>
+      <trkpt lat="21.26957" lon="-157.804278"><ele>46</ele></trkpt>
+      <trkpt lat="21.269623" lon="-157.803503"><ele>49</ele></trkpt>
+      <trkpt lat="21.26998" lon="-157.803477"><ele>51</ele></trkpt>
+      <trkpt lat="21.270277" lon="-157.803293"><ele>52</ele></trkpt>
+      <trkpt lat="21.273414" lon="-157.800725"><ele>72</ele></trkpt>
+      <trkpt lat="21.270526" lon="-157.79513"><ele>17</ele></trkpt>
+      <trkpt lat="21.268827" lon="-157.791716"><ele>10</ele></trkpt>
+      <trkpt lat="21.268621" lon="-157.791171"><ele>10</ele></trkpt>
+      <trkpt lat="21.268553" lon="-157.790723"><ele>9</ele></trkpt>
+      <trkpt lat="21.26857" lon="-157.790418"><ele>9</ele></trkpt>
+      <trkpt lat="21.268776" lon="-157.78978"><ele>10</ele></trkpt>
+      <trkpt lat="21.268882" lon="-157.789714"><ele>10</ele></trkpt>
+      <trkpt lat="21.269031" lon="-157.789495"><ele>10</ele></trkpt>
+      <trkpt lat="21.271469" lon="-157.786951"><ele>6</ele></trkpt>
+      <trkpt lat="21.271859" lon="-157.786589"><ele>5</ele></trkpt>
+      <trkpt lat="21.272513" lon="-157.786104"><ele>5</ele></trkpt>
+      <trkpt lat="21.272996" lon="-157.785825"><ele>5</ele></trkpt>
+      <trkpt lat="21.273911" lon="-157.78545"><ele>6</ele></trkpt>
+      <trkpt lat="21.27555" lon="-157.785045"><ele>9</ele></trkpt>
+      <trkpt lat="21.278274" lon="-157.784646"><ele>12</ele></trkpt>
+      <trkpt lat="21.278265" lon="-157.784547"><ele>11</ele></trkpt>
+      <trkpt lat="21.2776" lon="-157.7853"><ele>11</ele></trkpt>
+      <trkpt lat="21.2775" lon="-157.7864"><ele>9</ele></trkpt>
+  </trkseg></trk>
+</gpx>
