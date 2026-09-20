@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock } from 'react-icons/hi';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock, HiGlobeAlt } from 'react-icons/hi';
 
 interface NavItem {
   id: string;
@@ -19,7 +19,10 @@ const navItems: NavItem[] = [
 ];
 
 // Standalone pages (real routes, not scroll sections)
-const pageLinks = [{ href: '/happy-hour', label: 'HAPPY HOUR', icon: HiClock }];
+const pageLinks = [
+  { href: '/happy-hour', label: 'HAPPY HOUR', icon: HiClock },
+  { href: '/travel', label: 'TRAVEL', icon: HiGlobeAlt },
+];
 
 interface GlassNavProps {
   activeSection: string;
