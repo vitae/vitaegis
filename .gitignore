@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 
 # Claude Code local tooling
 .claude/
+
+# Claude project research and reference material: local only, never committed or deployed
+/PROJECTS/
