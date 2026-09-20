@@ -227,7 +227,7 @@ async function runPublish(job: Job) {
   // Serve the media from our own domain: TikTok only pulls from a verified domain and
   // Instagram needs a plain URL it can cURL, so a Supabase signed URL will not do.
   const secret = process.env.CONTENT_MEDIA_SECRET || process.env.CONTENT_INGEST_SECRET;
-  const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://vitaegis.com';
+  const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.vitaegis.com';
   const paths: string[] = post.media_paths?.length ? post.media_paths : post.media_path ? [post.media_path] : [];
   const mediaUrls = secret
     ? paths.map((_: string, i: number) => `${base}/api/content/media/${post.id}?t=${secret}&i=${i}`)

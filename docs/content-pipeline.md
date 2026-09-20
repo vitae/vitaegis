@@ -36,6 +36,7 @@ On Vercel and in `.env.local`:
 
 | Variable | What it is |
 | --- | --- |
+| `NEXT_PUBLIC_BASE_URL` | `https://www.vitaegis.com`. The apex redirects to www, and OAuth callbacks must match exactly. |
 | `CONTENT_INGEST_SECRET` | Shared secret the Shortcut sends. Generate something long. |
 | `CONTENT_ADMIN_KEY` | Unlocks `/admin/content` and the connect links. |
 | `CONTENT_MEDIA_SECRET` | Optional. Token on the media proxy URL. Falls back to the ingest secret. |
@@ -56,20 +57,25 @@ On Vercel and in `.env.local`:
 Open each of these once and approve:
 
 ```
-/api/social/connect/facebook?key=<CONTENT_ADMIN_KEY>
-/api/social/connect/youtube?key=<CONTENT_ADMIN_KEY>
-/api/social/connect/tiktok?key=<CONTENT_ADMIN_KEY>
-/api/social/connect/twitter?key=<CONTENT_ADMIN_KEY>
+https://www.vitaegis.com/api/social/connect/facebook?key=<CONTENT_ADMIN_KEY>
+https://www.vitaegis.com/api/social/connect/youtube?key=<CONTENT_ADMIN_KEY>
+https://www.vitaegis.com/api/social/connect/tiktok?key=<CONTENT_ADMIN_KEY>
+https://www.vitaegis.com/api/social/connect/twitter?key=<CONTENT_ADMIN_KEY>
 ```
 
 The Facebook grant also stores Instagram, since one Meta app covers both. The dots on
 `/admin/content` show what is connected.
 
+To check your progress at any point, open
+`https://www.vitaegis.com/api/content/status?key=<CONTENT_ADMIN_KEY>`. It reports which
+variables are set, whether the tables and bucket exist, which accounts are connected,
+and the exact callback URL to paste into each provider. It never returns a secret value.
+
 ### 4. The Shortcut
 
 New Shortcut, one action: **Get Contents of URL**.
 
-- URL: `https://vitaegis.com/api/content/ingest`
+- URL: `https://www.vitaegis.com/api/content/ingest`
 - Method: POST
 - Headers: `x-ingest-key` = your `CONTENT_INGEST_SECRET`
 - Request body: Form
