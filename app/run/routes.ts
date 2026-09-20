@@ -54,6 +54,8 @@ const lighthouse: [number, number] = [21.2568, -157.8065];
 const kcc: [number, number] = [21.2696, -157.802];
 const marathonStart: [number, number] = [21.29181, -157.85075];
 const bandstand: [number, number] = [21.2686, -157.8209];
+const kahalaHunakai: [number, number] = [21.2639, -157.7844];
+const kilaueaHunakai2: [number, number] = [21.26912, -157.78925];
 const kahalaPueo: [number, number] = [21.2687, -157.77948];
 const kilaueaPueo: [number, number] = [21.27243, -157.786];
 
@@ -63,20 +65,20 @@ export const routes: RunRoute[] = [
   {
     slug: 'kahala',
     name: 'Kahala Errand',
-    kicker: 'Warm-up · gym · lunch · bus home',
-    tagline: 'Over the back of Diamond Head to Planet Fitness and Whole Foods.',
+    kicker: 'Lighthouse · gym · lunch · bus home',
+    tagline: 'Out past the lighthouse and along the ocean to Planet Fitness and Whole Foods.',
     color: '#ff00ff',
     miles: g('kahala').miles,
     ascentFt: g('kahala').ascentFt,
     coords: g('kahala').coords,
     profile: g('kahala').profile,
     summary:
-      'The shortest legal route to Kahala Mall: up Paki and Monsarrat, around the mauka side of the crater past the KCC lot, then Kilauea Avenue all the way down. Planet Fitness and Whole Foods share the Ewa end of the mall, and TheBus Route 14 leaves from that corner and drops you at your own front door, so the groceries ride and you do not.',
-    marathonMiles: 'Marathon miles 6.1–7.3 (Monsarrat) and Kilauea Ave, which the race reaches at mile 9.7',
+      'The scenic way to Kahala Mall, and the one worth running: straight up Diamond Head Rd from the front door so the lighthouse and the surf lookouts come in the first mile, then the long flat stretch of Kahala Ave past the beach houses, up Hunakai St and along Kilauea Ave to the mall. Planet Fitness and Whole Foods share the Ewa end, and TheBus Route 14 leaves from that corner and drops you at your own front door, so the groceries ride and you do not. It is half a mile longer than going the back way over the crater and far better company.',
+    marathonMiles: 'Marathon miles 24.4–25.8 (Diamond Head Rd and Kahala Ave) run in reverse, then Kilauea Ave, which the race reaches at mile 9.7',
     plan: [
       {
-        title: '1 · Run 3.7 miles',
-        body: 'Easy effort. The only hill is Monsarrat between miles 0.9 and 1.4; the last 1.5 miles on Kilauea are a gentle downhill. Bring: phone, HOLO card or $3 cash, a small lock, a dry shirt.',
+        title: '1 · Run 4.1 miles',
+        body: 'Easy effort. The climb is Diamond Head Rd in the first mile, about 110 ft, and it is downhill or flat from the lighthouse on. Bring: phone, HOLO card or $3 cash, a small lock, a dry shirt.',
       },
       {
         title: '2 · Planet Fitness, Kahala Mall',
@@ -92,18 +94,19 @@ export const routes: RunRoute[] = [
       },
     ],
     cues: [
-      { mi: 0.0, text: 'Out the door and Diamond Head-bound (east) on Kalakaua for two blocks.' },
-      { mi: 0.2, text: 'At the Poni Moi Rd junction bear left (mauka) onto Paki Ave, the shaded top edge of Kapiolani Park.' },
-      { mi: 0.9, text: 'Right onto Monsarrat Ave. Steady climb past the back of the zoo and the Monsarrat food trucks.' },
-      { mi: 1.4, text: 'Monsarrat becomes Diamond Head Rd. Keep straight; the crater entrance tunnel is on your right.' },
-      { mi: 1.7, text: 'Left onto Makapuu Ave, just past the KCC lower lot (the Saturday market lot is right here).' },
-      { mi: 2.0, text: 'Right onto Kilauea Ave. Sidewalks both sides; it dips and curves 1.5 miles through Kaimuki and Kahala.' },
-      { mi: 3.6, text: 'Kahala Mall at the Kilauea / Waialae corner. Planet Fitness and Whole Foods are 100 m in, on the Ewa end.' },
+      { mi: 0.0, text: 'Out the door and east on Kalakaua two blocks; right on Poni Moi Rd, then left onto Diamond Head Rd. The climb starts at once.' },
+      { mi: 0.5, text: 'Beach Rd drops away on your right. Stay on the ocean-side sidewalk past the Kuilei Cliffs lookouts.' },
+      { mi: 1.1, text: 'Lighthouse and the surf lookouts. Then a gentle descent along the cliffs with Black Point ahead.' },
+      { mi: 1.7, text: 'Kahala Ave junction: Diamond Head Rd bends left and uphill; you keep straight along the coast on Kahala Ave.' },
+      { mi: 2.2, text: 'Flat and shaded the whole way through the Kahala mansions.' },
+      { mi: 2.6, text: 'Left onto Hunakai St, half a mile up through the neighborhood.' },
+      { mi: 3.1, text: 'Right onto Kilauea Ave and northeast for the last three quarters of a mile.' },
+      { mi: 3.8, text: 'Kahala Mall at the Kilauea / Waialae corner. Planet Fitness and Whole Foods are 100 m in, on the Ewa end.' },
     ],
-    mapsUrl: walk([home, pakiMonsarrat, dhMonsarrat, makapuuKilauea, kilaueaHunakai, planetFitness]),
+    mapsUrl: walk([home, lighthouse, dhKahala, kahalaHunakai, kilaueaHunakai2, planetFitness]),
     gpx: '/run/kahala.gpx',
     facts: [
-      { label: 'Scenic variant', value: 'Go the other way round the crater: Diamond Head Rd along the ocean, Kahala Ave, then Hunakai St up to Kilauea. About 3.9 miles, and it is the road the bus brings you home on.' },
+      { label: 'Faster variant', value: 'Go the back way over the crater instead: Paki, Monsarrat, around the mauka side past the KCC lot, then Kilauea Ave all the way down. About 3.7 miles with one real climb on Monsarrat.' },
     ],
   },
   {

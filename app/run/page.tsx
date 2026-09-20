@@ -9,7 +9,7 @@ import './run.css';
 export const metadata: Metadata = {
   title: 'Run · Diamond Head | VITAEGIS',
   description:
-    'Running routes from 2947 Kalakaua Ave: a 3.7-mile errand run to Planet Fitness and Whole Foods with the bus home, a 7-mile lighthouse, Kahala and Kaimuki loop, a 10-mile Waikiki–Magic Island–Diamond Head loop, the official Honolulu Marathon course, the KCC Saturday market loop and a flat park shakeout. Maps, elevation, turn-by-turn and GPX.',
+    'Running routes from 2947 Kalakaua Ave: a 4.1-mile lighthouse errand run to Planet Fitness and Whole Foods with the bus home, a 7-mile lighthouse, Kahala and Kaimuki loop, a 10-mile Waikiki–Magic Island–Diamond Head loop, the official Honolulu Marathon course, the KCC Saturday market loop and a flat park shakeout. Maps, elevation, turn-by-turn and GPX.',
   openGraph: {
     title: 'Run · Diamond Head | VITAEGIS',
     description: 'Six running routes out of the Gold Coast, mapped and measured, with the marathon course for December.',
@@ -56,7 +56,7 @@ export default function RunPage() {
             Runs
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            Six routes out the front door: the errand run to Planet Fitness and Whole Foods with TheBus
+            Six routes out the front door: the lighthouse errand run to Planet Fitness and Whole Foods with TheBus
             home, a seven-mile loop past the lighthouse and back over Kaimuki, a ten-mile south-shore loop,
             the official Honolulu Marathon course, the Saturday market loop over Diamond Head, and a flat
             park shakeout. {Math.round(totalMiles)} miles in all, mapped
