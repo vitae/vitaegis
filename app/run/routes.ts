@@ -54,6 +54,8 @@ const lighthouse: [number, number] = [21.2568, -157.8065];
 const kcc: [number, number] = [21.2696, -157.802];
 const marathonStart: [number, number] = [21.29181, -157.85075];
 const bandstand: [number, number] = [21.2686, -157.8209];
+const kahalaPueo: [number, number] = [21.2687, -157.77948];
+const kilaueaPueo: [number, number] = [21.27243, -157.786];
 
 const g = (slug: string) => geometry[slug];
 
@@ -135,6 +137,41 @@ export const routes: RunRoute[] = [
     facts: [
       { label: 'Water', value: 'Fountains and restrooms at Kapiolani Park, Kuhio Beach, Ala Moana Beach Park and Magic Island; nothing on Diamond Head Rd after KCC.' },
       { label: 'Shorter', value: 'Skip the Magic Island loop and turn at the park entrance for 8.8 miles. Skip Ala Moana entirely and turn at the Ala Wai bridge for 7.4.' },
+    ],
+  },
+  {
+    slug: 'lighthouse',
+    name: 'Lighthouse Seven',
+    kicker: 'Hills · lighthouse first, then the long way round',
+    tagline: 'Out to the lighthouse, on through Kahala, and back over Kaimuki: seven miles, two climbs.',
+    color: '#00e5ff',
+    miles: g('lighthouse').miles,
+    ascentFt: g('lighthouse').ascentFt,
+    coords: g('lighthouse').coords,
+    profile: g('lighthouse').profile,
+    summary:
+      'Straight up Diamond Head Rd from the front door, so the lighthouse and the surf lookouts come in the first mile while the legs are fresh. Then instead of turning for home, keep going: down to Kahala Ave and along the flat mile and a half of beach houses to Waialae Beach Park, up Pueo St, and back west on Kilauea Ave, which climbs through Kaimuki to the Makapuu Ave crest. Diamond Head Rd and Monsarrat bring you down past the crater entrance and the zoo, and Kalakaua along the beach closes the loop at seven.',
+    marathonMiles: 'Marathon miles 24.4–25.8 (Kahala Ave and Diamond Head Rd) run in reverse, Kilauea Ave in reverse, then Monsarrat downhill',
+    cues: [
+      { mi: 0.0, text: 'East on Kalakaua two blocks; right on Poni Moi Rd, then left onto Diamond Head Rd. The climb starts at once.' },
+      { mi: 0.5, text: 'Beach Rd drops away on your right. Stay on the ocean-side sidewalk past the Kuilei Cliffs lookouts.' },
+      { mi: 1.1, text: 'Lighthouse. Then a gentle descent along the cliffs with Black Point ahead.' },
+      { mi: 1.7, text: 'Kahala Ave junction: Diamond Head Rd bends left and uphill; you keep straight along the coast on Kahala Ave.' },
+      { mi: 2.2, text: 'Flat and shaded through the Kahala mansions. Waialae Beach Park at the end has water and restrooms.' },
+      { mi: 3.1, text: 'Left onto Pueo St just past the beach park; half a mile through the neighborhood to Kilauea Ave.' },
+      { mi: 3.6, text: 'Left onto Kilauea Ave. Kahala Mall (Whole Foods, Planet Fitness) is a quarter mile the other way if you need anything.' },
+      { mi: 4.2, text: 'Cross 22nd Ave; Kilauea starts climbing through Kaimuki, the mile-7 hill of the Kahala Errand run the other way.' },
+      { mi: 4.7, text: 'Crest at Makapuu Ave, the high point. Left onto Makapuu and drop to Diamond Head Rd.' },
+      { mi: 5.0, text: 'Right onto Diamond Head Rd: crater entrance on your left, then it becomes Monsarrat.' },
+      { mi: 5.3, text: 'Monsarrat all the way down: a mile past the food trucks, Paki Ave and the zoo to Kapahulu.' },
+      { mi: 6.4, text: 'Left onto Kalakaua at the Kapahulu corner and along the beach: Kuhio, the Aquarium, the Natatorium, Kaimana, home.' },
+    ],
+    mapsUrl: walk([home, lighthouse, dhKahala, kahalaPueo, kilaueaPueo, makapuuKilauea, dhMonsarrat, kalakauaKapahulu, home]),
+    gpx: '/run/lighthouse.gpx',
+    facts: [
+      { label: 'Water', value: 'Waialae Beach Park at mile 3 and Kapiolani Park at mile 6.4. Nothing on Diamond Head Rd or Kilauea Ave.' },
+      { label: 'Two climbs', value: 'Diamond Head Rd to the lighthouse, about 110 ft, and Kilauea Ave from 22nd Ave to Makapuu, about 200 ft. Everything from mile 4.7 is downhill or flat.' },
+      { label: 'Shorter', value: 'Turn up Elepaio St instead of Pueo for 6.0 miles, or finish down Paki instead of along the beach for 6.7.' },
     ],
   },
   {
@@ -253,6 +290,7 @@ export const pois: Poi[] = [
   { label: 'KCC market', lat: 21.2696, lon: -157.802, color: '#ffffff' },
   { label: 'Lighthouse lookout', lat: 21.2565, lon: -157.809, color: '#00ff00' },
   { label: 'Magic Island', lat: 21.2838, lon: -157.8466, color: '#00ff00' },
+  { label: 'Waialae Beach Park', lat: 21.2685, lon: -157.7803, color: '#00e5ff' },
   { label: 'Marathon start', lat: 21.29181, lon: -157.85075, color: '#ffff00' },
   { label: 'Marathon finish', lat: 21.2686, lon: -157.8209, color: '#ffff00' },
   { label: 'Mile 17.4 turnaround', lat: 21.28302, lon: -157.71531, color: '#ffff00' },
