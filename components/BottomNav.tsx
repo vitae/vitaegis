@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock } from 'react-icons/hi';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock, HiGlobeAlt } from 'react-icons/hi';
 
 interface NavItem {
   id: string;
@@ -19,7 +19,10 @@ const navItems: NavItem[] = [
 ];
 
 // Standalone pages (real routes, not scroll sections)
-const pageLinks = [{ href: '/happy-hour', label: 'HAPPY HR', icon: HiClock }];
+const pageLinks = [
+  { href: '/happy-hour', label: 'HAPPY HR', icon: HiClock },
+  { href: '/travel', label: 'TRAVEL', icon: HiGlobeAlt },
+];
 
 interface BottomNavProps {
   activeSection?: string;
@@ -98,7 +101,7 @@ export default function BottomNav({ activeSection = 'hero', onNavigate }: Bottom
                 {/* Label */}
                 <span 
                   className={`
-                    relative z-10 mt-1 text-[10px] font-medium tracking-wider
+                    relative z-10 mt-1 text-[9px] font-medium tracking-wide
                     transition-opacity duration-200
                     ${isActive ? 'opacity-100' : 'opacity-70'}
                   `}
@@ -119,7 +122,7 @@ export default function BottomNav({ activeSection = 'hero', onNavigate }: Bottom
                 <div className="relative z-10">
                   <Icon size={22} />
                 </div>
-                <span className="relative z-10 mt-1 text-[10px] font-medium tracking-wider opacity-70 whitespace-nowrap">
+                <span className="relative z-10 mt-1 text-[9px] font-medium tracking-wide opacity-70 whitespace-nowrap">
                   {page.label}
                 </span>
               </Link>
