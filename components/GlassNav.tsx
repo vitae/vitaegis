@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup } from 'react-icons/hi';
+import Link from 'next/link';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock } from 'react-icons/hi';
 
 interface NavItem {
   id: string;
@@ -16,6 +17,9 @@ const navItems: NavItem[] = [
   { id: 'token', label: 'STORE', icon: HiShoppingBag },
   { id: 'community', label: 'CONNECT', icon: HiUserGroup },
 ];
+
+// Standalone pages (real routes, not scroll sections)
+const pageLinks = [{ href: '/happy-hour', label: 'HAPPY HOUR', icon: HiClock }];
 
 interface GlassNavProps {
   activeSection: string;
@@ -92,6 +96,19 @@ export default function GlassNav({ activeSection, onNavigate }: GlassNavProps) {
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-vitae-green rounded-full shadow-[0_0_10px_#00ff00]" />
                   )}
                 </button>
+              );
+            })}
+            {pageLinks.map((page) => {
+              const Icon = page.icon;
+              return (
+                <Link
+                  key={page.href}
+                  href={page.href}
+                  className="relative flex items-center gap-2 px-3 lg:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 text-white/70 hover:text-white hover:bg-white/5"
+                >
+                  <Icon size={16} />
+                  <span className="hidden lg:inline">{page.label}</span>
+                </Link>
               );
             })}
           </div>

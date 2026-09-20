@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup } from 'react-icons/hi';
+import Link from 'next/link';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock } from 'react-icons/hi';
 
 interface NavItem {
   id: string;
@@ -16,6 +17,9 @@ const navItems: NavItem[] = [
   { id: 'token', label: 'STORE', icon: HiShoppingBag },
   { id: 'community', label: 'CONNECT', icon: HiUserGroup },
 ];
+
+// Standalone pages (real routes, not scroll sections)
+const pageLinks = [{ href: '/happy-hour', label: 'HAPPY HR', icon: HiClock }];
 
 interface BottomNavProps {
   activeSection?: string;
@@ -102,6 +106,23 @@ export default function BottomNav({ activeSection = 'hero', onNavigate }: Bottom
                   {item.label}
                 </span>
               </button>
+            );
+          })}
+          {pageLinks.map((page) => {
+            const Icon = page.icon;
+            return (
+              <Link
+                key={page.href}
+                href={page.href}
+                className="relative flex flex-col items-center justify-center flex-1 py-3 min-h-[56px] transition-all duration-200 ease-out active:scale-95 active:opacity-80 text-white/50"
+              >
+                <div className="relative z-10">
+                  <Icon size={22} />
+                </div>
+                <span className="relative z-10 mt-1 text-[10px] font-medium tracking-wider opacity-70 whitespace-nowrap">
+                  {page.label}
+                </span>
+              </Link>
             );
           })}
         </div>
