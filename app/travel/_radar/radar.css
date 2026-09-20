@@ -1,0 +1,137 @@
+/* /travel — radar scope effects. Scoped by class name; nothing here touches the rest of the site. */
+
+.travel-sweep {
+  background: conic-gradient(from 0deg, rgba(0, 255, 0, 0) 0deg, rgba(0, 255, 0, 0) 300deg, rgba(0, 255, 0, 0.05) 330deg, rgba(0, 255, 0, 0.22) 360deg);
+  mix-blend-mode: screen;
+  animation: travel-sweep 7s linear infinite;
+}
+
+.travel-scanlines {
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.22) 2px 3px);
+  box-shadow: inset 0 0 70px 18px rgba(0, 0, 0, 0.75);
+}
+
+.travel-grid {
+  background-image:
+    linear-gradient(rgba(0, 255, 0, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 0, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 80%);
+}
+
+@keyframes travel-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-sweep {
+    animation: none;
+  }
+}
+
+/* Target-designator boxes and data blocks pinned to each jet (see RadarGlobe). */
+.travel-tag {
+  --c: #00ff00;
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--c);
+  font-family: 'Jost', sans-serif;
+  will-change: transform;
+  transition: opacity 200ms;
+}
+
+.travel-box {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  width: 22px;
+  height: 22px;
+  transition: left 250ms, top 250ms, width 250ms, height 250ms;
+}
+
+.travel-box i {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--c);
+  opacity: 0.85;
+  filter: drop-shadow(0 0 3px var(--c));
+}
+
+.travel-box i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+.travel-box i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; }
+.travel-box i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; }
+.travel-box i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+
+.travel-tag.is-on .travel-box {
+  left: -17px;
+  top: -17px;
+  width: 34px;
+  height: 34px;
+  animation: travel-lock 550ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.travel-tag.is-on .travel-box i {
+  width: 9px;
+  height: 9px;
+  opacity: 1;
+}
+
+.travel-data {
+  position: absolute;
+  left: 15px;
+  top: -24px;
+  white-space: nowrap;
+  font-size: 9px;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px #000, 0 0 2px #000;
+}
+
+.travel-data b {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+.travel-data span {
+  display: none;
+  color: rgba(255, 255, 255, 0.78);
+  font-variant-numeric: tabular-nums;
+}
+
+.travel-tag.is-on .travel-data {
+  left: 22px;
+  top: -30px;
+  padding-left: 7px;
+  border-left: 1px solid var(--c);
+}
+
+.travel-tag.is-on .travel-data span {
+  display: block;
+}
+
+@keyframes travel-lock {
+  from {
+    transform: scale(2.8) rotate(45deg);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-tag.is-on .travel-box {
+    animation: none;
+  }
+}

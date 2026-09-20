@@ -3,40 +3,17 @@
 // Entry rules are for US passports, checked September 2026. Reconfirm everything before booking.
 // Macrons (kahako) are omitted on purpose: Jost has no precomposed macron vowels.
 
-export interface Airport {
-  code: string;
-  city: string;
-  country: string;
-  lat: number;
-  lon: number;
-  /** Where the HUD label sits relative to the blip, so neighbours do not collide. */
-  labelSide: 'left' | 'right';
-  /** Label hidden on the full-circuit view, where it would collide with a neighbour. */
-  minor?: boolean;
-}
+import { legMiles as chainMiles, type Airports, type Leg, type Overview, type Rejected } from '../_radar/geo';
 
-export interface Leg {
-  n: string;
-  from: string;
-  to: string;
-  /** Code shown on the strip when it differs from the plotted airport (e.g. NRT/HND). */
-  toLabel?: string;
-  farePP: number;
-  time: string;
-  carriers: string;
-  note: string;
-  flag?: 'visa' | 'win';
-}
-
-export const airports: Record<string, Airport> = {
-  HNL: { code: 'HNL', city: 'Honolulu', country: 'Hawaiʻi', lat: 21.3187, lon: -157.9225, labelSide: 'right' },
-  NRT: { code: 'NRT', city: 'Tokyo', country: 'Japan', lat: 35.772, lon: 140.3929, labelSide: 'right' },
-  PVG: { code: 'PVG', city: 'Shanghai', country: 'China', lat: 31.1443, lon: 121.8083, labelSide: 'left' },
-  BKK: { code: 'BKK', city: 'Bangkok', country: 'Thailand', lat: 13.69, lon: 100.7501, labelSide: 'left' },
-  HAN: { code: 'HAN', city: 'Hanoi', country: 'Vietnam', lat: 21.2187, lon: 105.8042, labelSide: 'left', minor: true },
-  SGN: { code: 'SGN', city: 'Ho Chi Minh City', country: 'Vietnam', lat: 10.8188, lon: 106.6519, labelSide: 'right', minor: true },
-  DPS: { code: 'DPS', city: 'Denpasar', country: 'Bali', lat: -8.7482, lon: 115.1672, labelSide: 'right' },
-  ICN: { code: 'ICN', city: 'Seoul', country: 'South Korea', lat: 37.4602, lon: 126.4407, labelSide: 'left' },
+export const airports: Airports = {
+  HNL: { code: 'HNL', city: 'Honolulu', country: 'Hawaiʻi', lat: 21.3187, lon: -157.9225, tz: 'Pacific/Honolulu', labelSide: 'right' },
+  NRT: { code: 'NRT', city: 'Tokyo', country: 'Japan', lat: 35.772, lon: 140.3929, tz: 'Asia/Tokyo', labelSide: 'right' },
+  PVG: { code: 'PVG', city: 'Shanghai', country: 'China', lat: 31.1443, lon: 121.8083, tz: 'Asia/Shanghai', labelSide: 'left' },
+  BKK: { code: 'BKK', city: 'Bangkok', country: 'Thailand', lat: 13.69, lon: 100.7501, tz: 'Asia/Bangkok', labelSide: 'left' },
+  HAN: { code: 'HAN', city: 'Hanoi', country: 'Vietnam', lat: 21.2187, lon: 105.8042, tz: 'Asia/Ho_Chi_Minh', labelSide: 'left', minor: true },
+  SGN: { code: 'SGN', city: 'Ho Chi Minh City', country: 'Vietnam', lat: 10.8188, lon: 106.6519, tz: 'Asia/Ho_Chi_Minh', labelSide: 'right', minor: true },
+  DPS: { code: 'DPS', city: 'Denpasar', country: 'Bali', lat: -8.7482, lon: 115.1672, tz: 'Asia/Makassar', labelSide: 'right' },
+  ICN: { code: 'ICN', city: 'Seoul', country: 'South Korea', lat: 37.4602, lon: 126.4407, tz: 'Asia/Seoul', labelSide: 'left' },
 };
 
 export const legs: Leg[] = [
@@ -90,18 +67,12 @@ export const travelers = 2;
 export const loopTotal = legs.reduce((sum, l) => sum + l.farePP, 0) * travelers;
 
 /** The routing the loop deliberately avoids. Drawn in red on the scope. */
-export const rejected = { from: 'DPS', to: 'HNL', farePP: 450, viaSeoulPP: 400 };
+export const rejected: Rejected & { farePP: number; viaSeoulPP: number } = { from: 'DPS', to: 'HNL', farePP: 450, viaSeoulPP: 400 };
 
-const R_MILES = 3958.8;
-export function greatCircleMiles(a: Airport, b: Airport): number {
-  const rad = Math.PI / 180;
-  const dLat = (b.lat - a.lat) * rad;
-  const dLon = (b.lon - a.lon) * rad;
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
-  return 2 * R_MILES * Math.asin(Math.sqrt(h));
-}
-export const legMiles = (l: Leg) => Math.round(greatCircleMiles(airports[l.from], airports[l.to]) / 10) * 10;
+/** Scope framing for the full circuit. */
+export const overview: Overview = { lat: 22, lon: 150, dist: 4.4 };
+
+export const legMiles = (l: Leg) => chainMiles(airports, l);
 export const totalMiles = legs.reduce((sum, l) => sum + legMiles(l), 0);
 
 // ─── Stops ───────────────────────────────────────────────────────────────────
