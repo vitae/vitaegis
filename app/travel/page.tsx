@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import RadarConsole from './_radar/RadarConsole';
 import { legMiles } from './_radar/geo';
-import { airports, home, legs, sectors, worldOverview } from './sectors';
+import { DALLAS_BLUE, airports, home, legend, legs, sectors, worldOverview } from './sectors';
 import './_radar/radar.css';
 
 export const metadata: Metadata = {
@@ -55,7 +55,8 @@ export default function TravelRadarPage() {
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
             Every track starts in Honolulu. Common flight paths through Asia, South America, Alaska,
             Dallas, Switzerland and Reykjavik, ranked nearest to farthest. Pick a sector to light its
-            tracks, then pick a strip to lock onto a flight.
+            tracks, then pick a strip to lock onto a flight.{' '}
+            <span style={{ color: DALLAS_BLUE }}>Blue tracks route through Dallas.</span>
           </p>
         </header>
 
@@ -68,6 +69,7 @@ export default function TravelRadarPage() {
             sector="All sectors"
             scope="Scope 00"
             regions={sectors}
+            legend={legend}
           />
         </section>
 
@@ -95,9 +97,9 @@ export default function TravelRadarPage() {
             const nearest = tracks[0];
             return (
               <li key={s.key} className={`${glass} p-6`}>
-                <div className="flex items-baseline justify-between">
-                  <p className={label}>#{s.rank} · {s.sector}</p>
-                  <p className="text-sm tabular-nums text-vitae-green">{s.miles.toLocaleString('en-US')} mi</p>
+                <div className="flex items-baseline justify-between" style={s.color ? { color: s.color } : undefined}>
+                  <p className={label} style={s.color ? { color: s.color } : undefined}>#{s.rank} · {s.sector}</p>
+                  <p className="text-sm tabular-nums text-vitae-green" style={s.color ? { color: s.color } : undefined}>{s.miles.toLocaleString('en-US')} mi</p>
                 </div>
                 <h3 className="mt-1 text-2xl font-semibold tracking-wide text-white">{s.label}</h3>
                 <p className="mt-1 text-sm font-light text-white/55">

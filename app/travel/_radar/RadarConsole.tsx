@@ -85,10 +85,12 @@ export interface RadarConsoleProps {
   /** HUD header, e.g. "Scope 01". */
   scope: string;
   /** Optional sector selector. Legs carry a matching `region` key. A region's own `overview` re-frames the scope and its `sector` replaces the HUD header when it is picked. */
-  regions?: { key: string; label: string; blurb?: string; sector?: string; overview?: Overview; rank?: number; miles?: number }[];
+  regions?: { key: string; label: string; blurb?: string; sector?: string; overview?: Overview; rank?: number; miles?: number; color?: string }[];
+  /** Extra legend swatches, for colour-coded tracks (legs with a `hue`). */
+  legend?: { color: string; label: string }[];
 }
 
-export default function RadarConsole({ airports, legs, rejected, home, overview, travelers = 1, sector, scope, regions }: RadarConsoleProps) {
+export default function RadarConsole({ airports, legs, rejected, home, overview, travelers = 1, sector, scope, regions, legend }: RadarConsoleProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const [region, setRegion] = useState<string | null>(null);
@@ -185,13 +187,17 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
                   type="button"
                   aria-pressed={on}
                   onClick={() => filter(on ? null : r.key)}
+                  style={on && r.color ? { borderColor: r.color, boxShadow: `0 0 24px ${r.color}33`, backgroundColor: `${r.color}14` } : undefined}
                   className={`group rounded-xl border px-3 py-3 text-left transition ${
                     on
                       ? 'border-[#ff00ff]/70 bg-[#ff00ff]/[0.07] shadow-[0_0_24px_rgba(255,0,255,0.12)]'
                       : 'border-vitae-green/20 bg-white/[0.025] hover:border-vitae-green/60 hover:bg-vitae-green/[0.05]'
                   }`}
                 >
-                  <span className={`flex justify-between tabular-nums ${on ? 'text-[#ff00ff]' : 'text-vitae-green/70'} ${hud}`}>
+                  <span
+                    style={r.color ? { color: r.color } : undefined}
+                    className={`flex justify-between tabular-nums ${on ? 'text-[#ff00ff]' : 'text-vitae-green/70'} ${hud}`}
+                  >
                     <span>{r.rank ? `#${r.rank}` : `${count} ${count === 1 ? 'track' : 'tracks'}`}</span>
                     {r.miles !== undefined && <span>{r.miles.toLocaleString('en-US')} mi</span>}
                   </span>
@@ -216,7 +222,7 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
               VTGS Approach<span className="hidden sm:inline"> · {sectorName}</span>
             </p>
             <p className="mt-1 text-white/45">
-              {scope} · {shown.length} tracks<span className="hidden lg:inline"> · drag to turn · click a track to lock</span>
+              {scope} · {shown.length} tracks{picked ? ' lit' : ''}<span className="hidden lg:inline"> · drag to turn · click a track to lock</span>
             </p>
           </div>
           <div className="text-right tabular-nums">
@@ -271,6 +277,11 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
           <span className="flex items-center gap-2">
             <i className="h-px w-6 bg-vitae-green shadow-[0_0_6px_#00ff00]" /> Booked track
           </span>
+          {legend?.map((g) => (
+            <span key={g.label} className="flex items-center gap-2">
+              <i className="h-px w-6" style={{ backgroundColor: g.color, boxShadow: `0 0 6px ${g.color}` }} /> {g.label}
+            </span>
+          ))}
           <span className="flex items-center gap-2">
             <i className="h-px w-6 bg-white shadow-[0_0_6px_#fff]" /> Hover
           </span>
@@ -303,6 +314,7 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
             const on = selected === i;
             const hv = !on && hovered === i;
             const via = l.via?.map((c) => airports[c].city).join(', ');
+            const tint = !on && !hv && l.hue ? { color: l.hue } : undefined;
             return (
               <li key={l.n}>
                 <button
@@ -320,18 +332,19 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
                         ? 'border-white/70 bg-white/[0.06] shadow-[0_0_20px_rgba(255,255,255,0.10)]'
                         : 'border-vitae-green/20 bg-white/[0.025]'
                   }`}
+                  style={!on && !hv && l.hue ? { borderColor: `${l.hue}55` } : undefined}
                 >
                   <span className="flex items-baseline gap-3">
-                    <span className={`w-5 text-xs tabular-nums ${on ? 'text-[#ff00ff]' : hv ? 'text-white' : 'text-vitae-green/70'}`}>{l.n}</span>
+                    <span style={tint} className={`w-5 text-xs tabular-nums ${on ? 'text-[#ff00ff]' : hv ? 'text-white' : 'text-vitae-green/70'}`}>{l.n}</span>
                     <span className="text-base font-semibold tracking-[0.12em] text-white sm:text-lg">
                       {l.from}
-                      <span className={`mx-2 ${on ? 'text-[#ff00ff]' : hv ? 'text-white' : 'text-vitae-green'}`}>→</span>
+                      <span style={tint} className={`mx-2 ${on ? 'text-[#ff00ff]' : hv ? 'text-white' : 'text-vitae-green'}`}>→</span>
                       {l.toLabel ?? l.to}
                     </span>
                     <span className="ml-auto hidden text-xs tabular-nums tracking-wider text-white/45 sm:inline">
                       {legMiles(airports, l).toLocaleString('en-US')} mi
                     </span>
-                    <span className="ml-auto w-14 text-right text-base font-semibold tabular-nums text-vitae-green sm:ml-0">
+                    <span style={tint} className="ml-auto w-14 text-right text-base font-semibold tabular-nums text-vitae-green sm:ml-0">
                       ${l.farePP}
                     </span>
                   </span>

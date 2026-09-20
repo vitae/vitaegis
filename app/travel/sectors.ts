@@ -12,9 +12,15 @@ export interface Sector {
   sector: string;
   blurb: string;
   overview: Overview;
+  /** Accent for the sector card, when its tracks are colour-coded. */
+  color?: string;
 }
 
 export const home = 'HNL';
+
+/** Anything routed through Dallas–Fort Worth is drawn in this blue. */
+export const DALLAS = 'DFW';
+export const DALLAS_BLUE = '#2f9bff';
 
 const sectorList: Sector[] = [
   {
@@ -33,7 +39,7 @@ const sectorList: Sector[] = [
     overview: { lat: 42, lon: -145, dist: 3.9 },
   },
   {
-    key: 'dallas', label: 'Dallas', sector: 'Central sector',
+    key: 'dallas', label: 'Dallas', sector: 'Central sector', color: DALLAS_BLUE,
     blurb: 'American’s daily nonstop makes DFW the one-stop gateway to the East Coast, the Gulf, London and beyond.',
     overview: { lat: 30, lon: -122, dist: 4.2 },
   },
@@ -66,7 +72,7 @@ export const airports: Airports = {
   SFO: { code: 'SFO', city: 'San Francisco', country: 'USA', lat: 37.6213, lon: -122.379, tz: 'America/Los_Angeles', labelSide: 'left', minor: true },
   SEA: { code: 'SEA', city: 'Seattle', country: 'USA', lat: 47.4502, lon: -122.3088, tz: 'America/Los_Angeles', labelSide: 'left' },
   DEN: { code: 'DEN', city: 'Denver', country: 'USA', lat: 39.8561, lon: -104.6737, tz: 'America/Denver', labelSide: 'right', minor: true },
-  DFW: { code: 'DFW', city: 'Dallas–Fort Worth', country: 'USA', lat: 32.8998, lon: -97.0403, tz: 'America/Chicago', labelSide: 'right' },
+  DFW: { code: 'DFW', city: 'Dallas–Fort Worth', country: 'USA', lat: 32.8998, lon: -97.0403, tz: 'America/Chicago', labelSide: 'right', hue: DALLAS_BLUE },
   ORD: { code: 'ORD', city: 'Chicago', country: 'USA', lat: 41.9742, lon: -87.9073, tz: 'America/Chicago', labelSide: 'left', minor: true },
   JFK: { code: 'JFK', city: 'New York', country: 'USA', lat: 40.6413, lon: -73.7781, tz: 'America/New_York', labelSide: 'right' },
   BOS: { code: 'BOS', city: 'Boston', country: 'USA', lat: 42.3656, lon: -71.0096, tz: 'America/New_York', labelSide: 'right', minor: true },
@@ -139,9 +145,14 @@ const routings: Leg[] = [
 // Everything is listed by proximity to Honolulu: strips shortest-first by miles actually flown,
 // sectors nearest-first by the direct great-circle distance to their closest destination.
 
+const throughDallas = (l: Leg) => l.to === DALLAS || (l.via ?? []).includes(DALLAS);
+
 export const legs: Leg[] = [...routings]
   .sort((a, b) => legMiles(airports, a) - legMiles(airports, b))
-  .map((l, i) => ({ ...l, n: String(i + 1).padStart(2, '0') }));
+  .map((l, i) => ({ ...l, n: String(i + 1).padStart(2, '0'), hue: throughDallas(l) ? DALLAS_BLUE : undefined }));
+
+/** Scope legend entries for the colour-coded tracks. */
+export const legend = [{ color: DALLAS_BLUE, label: 'Via Dallas' }];
 
 /** Direct great-circle miles from Honolulu to the sector's nearest destination, rounded to ten. */
 export function sectorMiles(key: string): number {

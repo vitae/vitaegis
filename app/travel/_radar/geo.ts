@@ -12,6 +12,8 @@ export interface Airport {
   labelSide: 'left' | 'right';
   /** Label hidden on the wide view, where it would collide with a neighbour. */
   minor?: boolean;
+  /** Blip colour, e.g. a hub that legs are colour-coded by. Defaults to scope green. */
+  hue?: string;
 }
 
 export interface Leg {
@@ -27,8 +29,10 @@ export interface Leg {
   carriers: string;
   note: string;
   flag?: 'visa' | 'win';
-  /** Region key, for the strip filter on pages that offer one. */
+  /** Region key, for the sector selector on pages that offer one. */
   region?: string;
+  /** Track colour when neither selected nor hovered. Defaults to scope green. */
+  hue?: string;
 }
 
 /** A routing the page deliberately avoids. Drawn dashed red on the scope. */

@@ -275,6 +275,8 @@ interface BlipParts {
   ring: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
   phase: number;
   on: boolean;
+  /** No shown track lands here: drawn faint. */
+  dim: boolean;
   label: HTMLDivElement;
   code: HTMLDivElement;
   city: HTMLDivElement;
@@ -285,13 +287,14 @@ function makeBlip(airport: Airport, isHome: boolean, labelLayer: HTMLElement): B
   const anchor = new THREE.Group();
   anchor.position.copy(position);
   anchor.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), position.clone().normalize());
+  const hue = airport.hue ?? GREEN;
   const dot = new THREE.Mesh(
     new THREE.CircleGeometry(isHome ? 0.017 : 0.012, 20),
-    new THREE.MeshBasicMaterial({ color: GREEN, toneMapped: false })
+    new THREE.MeshBasicMaterial({ color: hue, toneMapped: false, transparent: true })
   );
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.014, 0.0175, 32),
-    new THREE.MeshBasicMaterial({ color: GREEN, transparent: true, opacity: 0.6, toneMapped: false, side: THREE.DoubleSide })
+    new THREE.MeshBasicMaterial({ color: hue, transparent: true, opacity: 0.6, toneMapped: false, side: THREE.DoubleSide })
   );
   anchor.add(dot, ring);
 
@@ -307,7 +310,7 @@ function makeBlip(airport: Airport, isHome: boolean, labelLayer: HTMLElement): B
   label.append(code, city);
   labelLayer.appendChild(label);
 
-  return { airport, anchor, dot, ring, phase: (airport.lon + 180) / 47, on: false, label, code, city };
+  return { airport, anchor, dot, ring, phase: (airport.lon + 180) / 47, on: false, dim: false, label, code, city };
 }
 
 /** Target-designator box and data block, pinned to the jet from the HTML layer. */
@@ -436,16 +439,17 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       const codes = waypoints(leg);
       const route = buildRoute(airports, codes);
       // Planned route: a faint solid line under a flowing dash that shows direction of flight.
-      const line = track(fatLine(route.points, { color: GREEN, width: 1.1, opacity: 0.32 }));
+      const hue = leg.hue ?? GREEN;
+      const line = track(fatLine(route.points, { color: hue, width: 1.1, opacity: 0.32 }));
       const flow = track(
-        fatLine(buildRoute(airports, codes, 1, R_FLOW).points, { color: GREEN, width: 1.6, opacity: 0.55, dashed: true, dashSize: 0.014, gapSize: 0.034, additive: true })
+        fatLine(buildRoute(airports, codes, 1, R_FLOW).points, { color: hue, width: 1.6, opacity: 0.55, dashed: true, dashSize: 0.014, gapSize: 0.034, additive: true })
       );
       const trail = track(liveLine(TRAIL_PTS + 1, 2.4));
       const leader = track(liveLine(2, 1.4));
-      writeRamp(trail, GREEN);
-      writeRamp(leader, GREEN, 1);
+      writeRamp(trail, hue);
+      writeRamp(leader, hue, 1);
 
-      const jet = new THREE.Mesh(jetGeom, new THREE.MeshBasicMaterial({ color: GREEN, side: THREE.DoubleSide, toneMapped: false }));
+      const jet = new THREE.Mesh(jetGeom, new THREE.MeshBasicMaterial({ color: leg.hue ?? GREEN, side: THREE.DoubleSide, toneMapped: false, transparent: true }));
       jet.matrixAutoUpdate = false;
       const burner = new THREE.Mesh(
         burnerGeom,
@@ -468,7 +472,8 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
         tag: makeTag(labelLayer, `VTG${leg.n}`),
         speed: 0.11 / Math.max(route.angle, 0.25),
         size: 0.032,
-        shown: true,
+        /** Outside the picked sector: drawn faint, ignored by the hit test. */
+        dim: false,
       };
     });
 
@@ -521,27 +526,41 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
     let appliedHover: number | null | undefined;
     let appliedActive: boolean[] | undefined | null = null;
 
-    /** Three looks per track: selected (magenta, biggest), hovered (white), or plain green. */
-    const applyStyles = (sel: number | null, hov: number | null) => {
+    /**
+     * Looks per track, in priority order: selected (magenta, biggest), hovered (white), in the picked
+     * sector (its own hue, brighter), plain (its own hue), or outside the picked sector (faint).
+     */
+    const applyStyles = (sel: number | null, hov: number | null, act: boolean[] | undefined) => {
+      const landed = new Set<string>([home]);
       for (const f of flights) {
         const on = f.index === sel;
         const hv = !on && f.index === hov;
         const lit = on || hv;
-        const c = on ? MAGENTA : hv ? WHITE : GREEN;
+        const inSector = act ? act[f.index] !== false : true;
+        const dim = !inSector && !lit;
+        const emph = inSector && !!act && !lit;
+        f.dim = dim;
+        if (inSector) for (const c of waypoints(f.leg)) landed.add(c);
+        const hue = f.leg.hue ?? GREEN;
+        const c = on ? MAGENTA : hv ? WHITE : hue;
         f.line.material.color.set(c);
-        f.line.material.linewidth = on ? 2 : hv ? 1.8 : 1.1;
-        f.line.material.opacity = on ? 0.7 : hv ? 0.6 : 0.32;
+        f.line.material.linewidth = on ? 2 : hv ? 1.8 : emph ? 1.5 : dim ? 0.8 : 1.1;
+        f.line.material.opacity = on ? 0.7 : hv ? 0.6 : emph ? 0.5 : dim ? 0.07 : 0.32;
         f.flow.material.color.set(c);
-        f.flow.material.linewidth = on ? 2.4 : hv ? 2.2 : 1.6;
-        f.flow.material.opacity = on ? 0.9 : hv ? 0.85 : 0.55;
-        f.trail.material.linewidth = on ? 3.4 : hv ? 3 : 2.4;
+        f.flow.material.linewidth = on ? 2.4 : hv ? 2.2 : emph ? 1.9 : dim ? 1 : 1.6;
+        f.flow.material.opacity = on ? 0.9 : hv ? 0.85 : emph ? 0.75 : dim ? 0.08 : 0.55;
+        f.trail.material.linewidth = on ? 3.4 : hv ? 3 : emph ? 2.7 : 2.4;
+        f.trail.material.opacity = dim ? 0.12 : 1;
         f.leader.material.linewidth = lit ? 2 : 1.4;
-        writeRamp(f.trail, lit ? WHITE : GREEN);
+        f.leader.material.opacity = dim ? 0.12 : 1;
+        writeRamp(f.trail, lit ? WHITE : hue);
         writeRamp(f.leader, c, 1);
-        f.jet.material.color.set(lit ? WHITE : GREEN);
-        f.size = on ? 0.05 : hv ? 0.042 : 0.032;
+        f.jet.material.color.set(lit ? WHITE : hue);
+        f.jet.material.opacity = dim ? 0.18 : 1;
+        f.size = on ? 0.05 : hv ? 0.042 : emph ? 0.036 : 0.032;
         f.tag.root.classList.toggle('is-on', lit);
         f.tag.root.style.setProperty('--c', c);
+        f.tag.root.style.display = dim ? 'none' : '';
         f.tag.at = -1;
       }
       const selCodes = sel === null ? [] : waypoints(legs[sel]);
@@ -549,11 +568,15 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       for (const b of blips) {
         const on = selCodes.includes(b.airport.code);
         const hv = !on && hovCodes.includes(b.airport.code);
+        const dim = !on && !hv && !landed.has(b.airport.code);
         const isHome = b.airport.code === home;
+        const hue = b.airport.hue ?? GREEN;
         b.on = on || hv;
-        b.dot.material.color.set(on || hv ? WHITE : GREEN);
-        b.ring.material.color.set(on ? MAGENTA : hv ? WHITE : GREEN);
-        b.code.style.color = on ? MAGENTA : hv || isHome ? WHITE : GREEN;
+        b.dim = dim;
+        b.dot.material.color.set(on || hv ? WHITE : hue);
+        b.dot.material.opacity = dim ? 0.25 : 1;
+        b.ring.material.color.set(on ? MAGENTA : hv ? WHITE : hue);
+        b.code.style.color = on ? MAGENTA : hv || isHome ? WHITE : hue;
         b.code.style.fontSize = on || hv || isHome ? '13px' : '11px';
         b.city.style.display = on || hv ? 'block' : 'none';
       }
@@ -567,7 +590,7 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       let best: number | null = null;
       let bestD = HIT_RADIUS * HIT_RADIUS;
       for (const f of flights) {
-        if (!f.shown) continue;
+        if (f.dim) continue;
         for (const p of f.route.points) {
           hitPt.copy(p).applyMatrix4(spin.matrixWorld);
           const facing = toCamera.copy(camera.position).sub(hitPt).normalize().dot(hitNormal.copy(hitPt).normalize());
@@ -585,30 +608,13 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       return best;
     };
 
-    /** Strip filter: hide every part of a track that is filtered out, and its blip when nothing lands there. */
-    const applyActive = (act: boolean[] | undefined) => {
-      const landed = new Set<string>([home]);
-      for (const f of flights) {
-        f.shown = act ? act[f.index] !== false : true;
-        for (const obj of [f.line, f.flow, f.trail, f.leader, f.jet]) obj.visible = f.shown;
-        f.tag.root.style.display = f.shown ? '' : 'none';
-        if (f.shown) for (const c of waypoints(f.leg)) landed.add(c);
-      }
-      for (const b of blips) {
-        const on = landed.has(b.airport.code);
-        b.anchor.visible = on;
-        b.label.style.display = on ? '' : 'none';
-      }
-    };
-
     const frame = () => {
       raf = 0;
       const l = live.current;
       const delta = Math.min(clock.getDelta(), 0.1);
       const time = clock.elapsedTime;
-      if (appliedActive !== l.active) applyActive((appliedActive = l.active));
-      if (appliedSelection !== l.selected || appliedHover !== l.hovered) {
-        applyStyles((appliedSelection = l.selected), (appliedHover = l.hovered));
+      if (appliedActive !== l.active || appliedSelection !== l.selected || appliedHover !== l.hovered) {
+        applyStyles((appliedSelection = l.selected), (appliedHover = l.hovered), (appliedActive = l.active));
       }
 
       const target = targetFor(l.selected);
@@ -621,7 +627,6 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       camera.position.z = current.dist;
 
       for (const f of flights) {
-        if (!f.shown) continue;
         const t = l.still ? 0.5 : (time * f.speed + f.index * 0.13) % 1;
 
         // Jet: sit on the sphere, nose down the ground track (basis: right, forward, outward normal).
@@ -633,7 +638,7 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
         forward.crossVectors(normal, right);
         f.jet.matrix.makeBasis(right, forward, normal).scale(scale.setScalar(f.size)).setPosition(pos);
         f.jet.matrixWorldNeedsUpdate = true;
-        f.burner.material.opacity = l.still ? 0.7 : 0.45 + 0.55 * Math.abs(Math.sin(time * 29 + f.index * 1.7));
+        f.burner.material.opacity = (f.dim ? 0.15 : 1) * (l.still ? 0.7 : 0.45 + 0.55 * Math.abs(Math.sin(time * 29 + f.index * 1.7)));
 
         // Exhaust trail behind, velocity vector ahead. Both compress at the ends of the route.
         const t0 = Math.max(0, t - TRAIL);
@@ -664,7 +669,7 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       scene.updateMatrixWorld();
 
       for (const f of flights) {
-        if (!f.shown) continue;
+        if (f.dim) continue;
         f.jet.getWorldPosition(world);
         const facing = toCamera.copy(camera.position).sub(world).normalize().dot(normal.copy(world).normalize());
         world.project(camera);
@@ -673,11 +678,10 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       }
 
       for (const b of blips) {
-        if (!b.anchor.visible) continue;
         const on = b.on;
         const t = l.still ? 0.35 : (time * 0.55 + b.phase) % 1;
         b.ring.scale.setScalar(1 + t * (on ? 3.2 : 2.8));
-        b.ring.material.opacity = (1 - t) * (on ? 0.9 : 0.5);
+        b.ring.material.opacity = (1 - t) * (on ? 0.9 : b.dim ? 0.12 : 0.5);
 
         // Pin the HTML label to the blip; hide it once the airport turns over the horizon.
         b.anchor.getWorldPosition(world);
@@ -691,7 +695,7 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
         b.label.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(${right ? `${on ? 16 : 10}px` : `calc(-100% - ${on ? 16 : 10}px)`}, -50%)`;
         // Minor airports crowd their neighbours on the wide view; name them once zoomed in.
         const crowded = b.airport.minor && !on && current.dist > 3;
-        b.label.style.opacity = facing > 0.12 && !crowded ? '1' : '0';
+        b.label.style.opacity = facing > 0.12 && !crowded ? (b.dim ? '0.28' : '1') : '0';
       }
 
       composer.render(delta);
