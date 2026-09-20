@@ -33,7 +33,7 @@ const sectorList: Sector[] = [
   },
   {
     key: 'south-america', label: 'South America', sector: 'Andean sector',
-    blurb: 'No nonstop exists. American’s Dallas hub is the door: one stop to Bogotá, Lima, Santiago, Buenos Aires and São Paulo.',
+    blurb: 'No nonstop exists. American’s Dallas hub is the door: one stop to Bogotá, Lima, Santiago, Buenos Aires and São Paulo, two to Rio.',
     overview: { lat: 2, lon: -105, dist: 4.4 },
   },
   {
@@ -83,7 +83,8 @@ export const airports: Airports = {
   LIM: { code: 'LIM', city: 'Lima', country: 'Peru', lat: -12.0219, lon: -77.1143, tz: 'America/Lima', labelSide: 'left' },
   SCL: { code: 'SCL', city: 'Santiago', country: 'Chile', lat: -33.393, lon: -70.7858, tz: 'America/Santiago', labelSide: 'left' },
   EZE: { code: 'EZE', city: 'Buenos Aires', country: 'Argentina', lat: -34.8222, lon: -58.5358, tz: 'America/Argentina/Buenos_Aires', labelSide: 'right' },
-  GRU: { code: 'GRU', city: 'São Paulo', country: 'Brazil', lat: -23.4356, lon: -46.4731, tz: 'America/Sao_Paulo', labelSide: 'right' },
+  GRU: { code: 'GRU', city: 'São Paulo', country: 'Brazil', lat: -23.4356, lon: -46.4731, tz: 'America/Sao_Paulo', labelSide: 'left', minor: true },
+  GIG: { code: 'GIG', city: 'Rio de Janeiro', country: 'Brazil', lat: -22.81, lon: -43.2506, tz: 'America/Sao_Paulo', labelSide: 'right' },
   // Alaska
   ANC: { code: 'ANC', city: 'Anchorage', country: 'Alaska', lat: 61.1743, lon: -149.9962, tz: 'America/Anchorage', labelSide: 'left' },
   // Europe
@@ -110,6 +111,7 @@ const routings: Leg[] = [
   { n: '09', region: 'south-america', from: 'HNL', to: 'SCL', via: ['DFW'], farePP: 600, time: '1 stop · ~18.5h', carriers: 'American', note: 'Overnight from Dallas. Santiago sits under the Andes wall — sit on the left.' },
   { n: '10', region: 'south-america', from: 'HNL', to: 'EZE', via: ['DFW'], farePP: 600, time: '1 stop · ~19h', carriers: 'American', note: 'American’s DFW–Buenos Aires nonstop. Overnight, land at dawn.' },
   { n: '11', region: 'south-america', from: 'HNL', to: 'GRU', via: ['DFW'], farePP: 580, time: '1 stop · ~18h', carriers: 'American', note: 'US passports need a Brazil e-visa since April 2025, ~$81.', flag: 'visa' },
+  { n: '28', region: 'south-america', from: 'HNL', to: 'GIG', via: ['DFW', 'MIA'], farePP: 640, time: '2 stops · ~21h', carriers: 'American', note: 'American’s Rio flights leave from Miami, so it is Dallas then Miami then the overnight south. Same Brazil e-visa as São Paulo.', flag: 'visa' },
 
   // ── Alaska ── the one nonstop.
   { n: '12', region: 'alaska', from: 'HNL', to: 'ANC', farePP: 260, time: 'Seasonal nonstop · ~6h', carriers: 'Alaska Airlines (summer)', note: 'Summer only — the one nonstop between Hawaiʻi and Alaska. Off-season it is a Seattle connection.', flag: 'win' },
