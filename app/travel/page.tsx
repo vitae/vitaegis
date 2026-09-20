@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import RadarConsole from './_radar/RadarConsole';
 import { legMiles } from './_radar/geo';
-import { DALLAS_BLUE, airports, home, legend, legs, sectors, worldOverview } from './sectors';
+import { ASIA_RED, DALLAS_BLUE, airports, home, legend, legs, sectors, worldOverview } from './sectors';
 import './_radar/radar.css';
 
 export const metadata: Metadata = {
@@ -53,9 +53,11 @@ export default function TravelRadarPage() {
             Radar
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            Every track starts in Honolulu. Common flight paths through Asia, South America, Alaska,
-            Dallas, Switzerland and Reykjavik, ranked nearest to farthest. Pick a sector to light its
+            Every track starts in Honolulu, on Alaska Airlines, Hawaiian, American and their oneworld
+            partners. Common flight paths through Asia, South America, Alaska, Dallas, Switzerland and
+            Reykjavik — nonstops first, then ranked nearest to farthest. Pick a sector to light its
             tracks, then pick a strip to lock onto a flight.{' '}
+            <span style={{ color: ASIA_RED }}>Red tracks are the Asia sector.</span>{' '}
             <span style={{ color: DALLAS_BLUE }}>Blue tracks route through Dallas.</span>
           </p>
         </header>
@@ -84,10 +86,10 @@ export default function TravelRadarPage() {
 
         <section className="mt-12">
           <header className="text-center">
-            <p className={label}>Ranked · Nearest to farthest from HNL</p>
+            <p className={label}>Ranked · Nonstops first, then nearest to farthest from HNL</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">Six sectors</h2>
             <p className="mx-auto mt-2 max-w-2xl text-lg font-light italic text-white/60">
-              Direct great-circle miles to each sector’s closest destination. Strips inside each sector run shortest-first by miles actually flown.
+              Sectors with a nonstop from Honolulu rank first. Miles are direct great-circle distance to each sector’s closest destination; strips run nonstops first, then shortest-first by miles actually flown.
             </p>
           </header>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -101,7 +103,14 @@ export default function TravelRadarPage() {
                   <p className={label} style={s.color ? { color: s.color } : undefined}>#{s.rank} · {s.sector}</p>
                   <p className="text-sm tabular-nums text-vitae-green" style={s.color ? { color: s.color } : undefined}>{s.miles.toLocaleString('en-US')} mi</p>
                 </div>
-                <h3 className="mt-1 text-2xl font-semibold tracking-wide text-white">{s.label}</h3>
+                <h3 className="mt-1 flex items-baseline gap-3 text-2xl font-semibold tracking-wide text-white">
+                  {s.label}
+                  {s.nonstop && (
+                    <span className="rounded-full border border-vitae-green/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-vitae-green">
+                      Nonstop
+                    </span>
+                  )}
+                </h3>
                 <p className="mt-1 text-sm font-light text-white/55">
                   Shortest track: HNL → {nearest.to}{nearest.via ? ` via ${nearest.via.join(', ')}` : ''} · {legMiles(airports, nearest).toLocaleString('en-US')} mi flown
                 </p>
@@ -120,7 +129,7 @@ export default function TravelRadarPage() {
 
         <footer className="mt-16 text-center text-sm font-light text-white/40">
           <p className="mx-auto max-w-3xl">
-            Every track originates at Honolulu. Tracks are typical scheduled routings, not live traffic. Fares are indicative lowest one-way
+            Every track originates at Honolulu on Alaska Airlines, Hawaiian, American or a oneworld / Mileage Plan partner. Tracks are typical scheduled routings, not live traffic. Fares are indicative lowest one-way
             economy prices seen on fare aggregators in September 2026 — a planning budget, not a quote.
             Entry notes are for US passports. Compiled by Vitaegis.
           </p>

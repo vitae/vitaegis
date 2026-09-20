@@ -85,7 +85,7 @@ export interface RadarConsoleProps {
   /** HUD header, e.g. "Scope 01". */
   scope: string;
   /** Optional sector selector. Legs carry a matching `region` key. A region's own `overview` re-frames the scope and its `sector` replaces the HUD header when it is picked. */
-  regions?: { key: string; label: string; blurb?: string; sector?: string; overview?: Overview; rank?: number; miles?: number; color?: string }[];
+  regions?: { key: string; label: string; blurb?: string; sector?: string; overview?: Overview; rank?: number; miles?: number; color?: string; nonstop?: boolean }[];
   /** Extra legend swatches, for colour-coded tracks (legs with a `hue`). */
   legend?: { color: string; label: string }[];
 }
@@ -203,7 +203,9 @@ export default function RadarConsole({ airports, legs, rejected, home, overview,
                   </span>
                   <span className="mt-1 block text-base font-semibold tracking-[0.08em] text-white">{r.label}</span>
                   {r.rank && (
-                    <span className="mt-0.5 block text-xs text-white/45">{count} {count === 1 ? 'track' : 'tracks'}</span>
+                    <span className="mt-0.5 block text-xs text-white/45">
+                      {count} {count === 1 ? 'track' : 'tracks'}{r.nonstop ? ' · nonstop' : ''}
+                    </span>
                   )}
                   {r.blurb && <span className="mt-1.5 hidden text-xs font-light leading-relaxed text-white/55 lg:block">{r.blurb}</span>}
                 </button>
