@@ -123,6 +123,11 @@ export default function HeroSection() {
             </span>
           </div>
 
+          {/* Brand descriptors */}
+          <p className="text-[0.65rem] sm:text-xs text-[#00ff00]/70 text-center tracking-[0.2em] uppercase mb-4 sm:mb-5">
+            Center for Inner Peace
+          </p>
+
           {/* Description with Instagram typography */}
           <p className="text-sm sm:text-base text-white/70 text-center leading-relaxed mb-5 sm:mb-6">
             Ancient wisdom meets Cyberspirituality:

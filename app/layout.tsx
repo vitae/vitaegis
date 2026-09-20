@@ -6,9 +6,10 @@ import { Analytics } from '@vercel/analytics/next';
 export const metadata: Metadata = {
   title: 'VITAEGIS | Health • Stealth • Wealth',
   description:
-    'Ancient wisdom meets Cyberspirituality. Evolve your energy through the convergence of Zen Meditation, Kundalini Yoga, Yang Tai Chi, and Qi Gong.',
+    'Ancient wisdom meets Cyberspirituality. Evolve your energy with  Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
   keywords: [
     'Vitaegis',
+    'Center for Inner Peace',
     'Web3',
     'Zen',
     'Kundalini',
@@ -31,14 +32,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'VITAEGIS | Health • Stealth • Wealth',
     description:
-      'Ancient wisdom meets Cyberspirituality. Evolve your energy through the convergence of Zen Meditation, Kundalini Yoga, Yang Tai Chi, and Qi Gong.',
+      'Ancient wisdom meets Cyberspirituality. Evolve your energy with Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'VITAEGIS | Health • Stealth • Wealth',
     description:
-      'Ancient wisdom meets Cyberspirituality. Evolve your energy through the convergence of Zen Meditation, Kundalini Yoga, Yang Tai Chi, and Qi Gong.',
+      'Ancient wisdom meets Cyberspirituality. Evolve your energy with Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
   },
 };
 

@@ -3,7 +3,7 @@
 import { FaDiscord, FaTwitter, FaTelegram, FaGithub, FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa';
 
 const footerLinks = {
-  Products: ['Features', 'Green Tea', 'Books'],
+  Products: ['Vitamins', 'Green Tea', 'Books'],
   Practices: ['Meditation', 'Yoga', 'Tai Chi'],
   Resources: ['Documentation', 'Videos', 'Tutorials'],
   Company: ['About', 'Mission', 'Contact'],
