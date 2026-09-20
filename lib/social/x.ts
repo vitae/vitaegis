@@ -66,25 +66,32 @@ async function uploadMedia(token: string, bytes: Buffer, mimeType: string, categ
 
 export async function postToX(
   caption: string,
-  mediaUrl?: string,
+  mediaUrls: string[] = [],
   kind?: string,
   aiGenerated = true,
 ): Promise<PostResult> {
   const account = await accessToken('twitter');
   const body: Record<string, unknown> = { text: caption.slice(0, 280), made_with_ai: aiGenerated };
 
-  if (mediaUrl) {
-    const media = await fetch(mediaUrl, { cache: 'no-store' });
-    if (!media.ok) throw new Error(`Could not fetch media for X: ${media.status}`);
-    const bytes = Buffer.from(await media.arrayBuffer());
-    const isVideo = kind === 'video';
-    const mediaId = await uploadMedia(
-      account.access_token,
-      bytes,
-      isVideo ? 'video/mp4' : media.headers.get('content-type') || 'image/png',
-      isVideo ? 'tweet_video' : 'tweet_image',
-    );
-    body.media = { media_ids: [mediaId] };
+  const isVideo = kind === 'video';
+  // A post carries one video, or up to four images.
+  const urls = isVideo ? mediaUrls.slice(0, 1) : mediaUrls.slice(0, 4);
+  if (urls.length) {
+    const ids: string[] = [];
+    for (const url of urls) {
+      const media = await fetch(url, { cache: 'no-store' });
+      if (!media.ok) throw new Error(`Could not fetch media for X: ${media.status}`);
+      const bytes = Buffer.from(await media.arrayBuffer());
+      ids.push(
+        await uploadMedia(
+          account.access_token,
+          bytes,
+          isVideo ? 'video/mp4' : media.headers.get('content-type') || 'image/png',
+          isVideo ? 'tweet_video' : 'tweet_image',
+        ),
+      );
+    }
+    body.media = { media_ids: ids };
   }
 
   const res = await fetch(`${API}/tweets`, {

@@ -14,7 +14,7 @@ const DISCLOSURE = 'Made with AI.';
 
 export interface PublishInput {
   captions: Partial<Record<Platform | 'default', string>>;
-  mediaUrl?: string;
+  mediaUrls?: string[];
   mediaKind?: string;
   platforms: Platform[];
   aiDisclosure?: boolean;
@@ -61,15 +61,17 @@ export async function publish(input: PublishInput): Promise<PublishOutcome> {
   for (const platform of targets) {
     try {
       const caption = disclose(platform);
-      const url = input.mediaUrl;
+      const urls = input.mediaUrls ?? [];
       const kind = input.mediaKind;
       const ai = input.aiDisclosure ?? true;
 
-      if (platform === 'facebook') results[platform] = await postToFacebook(caption, url, kind);
-      else if (platform === 'instagram') results[platform] = await postToInstagram(caption, url!, kind!);
-      else if (platform === 'youtube') results[platform] = await postToYouTube(caption, url!, kind!);
-      else if (platform === 'tiktok') results[platform] = await postToTikTok(caption, url!, kind!, ai);
-      else if (platform === 'twitter') results[platform] = await postToX(caption, url, kind, ai);
+      // Instagram takes the whole deck as a carousel and X takes up to four stills;
+      // the rest take the first file.
+      if (platform === 'facebook') results[platform] = await postToFacebook(caption, urls[0], kind);
+      else if (platform === 'instagram') results[platform] = await postToInstagram(caption, urls, kind!);
+      else if (platform === 'youtube') results[platform] = await postToYouTube(caption, urls[0], kind!);
+      else if (platform === 'tiktok') results[platform] = await postToTikTok(caption, urls[0], kind!, ai);
+      else if (platform === 'twitter') results[platform] = await postToX(caption, urls, kind, ai);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       failures[platform] = message;

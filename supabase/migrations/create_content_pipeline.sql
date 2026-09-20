@@ -79,3 +79,7 @@ create table if not exists social_accounts (
 );
 
 alter table social_accounts enable row level security;
+
+-- Slide decks: Nano Banana Pro renders several stills for an Instagram carousel,
+-- so a post can carry more than one file. media_path stays the first/only one.
+alter table content_posts add column if not exists media_paths text[] default '{}';

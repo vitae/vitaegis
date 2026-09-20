@@ -17,7 +17,7 @@ interface Post {
   status: string;
   captions: Partial<Record<Platform | 'default', string>>;
   media_kind: string;
-  media_url: string | null;
+  media_urls: string[];
   platforms: Platform[];
   error: string | null;
   created_at: string;
@@ -162,20 +162,34 @@ export default function ContentReview() {
             return (
               <article key={p.id} className={`${glass} p-5 sm:p-7`}>
                 <header className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className={`${label} ${STATUS_TONE[p.status] ?? 'text-white/50'}`}>{p.status}</span>
+                  <span className={`${label} ${STATUS_TONE[p.status] ?? 'text-white/50'}`}>
+                    {p.status} · {p.media_kind === 'slides' ? `${p.media_urls?.length ?? 0} slides` : p.media_kind}
+                  </span>
                   <span className="text-xs text-white/40">
                     {new Date(p.created_at).toLocaleString('en-US', { timeZone: 'Pacific/Honolulu' })}
                   </span>
                 </header>
 
-                {p.media_url && (
+                {p.media_urls?.length > 0 && (
                   <div className="mt-4">
                     {p.media_kind === 'video' ? (
-                      <video src={p.media_url} controls playsInline className="max-h-80 rounded-xl border border-white/10" />
+                      <video src={p.media_urls[0]} controls playsInline className="max-h-80 rounded-xl border border-white/10" />
                     ) : (
-                      // Generated media lives on a signed Supabase URL, so next/image is not worth the config.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.media_url} alt="" className="max-h-80 rounded-xl border border-white/10" />
+                      // A deck scrolls horizontally in carousel order, numbered as it will post.
+                      <div className="flex gap-3 overflow-x-auto pb-2">
+                        {p.media_urls.map((u, i) => (
+                          <figure key={u} className="relative shrink-0">
+                            {/* Signed Supabase URLs, so next/image is not worth the config. */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={u} alt="" className="h-56 rounded-xl border border-white/10" />
+                            {p.media_urls.length > 1 && (
+                              <figcaption className="absolute left-2 top-2 rounded bg-black/80 px-1.5 py-0.5 text-[10px] tabular-nums text-vitae-green">
+                                {i + 1}/{p.media_urls.length}
+                              </figcaption>
+                            )}
+                          </figure>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}

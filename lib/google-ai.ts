@@ -43,6 +43,7 @@ export interface CaptionSet {
   twitter: string;
   imagePrompt: string;
   videoPrompt: string;
+  slidePrompts: string[];
 }
 
 const CAPTION_SCHEMA = {
@@ -56,8 +57,12 @@ const CAPTION_SCHEMA = {
     twitter: { type: 'STRING' },
     imagePrompt: { type: 'STRING' },
     videoPrompt: { type: 'STRING' },
+    slidePrompts: { type: 'ARRAY', items: { type: 'STRING' } },
   },
-  required: ['default', 'instagram', 'facebook', 'youtube', 'tiktok', 'twitter', 'imagePrompt', 'videoPrompt'],
+  required: [
+    'default', 'instagram', 'facebook', 'youtube', 'tiktok', 'twitter',
+    'imagePrompt', 'videoPrompt', 'slidePrompts',
+  ],
 };
 
 const BRAND = `You write for VITAEGIS, a wellness brand whose line is "Health, Stealth, Wealth".
@@ -81,9 +86,10 @@ Write social copy about it. Rules per platform:
 - tiktok: one punchy line, at most 2 hashtags.
 - twitter: under 260 characters, no hashtags.
 - default: a neutral version for anywhere else.
-Also write:
-- imagePrompt: a prompt for an image model to make a branded still on this subject, naming the palette and the glassmorphic Matrix look.
-- videoPrompt: a prompt for a video model for a 6 to 8 second vertical clip on this subject, describing camera move, lighting and sound.`,
+Also write prompts for the media models:
+- videoPrompt: the main one. A prompt for a video model for a 6 to 8 second vertical 9:16 clip on this subject. Describe the camera move, the lighting, the palette and the sound. Make it something worth watching on its own, not a slideshow.
+- imagePrompt: a prompt for an image model to make a single branded still on this subject, naming the palette and the glassmorphic Matrix look.
+- slidePrompts: exactly 4 prompts for a square 1:1 Instagram carousel that teaches this subject across four slides, in order. Slide 1 is the hook, slides 2 and 3 carry the substance, slide 4 is the takeaway. Each prompt must name the exact short text to render on that slide, keep the same palette and layout across all four so they read as one deck, and stay legible at thumbnail size.`,
   });
 
   const json = await call(`/models/${TEXT_MODEL}:generateContent`, {

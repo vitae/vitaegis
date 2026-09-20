@@ -22,16 +22,24 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const db = supabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 });
 
-  const { data: post } = await db.from('content_posts').select('media_path, media_kind').eq('id', id).single();
-  if (!post?.media_path) return NextResponse.json({ error: 'No media' }, { status: 404 });
+  const { data: post } = await db
+    .from('content_posts')
+    .select('media_path, media_paths, media_kind')
+    .eq('id', id)
+    .single();
+  // A slide deck has several files; ?i= picks one, defaulting to the first.
+  const paths: string[] = post?.media_paths?.length ? post.media_paths : post?.media_path ? [post.media_path] : [];
+  const index = Number(req.nextUrl.searchParams.get('i') ?? 0);
+  const path = paths[Number.isFinite(index) && index >= 0 ? index : 0];
+  if (!path) return NextResponse.json({ error: 'No media' }, { status: 404 });
 
-  const { data, error } = await db.storage.from('content').download(post.media_path);
+  const { data, error } = await db.storage.from('content').download(path);
   if (error || !data) return NextResponse.json({ error: 'Could not read media' }, { status: 404 });
 
   const bytes = Buffer.from(await data.arrayBuffer());
   return new NextResponse(new Uint8Array(bytes), {
     headers: {
-      'Content-Type': data.type || (post.media_kind === 'video' ? 'video/mp4' : 'image/png'),
+      'Content-Type': data.type || (post?.media_kind === 'video' ? 'video/mp4' : 'image/png'),
       'Content-Length': String(bytes.length),
       'Cache-Control': 'no-store',
     },

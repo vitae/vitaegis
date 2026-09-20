@@ -11,7 +11,7 @@ const BUCKET = 'content';
 /** Long enough for the publisher to fetch the media and for you to preview it. */
 const SIGNED_URL_TTL = 60 * 60 * 24;
 
-type JobKind = 'caption' | 'image' | 'video' | 'video_poll' | 'publish';
+type JobKind = 'caption' | 'image' | 'slides' | 'video' | 'video_poll' | 'publish';
 
 interface Job {
   id: string;
@@ -85,9 +85,14 @@ async function runCaption(job: Job) {
   const source = await sourceFrom(ingest.storage_path, ingest.kind);
   const captions = await writeCaptions(ingest.note ?? '', source);
 
-  // A captured clip or an explicit request becomes video; everything else is a still.
-  const wantsVideo = ingest.kind === 'video' || /\b(reel|video|clip)\b/i.test(ingest.note ?? '');
-  const mediaKind = wantsVideo ? 'video' : 'image';
+  // Veo is the default: most posts are a clip. Say "slides" or "carousel" in the note
+  // for a Nano Banana Pro Instagram deck, or "still" / "photo" for a single image.
+  const note = ingest.note ?? '';
+  const mediaKind = /(slides?|carousel|deck)/i.test(note)
+    ? 'slides'
+    : /(still|photo|image|picture)/i.test(note)
+      ? 'image'
+      : 'video';
 
   const { data: post, error: pErr } = await db()
     .from('content_posts')
@@ -95,6 +100,11 @@ async function runCaption(job: Job) {
       ingest_id: ingest.id,
       status: 'draft',
       media_kind: mediaKind,
+      // A deck belongs on the feeds that show stills; a clip can go everywhere.
+      platforms:
+        mediaKind === 'slides'
+          ? ['instagram', 'facebook', 'twitter']
+          : ['instagram', 'facebook', 'youtube', 'tiktok', 'twitter'],
       captions: {
         default: captions.default,
         instagram: captions.instagram,
@@ -110,10 +120,13 @@ async function runCaption(job: Job) {
 
   await db().from('content_ingest').update({ status: 'done' }).eq('id', ingest.id);
   await queueJob({
-    kind: mediaKind,
+    kind: mediaKind as JobKind,
     postId: post.id,
     ingestId: ingest.id,
-    payload: { prompt: wantsVideo ? captions.videoPrompt : captions.imagePrompt },
+    payload:
+      mediaKind === 'slides'
+        ? { prompts: captions.slidePrompts ?? [] }
+        : { prompt: mediaKind === 'video' ? captions.videoPrompt : captions.imagePrompt },
   });
 }
 
@@ -135,7 +148,49 @@ async function runImage(job: Job) {
   const path = await store(`generated/${job.post_id}.${ext}`, bytes, mimeType);
   await db()
     .from('content_posts')
-    .update({ media_path: path, media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })
+    .update({ media_path: path, media_paths: [path], media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })
+    .eq('id', job.post_id!);
+}
+
+/** Stage 2c: a Nano Banana Pro deck for an Instagram carousel, up to ten slides. */
+async function runSlides(job: Job) {
+  const prompts = (job.payload.prompts as string[] | undefined) ?? [];
+  if (!prompts.length) throw new Error('No slide prompts');
+
+  const { data: post } = await db().from('content_posts').select('ingest_id').eq('id', job.post_id!).single();
+  let source: Source | undefined;
+  if (post?.ingest_id) {
+    const { data: ingest } = await db()
+      .from('content_ingest')
+      .select('storage_path, kind')
+      .eq('id', post.ingest_id)
+      .single();
+    if (ingest?.kind === 'photo') source = await sourceFrom(ingest.storage_path, ingest.kind);
+  }
+
+  const paths: string[] = [];
+  for (const [i, prompt] of prompts.slice(0, 10).entries()) {
+    // Only slide one takes the captured photo as reference; the rest hold the look
+    // through the prompt, which keeps the deck consistent without re-priming each time.
+    const { bytes, mimeType } = await generateImage(`${prompt}
+
+Square 1:1 composition.`, {
+      source: i === 0 ? source : undefined,
+      size: '2K',
+    });
+    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
+    paths.push(await store(`generated/${job.post_id}-${i + 1}.${ext}`, bytes, mimeType));
+  }
+
+  await db()
+    .from('content_posts')
+    .update({
+      media_path: paths[0],
+      media_paths: paths,
+      media_url: await signedUrl(paths[0]),
+      status: 'ready',
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', job.post_id!);
 }
 
@@ -156,7 +211,7 @@ async function runVideoPoll(job: Job) {
   const path = await store(`generated/${job.post_id}.mp4`, await downloadVideo(uri), 'video/mp4');
   await db()
     .from('content_posts')
-    .update({ media_path: path, media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })
+    .update({ media_path: path, media_paths: [path], media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })
     .eq('id', job.post_id!);
 }
 
@@ -173,12 +228,15 @@ async function runPublish(job: Job) {
   // Instagram needs a plain URL it can cURL, so a Supabase signed URL will not do.
   const secret = process.env.CONTENT_MEDIA_SECRET || process.env.CONTENT_INGEST_SECRET;
   const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://vitaegis.com';
-  const mediaUrl = post.media_path && secret ? `${base}/api/content/media/${post.id}?t=${secret}` : undefined;
+  const paths: string[] = post.media_paths?.length ? post.media_paths : post.media_path ? [post.media_path] : [];
+  const mediaUrls = secret
+    ? paths.map((_: string, i: number) => `${base}/api/content/media/${post.id}?t=${secret}&i=${i}`)
+    : [];
 
   const priorResults = (post.results ?? {}) as Record<string, unknown>;
   const { results, failures, skipped } = await publish({
     captions: post.captions ?? {},
-    mediaUrl,
+    mediaUrls,
     mediaKind: post.media_kind ?? 'none',
     platforms: (post.platforms ?? []) as Platform[],
     aiDisclosure: post.ai_disclosure ?? true,
@@ -200,7 +258,7 @@ async function runPublish(job: Job) {
         ]
           .join(' | ')
           .slice(0, 1000) || null,
-      media_url: mediaUrl,
+      media_url: mediaUrls[0],
       published_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -214,6 +272,7 @@ async function runPublish(job: Job) {
 const STAGES: Record<JobKind, (job: Job) => Promise<void>> = {
   caption: runCaption,
   image: runImage,
+  slides: runSlides,
   video: runVideo,
   video_poll: runVideoPoll,
   publish: runPublish,

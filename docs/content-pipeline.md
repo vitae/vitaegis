@@ -11,8 +11,8 @@ timing and the credentials stay here. No third-party relay.
    `POST /api/content/ingest` with an `x-ingest-key` header. The file lands in the
    private `content` bucket, a row lands in `content_ingest`, and a `caption` job is queued.
 2. **Generate.** The cron worker picks the job up. Gemini looks at what you captured
-   and writes per-platform copy plus prompts for the image and video models. Then
-   either Nano Banana Pro makes a still or Veo makes a clip. The post moves to `ready`.
+   and writes per-platform copy plus prompts for the media models. **Veo is the default**,
+   so most posts come out as a clip. The post moves to `ready`.
 3. **Review.** `/admin/content`. Edit any caption, pick platforms, approve or reject.
    Nothing is published without this step.
 4. **Publish.** Approval queues a `publish` job that calls each network directly.
@@ -76,8 +76,21 @@ New Shortcut, one action: **Get Contents of URL**.
   - `file` = Shortcut Input (photo, video or recording)
   - `note` = Ask For Input, or a dictated text action
 
-Add it to the share sheet so you can send straight from Photos. Put the word "reel",
-"video" or "clip" in the note and the pipeline renders a Veo clip instead of a still.
+Add it to the share sheet so you can send straight from Photos.
+
+**What the note decides.** Veo is the default, so anything you send becomes a clip
+unless you say otherwise:
+
+| Word in the note | What you get | Where it posts |
+| --- | --- | --- |
+| nothing in particular | Veo clip | all five |
+| `slides`, `carousel`, `deck` | a four-slide Nano Banana Pro deck | Instagram carousel, Facebook, X |
+| `still`, `photo`, `image` | one Nano Banana Pro image | Instagram, Facebook, X |
+
+Slides are square 1:1, written as a set so they read as one deck: hook, two slides of
+substance, takeaway. Instagram takes up to ten and crops them all to the first one's
+aspect ratio. X takes the first four. YouTube and TikTok are video-only, so a deck
+skips them automatically.
 
 ## Platform notes
 
@@ -99,8 +112,9 @@ These are the things that actually bite:
 ## Cost
 
 Veo is priced per second of generated video and is by far the most expensive part.
-Price out a realistic week before you lean on it. Stills through Nano Banana Pro and
-copy through Gemini are cheap by comparison.
+Since it is now the default, price out a realistic week before you lean on it. Stills
+through Nano Banana Pro and copy through Gemini are cheap by comparison, so a day of
+`slides` posts costs a fraction of a day of clips.
 
 Vercel's cron runs every two minutes here. On Hobby, cron is limited to once a day, so
 this needs a Pro project or you will have to trigger `/api/content/worker` yourself.

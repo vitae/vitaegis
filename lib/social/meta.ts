@@ -45,7 +45,7 @@ export async function postToFacebook(caption: string, mediaUrl?: string, kind?: 
 
 // ── Instagram ───────────────────────────────────────────────────────────────
 
-/** Containers for video are processed asynchronously; publishing before FINISHED fails. */
+/** Video and carousel containers are processed asynchronously; publishing before FINISHED fails. */
 async function waitForContainer(containerId: string, token: string, tries = 20) {
   for (let i = 0; i < tries; i++) {
     const json = await graph(`/${containerId}`, { fields: 'status_code,status', access_token: token }, 'GET');
@@ -58,24 +58,51 @@ async function waitForContainer(containerId: string, token: string, tries = 20) 
   throw new Error('Instagram container never finished processing');
 }
 
-export async function postToInstagram(caption: string, mediaUrl: string, kind: string): Promise<PostResult> {
+export async function postToInstagram(caption: string, mediaUrls: string[], kind: string): Promise<PostResult> {
   const account = await accessToken('instagram');
   const igId = account.account_id;
   if (!igId) throw new Error('No Instagram user id stored');
-  if (!mediaUrl) throw new Error('Instagram requires media');
+  if (!mediaUrls.length) throw new Error('Instagram requires media');
 
+  const token = account.access_token;
   const isVideo = kind === 'video';
-  const container = await graph(`/${igId}/media`, {
-    ...(isVideo ? { video_url: mediaUrl, media_type: 'REELS' } : { image_url: mediaUrl }),
-    caption,
-    access_token: account.access_token,
-  });
-  if (isVideo) await waitForContainer(container.id, account.access_token);
 
-  const published = await graph(`/${igId}/media_publish`, {
-    creation_id: container.id,
-    access_token: account.access_token,
+  // More than one still is a carousel: a child container per slide, then a parent
+  // that lists them. Instagram caps this at ten and crops all slides to the first.
+  if (!isVideo && mediaUrls.length > 1) {
+    const children: string[] = [];
+    for (const url of mediaUrls.slice(0, 10)) {
+      const child = await graph(`/${igId}/media`, {
+        image_url: url,
+        is_carousel_item: 'true',
+        access_token: token,
+      });
+      children.push(child.id);
+    }
+    const parent = await graph(`/${igId}/media`, {
+      media_type: 'CAROUSEL',
+      children: children.join(','),
+      caption,
+      access_token: token,
+    });
+    await waitForContainer(parent.id, token);
+    const published = await graph(`/${igId}/media_publish`, { creation_id: parent.id, access_token: token });
+    return {
+      platform: 'instagram',
+      id: published.id,
+      url: published.id ? `https://www.instagram.com/p/${published.id}` : undefined,
+      raw: { ...published, slides: children.length },
+    };
+  }
+
+  const container = await graph(`/${igId}/media`, {
+    ...(isVideo ? { video_url: mediaUrls[0], media_type: 'REELS' } : { image_url: mediaUrls[0] }),
+    caption,
+    access_token: token,
   });
+  if (isVideo) await waitForContainer(container.id, token);
+
+  const published = await graph(`/${igId}/media_publish`, { creation_id: container.id, access_token: token });
   return {
     platform: 'instagram',
     id: published.id,

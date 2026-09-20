@@ -23,8 +23,12 @@ export async function GET(req: NextRequest) {
   const posts = await Promise.all(
     (data ?? []).map(async (p) => ({
       ...p,
-      // Signed URLs expire; hand the screen a fresh one each load.
-      media_url: p.media_path ? await signedUrl(p.media_path).catch(() => null) : null,
+      // Signed URLs expire; hand the screen fresh ones each load, one per slide.
+      media_urls: await Promise.all(
+        ((p.media_paths?.length ? p.media_paths : p.media_path ? [p.media_path] : []) as string[]).map((path) =>
+          signedUrl(path).catch(() => null),
+        ),
+      ).then((urls) => urls.filter(Boolean)),
     })),
   );
   const accounts = await listAccounts().catch(() => []);
