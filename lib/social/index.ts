@@ -25,6 +25,8 @@ export interface PublishInput {
 export interface PublishOutcome {
   results: Record<string, PostResult>;
   failures: Record<string, string>;
+  /** Selected but not attempted: no account connected, or the media is the wrong kind. */
+  skipped: string[];
 }
 
 /** Which platforms can accept this post at all. */
@@ -46,9 +48,13 @@ export async function publish(input: PublishInput): Promise<PublishOutcome> {
 
   const results: Record<string, PostResult> = {};
   const failures: Record<string, string> = {};
-  const targets = eligible(input.platforms, input.mediaKind).filter(
-    (p) => !(input.alreadyDone ?? []).includes(p),
-  );
+
+  // Only publish where an account is actually connected, so running with two networks
+  // set up is a normal state rather than three guaranteed failures.
+  const connected = new Set((await listAccounts()).map((a) => a.platform));
+  const wanted = input.platforms.filter((p) => !(input.alreadyDone ?? []).includes(p));
+  const targets = eligible(wanted, input.mediaKind).filter((p) => connected.has(p));
+  const skipped = wanted.filter((p) => !targets.includes(p));
 
   // Sequential on purpose: one network failing must not abort the others, and the
   // per-platform result is recorded as each one lands.
@@ -70,5 +76,5 @@ export async function publish(input: PublishInput): Promise<PublishOutcome> {
       console.error(`publish to ${platform} failed:`, message);
     }
   }
-  return { results, failures };
+  return { results, failures, skipped };
 }

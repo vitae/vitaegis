@@ -176,7 +176,7 @@ async function runPublish(job: Job) {
   const mediaUrl = post.media_path && secret ? `${base}/api/content/media/${post.id}?t=${secret}` : undefined;
 
   const priorResults = (post.results ?? {}) as Record<string, unknown>;
-  const { results, failures } = await publish({
+  const { results, failures, skipped } = await publish({
     captions: post.captions ?? {},
     mediaUrl,
     mediaKind: post.media_kind ?? 'none',
@@ -193,7 +193,13 @@ async function runPublish(job: Job) {
       // Anything that landed is recorded, so a retry only picks up what did not.
       status: Object.keys(merged).length ? 'published' : 'failed',
       results: merged,
-      error: failed.length ? failed.map((p) => `${p}: ${failures[p]}`).join(' | ').slice(0, 1000) : null,
+      error:
+        [
+          ...failed.map((p) => `${p}: ${failures[p]}`),
+          ...(skipped.length ? [`skipped (not connected or wrong media): ${skipped.join(', ')}`] : []),
+        ]
+          .join(' | ')
+          .slice(0, 1000) || null,
       media_url: mediaUrl,
       published_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
