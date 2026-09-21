@@ -14,8 +14,27 @@ const SCOPE = 'https://www.googleapis.com/auth/drive.file';
 /** Google's own cutoff between multipart and resumable uploads. */
 const MULTIPART_LIMIT = 5 * 1024 * 1024;
 
-export const driveConfigured = () =>
-  Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_KEY && process.env.GDRIVE_FOLDER_ID);
+/**
+ * Credentials come either as the whole downloaded JSON key in
+ * GOOGLE_SERVICE_ACCOUNT_JSON, or as the two fields split out. The JSON is what
+ * Google actually hands you, so prefer it.
+ */
+function credentials(): { email: string; key: string } | null {
+  const blob = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (blob) {
+    try {
+      const j = JSON.parse(blob);
+      if (j.client_email && j.private_key) return { email: j.client_email, key: j.private_key };
+    } catch {
+      console.error('GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON');
+    }
+  }
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  return email && key ? { email, key } : null;
+}
+
+export const driveConfigured = () => Boolean(credentials() && process.env.GDRIVE_FOLDER_ID);
 
 const b64url = (b: Buffer | string) =>
   Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -26,9 +45,11 @@ let cached: { token: string; expires: number } | null = null;
 async function accessToken(): Promise<string> {
   if (cached && cached.expires - 60 > Date.now() / 1000) return cached.token;
 
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL!;
+  const creds = credentials();
+  if (!creds) throw new Error('No Google service account credentials set');
+  const email = creds.email;
   // Vercel's UI turns real newlines into \n, so accept either form.
-  const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY!.replace(/\\n/g, '\n');
+  const key = creds.key.replace(/\\n/g, '\n');
   const now = Math.floor(Date.now() / 1000);
 
   const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
