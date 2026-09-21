@@ -39,24 +39,29 @@ export default function RunGuide() {
     <>
       {/* Route picker */}
       <nav aria-label="Routes" className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
-        <ul className="flex min-w-max gap-2 sm:grid sm:min-w-0 sm:grid-cols-3 lg:grid-cols-6">
+        {/* auto-rows-fr keeps every cell the same height even though some names wrap to
+            two lines; the name block reserves both lines so single-line cards match. */}
+        <ul className="flex min-w-max items-stretch gap-2 sm:grid sm:min-w-0 sm:auto-rows-fr sm:grid-cols-3 lg:grid-cols-6">
           {routes.map((r) => {
             const on = r.slug === selected;
             return (
-              <li key={r.slug}>
+              <li key={r.slug} className="h-full">
                 <button
                   onClick={() => select(r.slug)}
                   aria-pressed={on}
-                  className={`flex h-full w-40 flex-col items-start rounded-xl border px-4 py-3 text-left transition sm:w-auto ${
+                  className={`flex h-full w-40 flex-col items-start justify-between rounded-xl border px-4 py-3 text-left transition sm:w-full ${
                     on ? 'border-white/60 bg-white/[0.06]' : 'border-white/15 bg-black/40 hover:border-white/40'
                   }`}
                   style={on ? { boxShadow: `0 0 24px ${r.color}33`, borderColor: r.color } : undefined}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: r.color, boxShadow: `0 0 8px ${r.color}` }} />
-                    <span className="text-sm font-semibold text-white">{r.name}</span>
+                  <span className="flex min-h-[2.5rem] items-start gap-2">
+                    <span
+                      className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ background: r.color, boxShadow: `0 0 8px ${r.color}` }}
+                    />
+                    <span className="text-sm font-semibold leading-5 text-white">{r.name}</span>
                   </span>
-                  <span className="mt-1 text-xs tabular-nums text-white/60">
+                  <span className="mt-2 text-xs tabular-nums text-white/60">
                     {(r.officialMiles ?? r.miles).toFixed(1)} mi · +{r.ascentFt} ft
                   </span>
                 </button>
