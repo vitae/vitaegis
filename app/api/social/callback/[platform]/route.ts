@@ -126,8 +126,16 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: s
         `${GRAPH}/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&access_token=${long.access_token}`,
         { cache: 'no-store' },
       ).then((r) => r.json());
-      const page = pages?.data?.[0];
-      if (!page) throw new Error('No Facebook Page on this account');
+      // Pick the Page deliberately. Taking pages.data[0] silently connected whichever
+      // Page Meta happened to list first, which is rarely the one you want.
+      const all: { id: string; name?: string }[] = pages?.data ?? [];
+      if (!all.length) throw new Error('No Facebook Page on this account');
+      const wantId = process.env.META_PAGE_ID;
+      const wantName = process.env.META_PAGE_NAME || 'vitaegis';
+      const page =
+        (wantId && all.find((x) => x.id === wantId)) ||
+        all.find((x) => (x.name ?? '').toLowerCase().includes(wantName.toLowerCase())) ||
+        all[0];
 
       await saveAccount({
         platform: 'facebook',
@@ -135,7 +143,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: s
         account_name: page.name,
         access_token: page.access_token,
         expires_at: null,
-        meta: { pages: pages.data?.length ?? 1 },
+        // Keep the full list so a mis-pick is visible and fixable without reconnecting blind.
+        meta: { chosen: page.name, available: all.map((x) => ({ id: x.id, name: x.name })) },
       });
       if (page.instagram_business_account?.id) {
         await saveAccount({
