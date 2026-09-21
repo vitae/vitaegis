@@ -1,48 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="vitaegis.com/run" xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata><name>Kapiolani Park shakeout</name><desc>Start: Gold Coast, Kalakaua Ave, Honolulu. Route traced on OpenStreetMap data (ODbL).</desc></metadata>
-  <trk><name>Kapiolani Park shakeout</name><trkseg>
-      <trkpt lat="21.261892" lon="-157.820374"><ele>1</ele></trkpt>
+  <metadata><name>Park Shakeout - Kapiolani Park perimeter</name><desc>Start: 2947 Kalakaua Ave, Honolulu. Route traced on OpenStreetMap data (ODbL).</desc></metadata>
+  <trk><name>Park Shakeout - Kapiolani Park perimeter</name><trkseg>
+      <trkpt lat="21.263973" lon="-157.821363"><ele>1</ele></trkpt>
       <trkpt lat="21.265336" lon="-157.821173"><ele>1</ele></trkpt>
-      <trkpt lat="21.265245" lon="-157.821277"><ele>1</ele></trkpt>
-      <trkpt lat="21.265103" lon="-157.821976"><ele>1</ele></trkpt>
-      <trkpt lat="21.265635" lon="-157.822208"><ele>1</ele></trkpt>
-      <trkpt lat="21.266755" lon="-157.822486"><ele>1</ele></trkpt>
-      <trkpt lat="21.268453" lon="-157.822758"><ele>1</ele></trkpt>
-      <trkpt lat="21.269331" lon="-157.822729"><ele>1</ele></trkpt>
-      <trkpt lat="21.270399" lon="-157.822394"><ele>1</ele></trkpt>
-      <trkpt lat="21.270419" lon="-157.82233"><ele>1</ele></trkpt>
+      <trkpt lat="21.265963" lon="-157.821311"><ele>1</ele></trkpt>
+      <trkpt lat="21.266574" lon="-157.821463"><ele>1</ele></trkpt>
+      <trkpt lat="21.267302" lon="-157.821582"><ele>1</ele></trkpt>
+      <trkpt lat="21.268062" lon="-157.821751"><ele>1</ele></trkpt>
+      <trkpt lat="21.268854" lon="-157.821952"><ele>1</ele></trkpt>
+      <trkpt lat="21.270139" lon="-157.822243"><ele>1</ele></trkpt>
+      <trkpt lat="21.270811" lon="-157.822489"><ele>1</ele></trkpt>
       <trkpt lat="21.271505" lon="-157.822757"><ele>1</ele></trkpt>
-      <trkpt lat="21.27162" lon="-157.82242"><ele>1</ele></trkpt>
-      <trkpt lat="21.271709" lon="-157.821437"><ele>1</ele></trkpt>
-      <trkpt lat="21.271359" lon="-157.821393"><ele>1</ele></trkpt>
-      <trkpt lat="21.271258" lon="-157.821433"><ele>1</ele></trkpt>
-      <trkpt lat="21.271026" lon="-157.821635"><ele>1</ele></trkpt>
-      <trkpt lat="21.270718" lon="-157.821617"><ele>1</ele></trkpt>
-      <trkpt lat="21.270718" lon="-157.822058"><ele>1</ele></trkpt>
-      <trkpt lat="21.270677" lon="-157.822113"><ele>1</ele></trkpt>
-      <trkpt lat="21.270558" lon="-157.821999"><ele>1</ele></trkpt>
+      <trkpt lat="21.271009" lon="-157.822509"><ele>1</ele></trkpt>
       <trkpt lat="21.270507" lon="-157.822059"><ele>1</ele></trkpt>
-      <trkpt lat="21.270282" lon="-157.82185"><ele>1</ele></trkpt>
       <trkpt lat="21.269795" lon="-157.821261"><ele>1</ele></trkpt>
-      <trkpt lat="21.26969" lon="-157.821044"><ele>1</ele></trkpt>
       <trkpt lat="21.269555" lon="-157.820668"><ele>1</ele></trkpt>
-      <trkpt lat="21.269127" lon="-157.815853"><ele>3</ele></trkpt>
-      <trkpt lat="21.267821" lon="-157.816087"><ele>2</ele></trkpt>
-      <trkpt lat="21.26727" lon="-157.816259"><ele>2</ele></trkpt>
-      <trkpt lat="21.265915" lon="-157.817111"><ele>2</ele></trkpt>
-      <trkpt lat="21.264951" lon="-157.817542"><ele>2</ele></trkpt>
-      <trkpt lat="21.263788" lon="-157.818456"><ele>3</ele></trkpt>
-      <trkpt lat="21.263551" lon="-157.818555"><ele>3</ele></trkpt>
-      <trkpt lat="21.263303" lon="-157.818571"><ele>2</ele></trkpt>
-      <trkpt lat="21.261229" lon="-157.818236"><ele>1</ele></trkpt>
-      <trkpt lat="21.26051" lon="-157.818232"><ele>1</ele></trkpt>
-      <trkpt lat="21.260168" lon="-157.818178"><ele>2</ele></trkpt>
-      <trkpt lat="21.259981" lon="-157.818866"><ele>1</ele></trkpt>
-      <trkpt lat="21.260005" lon="-157.819106"><ele>1</ele></trkpt>
-      <trkpt lat="21.26018" lon="-157.819321"><ele>1</ele></trkpt>
-      <trkpt lat="21.260135" lon="-157.819382"><ele>1</ele></trkpt>
-      <trkpt lat="21.261486" lon="-157.820256"><ele>1</ele></trkpt>
-      <trkpt lat="21.261892" lon="-157.820374"><ele>1</ele></trkpt>
+      <trkpt lat="21.26948" lon="-157.819864"><ele>1</ele></trkpt>
+      <trkpt lat="21.269428" lon="-157.819309"><ele>1</ele></trkpt>
+      <trkpt lat="21.269302" lon="-157.817971"><ele>1</ele></trkpt>
+      <trkpt lat="21.269236" lon="-157.8172"><ele>1</ele></trkpt>
+      <trkpt lat="21.269164" lon="-157.816311"><ele>2</ele></trkpt>
+      <trkpt lat="21.269236" lon="-157.8172"><ele>1</ele></trkpt>
+      <trkpt lat="21.268825" lon="-157.817787"><ele>1</ele></trkpt>
+      <trkpt lat="21.268938" lon="-157.81917"><ele>1</ele></trkpt>
+      <trkpt lat="21.269077" lon="-157.820627"><ele>1</ele></trkpt>
+      <trkpt lat="21.268919" lon="-157.821182"><ele>1</ele></trkpt>
+      <trkpt lat="21.268892" lon="-157.821733"><ele>1</ele></trkpt>
+      <trkpt lat="21.267171" lon="-157.821323"><ele>1</ele></trkpt>
+      <trkpt lat="21.266574" lon="-157.821463"><ele>1</ele></trkpt>
+      <trkpt lat="21.265963" lon="-157.821311"><ele>1</ele></trkpt>
+      <trkpt lat="21.265336" lon="-157.821173"><ele>1</ele></trkpt>
+      <trkpt lat="21.264002" lon="-157.820873"><ele>1</ele></trkpt>
+      <trkpt lat="21.263973" lon="-157.821363"><ele>1</ele></trkpt>
   </trkseg></trk>
 </gpx>

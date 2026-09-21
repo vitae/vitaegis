@@ -9,10 +9,10 @@ import './run.css';
 export const metadata: Metadata = {
   title: 'Run · Diamond Head | VITAEGIS',
   description:
-    'Running routes from the Gold Coast: a 4.1-mile lighthouse errand run to Planet Fitness and Whole Foods with the bus home, a 7-mile lighthouse, Kahala and Kaimuki loop, a 10-mile Waikiki–Magic Island–Diamond Head loop, the official Honolulu Marathon course, the KCC Saturday market loop and a flat park shakeout. Maps, elevation, turn-by-turn and GPX.',
+    'Running routes from Kaimana Beach, shortest to longest: a flat park shakeout, the KCC Saturday market loop, a lighthouse errand run to Planet Fitness and Whole Foods with the bus home, a seven-mile Kahala and Kaimuki loop, a ten-mile south-shore loop and the official Honolulu Marathon course. Maps, elevation, turn-by-turn and GPX.',
   openGraph: {
     title: 'Run · Diamond Head | VITAEGIS',
-    description: 'Six running routes out of the Gold Coast, mapped and measured, with the marathon course for December.',
+    description: 'Six running routes from Kaimana Beach, ordered shortest to longest, with the marathon course for December.',
     type: 'article',
   },
 };
@@ -46,7 +46,7 @@ export default function RunPage() {
         </Link>
 
         <header className="pb-8 pt-12 text-center sm:pt-16">
-          <p className={label}>Run · Gold Coast · Diamond Head, Honolulu</p>
+          <p className={label}>Run · Kaimana Beach · Diamond Head, Honolulu</p>
           <h1
             className="mt-4 text-5xl font-bold uppercase tracking-[0.12em] text-vitae-green sm:text-7xl"
             style={{ textShadow: '0 0 24px rgba(0,255,0,0.45)' }}
@@ -56,11 +56,11 @@ export default function RunPage() {
             Runs
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            Six routes out the front door: the lighthouse errand run to Planet Fitness and Whole Foods with TheBus
-            home, a seven-mile loop past the lighthouse and back over Kaimuki, a ten-mile south-shore loop,
-            the official Honolulu Marathon course, the Saturday market loop over Diamond Head, and a flat
-            park shakeout. {Math.round(totalMiles)} miles in all, mapped
-            and measured.
+            Six routes from the sand at Kaimana Beach, ordered shortest to longest: a flat park
+            shakeout, the Saturday market loop over Diamond Head, the lighthouse errand run to Planet
+            Fitness and Whole Foods with TheBus home, a seven-mile loop back over Kaimuki, a ten-mile
+            south-shore loop, and the official Honolulu Marathon course. {Math.round(totalMiles)} miles
+            in all, mapped and measured.
           </p>
         </header>
 

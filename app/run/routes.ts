@@ -1,5 +1,5 @@
-// Running routes from the Gold Coast end of Kalakaua Ave, Honolulu.
-// The start point is deliberately the public Kaimana Beach corner, not a home address.
+// Running routes from Kaimana Beach on the Gold Coast, Honolulu.
+// The start is a public beach on purpose: no route begins or ends at a residence.
 // Distances and elevation come from ./geometry.ts (traced on OpenStreetMap data);
 // the marathon shows the official 26.2 because the trace of the course runs a little long.
 // Macrons (kahakō) are omitted on purpose: Jost has no precomposed macron vowels.
@@ -29,7 +29,7 @@ export interface RunRoute {
   facts?: { label: string; value: string }[];
 }
 
-export const HOME = { lat: 21.2619, lon: -157.8203, label: 'Gold Coast start' };
+export const HOME = { lat: 21.26364, lon: -157.8218, label: 'Kaimana Beach' };
 
 const walk = (points: [number, number][]) => {
   const [o, ...rest] = points;
@@ -41,7 +41,7 @@ const walk = (points: [number, number][]) => {
   );
 };
 
-const home: [number, number] = [21.2619, -157.8203];
+const home: [number, number] = [21.26364, -157.8218];  // Kaimana Beach, a public start
 const pakiMonsarrat: [number, number] = [21.26913, -157.81585];
 const dhMonsarrat: [number, number] = [21.26978, -157.80782];
 const makapuuKilauea: [number, number] = [21.27341, -157.80072];
@@ -64,6 +64,28 @@ const g = (slug: string) => geometry[slug];
 
 export const routes: RunRoute[] = [
   {
+    slug: 'park',
+    name: 'Park Shakeout',
+    kicker: 'Easy · flat · Kapiolani Park perimeter',
+    tagline: 'Recovery loop around the park, ocean on one side, banyans on the other.',
+    color: '#ff3355',
+    miles: g('park').miles,
+    ascentFt: g('park').ascentFt,
+    coords: g('park').coords,
+    profile: g('park').profile,
+    summary:
+      'Dead flat. Kalakaua along the beach to the Kapahulu corner, up past the zoo on Monsarrat, back along Paki under the trees. Add strides on the park grass and finish barefoot on the sand where you started.',
+    marathonMiles: 'The final mile of the marathon, plus Monsarrat and Paki',
+    cues: [
+      { mi: 0.0, text: 'Ewa (west) on Kalakaua from Kaimana Beach: the Natatorium, the Aquarium.' },
+      { mi: 0.5, text: 'Right onto Kapahulu Ave for one block, then right onto Monsarrat Ave past the zoo.' },
+      { mi: 1.0, text: 'Right onto Paki Ave along the mauka edge of the park.' },
+      { mi: 1.6, text: 'Paki ends at Poni Moi Rd; right onto Kalakaua and back to the beach.' },
+    ],
+    mapsUrl: walk([home, kalakauaKapahulu, pakiMonsarrat, home]),
+    gpx: '/run/park.gpx',
+  },
+  {
     slug: 'kahala',
     name: 'Kahala Errand',
     kicker: 'Lighthouse · gym · lunch · bus home',
@@ -74,11 +96,11 @@ export const routes: RunRoute[] = [
     coords: g('kahala').coords,
     profile: g('kahala').profile,
     summary:
-      'The scenic way to Kahala Mall, and the one worth running: straight up Diamond Head Rd from the front door so the lighthouse and the surf lookouts come in the first mile, then the long flat stretch of Kahala Ave past the beach houses, up Hunakai St and along Kilauea Ave to the mall. Planet Fitness and Whole Foods share the Ewa end, and TheBus Route 14 leaves from that corner and drops you at your own front door, so the groceries ride and you do not. It is half a mile longer than going the back way over the crater and far better company.',
+      'The scenic way to Kahala Mall, and the one worth running: straight up Diamond Head Rd from Kaimana Beach so the lighthouse and the surf lookouts come in the first mile, then the long flat stretch of Kahala Ave past the beach houses, up Hunakai St and along Kilauea Ave to the mall. Planet Fitness and Whole Foods share the Ewa end, and TheBus Route 14 leaves from that corner and drops you at your own front door, so the groceries ride and you do not. It is a little longer than going the back way over the crater and far better company.',
     marathonMiles: 'Marathon miles 24.4–25.8 (Diamond Head Rd and Kahala Ave) run in reverse, then Kilauea Ave, which the race reaches at mile 9.7',
     plan: [
       {
-        title: '1 · Run 4.1 miles',
+        title: '1 · Run 4.3 miles',
         body: 'Easy effort. The climb is Diamond Head Rd in the first mile, about 110 ft, and it is downhill or flat from the lighthouse on. Bring: phone, HOLO card or $3 cash, a small lock, a dry shirt.',
       },
       {
@@ -95,19 +117,82 @@ export const routes: RunRoute[] = [
       },
     ],
     cues: [
-      { mi: 0.0, text: 'Out the door and east on Kalakaua two blocks; right on Poni Moi Rd, then left onto Diamond Head Rd. The climb starts at once.' },
-      { mi: 0.5, text: 'Beach Rd drops away on your right. Stay on the ocean-side sidewalk past the Kuilei Cliffs lookouts.' },
-      { mi: 1.1, text: 'Lighthouse and the surf lookouts. Then a gentle descent along the cliffs with Black Point ahead.' },
-      { mi: 1.7, text: 'Kahala Ave junction: Diamond Head Rd bends left and uphill; you keep straight along the coast on Kahala Ave.' },
-      { mi: 2.2, text: 'Flat and shaded the whole way through the Kahala mansions.' },
-      { mi: 2.6, text: 'Left onto Hunakai St, half a mile up through the neighborhood.' },
-      { mi: 3.1, text: 'Right onto Kilauea Ave and northeast for the last three quarters of a mile.' },
-      { mi: 3.8, text: 'Kahala Mall at the Kilauea / Waialae corner. Planet Fitness and Whole Foods are 100 m in, on the Ewa end.' },
+      { mi: 0.0, text: 'West out of Kaimana Beach on Kalakaua, then right on Poni Moi Rd and left onto Diamond Head Rd. The climb starts at once.' },
+      { mi: 0.7, text: 'Beach Rd drops away on your right. Stay on the ocean-side sidewalk past the Kuilei Cliffs lookouts.' },
+      { mi: 1.3, text: 'Lighthouse and the surf lookouts, then a gentle descent along the cliffs.' },
+      { mi: 1.8, text: 'Kahala Ave junction: Diamond Head Rd bends left and uphill; you keep straight along the coast on Kahala Ave.' },
+      { mi: 2.8, text: 'Left onto Hunakai St, half a mile up through the neighborhood.' },
+      { mi: 3.3, text: 'Right onto Kilauea Ave and northeast for the last stretch.' },
+      { mi: 4.0, text: 'Kahala Mall at the Kilauea / Waialae corner. Planet Fitness and Whole Foods are 100 m in, on the Ewa end.' },
     ],
     mapsUrl: walk([home, lighthouse, dhKahala, kahalaHunakai, kilaueaHunakai2, planetFitness]),
     gpx: '/run/kahala.gpx',
     facts: [
-      { label: 'Faster variant', value: 'Go the back way over the crater instead: Paki, Monsarrat, around the mauka side past the KCC lot, then Kilauea Ave all the way down. About 3.7 miles with one real climb on Monsarrat.' },
+      { label: 'Faster variant', value: 'Go the back way over the crater instead: Paki, Monsarrat, around the mauka side past the KCC lot, then Kilauea Ave all the way down. About 4 miles with one real climb on Monsarrat.' },
+    ],
+  },
+  {
+    slug: 'kcc',
+    name: 'Saturday Market Loop',
+    kicker: 'Diamond Head loop · KCC Farmers Market',
+    tagline: 'The classic crater loop with breakfast at mile 1.8.',
+    color: '#ffffff',
+    miles: g('kcc').miles,
+    ascentFt: g('kcc').ascentFt,
+    coords: g('kcc').coords,
+    profile: g('kcc').profile,
+    summary:
+      'Every Saturday 7:30 to 11 am the KCC lot on Diamond Head Rd fills with fifty-plus farm stands. Run there the mauka way (Paki, Monsarrat, the crater entrance), eat, then finish the loop down the ocean side past the lighthouse. Reverse it if you would rather carry the haul down Monsarrat than along the cliffs.',
+    marathonMiles: 'Marathon miles 6.1–9.4 outbound and 24.4–25.8 inbound',
+    plan: [
+      { title: 'Market', body: 'KCC Farmers Market · 4303 Diamond Head Rd, parking lot C across from the crater entrance · Saturdays 7:30–11 am · run by the Hawaii Farm Bureau. Arrive at opening; by 9 the lines are long.' },
+      { title: 'Carry', body: 'A light running vest handles coffee-and-pastry loads. For a real grocery run take Route 2 from the market to Kapahulu Ave (frequent, 24 hours) and walk the last mile, or run the loop reversed so the market is at mile 2.7.' },
+    ],
+    cues: [
+      { mi: 0.0, text: 'East on Kalakaua from Kaimana Beach, then bear left onto Paki Ave at Poni Moi Rd.' },
+      { mi: 0.8, text: 'Right onto Monsarrat Ave and climb.' },
+      { mi: 1.3, text: 'Monsarrat becomes Diamond Head Rd; crater entrance on your right.' },
+      { mi: 1.7, text: 'KCC Farmers Market, lot C on your right. Coffee, Dakota corn, fried green tomatoes, mochi.' },
+      { mi: 2.0, text: 'Continue on Diamond Head Rd around the east side: Fort Ruger Park, then it swings right and descends.' },
+      { mi: 2.6, text: 'Kahala Ave junction: stay right along the ocean.' },
+      { mi: 3.1, text: 'Lighthouse lookout, then downhill.' },
+      { mi: 4.0, text: 'Fork right onto Kalakaua at Poni Moi Rd; Kaimana Beach ahead.' },
+    ],
+    mapsUrl: walk([home, pakiMonsarrat, kcc, dhKahala, lighthouse, home]),
+    gpx: '/run/kcc.gpx',
+  },
+  {
+    slug: 'lighthouse',
+    name: 'Lighthouse Seven',
+    kicker: 'Hills · lighthouse first, then the long way round',
+    tagline: 'Out to the lighthouse, on through Kahala, and back over Kaimuki: seven miles, two climbs.',
+    color: '#00e5ff',
+    miles: g('lighthouse').miles,
+    ascentFt: g('lighthouse').ascentFt,
+    coords: g('lighthouse').coords,
+    profile: g('lighthouse').profile,
+    summary:
+      'Straight up Diamond Head Rd from Kaimana Beach, so the lighthouse and the surf lookouts come in the first mile while the legs are fresh. Then instead of turning for home, keep going: down to Kahala Ave and along the flat mile and a half of beach houses to Waialae Beach Park, up Pueo St, and back west on Kilauea Ave, which climbs through Kaimuki to the Makapuu Ave crest. Diamond Head Rd and Monsarrat bring you down past the crater entrance and the zoo, and Kalakaua along the beach closes the loop at seven.',
+    marathonMiles: 'Marathon miles 24.4–25.8 (Kahala Ave and Diamond Head Rd) run in reverse, Kilauea Ave in reverse, then Monsarrat downhill',
+    cues: [
+      { mi: 0.0, text: 'East from Kaimana Beach on Kalakaua; right on Poni Moi Rd, then left onto Diamond Head Rd. The climb starts at once.' },
+      { mi: 0.7, text: 'Beach Rd drops away on your right. Stay on the ocean-side sidewalk past the Kuilei Cliffs lookouts.' },
+      { mi: 1.3, text: 'Lighthouse and the surf lookouts, then a gentle descent along the cliffs with Black Point ahead.' },
+      { mi: 1.8, text: 'Kahala Ave junction: Diamond Head Rd bends left and uphill; you keep straight along the coast on Kahala Ave.' },
+      { mi: 2.4, text: 'Flat and shaded through the Kahala mansions. Waialae Beach Park has water and restrooms.' },
+      { mi: 3.3, text: 'Left onto Pueo St just past the beach park; half a mile through the neighborhood to Kilauea Ave.' },
+      { mi: 3.8, text: 'Left onto Kilauea Ave. Kahala Mall is a quarter mile the other way if you need anything.' },
+      { mi: 4.3, text: 'Cross 22nd Ave; Kilauea starts climbing through Kaimuki.' },
+      { mi: 4.9, text: 'Crest at Makapuu Ave, the high point. Left onto Makapuu and drop to Diamond Head Rd.' },
+      { mi: 5.5, text: 'Right onto Diamond Head Rd, then it becomes Monsarrat: a mile down past the food trucks and the zoo.' },
+      { mi: 6.5, text: 'Left onto Kalakaua at the Kapahulu corner and along the beach back to Kaimana.' },
+    ],
+    mapsUrl: walk([home, lighthouse, dhKahala, kahalaPueo, kilaueaPueo, makapuuKilauea, dhMonsarrat, kalakauaKapahulu, home]),
+    gpx: '/run/lighthouse.gpx',
+    facts: [
+      { label: 'Water', value: 'Waialae Beach Park at mile 3 and Kapiolani Park at mile 6.5. Nothing on Diamond Head Rd or Kilauea Ave.' },
+      { label: 'Two climbs', value: 'Diamond Head Rd to the lighthouse, about 110 ft, and Kilauea Ave from 22nd Ave to Makapuu, about 200 ft. Everything from mile 4.7 is downhill or flat.' },
+      { label: 'Shorter', value: 'Turn up Elepaio St instead of Pueo for about 6 miles, or finish down Paki instead of along the beach for about 6.7.' },
     ],
   },
   {
@@ -121,61 +206,26 @@ export const routes: RunRoute[] = [
     coords: g('ten').coords,
     profile: g('ten').profile,
     summary:
-      'Flat and fast for the first six miles along Kalakaua and the Ala Moana beach path, a turnaround on the tip of Magic Island, then the Monsarrat climb and the full Diamond Head Rd horseshoe back to the ocean. Start before sunrise and the Waikiki sidewalks are yours; the lighthouse lookout at mile 9.4 is the reward.',
+      'Flat and fast for the first six miles along Kalakaua and the Ala Moana beach path, a turnaround on the tip of Magic Island, then the Monsarrat climb and the full Diamond Head Rd horseshoe back to the ocean. Start before sunrise and the Waikiki sidewalks are yours; the lighthouse lookout at mile 8.3 is the reward.',
     marathonMiles: 'Marathon miles 4.9–8.7 in order, then the finish-side descent of miles 24.4–25.8',
     cues: [
-      { mi: 0.0, text: 'Ewa (west) on Kalakaua along the Gold Coast: Kaimana Beach, the Natatorium, the Aquarium, Kapiolani Park on your right.' },
-      { mi: 0.9, text: 'Cross Kapahulu Ave and stay on Kalakaua through Waikiki: Kuhio Beach, the Duke statue, the Royal Hawaiian.' },
-      { mi: 1.9, text: 'Kalakaua ends; continue straight on Ala Moana Blvd over the Ala Wai bridge, Hilton lagoon then Ala Moana Center on your right.' },
-      { mi: 2.7, text: 'Left into Ala Moana Regional Park at Atkinson Dr. Follow the beach path west.' },
-      { mi: 3.4, text: 'Loop Magic Island: out the harbor side, around the lagoon at the tip, back along the beach.' },
-      { mi: 4.4, text: 'Leave the park on Ala Moana Park Dr and retrace Ala Moana Blvd and Kalakaua through Waikiki.' },
-      { mi: 6.3, text: 'At Kapahulu Ave bear left onto Monsarrat Ave: the marathon’s mile-7 hill, one mile up past the zoo and the food trucks.' },
-      { mi: 7.3, text: 'Monsarrat becomes Diamond Head Rd. Around the back of the crater: monument entrance, KCC, Fort Ruger Park, then it swings right and drops.' },
-      { mi: 8.9, text: 'Kahala Ave junction: stay right on Diamond Head Rd along the ocean.' },
-      { mi: 9.4, text: 'Lighthouse and the surf lookouts. All downhill from here.' },
-      { mi: 10.1, text: 'Fork left onto Kalakaua at Poni Moi Rd; home in two blocks.' },
+      { mi: 0.0, text: 'Ewa (west) from Kaimana Beach on Kalakaua: the Natatorium, the Aquarium, Kapiolani Park on your left.' },
+      { mi: 0.6, text: 'Cross Kapahulu Ave and stay on Kalakaua through Waikiki: Kuhio Beach, the Duke statue, the Royal Hawaiian.' },
+      { mi: 1.7, text: 'Kalakaua ends; continue on Ala Moana Blvd over the Ala Wai bridge, Hilton lagoon then Ala Moana Center on your right.' },
+      { mi: 2.4, text: 'Left into Ala Moana Regional Park. Follow the beach path west to the far end.' },
+      { mi: 3.0, text: 'Loop Magic Island: out the harbor side, around the lagoon at the tip, back along the beach.' },
+      { mi: 4.2, text: 'Leave the park and retrace Ala Moana Blvd and Kalakaua through Waikiki.' },
+      { mi: 6.0, text: 'At Kapahulu Ave bear left onto Monsarrat Ave: the marathon mile-7 hill, one mile up past the zoo and the food trucks.' },
+      { mi: 6.5, text: 'Monsarrat becomes Diamond Head Rd. Around the back of the crater: monument entrance, KCC, Fort Ruger Park, then it swings right and drops.' },
+      { mi: 7.7, text: 'Kahala Ave junction: stay right on Diamond Head Rd along the ocean.' },
+      { mi: 8.3, text: 'Lighthouse and the surf lookouts. All downhill from here.' },
+      { mi: 9.5, text: 'Poni Moi Rd, then right onto Kalakaua; Kaimana Beach in two blocks.' },
     ],
     mapsUrl: walk([home, kalakauaAlaMoana, magicIsland, kalakauaKapahulu, dhMonsarrat, dhKahala, lighthouse, home]),
     gpx: '/run/ten.gpx',
     facts: [
       { label: 'Water', value: 'Fountains and restrooms at Kapiolani Park, Kuhio Beach, Ala Moana Beach Park and Magic Island; nothing on Diamond Head Rd after KCC.' },
-      { label: 'Shorter', value: 'Skip the Magic Island loop and turn at the park entrance for 8.8 miles. Skip Ala Moana entirely and turn at the Ala Wai bridge for 7.4.' },
-    ],
-  },
-  {
-    slug: 'lighthouse',
-    name: 'Lighthouse Seven',
-    kicker: 'Hills · lighthouse first, then the long way round',
-    tagline: 'Out to the lighthouse, on through Kahala, and back over Kaimuki: seven miles, two climbs.',
-    color: '#00e5ff',
-    miles: g('lighthouse').miles,
-    ascentFt: g('lighthouse').ascentFt,
-    coords: g('lighthouse').coords,
-    profile: g('lighthouse').profile,
-    summary:
-      'Straight up Diamond Head Rd from the front door, so the lighthouse and the surf lookouts come in the first mile while the legs are fresh. Then instead of turning for home, keep going: down to Kahala Ave and along the flat mile and a half of beach houses to Waialae Beach Park, up Pueo St, and back west on Kilauea Ave, which climbs through Kaimuki to the Makapuu Ave crest. Diamond Head Rd and Monsarrat bring you down past the crater entrance and the zoo, and Kalakaua along the beach closes the loop at seven.',
-    marathonMiles: 'Marathon miles 24.4–25.8 (Kahala Ave and Diamond Head Rd) run in reverse, Kilauea Ave in reverse, then Monsarrat downhill',
-    cues: [
-      { mi: 0.0, text: 'East on Kalakaua two blocks; right on Poni Moi Rd, then left onto Diamond Head Rd. The climb starts at once.' },
-      { mi: 0.5, text: 'Beach Rd drops away on your right. Stay on the ocean-side sidewalk past the Kuilei Cliffs lookouts.' },
-      { mi: 1.1, text: 'Lighthouse. Then a gentle descent along the cliffs with Black Point ahead.' },
-      { mi: 1.7, text: 'Kahala Ave junction: Diamond Head Rd bends left and uphill; you keep straight along the coast on Kahala Ave.' },
-      { mi: 2.2, text: 'Flat and shaded through the Kahala mansions. Waialae Beach Park at the end has water and restrooms.' },
-      { mi: 3.1, text: 'Left onto Pueo St just past the beach park; half a mile through the neighborhood to Kilauea Ave.' },
-      { mi: 3.6, text: 'Left onto Kilauea Ave. Kahala Mall (Whole Foods, Planet Fitness) is a quarter mile the other way if you need anything.' },
-      { mi: 4.2, text: 'Cross 22nd Ave; Kilauea starts climbing through Kaimuki, the mile-7 hill of the Kahala Errand run the other way.' },
-      { mi: 4.7, text: 'Crest at Makapuu Ave, the high point. Left onto Makapuu and drop to Diamond Head Rd.' },
-      { mi: 5.0, text: 'Right onto Diamond Head Rd: crater entrance on your left, then it becomes Monsarrat.' },
-      { mi: 5.3, text: 'Monsarrat all the way down: a mile past the food trucks, Paki Ave and the zoo to Kapahulu.' },
-      { mi: 6.4, text: 'Left onto Kalakaua at the Kapahulu corner and along the beach: Kuhio, the Aquarium, the Natatorium, Kaimana, home.' },
-    ],
-    mapsUrl: walk([home, lighthouse, dhKahala, kahalaPueo, kilaueaPueo, makapuuKilauea, dhMonsarrat, kalakauaKapahulu, home]),
-    gpx: '/run/lighthouse.gpx',
-    facts: [
-      { label: 'Water', value: 'Waialae Beach Park at mile 3 and Kapiolani Park at mile 6.4. Nothing on Diamond Head Rd or Kilauea Ave.' },
-      { label: 'Two climbs', value: 'Diamond Head Rd to the lighthouse, about 110 ft, and Kilauea Ave from 22nd Ave to Makapuu, about 200 ft. Everything from mile 4.7 is downhill or flat.' },
-      { label: 'Shorter', value: 'Turn up Elepaio St instead of Pueo for 6.0 miles, or finish down Paki instead of along the beach for 6.7.' },
+      { label: 'Shorter', value: 'Skip the Magic Island loop and turn at the park entrance for about 8 miles. Skip Ala Moana entirely and turn at the Ala Wai bridge for about 7.' },
     ],
   },
   {
@@ -229,66 +279,14 @@ export const routes: RunRoute[] = [
     gpx: '/run/marathon.gpx',
     facts: [
       { label: 'Race day', value: 'Sunday, December 13, 2026 · 5:00 am start · no time limit · honolulumarathon.org' },
-      { label: 'Getting to the start', value: 'From the Gold Coast it is 3.4 miles to the start on Ala Moana Blvd. Race-morning shuttles run from Waikiki; walking Kalakaua at 3:30 am with everyone else is the tradition.' },
+      { label: 'Getting to the start', value: 'From Kaimana Beach it is 3.2 miles to the start on Ala Moana Blvd. Race-morning shuttles run from Waikiki; walking Kalakaua at 3:30 am with everyone else is the tradition.' },
       { label: 'Train on it', value: 'The Ten covers miles 4.9–8.7 and the finish descent. The Kahala Errand is Monsarrat and Kilauea. For the Hawaii Kai out-and-back, take Route 23 to Kahala Mall and run Kalanianaole early on a Sunday when the shoulder is quiet.' },
     ],
-  },
-  {
-    slug: 'kcc',
-    name: 'Saturday Market Loop',
-    kicker: 'Diamond Head loop · KCC Farmers Market',
-    tagline: 'The classic crater loop with breakfast at mile 1.8.',
-    color: '#ffffff',
-    miles: g('kcc').miles,
-    ascentFt: g('kcc').ascentFt,
-    coords: g('kcc').coords,
-    profile: g('kcc').profile,
-    summary:
-      'Every Saturday 7:30 to 11 am the KCC lot on Diamond Head Rd fills with fifty-plus farm stands. Run there the mauka way (Paki, Monsarrat, the crater entrance), eat, then finish the loop down the ocean side past the lighthouse. Reverse it if you would rather carry the haul down Monsarrat than along the cliffs.',
-    marathonMiles: 'Marathon miles 6.1–9.4 outbound and 24.4–25.8 inbound',
-    plan: [
-      { title: 'Market', body: 'KCC Farmers Market · 4303 Diamond Head Rd, parking lot C across from the crater entrance · Saturdays 7:30–11 am · run by the Hawaii Farm Bureau. Arrive at opening; by 9 the lines are long.' },
-      { title: 'Carry', body: 'A light running vest handles coffee-and-pastry loads. For a real grocery run take Route 2 from the market to Kapahulu Ave (frequent, 24 hours) and walk the last mile, or run the loop reversed so the market is at mile 2.7.' },
-    ],
-    cues: [
-      { mi: 0.0, text: 'East on Kalakaua two blocks; bear left onto Paki Ave at Poni Moi Rd.' },
-      { mi: 0.9, text: 'Right onto Monsarrat Ave and climb.' },
-      { mi: 1.4, text: 'Monsarrat becomes Diamond Head Rd; crater entrance on your right.' },
-      { mi: 1.8, text: 'KCC Farmers Market, lot C on your right. Coffee, Dakota corn, fried green tomatoes, mochi.' },
-      { mi: 2.0, text: 'Continue on Diamond Head Rd around the east side: Fort Ruger Park, then it swings right and descends.' },
-      { mi: 2.7, text: 'Kahala Ave junction: stay right along the ocean.' },
-      { mi: 3.5, text: 'Lighthouse lookout, then downhill.' },
-      { mi: 4.3, text: 'Fork left onto Kalakaua at Poni Moi Rd; home.' },
-    ],
-    mapsUrl: walk([home, pakiMonsarrat, kcc, dhKahala, lighthouse, home]),
-    gpx: '/run/kcc.gpx',
-  },
-  {
-    slug: 'park',
-    name: 'Park Shakeout',
-    kicker: 'Easy · flat · Kapiolani Park perimeter',
-    tagline: 'Recovery loop around the park, ocean on one side, banyans on the other.',
-    color: '#ff3355',
-    miles: g('park').miles,
-    ascentFt: g('park').ascentFt,
-    coords: g('park').coords,
-    profile: g('park').profile,
-    summary:
-      'Dead flat. Kalakaua along the beach to the Kapahulu corner, up past the zoo on Monsarrat, back along Paki under the trees, and home. Add strides on the park grass and finish barefoot on the sand at Kaimana Beach.',
-    marathonMiles: 'The final mile of the marathon, plus Monsarrat and Paki',
-    cues: [
-      { mi: 0.0, text: 'Ewa (west) on Kalakaua: Kaimana Beach, the Natatorium, the Aquarium.' },
-      { mi: 0.8, text: 'Right onto Kapahulu Ave for one block, then right onto Monsarrat Ave past the zoo.' },
-      { mi: 1.4, text: 'Right onto Paki Ave along the mauka edge of the park.' },
-      { mi: 2.1, text: 'Paki ends at Poni Moi Rd; right onto Kalakaua and home.' },
-    ],
-    mapsUrl: walk([home, kalakauaKapahulu, pakiMonsarrat, home]),
-    gpx: '/run/park.gpx',
   },
 ];
 
 export const pois: Poi[] = [
-  { label: 'Gold Coast start', lat: 21.2619, lon: -157.8203, color: '#00ff00' },
+  { label: 'Kaimana Beach', lat: 21.26364, lon: -157.8218, color: '#00ff00' },
   { label: 'Planet Fitness · Whole Foods', lat: 21.2776, lon: -157.7858, color: '#ff00ff' },
   { label: 'Bus 14 home', lat: 21.27835, lon: -157.78523, color: '#ff00ff' },
   { label: 'KCC market', lat: 21.2696, lon: -157.802, color: '#ffffff' },

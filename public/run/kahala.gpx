@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="vitaegis.com/run" xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata><name>Kahala Errand - the lighthouse way to Planet Fitness and Whole Foods</name><desc>Start: Gold Coast, Kalakaua Ave, Honolulu. Route traced on OpenStreetMap data (ODbL).</desc></metadata>
+  <metadata><name>Kahala Errand - the lighthouse way to Planet Fitness and Whole Foods</name><desc>Start: 2947 Kalakaua Ave, Honolulu. Route traced on OpenStreetMap data (ODbL).</desc></metadata>
   <trk><name>Kahala Errand - the lighthouse way to Planet Fitness and Whole Foods</name><trkseg>
-      <trkpt lat="21.261906" lon="-157.820279"><ele>1</ele></trkpt>
-      <trkpt lat="21.261363" lon="-157.820054"><ele>1</ele></trkpt>
-      <trkpt lat="21.260237" lon="-157.819364"><ele>1</ele></trkpt>
-      <trkpt lat="21.259981" lon="-157.818866"><ele>1</ele></trkpt>
+      <trkpt lat="21.263973" lon="-157.821363"><ele>1</ele></trkpt>
+      <trkpt lat="21.263871" lon="-157.820827"><ele>1</ele></trkpt>
+      <trkpt lat="21.263368" lon="-157.820699"><ele>1</ele></trkpt>
+      <trkpt lat="21.262706" lon="-157.820566"><ele>1</ele></trkpt>
+      <trkpt lat="21.262004" lon="-157.820403"><ele>1</ele></trkpt>
+      <trkpt lat="21.261486" lon="-157.820256"><ele>1</ele></trkpt>
+      <trkpt lat="21.260135" lon="-157.819382"><ele>1</ele></trkpt>
+      <trkpt lat="21.259989" lon="-157.818786"><ele>1</ele></trkpt>
       <trkpt lat="21.260143" lon="-157.81826"><ele>1</ele></trkpt>
       <trkpt lat="21.258806" lon="-157.817507"><ele>4</ele></trkpt>
       <trkpt lat="21.258332" lon="-157.817248"><ele>4</ele></trkpt>
