@@ -84,19 +84,23 @@ New Shortcut, one action: **Get Contents of URL**.
 
 Add it to the share sheet so you can send straight from Photos.
 
-**What the note decides.** Veo is the default, so anything you send becomes a clip
-unless you say otherwise:
+**What the note decides.** Your own footage posts as-is by default, which costs
+nothing to generate and needs no AI label. Generation is opt-in by keyword:
 
-| Word in the note | What you get | Where it posts |
+| Word in the note | What posts | Needs Google billing |
 | --- | --- | --- |
-| nothing in particular | Veo clip | all five |
-| `slides`, `carousel`, `deck` | a four-slide Nano Banana Pro deck | Instagram carousel, Facebook, X |
-| `still`, `photo`, `image` | one Nano Banana Pro image | Instagram, Facebook, X |
+| nothing in particular | the photo or clip you sent, with AI captions | no |
+| `veo`, `generate`, `render` | a Veo clip | yes |
+| `slides`, `carousel`, `deck` | a four-slide Nano Banana Pro deck | yes |
+| `illustrate`, `artwork` | one generated still | yes |
+
+Generated media requires billing on the Google Cloud project behind `GEMINI_API_KEY`.
+Text generation works on the free tier; image and video do not.
 
 Slides are square 1:1, written as a set so they read as one deck: hook, two slides of
 substance, takeaway. Instagram takes up to ten and crops them all to the first one's
-aspect ratio. X takes the first four. YouTube and TikTok are video-only, so a deck
-skips them automatically.
+aspect ratio. X takes the first four. YouTube and TikTok are video-only, so a photo
+post skips them automatically.
 
 ## Platform notes
 

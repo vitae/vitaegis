@@ -85,14 +85,19 @@ async function runCaption(job: Job) {
   const source = await sourceFrom(ingest.storage_path, ingest.kind);
   const captions = await writeCaptions(ingest.note ?? '', source);
 
-  // Veo is the default: most posts are a clip. Say "slides" or "carousel" in the note
-  // for a Nano Banana Pro Instagram deck, or "still" / "photo" for a single image.
+  // Your own footage is the default: it costs nothing to generate, needs no AI
+  // disclosure, and is better content than a synthetic clip. Generation is opt-in.
   const note = ingest.note ?? '';
+  const hasFile = Boolean(ingest.storage_path);
   const mediaKind = /(slides?|carousel|deck)/i.test(note)
     ? 'slides'
-    : /(still|photo|image|picture)/i.test(note)
-      ? 'image'
-      : 'video';
+    : /(veo|generate|render|synthetic)/i.test(note)
+      ? 'video'
+      : /(illustrate|artwork|render a still)/i.test(note)
+        ? 'image'
+        : hasFile
+          ? 'original'
+          : 'video';
 
   const { data: post, error: pErr } = await db()
     .from('content_posts')
@@ -100,11 +105,13 @@ async function runCaption(job: Job) {
       ingest_id: ingest.id,
       status: 'draft',
       media_kind: mediaKind,
-      // A deck belongs on the feeds that show stills; a clip can go everywhere.
+      // A deck or a still belongs on the feeds that show images; clips go everywhere.
       platforms:
-        mediaKind === 'slides'
+        mediaKind === 'slides' || mediaKind === 'image' || (mediaKind === 'original' && ingest.kind !== 'video')
           ? ['instagram', 'facebook', 'twitter']
           : ['instagram', 'facebook', 'youtube', 'tiktok', 'twitter'],
+      // Nothing synthetic in a passthrough post, so no AI label is owed.
+      ai_disclosure: mediaKind !== 'original',
       captions: {
         default: captions.default,
         instagram: captions.instagram,
@@ -119,6 +126,23 @@ async function runCaption(job: Job) {
   if (pErr || !post) throw new Error(pErr?.message ?? 'Could not create post');
 
   await db().from('content_ingest').update({ status: 'done' }).eq('id', ingest.id);
+
+  if (mediaKind === 'original') {
+    // The captured file is the post. Point at it and go straight to review.
+    await db()
+      .from('content_posts')
+      .update({
+        media_kind: ingest.kind === 'video' ? 'video' : 'image',
+        media_path: ingest.storage_path,
+        media_paths: ingest.storage_path ? [ingest.storage_path] : [],
+        media_url: ingest.storage_path ? await signedUrl(ingest.storage_path) : null,
+        status: 'ready',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', post.id);
+    return;
+  }
+
   await queueJob({
     kind: mediaKind as JobKind,
     postId: post.id,
