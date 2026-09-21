@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="vitaegis.com/run" xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata><name>Honolulu Marathon course</name><desc>Start: 2947 Kalakaua Ave, Honolulu. Route traced on OpenStreetMap data (ODbL).</desc></metadata>
+  <metadata><name>Honolulu Marathon course</name><desc>Start: Gold Coast, Kalakaua Ave, Honolulu. Route traced on OpenStreetMap data (ODbL).</desc></metadata>
   <trk><name>Honolulu Marathon course</name><trkseg>
       <trkpt lat="21.291808" lon="-157.85075"><ele>1</ele></trkpt>
       <trkpt lat="21.2919" lon="-157.851695"><ele>1</ele></trkpt>

@@ -1,4 +1,5 @@
-// Running routes from 2947 Kalakaua Ave (Diamond Head Beach Hotel), Honolulu.
+// Running routes from the Gold Coast end of Kalakaua Ave, Honolulu.
+// The start point is deliberately the public Kaimana Beach corner, not a home address.
 // Distances and elevation come from ./geometry.ts (traced on OpenStreetMap data);
 // the marathon shows the official 26.2 because the trace of the course runs a little long.
 // Macrons (kahakō) are omitted on purpose: Jost has no precomposed macron vowels.
@@ -28,7 +29,7 @@ export interface RunRoute {
   facts?: { label: string; value: string }[];
 }
 
-export const HOME = { lat: 21.2619, lon: -157.8203, label: '2947 Kalakaua Ave' };
+export const HOME = { lat: 21.2619, lon: -157.8203, label: 'Gold Coast start' };
 
 const walk = (points: [number, number][]) => {
   const [o, ...rest] = points;
@@ -90,7 +91,7 @@ export const routes: RunRoute[] = [
       },
       {
         title: '4 · Route 14 home',
-        body: 'Board at the “Waialae Ave + Kilauea Ave” stop at the mall corner, direction St. Louis Heights (via Kalakaua). About 12 minutes to the “Kalakaua Ave + Elks Club” stop outside 2947. Roughly hourly: Saturdays and Sundays about :27 past the hour (7:27, 8:27, 9:27, 10:27, 11:27, 12:28, 1:28, 2:29…); weekdays 8:23, 9:19, 10:19, 11:17, 12:19, 1:11, 2:14, 3:09, then 6:16, 7:20, 8:13, 9:12 pm. From the Aug 2024 timetable; check DaBus2 or Google Maps for live times.',
+        body: 'Board at the “Waialae Ave + Kilauea Ave” stop at the mall corner, direction St. Louis Heights (via Kalakaua). About 12 minutes to the “Kalakaua Ave + Elks Club” stop on the Gold Coast. Roughly hourly: Saturdays and Sundays about :27 past the hour (7:27, 8:27, 9:27, 10:27, 11:27, 12:28, 1:28, 2:29…); weekdays 8:23, 9:19, 10:19, 11:17, 12:19, 1:11, 2:14, 3:09, then 6:16, 7:20, 8:13, 9:12 pm. From the Aug 2024 timetable; check DaBus2 or Google Maps for live times.',
       },
     ],
     cues: [
@@ -209,7 +210,7 @@ export const routes: RunRoute[] = [
       { mi: 22.2, text: 'Left onto Kealaolu Ave along the Waialae Country Club.' },
       { mi: 22.9, text: 'Right onto Kahala Ave: the mansions mile.' },
       { mi: 24.0, text: 'Kahala Ave merges into Diamond Head Rd: the second climb, 23.8 to 24.7.' },
-      { mi: 25.6, text: 'Fork onto Kalakaua Ave; past 2947 at about 25.8.' },
+      { mi: 25.6, text: 'Fork onto Kalakaua Ave along the Gold Coast for the last half mile.' },
       { mi: 26.2, text: 'Finish in Kapiolani Park near the bandstand.' },
     ],
     mapsUrl: walk([
@@ -228,7 +229,7 @@ export const routes: RunRoute[] = [
     gpx: '/run/marathon.gpx',
     facts: [
       { label: 'Race day', value: 'Sunday, December 13, 2026 · 5:00 am start · no time limit · honolulumarathon.org' },
-      { label: 'Getting to the start', value: 'From 2947 it is 3.4 miles to the start on Ala Moana Blvd. Race-morning shuttles run from Waikiki; walking Kalakaua at 3:30 am with everyone else is the tradition.' },
+      { label: 'Getting to the start', value: 'From the Gold Coast it is 3.4 miles to the start on Ala Moana Blvd. Race-morning shuttles run from Waikiki; walking Kalakaua at 3:30 am with everyone else is the tradition.' },
       { label: 'Train on it', value: 'The Ten covers miles 4.9–8.7 and the finish descent. The Kahala Errand is Monsarrat and Kilauea. For the Hawaii Kai out-and-back, take Route 23 to Kahala Mall and run Kalanianaole early on a Sunday when the shoulder is quiet.' },
     ],
   },
@@ -287,7 +288,7 @@ export const routes: RunRoute[] = [
 ];
 
 export const pois: Poi[] = [
-  { label: '2947 Kalakaua', lat: 21.2619, lon: -157.8203, color: '#00ff00' },
+  { label: 'Gold Coast start', lat: 21.2619, lon: -157.8203, color: '#00ff00' },
   { label: 'Planet Fitness · Whole Foods', lat: 21.2776, lon: -157.7858, color: '#ff00ff' },
   { label: 'Bus 14 home', lat: 21.27835, lon: -157.78523, color: '#ff00ff' },
   { label: 'KCC market', lat: 21.2696, lon: -157.802, color: '#ffffff' },
