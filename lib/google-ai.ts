@@ -1,11 +1,13 @@
 // Google AI helpers: Gemini text, Nano Banana Pro images, Veo video.
 // Verified against ai.google.dev/gemini-api/docs (text, image-generation, veo).
-// Model ids move fast, so every one is overridable by env.
+// Model ids move fast, so every one is overridable by env. Checked against the live
+// models list on 2026-09-20: gemini-2.0-flash and gemini-2.5-flash are both retired.
+// Cheaper video options if Veo cost bites: veo-3.1-fast-generate-preview, veo-3.1-lite-generate-preview.
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
-export const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-2.0-flash';
-export const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image-preview';
+export const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.5-flash';
+export const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image';
 export const VIDEO_MODEL = process.env.GEMINI_VIDEO_MODEL || 'veo-3.1-generate-preview';
 
 export const googleAiConfigured = () => Boolean(process.env.GEMINI_API_KEY);
