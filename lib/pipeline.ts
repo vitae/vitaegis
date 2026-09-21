@@ -89,11 +89,11 @@ async function runCaption(job: Job) {
   // disclosure, and is better content than a synthetic clip. Generation is opt-in.
   const note = ingest.note ?? '';
   const hasFile = Boolean(ingest.storage_path);
-  const mediaKind = /(slides?|carousel|deck)/i.test(note)
+  const mediaKind = /\b(slides?|carousel|deck)\b/i.test(note)
     ? 'slides'
-    : /(veo|generate|render|synthetic)/i.test(note)
+    : /\b(veo|generate|render|synthetic)\b/i.test(note)
       ? 'video'
-      : /(illustrate|artwork|render a still)/i.test(note)
+      : /\b(illustrate|artwork|render a still)\b/i.test(note)
         ? 'image'
         : hasFile
           ? 'original'
