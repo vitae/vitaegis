@@ -27,6 +27,11 @@ export async function GET(req: NextRequest) {
       SUPABASE_SERVICE_ROLE_KEY: has('SUPABASE_SERVICE_ROLE_KEY'),
     },
     google: { GEMINI_API_KEY: has('GEMINI_API_KEY') },
+    drive: {
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: has('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+      GOOGLE_SERVICE_ACCOUNT_KEY: has('GOOGLE_SERVICE_ACCOUNT_KEY'),
+      GDRIVE_FOLDER_ID: has('GDRIVE_FOLDER_ID'),
+    },
     facebook: { META_APP_ID: has('META_APP_ID'), META_APP_SECRET: has('META_APP_SECRET') },
     youtube: {
       GOOGLE_OAUTH_CLIENT_ID: has('GOOGLE_OAUTH_CLIENT_ID'),

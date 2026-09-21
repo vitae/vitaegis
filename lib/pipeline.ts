@@ -5,6 +5,7 @@
 import { supabaseAdmin } from './supabase';
 import { downloadVideo, generateImage, pollVideo, startVideo, writeCaptions, type Source } from './google-ai';
 import { publish, type Platform } from './social';
+import { driveConfigured, driveName, uploadToDrive } from './drive';
 
 
 const BUCKET = 'content';
@@ -154,6 +155,33 @@ async function runCaption(job: Job) {
   });
 }
 
+
+/**
+ * Copy finished media to Google Drive. Best effort on purpose: an archive failure must
+ * never fail a post, so it logs and moves on.
+ */
+async function archiveToDrive(postId: string, kind: string, files: { bytes: Buffer; mimeType: string }[]) {
+  if (!driveConfigured()) return;
+  try {
+    const { data: post } = await db().from('content_posts').select('captions').eq('id', postId).single();
+    const caption = (post?.captions?.default as string) ?? '';
+    const links: string[] = [];
+    for (const [i, f] of files.entries()) {
+      const ext = f.mimeType.includes('mp4') ? 'mp4' : f.mimeType.includes('jpeg') ? 'jpg' : 'png';
+      const up = await uploadToDrive(driveName(caption, kind, i, files.length, ext), f.mimeType, f.bytes);
+      if (up.webViewLink) links.push(up.webViewLink);
+    }
+    if (links.length) {
+      await db()
+        .from('content_posts')
+        .update({ results: { drive: links } })
+        .eq('id', postId);
+    }
+  } catch (err) {
+    console.error(`Drive archive failed for post ${postId}:`, err instanceof Error ? err.message : err);
+  }
+}
+
 /** Stage 2a: Nano Banana Pro still, using the captured photo as reference when there is one. */
 async function runImage(job: Job) {
   const prompt = String(job.payload.prompt ?? '');
@@ -170,6 +198,7 @@ async function runImage(job: Job) {
   const { bytes, mimeType } = await generateImage(prompt, { source, size: '2K' });
   const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
   const path = await store(`generated/${job.post_id}.${ext}`, bytes, mimeType);
+  await archiveToDrive(job.post_id!, 'still', [{ bytes, mimeType }]);
   await db()
     .from('content_posts')
     .update({ media_path: path, media_paths: [path], media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })
@@ -193,6 +222,7 @@ async function runSlides(job: Job) {
   }
 
   const paths: string[] = [];
+  const archive: { bytes: Buffer; mimeType: string }[] = [];
   for (const [i, prompt] of prompts.slice(0, 10).entries()) {
     // Only slide one takes the captured photo as reference; the rest hold the look
     // through the prompt, which keeps the deck consistent without re-priming each time.
@@ -204,7 +234,9 @@ Square 1:1 composition.`, {
     });
     const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
     paths.push(await store(`generated/${job.post_id}-${i + 1}.${ext}`, bytes, mimeType));
+    archive.push({ bytes, mimeType });
   }
+  await archiveToDrive(job.post_id!, 'slide', archive);
 
   await db()
     .from('content_posts')
@@ -232,7 +264,9 @@ async function runVideoPoll(job: Job) {
     return;
   }
   if (error || !uri) throw new Error(error ?? 'Veo returned no video');
-  const path = await store(`generated/${job.post_id}.mp4`, await downloadVideo(uri), 'video/mp4');
+  const video = await downloadVideo(uri);
+  const path = await store(`generated/${job.post_id}.mp4`, video, 'video/mp4');
+  await archiveToDrive(job.post_id!, 'clip', [{ bytes: video, mimeType: 'video/mp4' }]);
   await db()
     .from('content_posts')
     .update({ media_path: path, media_paths: [path], media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })

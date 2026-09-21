@@ -50,6 +50,9 @@ On Vercel and in `.env.local`:
 | `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` | TikTok developer app. |
 | `X_CLIENT_ID`, `X_CLIENT_SECRET` | X app, OAuth 2.0 with PKCE. |
 | `TIKTOK_PRIVACY` | Defaults to `SELF_ONLY`. Change once the app is approved. |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Service account that archives media to Drive. Optional. |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | That account's private key, the whole PEM block. |
+| `GDRIVE_FOLDER_ID` | Destination folder id, from its Drive URL. |
 | `YOUTUBE_PRIVACY` | Defaults to `public`. Use `private` while testing. |
 
 ### 3. Connect the accounts
@@ -101,6 +104,23 @@ Slides are square 1:1, written as a set so they read as one deck: hook, two slid
 substance, takeaway. Instagram takes up to ten and crops them all to the first one's
 aspect ratio. X takes the first four. YouTube and TikTok are video-only, so a photo
 post skips them automatically.
+
+## Drive archive
+
+Every generated still, slide and clip is also copied to Google Drive, so you keep an
+archive outside Supabase. It is best effort: if Drive fails the post still goes ahead.
+
+Set it up once:
+
+1. In Google Cloud, create a service account and download a JSON key.
+2. Enable the Google Drive API on that project.
+3. Put the account's `client_email` in `GOOGLE_SERVICE_ACCOUNT_EMAIL` and its
+   `private_key` in `GOOGLE_SERVICE_ACCOUNT_KEY`, newlines and all.
+4. **Share the destination Drive folder with that email as Editor.** A service account
+   has no Drive of its own, so without this every upload fails with a permission error.
+5. Put the folder id, the part of its URL after `/folders/`, in `GDRIVE_FOLDER_ID`.
+
+Files are named `YYYY-MM-DD-subject-kind.ext`, with slides numbered `1of4` and so on.
 
 ## Platform notes
 
