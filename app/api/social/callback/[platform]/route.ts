@@ -128,7 +128,13 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: s
       ).then((r) => r.json());
       // Pick the Page deliberately. Taking pages.data[0] silently connected whichever
       // Page Meta happened to list first, which is rarely the one you want.
-      const all: { id: string; name?: string }[] = pages?.data ?? [];
+      interface MetaPage {
+        id: string;
+        name?: string;
+        access_token: string;
+        instagram_business_account?: { id: string; username?: string };
+      }
+      const all: MetaPage[] = pages?.data ?? [];
       if (!all.length) throw new Error('No Facebook Page on this account');
       const wantId = process.env.META_PAGE_ID;
       const wantName = process.env.META_PAGE_NAME || 'vitaegis';
