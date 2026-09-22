@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiCollection } from 'react-icons/hi';
 
 interface NavItem {
@@ -19,27 +20,56 @@ const navItems: NavItem[] = [
   { id: 'community', label: 'CONNECT', icon: HiUserGroup },
 ];
 
-interface GlassNavProps {
-  activeSection: string;
-  onNavigate: (id: string) => void;
-}
+const SECTION_IDS = navItems.map((item) => item.id);
 
-export default function GlassNav({ activeSection, onNavigate }: GlassNavProps) {
+/**
+ * Pinned top nav, rendered once from the root layout. On the home page the section
+ * buttons scroll; anywhere else they route back to the matching home anchor.
+ */
+export default function GlassNav() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const isHome = pathname === '/';
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+      if (!isHome || ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const viewportMiddle = window.scrollY + window.innerHeight / 2;
+        for (let i = SECTION_IDS.length - 1; i >= 0; i--) {
+          const el = document.getElementById(SECTION_IDS[i]);
+          if (el && el.offsetTop <= viewportMiddle) {
+            setActiveSection(SECTION_IDS[i]);
+            break;
+          }
+        }
+        ticking = false;
+      });
     };
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isHome]);
 
   const handleNavigate = (id: string) => {
-    onNavigate(id);
+    if (!isHome) {
+      router.push(id === 'hero' ? '/' : `/#${id}`);
+      return;
+    }
+    const element = document.getElementById(id);
+    if (!element) return;
+    const offset = window.innerWidth >= 768 ? 80 : 64;
+    const top = element.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: 'smooth' });
   };
 
   return (
+    <>
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled ? 'py-2' : 'py-4'
@@ -76,8 +106,8 @@ export default function GlassNav({ activeSection, onNavigate }: GlassNavProps) {
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeSection === item.id;
-              
+              const isActive = isHome && activeSection === item.id;
+
               return (
                 <button
                   key={item.id}
@@ -110,6 +140,9 @@ export default function GlassNav({ activeSection, onNavigate }: GlassNavProps) {
         </div>
       </div>
     </nav>
+    {/* Sub-pages start below the pinned nav; the home hero is full-height and centres itself */}
+    {!isHome && <div aria-hidden className="h-20 md:h-24 w-full shrink-0" />}
+    </>
   );
 }   
 

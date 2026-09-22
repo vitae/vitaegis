@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import GlassNav from '@/components/GlassNav';
 import BottomNav from '@/components/BottomNav';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -146,12 +145,6 @@ export default function Home() {
           }}
         />
       </div>
-
-      {/* Top Navigation - pinned on every breakpoint */}
-      <GlassNav
-        activeSection={activeSection}
-        onNavigate={scrollToSection}
-      />
 
       {/* Main Content */}
       <main ref={containerRef} className="app-content relative z-10 flex flex-col items-center justify-center w-full max-w-screen-md mx-auto px-2">

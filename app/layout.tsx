@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
+import GlassNav from '@/components/GlassNav';
 
 export const metadata: Metadata = {
   title: 'VITAEGIS | Health • Stealth • Wealth',
@@ -76,6 +77,7 @@ export default function RootLayout({
         <meta name="x-ua-compatible" content="IE=edge" />
       </head>
       <body className="antialiased text-white selection:bg-vitae-green selection:text-black min-h-screen flex flex-col text-center">
+        <GlassNav />
         {children}
         <SpeedInsights />
         <Analytics />

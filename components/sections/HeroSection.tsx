@@ -130,12 +130,8 @@ export default function HeroSection() {
           {/* CTA Buttons with touch feedback */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             {/* Primary CTA */}
-            <a
-              href="/about"
-              tabIndex={-1}
-              className="w-full sm:w-auto"
-            >
               <button
+                onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
                 onTouchStart={() => setPrimaryPressed(true)}
                 onTouchEnd={() => setPrimaryPressed(false)}
                 onMouseDown={() => setPrimaryPressed(true)}
@@ -157,9 +153,8 @@ export default function HeroSection() {
                     : '0 0 20px rgba(0, 255, 65, 0.5)',
                 }}
               >
-                Enter Vitaegis
+                ENTER VITAEGIS
               </button>
-            </a>
 
           </div>
         </GlassContainer>
