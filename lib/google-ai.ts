@@ -72,7 +72,7 @@ const CAPTION_SCHEMA = {
 const BRAND = `You write for VITAEGIS, a wellness brand whose line is "Health, Stealth, Wealth".
 Voice: calm, precise, a little cyberpunk. Ancient practice meets modern technology.
 Never hype, never emoji spam, never hashtag walls. At most three hashtags, and only where they earn their place.
-Visual identity: black, white, red and neon green #00FF41, Matrix rain, glassmorphic panels, Jost type.`;
+Visual identity: black background, white text, neon green #00FF00 as the lead color, with red #FF0000, magenta #FF00FF, yellow #FFFF00, cyan #00FFFF, orange #FF6A00 and blue #0066FF as accents (one or two per piece, never all at once). Matrix rain, glassmorphic panels, Jost type.`;
 
 /** Turn one captured item into per-platform copy plus prompts for the image and video models. */
 export async function writeCaptions(note: string, source?: Source): Promise<CaptionSet> {

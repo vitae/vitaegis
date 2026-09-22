@@ -26,7 +26,7 @@ function Stat({ value, unit }: { value: string; unit: string }) {
 }
 
 /** Tiny SVG of the activity's summary polyline. */
-function Trace({ polyline, color = '#00ff41' }: { polyline: string | null; color?: string }) {
+function Trace({ polyline, color = '#00ff00' }: { polyline: string | null; color?: string }) {
   if (!polyline) return null;
   const pts = decodePolyline(polyline);
   if (pts.length < 2) return null;

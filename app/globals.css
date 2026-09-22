@@ -26,12 +26,19 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Core palette */
+  /* Core palette: pure neon on black. Mirrors tailwind.config.js and the vitaegis-brand skill. */
   --vitae-green: #00ff00;
   --vitae-green-dim: #003311;
-  --vitae-green-glow: rgba(0, 255, 65, 0.5);
+  --vitae-green-glow: rgba(0, 255, 0, 0.5);
+  --vitae-red: #ff0000;
+  --vitae-magenta: #ff00ff;
+  --vitae-yellow: #ffff00;
+  --vitae-cyan: #00ffff;
+  --vitae-orange: #ff6a00;
+  --vitae-blue: #0066ff;
   --vitae-black: #000000;
   --vitae-white: #ffffff;
+  --vitae-gray: #808080;
   
   /* ═══════════════════════════════════════════════════════════════════════════════
      Section Container Utility - Global Alignment

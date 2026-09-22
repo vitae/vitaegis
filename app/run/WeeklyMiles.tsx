@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import type { WeekBucket } from '@/lib/strava';
 
 const FILL = '#00b336';
-const CURRENT = '#00ff41';
+const CURRENT = '#00ff00';
 
 export default function WeeklyMiles({ weeks }: { weeks: WeekBucket[] }) {
   const [hover, setHover] = useState<number | null>(null);

@@ -93,7 +93,7 @@ div.leaflet-container {
   transform: rotate(var(--deg, 0deg));
   /* Chevron pointing up, so the bearing maps straight onto the rotation. */
   clip-path: polygon(50% 0%, 100% 100%, 50% 76%, 0% 100%);
-  background: var(--c, #00ff41);
+  background: var(--c, #00ff00);
   filter: drop-shadow(0 0 3px #000) drop-shadow(0 0 2px #000);
   opacity: 0.95;
 }
@@ -114,8 +114,8 @@ div.leaflet-container {
   box-shadow: 0 0 12px currentColor;
 }
 .run-end-start {
-  background: #00ff41;
-  color: #00ff41;
+  background: #00ff00;
+  color: #00ff00;
 }
 .run-end-finish {
   background: #fff;
@@ -123,8 +123,8 @@ div.leaflet-container {
 }
 /* A loop starts and finishes in the same place: half green, half white. */
 .run-end-loop {
-  background: linear-gradient(90deg, #00ff41 50%, #fff 50%);
-  color: #00ff41;
+  background: linear-gradient(90deg, #00ff00 50%, #fff 50%);
+  color: #00ff00;
 }
 .run-end-label {
   position: absolute;

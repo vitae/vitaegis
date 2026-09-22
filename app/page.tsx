@@ -138,7 +138,7 @@ export default function Home() {
           className="h-full transition-all duration-100 ease-out"
           style={{ 
             width: `${scrollProgress}%`,
-            background: 'linear-gradient(90deg, #00ff00, #00ff41)',
+            background: 'linear-gradient(90deg, #00ff00, #00ff00)',
             boxShadow: '0 0 10px rgba(0, 255, 65, 0.8)',
             opacity: isScrolling ? 1 : 0,
             transition: 'opacity 0.3s ease, width 0.1s ease-out',
