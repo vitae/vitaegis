@@ -6,21 +6,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import AdminShell, { ui } from '@/components/admin/AdminShell';
 
 const TOPICS = ['energy', 'mitochondria', 'brainwaves', 'meditation', 'fitness', 'recipes', 'travel', 'gear'] as const;
 type Topic = (typeof TOPICS)[number];
 
-const glass = 'rounded-2xl border border-vitae-green/25 bg-white/[0.03] backdrop-blur-lg';
-const label = 'text-[11px] font-semibold uppercase tracking-[0.25em] text-vitae-green';
-const input =
-  'w-full rounded-lg border border-vitae-green/30 bg-black px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-vitae-green focus:outline-none';
-const pill = (on: boolean) =>
-  `rounded-full border px-3 py-1 text-xs uppercase tracking-[0.15em] transition-colors ${
-    on ? 'border-vitae-green/60 bg-vitae-green/10 text-vitae-green' : 'border-white/15 text-white/40 hover:border-white/30'
-  }`;
-const btn = 'rounded-lg border border-vitae-green/50 px-4 py-2 text-sm text-vitae-green hover:bg-vitae-green/10 disabled:opacity-40';
-const btnQuiet = 'rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-40';
-const KEY_STORAGE = 'vitaegis-content-admin-key';
+const { glass, label, input, pill, btn, btnQuiet } = ui;
 
 interface Source {
   id: string;
@@ -75,8 +66,28 @@ const TONE: Record<string, string> = {
 const KIND_LABEL: Record<Source['kind'], string> = { pdf: 'PDF', youtube: 'YouTube', url: 'Article', text: 'Text' };
 
 export default function ResearchDesk() {
-  const [key, setKey] = useState('');
-  const [authed, setAuthed] = useState(false);
+  return (
+    <AdminShell
+      title="Research desk"
+      blurb={
+        <>
+          Feed in books, papers, YouTube videos and articles. Gemini reads each one end to end and keeps the pertinent quotes
+          and the scientific findings. Build a brief per topic to see what recurs across sources, then send it to the post
+          queue: it lands in{' '}
+          <Link href="/admin/content" className="text-vitae-green hover:underline">
+            Content
+          </Link>{' '}
+          as a branded carousel with copy for all five platforms.
+        </>
+      }
+      probe="/api/research/briefs"
+    >
+      {(key) => <Desk adminKey={key} />}
+    </AdminShell>
+  );
+}
+
+function Desk({ adminKey: key }: { adminKey: string }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -110,21 +121,10 @@ export default function ResearchDesk() {
           fetch(`/api/research/findings${filterTopic ? `?topic=${filterTopic}` : ''}`, { headers: headers(k), cache: 'no-store' }),
           fetch('/api/research/briefs', { headers: headers(k), cache: 'no-store' }),
         ]);
-        if (s.status === 403) {
-          setError('That key was rejected.');
-          setAuthed(false);
-          return;
-        }
         if (!s.ok || !f.ok || !b.ok) throw new Error('load');
         setSources(((await s.json()) as { sources: Source[] }).sources);
         setFindings(((await f.json()) as { findings: Finding[] }).findings);
         setBriefs(((await b.json()) as { briefs: Brief[] }).briefs);
-        setAuthed(true);
-        try {
-          localStorage.setItem(KEY_STORAGE, k);
-        } catch {
-          /* private mode */
-        }
       } catch {
         setError('Could not load the desk.');
       }
@@ -133,32 +133,18 @@ export default function ResearchDesk() {
   );
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(KEY_STORAGE);
-      if (saved) {
-        setKey(saved);
-        void load(saved);
-      }
-    } catch {
-      /* ignore */
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (authed) void load(key);
+    void load(key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterTopic]);
 
   // Extraction runs on the cron worker; poll while anything is in flight.
   useEffect(() => {
-    if (!authed) return;
     const inFlight =
       sources.some((s) => s.status === 'queued' || s.status === 'extracting') || briefs.some((b) => b.status === 'queued');
     if (!inFlight) return;
     const t = setInterval(() => void load(key), 15_000);
     return () => clearInterval(t);
-  }, [authed, sources, briefs, key, load]);
+  }, [sources, briefs, key, load]);
 
   const post = async (path: string, body: unknown) => {
     const res = await fetch(path, { method: 'POST', headers: headers(key), body: JSON.stringify(body) });
@@ -228,37 +214,9 @@ export default function ResearchDesk() {
   const when = (iso: string) => new Date(iso).toLocaleString('en-US', { timeZone: 'Pacific/Honolulu' });
 
   return (
-    <main className="min-h-screen w-full bg-black text-left text-white">
-      <div className="mx-auto max-w-5xl px-4 pb-32 pt-6 sm:px-6">
-        <p className={label}>Vitaegis · admin</p>
-        <h1 className="mt-3 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green">Research desk</h1>
-        <p className="mt-3 max-w-2xl text-sm font-light text-white/60">
-          Feed in books, papers, YouTube videos and articles. Gemini reads each one end to end and keeps the pertinent quotes
-          and the scientific findings. Build a brief per topic to see what recurs across sources, then send it to the post
-          queue: it lands in{' '}
-          <Link href="/admin/content" className="text-vitae-green hover:underline">
-            Content review
-          </Link>{' '}
-          as a branded carousel with copy for all five platforms.
-        </p>
-
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <input
-            type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && load(key)}
-            placeholder="Admin key"
-            className="w-64 rounded-lg border border-vitae-green/30 bg-black px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-vitae-green focus:outline-none"
-          />
-          <button onClick={() => load(key)} className={btn}>
-            {authed ? 'Refresh' : 'Open'}
-          </button>
-          {error && <span className="text-sm text-red-400">{error}</span>}
-        </div>
-
-        {authed && (
-          <>
+    <div className="mt-2">
+      {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+      <>
             {/* Add a source */}
             <section className={`${glass} mt-8 p-5 sm:p-7`}>
               <p className={label}>Add a source</p>
@@ -534,9 +492,7 @@ export default function ResearchDesk() {
                 </div>
               </div>
             )}
-          </>
-        )}
-      </div>
-    </main>
+      </>
+    </div>
   );
 }

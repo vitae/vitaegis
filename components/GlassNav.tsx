@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiCollection } from 'react-icons/hi';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiCollection, HiChevronDown } from 'react-icons/hi';
+import { projects } from '@/components/projects';
 
 interface NavItem {
   id: string;
@@ -108,9 +109,8 @@ export default function GlassNav() {
               const Icon = item.icon;
               const isActive = isHome && activeSection === item.id;
 
-              return (
+              const button = (
                 <button
-                  key={item.id}
                   onClick={() => handleNavigate(item.id)}
                   className={`relative flex items-center gap-2 px-3 lg:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                     isActive
@@ -120,10 +120,47 @@ export default function GlassNav() {
                 >
                   <Icon size={16} className={isActive ? 'text-vitae-green' : ''} />
                   <span className="hidden lg:inline">{item.label}</span>
+                  {item.id === 'projects' && <HiChevronDown size={14} className="hidden lg:inline opacity-60" />}
                   {isActive && (
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-vitae-green rounded-full shadow-[0_0_10px_#00ff00]" />
                   )}
                 </button>
+              );
+
+              if (item.id !== 'projects') return <span key={item.id}>{button}</span>;
+
+              // PROJECTS opens a menu of every project page on hover or keyboard focus.
+              return (
+                <div key={item.id} className="group relative">
+                  {button}
+                  <div className="invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                    <div className="w-64 rounded-2xl border border-white/10 bg-black/80 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+                      <div className="absolute -top-px left-1/2 h-px w-1/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
+                      {projects.map((project) => {
+                        const PIcon = project.icon;
+                        return (
+                          <Link
+                            key={project.href}
+                            href={project.href}
+                            className="flex items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                          >
+                            <PIcon size={16} className="shrink-0 text-vitae-green" />
+                            <span className="flex flex-col">
+                              <span className="font-medium">{project.title}</span>
+                              <span className="text-[0.6rem] tracking-[0.2em] text-white/40">{project.label}</span>
+                            </span>
+                          </Link>
+                        );
+                      })}
+                      <Link
+                        href="/projects"
+                        className="mt-1 flex items-center justify-center rounded-xl border border-vitae-green/30 px-3 py-2 text-xs uppercase tracking-[0.2em] text-vitae-green transition-colors hover:bg-vitae-green/10"
+                      >
+                        All projects
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
