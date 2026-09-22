@@ -55,6 +55,10 @@ const PracticesSection = dynamic(() => import('@/components/sections/PracticesSe
   loading: () => <SkeletonSection className="min-h-screen p-8" />,
 });
 
+const ProjectsSection = dynamic(() => import('@/components/sections/ProjectsSection'), {
+  loading: () => <SkeletonSection className="min-h-screen p-8" />,
+});
+
 const TokenSection = dynamic(() => import('@/components/sections/TokenSection'), {
   loading: () => <SkeletonSection className="min-h-screen p-8" />,
 });
@@ -75,7 +79,7 @@ export default function Home() {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Section IDs for scroll detection
-  const sectionIds = ['hero', 'about', 'practices', 'token', 'community'];
+  const sectionIds = ['hero', 'about', 'practices', 'projects', 'token', 'community'];
 
   // Scroll handler with momentum detection
   useEffect(() => {
@@ -109,8 +113,8 @@ export default function Home() {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      // Calculate offset for fixed headers
-      const offset = window.innerWidth >= 768 ? 80 : 0;
+      // Calculate offset for the fixed top nav
+      const offset = window.innerWidth >= 768 ? 80 : 64;
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       const offsetPosition = elementPosition - offset;
 
@@ -143,13 +147,11 @@ export default function Home() {
         />
       </div>
 
-      {/* Top Navigation - Desktop only */}
-      <div className="hidden md:block">
-        <GlassNav
-          activeSection={activeSection}
-          onNavigate={scrollToSection}
-        />
-      </div>
+      {/* Top Navigation - pinned on every breakpoint */}
+      <GlassNav
+        activeSection={activeSection}
+        onNavigate={scrollToSection}
+      />
 
       {/* Main Content */}
       <main ref={containerRef} className="app-content relative z-10 flex flex-col items-center justify-center w-full max-w-screen-md mx-auto px-2">
@@ -168,6 +170,12 @@ export default function Home() {
         <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
           <section id="practices">
             <PracticesSection />
+          </section>
+        </Suspense>
+
+        <Suspense fallback={<SkeletonSection className="min-h-screen p-8" />}>
+          <section id="projects">
+            <ProjectsSection />
           </section>
         </Suspense>
 

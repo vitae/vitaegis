@@ -99,6 +99,8 @@ html {
     -moz-user-select: none !important;
     -ms-user-select: none !important;
   scroll-behavior: smooth;
+  /* Keep in-page anchors clear of the pinned top nav */
+  scroll-padding-top: 80px;
   /* Use dynamic viewport height for mobile browsers */
   height: 100%;
   height: -webkit-fill-available;

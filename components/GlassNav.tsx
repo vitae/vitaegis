@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiClock, HiGlobeAlt, HiLightningBolt } from 'react-icons/hi';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiCollection } from 'react-icons/hi';
 
 interface NavItem {
   id: string;
@@ -14,15 +14,9 @@ const navItems: NavItem[] = [
   { id: 'hero', label: 'HOME', icon: HiHome },
   { id: 'about', label: 'ABOUT', icon: HiInformationCircle },
   { id: 'practices', label: 'LIVE', icon: HiVideoCamera },
+  { id: 'projects', label: 'PROJECTS', icon: HiCollection },
   { id: 'token', label: 'STORE', icon: HiShoppingBag },
   { id: 'community', label: 'CONNECT', icon: HiUserGroup },
-];
-
-// Standalone pages (real routes, not scroll sections)
-const pageLinks = [
-  { href: '/happy-hour', label: 'HAPPY HOUR', icon: HiClock },
-  { href: '/travel', label: 'TRAVEL', icon: HiGlobeAlt },
-  { href: '/run', label: 'RUN', icon: HiLightningBolt },
 ];
 
 interface GlassNavProps {
@@ -102,20 +96,16 @@ export default function GlassNav({ activeSection, onNavigate }: GlassNavProps) {
                 </button>
               );
             })}
-            {pageLinks.map((page) => {
-              const Icon = page.icon;
-              return (
-                <Link
-                  key={page.href}
-                  href={page.href}
-                  className="relative flex items-center gap-2 px-3 lg:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 text-white/70 hover:text-white hover:bg-white/5"
-                >
-                  <Icon size={16} />
-                  <span className="hidden lg:inline">{page.label}</span>
-                </Link>
-              );
-            })}
           </div>
+
+          {/* Mobile: single link to the projects hub */}
+          <Link
+            href="/projects"
+            className="md:hidden flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium tracking-wider text-white/70 hover:text-white hover:bg-white/5 min-h-[40px]"
+          >
+            <HiCollection size={16} />
+            PROJECTS
+          </Link>
 
         </div>
       </div>
