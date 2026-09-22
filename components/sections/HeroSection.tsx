@@ -12,7 +12,6 @@ export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const [hasBeenVisible, setHasBeenVisible] = useState(false);
   const [primaryPressed, setPrimaryPressed] = useState(false);
-  const [secondaryPressed, setSecondaryPressed] = useState(false);
 
   // Intersection observer for fade-in animation
   useEffect(() => {
@@ -108,8 +107,13 @@ export default function HeroSection() {
           `}
           style={{ transitionDelay: '400ms' }}
         >
+          {/* Brand descriptor */}
+          <p className="text-sm sm:text-base text-[#00ff00] text-center tracking-[0.15em] uppercase mb-3 sm:mb-4">
+            Center for Inner Peace
+          </p>
+
           {/* Tagline with Instagram spacing */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-5 sm:mb-6">
             <span className="text-sm sm:text-base font-light text-[#00ff00] tracking-[0.15em] sm:tracking-[0.2em]">
               HEALTH
             </span>
@@ -122,19 +126,6 @@ export default function HeroSection() {
               WEALTH
             </span>
           </div>
-
-          {/* Brand descriptors */}
-          <p className="text-[0.65rem] sm:text-xs text-[#00ff00]/70 text-center tracking-[0.2em] uppercase mb-4 sm:mb-5">
-            Center for Inner Peace
-          </p>
-
-          {/* Description with Instagram typography */}
-          <p className="text-sm sm:text-base text-white/70 text-center leading-relaxed mb-5 sm:mb-6">
-            Ancient wisdom meets Cyberspirituality:
-          </p>
-           <p className="text-xs sm:text-sm text-green/70 text-center leading-relaxed mb-5 sm:mb-6">
-             Evolve your energy with Meditation, Yoga, Tai Chi.
-           </p>
 
           {/* CTA Buttons with touch feedback */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
@@ -170,30 +161,6 @@ export default function HeroSection() {
               </button>
             </a>
 
-            {/* Secondary CTA */}
-            <button
-              onTouchStart={() => setSecondaryPressed(true)}
-              onTouchEnd={() => setSecondaryPressed(false)}
-              onMouseDown={() => setSecondaryPressed(true)}
-              onMouseUp={() => setSecondaryPressed(false)}
-              onMouseLeave={() => setSecondaryPressed(false)}
-              className="
-                w-full sm:w-auto
-                px-5 sm:px-6 py-3
-                bg-white/10 text-white
-                border border-white/20
-                font-medium text-sm sm:text-base
-                rounded-lg
-                min-h-[44px]
-                transition-all duration-200
-                hover:bg-white/15
-              "
-              style={{
-                transform: secondaryPressed ? 'scale(0.97)' : 'scale(1)',
-              }}
-            >
-              Buy Our Book
-            </button>
           </div>
         </GlassContainer>
       </div>
