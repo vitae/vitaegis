@@ -7,6 +7,8 @@
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 export const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.5-flash';
+/** Long-context reading model for books, papers and full videos. */
+export const RESEARCH_MODEL = process.env.GEMINI_RESEARCH_MODEL || 'gemini-3.8-flash';
 export const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image';
 export const VIDEO_MODEL = process.env.GEMINI_VIDEO_MODEL || 'veo-3.1-generate-preview';
 
@@ -150,4 +152,103 @@ export async function downloadVideo(uri: string): Promise<Buffer> {
   const res = await fetch(uri, { headers: { 'x-goog-api-key': key() }, redirect: 'follow', cache: 'no-store' });
   if (!res.ok) throw new Error(`Veo download failed: ${res.status}`);
   return Buffer.from(await res.arrayBuffer());
+}
+
+// ── files + interactions (research) ─────────────────────────────────────────
+// Verified against ai.google.dev/gemini-api/docs (files, video-understanding,
+// document-processing, structured-output) on 2026-09-22. The Interactions API takes
+// a flat `input` list of typed parts and returns `output_text` / `steps[]`.
+
+export interface GeminiFile { name: string; uri: string; mimeType: string; state?: string }
+
+/**
+ * Resumable upload to the Files API. Needed for anything over the inline limit
+ * (PDFs are capped at 50 MB either way); files live 48 hours, which covers one
+ * extraction pass. The upload URL comes back in a response header.
+ */
+export async function uploadFile(bytes: Buffer, mimeType: string, displayName: string): Promise<GeminiFile> {
+  const start = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files`, {
+    method: 'POST',
+    headers: {
+      'x-goog-api-key': key(),
+      'X-Goog-Upload-Protocol': 'resumable',
+      'X-Goog-Upload-Command': 'start',
+      'X-Goog-Upload-Header-Content-Length': String(bytes.byteLength),
+      'X-Goog-Upload-Header-Content-Type': mimeType,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ file: { display_name: displayName.slice(0, 120) } }),
+    cache: 'no-store',
+  });
+  if (!start.ok) throw new Error(`Files API start failed: ${start.status} ${(await start.text()).slice(0, 300)}`);
+  const uploadUrl = start.headers.get('x-goog-upload-url');
+  if (!uploadUrl) throw new Error('Files API returned no upload URL');
+
+  const finish = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Length': String(bytes.byteLength),
+      'X-Goog-Upload-Offset': '0',
+      'X-Goog-Upload-Command': 'upload, finalize',
+    },
+    body: new Uint8Array(bytes),
+    cache: 'no-store',
+  });
+  if (!finish.ok) throw new Error(`Files API upload failed: ${finish.status} ${(await finish.text()).slice(0, 300)}`);
+  const json = await finish.json();
+  const file = json?.file;
+  if (!file?.uri) throw new Error(`Files API returned no uri: ${JSON.stringify(json).slice(0, 300)}`);
+  return { name: file.name, uri: file.uri, mimeType: file.mimeType ?? mimeType, state: file.state };
+}
+
+/** Videos and big PDFs are processed after upload; wait until the file is usable. */
+export async function waitForFile(file: GeminiFile, timeoutMs = 120_000): Promise<GeminiFile> {
+  const deadline = Date.now() + timeoutMs;
+  let current = file;
+  while (current.state === 'PROCESSING' && Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 4000));
+    const json = await call(`/${current.name}`, undefined, 'GET');
+    current = { name: json.name, uri: json.uri, mimeType: json.mimeType ?? current.mimeType, state: json.state };
+  }
+  if (current.state === 'FAILED') throw new Error('Gemini could not process the uploaded file');
+  if (current.state === 'PROCESSING') throw new Error('Gemini is still processing the file; retry later');
+  return current;
+}
+
+export async function deleteFile(name: string) {
+  try {
+    await fetch(`${BASE}/${name}`, { method: 'DELETE', headers: { 'x-goog-api-key': key() }, cache: 'no-store' });
+  } catch {
+    /* 48-hour expiry cleans up anyway */
+  }
+}
+
+/** One typed input part for the Interactions API. */
+export type InteractionPart =
+  | { type: 'text'; text: string }
+  | { type: 'document'; uri?: string; data?: string; mime_type: string }
+  | { type: 'video'; uri: string; mime_type?: string; processing?: 'agentic' | 'static' }
+  | { type: 'audio'; uri?: string; data?: string; mime_type: string };
+
+/** Run one interaction and parse the JSON the schema forced. */
+export async function interactJson<T>(
+  parts: InteractionPart[],
+  schema: Record<string, unknown>,
+  opts: { model?: string; temperature?: number } = {},
+): Promise<T> {
+  const json = await call('/interactions', {
+    model: opts.model ?? RESEARCH_MODEL,
+    input: parts,
+    response_format: { type: 'text', mime_type: 'application/json', schema },
+    ...(opts.temperature !== undefined ? { generation_config: { temperature: opts.temperature } } : {}),
+  });
+  let text: string = json?.output_text ?? '';
+  if (!text) {
+    // REST shape: the model's answer is the last model_output step.
+    const steps: { type?: string; content?: { type?: string; text?: string }[] }[] = json?.steps ?? [];
+    const out = [...steps].reverse().find((s) => s.type === 'model_output');
+    text = (out?.content ?? []).map((c) => (c.type === 'text' ? c.text ?? '' : '')).join('');
+  }
+  if (!text) throw new Error(`Empty interaction response: ${JSON.stringify(json).slice(0, 300)}`);
+  return JSON.parse(text.replace(/^```json|```$/g, '').trim()) as T;
 }

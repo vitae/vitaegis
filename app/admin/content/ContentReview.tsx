@@ -111,7 +111,9 @@ export default function ContentReview() {
       style={{ fontFamily: "'Jost', sans-serif" }}
     >
       <div className="mx-auto max-w-4xl px-4 pb-32 pt-12 sm:px-6">
-        <p className={label}>Vitaegis · admin</p>
+        <p className={label}>
+          Vitaegis · admin · <a href="/admin/research" className="text-white/60 hover:text-vitae-green">Research desk</a>
+        </p>
         <h1 className="mt-3 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green">Content review</h1>
         <p className="mt-3 max-w-xl text-sm font-light text-white/60">
           Everything the pipeline generated, waiting on you. Nothing posts until you approve it.

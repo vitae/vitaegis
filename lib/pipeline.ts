@@ -6,13 +6,16 @@ import { supabaseAdmin } from './supabase';
 import { downloadVideo, generateImage, pollVideo, startVideo, writeCaptions, type Source } from './google-ai';
 import { publish, type Platform } from './social';
 import { driveConfigured, driveName, uploadToDrive } from './drive';
+import { briefNote, buildBrief, extractSource } from './research';
 
 
 const BUCKET = 'content';
 /** Long enough for the publisher to fetch the media and for you to preview it. */
 const SIGNED_URL_TTL = 60 * 60 * 24;
 
-type JobKind = 'caption' | 'image' | 'slides' | 'video' | 'video_poll' | 'publish';
+type JobKind =
+  | 'caption' | 'image' | 'slides' | 'video' | 'video_poll' | 'publish'
+  | 'research_extract' | 'research_brief' | 'research_post';
 
 interface Job {
   id: string;
@@ -327,6 +330,66 @@ async function runPublish(job: Job) {
   }
 }
 
+// ── research stages ─────────────────────────────────────────────────────────
+
+/** Read one source (book, paper, video, article) and store its quotes and findings. */
+async function runResearchExtract(job: Job) {
+  const sourceId = String(job.payload.sourceId ?? '');
+  if (!sourceId) throw new Error('No sourceId');
+  try {
+    await extractSource(sourceId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const spent = job.attempts >= job.max_attempts;
+    await db()
+      .from('research_sources')
+      .update({ status: spent ? 'failed' : 'queued', error: message.slice(0, 1000), updated_at: new Date().toISOString() })
+      .eq('id', sourceId);
+    throw err;
+  }
+}
+
+/** Collate every finding on a topic into one brief. */
+async function runResearchBrief(job: Job) {
+  const briefId = String(job.payload.briefId ?? '');
+  if (!briefId) throw new Error('No briefId');
+  try {
+    await buildBrief(briefId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const spent = job.attempts >= job.max_attempts;
+    await db()
+      .from('research_briefs')
+      .update({ status: spent ? 'failed' : 'queued', error: message.slice(0, 1000), updated_at: new Date().toISOString() })
+      .eq('id', briefId);
+    throw err;
+  }
+}
+
+/**
+ * Hand a ready brief to the content pipeline. It becomes a text ingest whose note asks
+ * for a carousel, so the existing caption -> slides -> review -> publish path takes over.
+ */
+async function runResearchPost(job: Job) {
+  const briefId = String(job.payload.briefId ?? '');
+  const { data: brief, error } = await db().from('research_briefs').select('*').eq('id', briefId).single();
+  if (error || !brief) throw new Error('Brief row is gone');
+  if (brief.status !== 'ready' && brief.status !== 'posted') throw new Error(`Brief is ${brief.status}, not ready`);
+  if (brief.ingest_id) return; // already handed over
+
+  const { data: ingest, error: iErr } = await db()
+    .from('content_ingest')
+    .insert({ kind: 'text', note: briefNote(brief), status: 'queued' })
+    .select()
+    .single();
+  if (iErr || !ingest) throw new Error(iErr?.message ?? 'Could not create ingest');
+  await queueJob({ kind: 'caption', ingestId: ingest.id });
+  await db()
+    .from('research_briefs')
+    .update({ status: 'posted', ingest_id: ingest.id, updated_at: new Date().toISOString() })
+    .eq('id', briefId);
+}
+
 const STAGES: Record<JobKind, (job: Job) => Promise<void>> = {
   caption: runCaption,
   image: runImage,
@@ -334,6 +397,9 @@ const STAGES: Record<JobKind, (job: Job) => Promise<void>> = {
   video: runVideo,
   video_poll: runVideoPoll,
   publish: runPublish,
+  research_extract: runResearchExtract,
+  research_brief: runResearchBrief,
+  research_post: runResearchPost,
 };
 
 /** Advance up to `limit` due jobs. Called by the cron worker. */
