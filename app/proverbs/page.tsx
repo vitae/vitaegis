@@ -341,6 +341,7 @@ export default function ProverbsPage() {
                 placeholder="Speak your question to the oracle..."
                 style={{
                   flex: 1,
+                  minWidth: 0,
                   background: '#00ff9d06',
                   border: '1px solid #00ff9d2a',
                   color: '#00ff9d',
@@ -357,7 +358,8 @@ export default function ProverbsPage() {
                   background: '#00ff9d1a',
                   border: '1px solid #00ff9d44',
                   color: '#00ff9d',
-                  padding: '12px 28px',
+                  padding: '12px 16px',
+                  flexShrink: 0,
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontSize: 11,
                   letterSpacing: 3,

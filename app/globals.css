@@ -81,6 +81,14 @@
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
+  /* Height the bottom-docked nav takes up, bar plus its margin */
+  --nav-h: 72px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --nav-h: 88px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -106,8 +114,13 @@ html {
     -moz-user-select: none !important;
     -ms-user-select: none !important;
   scroll-behavior: smooth;
-  /* Keep in-page anchors clear of the pinned top nav */
-  scroll-padding-top: 80px;
+  /* Keep in-page anchors clear of the status bar and the bottom-docked nav */
+  scroll-padding-top: calc(var(--sat) + 16px);
+  scroll-padding-bottom: calc(var(--nav-h) + var(--sab));
+  /* No double-tap zoom; pinch zoom is blocked in NoZoom.tsx */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   /* Use dynamic viewport height for mobile browsers */
   height: 100%;
   height: -webkit-fill-available;
@@ -172,23 +185,24 @@ p, span, a, button, input, textarea, select, label, div {
   width: 100%;
 }
 
-/* Keep every page's content clear of the mobile bottom tab bar */
-@media (max-width: 767px) {
-  body {
-    padding-bottom: calc(80px + var(--sab));
-  }
+/* Keep every page's content clear of the status bar and the bottom-docked nav */
+body {
+  padding-top: var(--sat);
+  padding-bottom: calc(var(--nav-h) + var(--sab));
 }
 
-/* Pages that scroll inside their own fixed container clear the pinned nav themselves */
+/* Pages that scroll inside their own fixed container clear them themselves */
 .nav-clear {
-  padding-top: calc(4.5rem + var(--sat));
-  padding-bottom: calc(80px + var(--sab));
+  padding-top: var(--sat);
+  padding-bottom: calc(var(--nav-h) + var(--sab));
 }
 
-@media (min-width: 768px) {
-  .nav-clear {
-    padding-top: 6rem;
-    padding-bottom: 0;
+/* iOS zooms into any field under 16px when it is focused */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
   }
 }
 

@@ -41,7 +41,7 @@ export default function HeroSection() {
       style={{ minHeight: '100dvh' }}
     >
       {/* Content container with safe area padding and global alignment */}
-      <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ paddingTop: 'env(safe-area-inset-top, 16px)', width: '100%' }}>
+      <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ paddingTop: '1rem', width: '100%' }}>
         
         {/* Badge - Instagram style pill */}
         <div 
@@ -163,7 +163,7 @@ export default function HeroSection() {
       {/* Scroll indicator - positioned above bottom nav on mobile */}
       <div 
         className={`
-          absolute bottom-24 md:bottom-8 left-1/2 -translate-x-1/2
+          absolute bottom-24 md:bottom-28 left-1/2 -translate-x-1/2
           flex flex-col items-center gap-1
           transition-all duration-500
           ${hasBeenVisible ? 'opacity-100' : 'opacity-0'}
@@ -183,13 +183,15 @@ export default function HeroSection() {
         </svg>
       </div>
 
-      {/* Ambient glow effect */}
-      <div 
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(0, 255, 0, 0.5) 0%, transparent 50%)',
-        }}
-      />
+      {/* Ambient glow effect, clipped to the hero so it never widens the page */}
+      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px]"
+          style={{
+            background: 'radial-gradient(circle, rgba(0, 255, 0, 0.5) 0%, transparent 50%)',
+          }}
+        />
+      </div>
     </section>
   );
 }

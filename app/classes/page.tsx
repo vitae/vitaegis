@@ -11,7 +11,7 @@ export default function ClassesPage() {
       <div className="content min-h-screen">
         <section className="container mx-auto px-4 py-16 text-center">
           <div className="animate-bounce text-6xl mb-6">🧘‍♀️</div>
-          <h1 className="text-7xl font-black mb-4" style={{textShadow:'0 0 20px #dc2626,0 0 40px #dc2626'}}>
+          <h1 className="text-[clamp(2.25rem,11vw,4.5rem)] leading-none font-black mb-4 break-words" style={{textShadow:'0 0 20px #dc2626,0 0 40px #dc2626'}}>
             <span className="bg-gradient-to-r from-red-700 via-red-500 to-red-300 bg-clip-text text-transparent">MEDITATION MONDAYS</span>
           </h1>
           <p className="text-3xl text-red-500 tracking-wider font-semibold mb-8">SUNSET SESSIONS</p>

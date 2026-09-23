@@ -94,7 +94,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="app-shell flex flex-col items-center justify-center min-h-screen px-4 max-w-screen-md mx-auto">
+    <div className="app-shell flex flex-col items-center justify-center min-h-screen w-full min-w-0 px-4 max-w-screen-md mx-auto">
       {/* 3D Matrix Background */}
       <MatrixBackground />
 
