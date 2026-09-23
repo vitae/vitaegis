@@ -38,7 +38,7 @@ export default function HeroSection() {
       ref={sectionRef}
       id="hero"
       className="relative min-h-screen flex flex-col items-center justify-center text-center"
-      style={{ minHeight: '100dvh' }}
+      style={{ minHeight: 'calc(100dvh - var(--nav-top))' }}
     >
       {/* Content container with safe area padding and global alignment */}
       <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ paddingTop: '1rem', width: '100%' }}>
@@ -163,7 +163,7 @@ export default function HeroSection() {
       {/* Scroll indicator - positioned above bottom nav on mobile */}
       <div 
         className={`
-          absolute bottom-24 md:bottom-28 left-1/2 -translate-x-1/2
+          absolute bottom-24 md:bottom-8 left-1/2 -translate-x-1/2
           flex flex-col items-center gap-1
           transition-all duration-500
           ${hasBeenVisible ? 'opacity-100' : 'opacity-0'}

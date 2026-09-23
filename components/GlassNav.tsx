@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiCollection, HiChevronUp } from 'react-icons/hi';
+import { HiHome, HiInformationCircle, HiVideoCamera, HiShoppingBag, HiUserGroup, HiCollection, HiChevronDown } from 'react-icons/hi';
 import { projects } from '@/components/projects';
 
 interface NavItem {
@@ -24,8 +24,8 @@ const navItems: NavItem[] = [
 const SECTION_IDS = navItems.map((item) => item.id);
 
 /**
- * Site navigation, rendered once from the root layout and docked to the bottom of the
- * screen at every width. PROJECTS opens a sheet of every project page above the bar.
+ * Site navigation, rendered once from the root layout. Docked to the bottom of the screen
+ * on mobile and the top on desktop; PROJECTS opens a sheet of every project page next to it.
  * On the home page section tabs scroll; anywhere else they route back to the home anchor.
  */
 export default function GlassNav() {
@@ -90,7 +90,8 @@ export default function GlassNav() {
     }
     const element = document.getElementById(id);
     if (!element) return;
-    const top = id === 'hero' ? 0 : element.getBoundingClientRect().top + window.scrollY - 16;
+    const offset = window.innerWidth >= 768 ? 104 : 16;
+    const top = id === 'hero' ? 0 : element.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: 'smooth' });
   };
 
@@ -103,19 +104,19 @@ export default function GlassNav() {
 
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-50"
+      className="fixed inset-x-0 bottom-0 z-50 md:bottom-auto md:top-0"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
     >
-      <div className="relative mx-2 mb-2 md:mx-auto md:mb-4 md:max-w-3xl">
-        {/* Projects sheet, opening upward from the bar */}
+      <div className="relative mx-2 mb-2 md:mx-auto md:mb-0 md:mt-4 md:max-w-3xl">
+        {/* Projects sheet: opens upward from the bar on mobile, downward on desktop */}
         {menuOpen && (
           <div
             id="projects-sheet"
-            className="absolute inset-x-0 bottom-full mb-2 max-h-[calc(100dvh-6.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#050805] p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] md:right-auto md:left-1/2 md:w-96 md:-translate-x-1/2"
+            className="absolute inset-x-0 bottom-full mb-2 md:bottom-auto md:top-full md:mb-0 md:mt-2 max-h-[calc(100dvh-6.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#050805] p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] md:shadow-[0_8px_32px_rgba(0,0,0,0.6)] md:right-auto md:left-1/2 md:w-96 md:-translate-x-1/2"
           >
             <p className="px-3 pt-2 pb-1 text-left text-[0.65rem] tracking-[0.3em] text-vitae-green/80">PROJECTS</p>
             {projects.map((project) => {
@@ -161,7 +162,7 @@ export default function GlassNav() {
         )}
 
         {/* Bar */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/85 backdrop-blur-xl shadow-[0_-4px_32px_rgba(0,0,0,0.5)]">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/85 backdrop-blur-xl shadow-[0_-4px_32px_rgba(0,0,0,0.5)] md:shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           <div className="absolute -top-px left-1/2 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
           <div className="flex items-stretch justify-around">
@@ -185,7 +186,7 @@ export default function GlassNav() {
                   <span className="relative z-10 flex items-center gap-1 truncate text-[9px] md:text-xs font-medium tracking-wide">
                     {item.label}
                     {isProjects && (
-                      <HiChevronUp size={12} className={`hidden md:inline transition-transform ${menuOpen ? '' : 'rotate-180'}`} />
+                      <HiChevronDown size={12} className={`hidden md:inline transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
                     )}
                   </span>
                 </button>

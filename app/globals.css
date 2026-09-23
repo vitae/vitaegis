@@ -81,13 +81,15 @@
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
-  /* Height the bottom-docked nav takes up, bar plus its margin */
-  --nav-h: 72px;
+  /* Space the nav takes up, bar plus its margin: docked to the bottom on mobile, the top on desktop */
+  --nav-top: 0px;
+  --nav-bottom: 72px;
 }
 
 @media (min-width: 768px) {
   :root {
-    --nav-h: 88px;
+    --nav-top: 88px;
+    --nav-bottom: 0px;
   }
 }
 
@@ -114,9 +116,9 @@ html {
     -moz-user-select: none !important;
     -ms-user-select: none !important;
   scroll-behavior: smooth;
-  /* Keep in-page anchors clear of the status bar and the bottom-docked nav */
-  scroll-padding-top: calc(var(--sat) + 16px);
-  scroll-padding-bottom: calc(var(--nav-h) + var(--sab));
+  /* Keep in-page anchors clear of the status bar and the nav */
+  scroll-padding-top: calc(var(--sat) + var(--nav-top) + 16px);
+  scroll-padding-bottom: calc(var(--nav-bottom) + var(--sab));
   /* No double-tap zoom; pinch zoom is blocked in NoZoom.tsx */
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
@@ -185,16 +187,16 @@ p, span, a, button, input, textarea, select, label, div {
   width: 100%;
 }
 
-/* Keep every page's content clear of the status bar and the bottom-docked nav */
+/* Keep every page's content clear of the status bar and the nav */
 body {
-  padding-top: var(--sat);
-  padding-bottom: calc(var(--nav-h) + var(--sab));
+  padding-top: calc(var(--sat) + var(--nav-top));
+  padding-bottom: calc(var(--nav-bottom) + var(--sab));
 }
 
 /* Pages that scroll inside their own fixed container clear them themselves */
 .nav-clear {
-  padding-top: var(--sat);
-  padding-bottom: calc(var(--nav-h) + var(--sab));
+  padding-top: calc(var(--sat) + var(--nav-top));
+  padding-bottom: calc(var(--nav-bottom) + var(--sab));
 }
 
 /* iOS zooms into any field under 16px when it is focused */
