@@ -170,8 +170,26 @@ p, span, a, button, input, textarea, select, label, div {
 .app-content {
   position: relative;
   width: 100%;
-  /* Account for bottom nav on mobile */
-  padding-bottom: calc(72px + var(--sab));
+}
+
+/* Keep every page's content clear of the mobile bottom tab bar */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: calc(80px + var(--sab));
+  }
+}
+
+/* Pages that scroll inside their own fixed container clear the pinned nav themselves */
+.nav-clear {
+  padding-top: calc(4.5rem + var(--sat));
+  padding-bottom: calc(80px + var(--sab));
+}
+
+@media (min-width: 768px) {
+  .nav-clear {
+    padding-top: 6rem;
+    padding-bottom: 0;
+  }
 }
 
 @media (min-width: 768px) {

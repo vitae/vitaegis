@@ -21,7 +21,7 @@ export function LegalPage({
     // Matches /run and /travel: the global CSS pins <html> in some browsers, so the
     // page scrolls inside its own full-viewport container.
     <main
-      className="fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
+      className="nav-clear fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
       style={{ fontFamily: "'Jost', sans-serif", WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
     >
       <div className="relative mx-auto max-w-3xl px-4 pb-32 pt-10 sm:px-6">

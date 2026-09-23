@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import BottomNav from '@/components/BottomNav';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Main Page
@@ -71,14 +70,10 @@ const Footer = dynamic(() => import('@/components/Footer'), {
 });
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState('hero');
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Section IDs for scroll detection
-  const sectionIds = ['hero', 'about', 'practices', 'projects', 'token', 'community'];
 
   // Scroll handler with momentum detection
   useEffect(() => {
@@ -91,38 +86,12 @@ export default function Home() {
           const docHeight = document.documentElement.scrollHeight - window.innerHeight;
           const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
           setScrollProgress(progress);
-
-          // Detect active section
-          const viewportMiddle = scrollTop + window.innerHeight / 2;
-          for (let i = sectionIds.length - 1; i >= 0; i--) {
-            const el = document.getElementById(sectionIds[i]);
-            if (el && el.offsetTop <= viewportMiddle) {
-              setActiveSection(sectionIds[i]);
-              break;
-            }
-          }
         });
       }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [sectionIds]);
-
-  // Smooth scroll to section with iOS-like behavior
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      // Calculate offset for the fixed top nav
-      const offset = window.innerWidth >= 768 ? 80 : 64;
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
-    }
-  };
+  }, []);
 
   return (
     <div className="app-shell flex flex-col items-center justify-center min-h-screen px-4 max-w-screen-md mx-auto">
@@ -188,12 +157,6 @@ export default function Home() {
           <Footer />
         </Suspense>
       </main>
-
-      {/* Bottom Navigation - Mobile only */}
-      <BottomNav 
-        activeSection={activeSection} 
-        onNavigate={scrollToSection} 
-      />
     </div>
   );
 }

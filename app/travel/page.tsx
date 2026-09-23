@@ -32,7 +32,7 @@ export default function TravelRadarPage() {
   return (
     // The site's global CSS pins <html> to the viewport, so this page scrolls inside its own container.
     <main
-      className="fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
+      className="nav-clear fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
       style={{ fontFamily: "'Jost', sans-serif", WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
     >
       <div className="travel-grid pointer-events-none absolute inset-x-0 top-0 h-[900px]" aria-hidden />

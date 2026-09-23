@@ -35,7 +35,7 @@ export default function RunPage() {
     // Like /travel: the site's global CSS pins <html> to the viewport in some browsers, so this
     // page scrolls inside its own full-viewport container.
     <main
-      className="fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
+      className="nav-clear fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
       style={{ fontFamily: "'Jost', sans-serif", WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
     >
       <div className="run-grid pointer-events-none absolute inset-x-0 top-0 h-[700px]" aria-hidden />
