@@ -123,13 +123,10 @@ html {
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  /* Use dynamic viewport height for mobile browsers */
-  height: 100%;
-  height: -webkit-fill-available;
 }
 
 body {
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     user-select: none !important;
     -webkit-user-select: none !important;
     -moz-user-select: none !important;
@@ -145,12 +142,12 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent horizontal overflow */
-  overflow-x: hidden;
-  /* Use dynamic viewport height */
-  min-height: 100%;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  /* Prevent horizontal overflow without making body its own scroll container */
+  overflow-x: clip;
+  /* Small viewport height: stays fixed while the browser toolbar shows and hides,
+     so the page never reflows mid-scroll (which makes iOS bring the toolbar back) */
+  min-height: 100vh;
+  min-height: 100svh;
   /* Enable momentum scrolling on iOS */
   -webkit-overflow-scrolling: touch;
   /* Remove extra paddings for perfect centering */
@@ -177,8 +174,7 @@ p, span, a, button, input, textarea, select, label, div {
   margin-left: auto;
   margin-right: auto;
   min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  min-height: 100svh;
   overflow-x: hidden;
 }
 
@@ -471,15 +467,16 @@ button:active, a:active, [role="button"]:active {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   Fix for iOS 100vh issue
+   Stable full-screen heights: sized to the small viewport so they don't resize
+   (and shift the page) as the mobile browser toolbar collapses and expands
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-@supports (-webkit-touch-callout: none) {
+@supports (height: 100svh) {
   .min-h-screen {
-    min-height: -webkit-fill-available;
+    min-height: 100svh;
   }
-  
+
   .h-screen {
-    height: -webkit-fill-available;
+    height: 100svh;
   }
 }

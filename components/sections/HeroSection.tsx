@@ -38,7 +38,7 @@ export default function HeroSection() {
       ref={sectionRef}
       id="hero"
       className="relative min-h-screen flex flex-col items-center justify-center text-center"
-      style={{ minHeight: 'calc(100dvh - var(--nav-top))' }}
+      style={{ minHeight: 'calc(100svh - var(--nav-top))' }}
     >
       {/* Content container with safe area padding and global alignment */}
       <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ paddingTop: '1rem', width: '100%' }}>
