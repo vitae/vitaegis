@@ -115,6 +115,7 @@ export async function GET(req: NextRequest) {
       env: {
         gemini: Boolean(process.env.GEMINI_API_KEY),
         anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
+        typesafe: Boolean(process.env.TYPESAFE_API_KEY),
         cron,
         drive: Boolean(process.env.GDRIVE_FOLDER_ID),
         mediaSecret: Boolean(process.env.CONTENT_MEDIA_SECRET || process.env.CONTENT_INGEST_SECRET),

@@ -29,7 +29,7 @@ interface Overview {
   };
   research: { sourcesDone: number; sourcesPending: number; findings: number; briefsReady: number };
   accounts: { platform: string; connected: boolean; name: string | null; expires_at: number | null }[];
-  env: { gemini: boolean; anthropic: boolean; cron: boolean; drive: boolean; mediaSecret: boolean };
+  env: { gemini: boolean; anthropic: boolean; typesafe: boolean; cron: boolean; drive: boolean; mediaSecret: boolean };
   generatedAt: string;
 }
 
@@ -196,6 +196,7 @@ function Body({ adminKey }: { adminKey: string }) {
                 ['Cron secret', data.env.cron],
                 ['Gemini', data.env.gemini],
                 ['Anthropic', data.env.anthropic],
+                ['TypeSafe Jev', data.env.typesafe],
                 ['Media URL secret', data.env.mediaSecret],
                 ['Drive archive', data.env.drive],
               ] as const

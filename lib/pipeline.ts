@@ -7,6 +7,7 @@ import { downloadVideo, generateImage, pollVideo, startVideo, writeCaptions, typ
 import { publish, type Platform } from './social';
 import { driveConfigured, driveName, uploadToDrive } from './drive';
 import { briefNote, buildBrief, extractSource } from './research';
+import { askJev, choice, jevConfigured } from './jev';
 
 
 const BUCKET = 'content';
@@ -79,6 +80,53 @@ export async function signedUrl(path: string) {
   return data.signedUrl;
 }
 
+// ── media routing ───────────────────────────────────────────────────────────
+
+type MediaKind = 'slides' | 'video' | 'image' | 'original';
+
+/** Below this, Jev's pick is too split to act on and the plain default wins. Tune on real notes. */
+const MEDIA_ROUTE_MIN_CONFIDENCE = 0.6;
+
+const MEDIA_ROUTE_OPTIONS: Record<MediaKind, string> = {
+  original: 'Post the photo or clip that was captured, as it is. Nothing is generated.',
+  video: 'Generate a new short AI video clip about the subject.',
+  image: 'Generate a new AI illustration or still image about the subject.',
+  slides: 'Generate a multi-slide carousel that teaches or lists points about the subject.',
+};
+
+/**
+ * Keywords are explicit orders, so they stay in code. Only a note without one is handed
+ * to Jev, which reads intent ("break this into four lessons" means slides). No key, a
+ * failed call, or a low-confidence answer falls back to the old default.
+ */
+async function pickMediaKind(note: string, hasFile: boolean, captureKind: string): Promise<MediaKind> {
+  if (/\b(slides?|carousel|deck)\b/i.test(note)) return 'slides';
+  if (/\b(veo|generate|render|synthetic)\b/i.test(note)) return 'video';
+  if (/\b(illustrate|artwork|render a still)\b/i.test(note)) return 'image';
+  const fallback: MediaKind = hasFile ? 'original' : 'video';
+  if (!note.trim() || !jevConfigured()) return fallback;
+
+  // Without a captured file there is nothing to pass through.
+  const { original, ...generated } = MEDIA_ROUTE_OPTIONS;
+  try {
+    const { model, answers } = await askJev(
+      { note, captured_file: hasFile ? captureKind : 'none' },
+      {
+        kind: choice(
+          'Vitae captured something for social media and left `note`. Which kind of post does the note ask for? If it does not say, prefer posting the captured file as it is.',
+          hasFile ? { original, ...generated } : generated,
+        ),
+      },
+    );
+    const { choice: picked, confidence } = answers.kind;
+    console.info(`media route: ${model} picked ${picked} at ${confidence.toFixed(2)}`);
+    return confidence >= MEDIA_ROUTE_MIN_CONFIDENCE ? (picked as MediaKind) : fallback;
+  } catch (err) {
+    console.warn('media route: Jev unavailable, using default', err);
+    return fallback;
+  }
+}
+
 // ── stages ──────────────────────────────────────────────────────────────────
 
 /** Stage 1: read the captured item, write the copy, decide still vs clip. */
@@ -93,15 +141,7 @@ async function runCaption(job: Job) {
   // disclosure, and is better content than a synthetic clip. Generation is opt-in.
   const note = ingest.note ?? '';
   const hasFile = Boolean(ingest.storage_path);
-  const mediaKind = /\b(slides?|carousel|deck)\b/i.test(note)
-    ? 'slides'
-    : /\b(veo|generate|render|synthetic)\b/i.test(note)
-      ? 'video'
-      : /\b(illustrate|artwork|render a still)\b/i.test(note)
-        ? 'image'
-        : hasFile
-          ? 'original'
-          : 'video';
+  const mediaKind = await pickMediaKind(note, hasFile, ingest.kind);
 
   const { data: post, error: pErr } = await db()
     .from('content_posts')

@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
       SUPABASE_SERVICE_ROLE_KEY: has('SUPABASE_SERVICE_ROLE_KEY'),
     },
     google: { GEMINI_API_KEY: has('GEMINI_API_KEY') },
+    typesafe: { TYPESAFE_API_KEY: has('TYPESAFE_API_KEY') },
     drive: {
       GOOGLE_SERVICE_ACCOUNT_JSON: has('GOOGLE_SERVICE_ACCOUNT_JSON'),
       GOOGLE_SERVICE_ACCOUNT_EMAIL: has('GOOGLE_SERVICE_ACCOUNT_EMAIL'),

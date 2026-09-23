@@ -44,6 +44,8 @@ On Vercel and in `.env.local`:
 | `GEMINI_API_KEY` | From Google AI Studio. Covers text, images and Veo. |
 | `GEMINI_TEXT_MODEL` | Optional override, defaults to `gemini-2.0-flash`. |
 | `GEMINI_IMAGE_MODEL` | Optional override, defaults to `gemini-3-pro-image-preview`. |
+| `TYPESAFE_API_KEY` | Optional. From console.typesafe.ai/keys. Lets Jev read what a note asks for when it has no keyword. |
+| `TYPESAFE_MODEL` | Optional override, defaults to `jev-latest`. |
 | `GEMINI_VIDEO_MODEL` | Optional override, defaults to `veo-3.1-generate-preview`. |
 | `META_APP_ID`, `META_APP_SECRET` | Meta app, covers Facebook and Instagram. |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Google Cloud OAuth client for YouTube. |
@@ -96,6 +98,12 @@ nothing to generate and needs no AI label. Generation is opt-in by keyword:
 | `veo`, `generate`, `render` | a Veo clip | yes |
 | `slides`, `carousel`, `deck` | a four-slide Nano Banana Pro deck | yes |
 | `illustrate`, `artwork` | one generated still | yes |
+
+With `TYPESAFE_API_KEY` set, a note that has none of these words goes to TypeSafe's
+Jev model, which reads what you meant: "break this into four lessons" becomes slides,
+"make a moody clip of this sunrise" becomes a Veo clip. It only switches away from the
+default when it is at least 60% confident, so a vague note still posts your file as-is.
+The keywords always win. Each post's pick is logged as `media route:` in the worker logs.
 
 Generated media requires billing on the Google Cloud project behind `GEMINI_API_KEY`.
 Text generation works on the free tier; image and video do not.
