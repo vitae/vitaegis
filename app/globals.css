@@ -81,9 +81,9 @@
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
-  /* Space the nav takes up, bar plus its margin: docked to the bottom on mobile, the top on desktop */
+  /* Space the nav takes up: flush to the bottom on mobile (56px bar + 1px border), floating at the top on desktop */
   --nav-top: 0px;
-  --nav-bottom: 72px;
+  --nav-bottom: 57px;
 }
 
 @media (min-width: 768px) {
