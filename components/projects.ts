@@ -7,6 +7,7 @@ import {
   HiSparkles,
   HiAcademicCap,
   HiHeart,
+  HiTrendingUp,
 } from 'react-icons/hi';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -46,6 +47,13 @@ export const projects: Project[] = [
     description:
       'Six running routes from Kaimana Beach, shortest to longest, with the marathon course for December.',
     icon: HiLightningBolt,
+  },
+  {
+    href: '/stocks',
+    label: 'STOCKS',
+    title: 'Wealth Board',
+    description: 'Twelve tickers versus their Dec 31, 2025 close, refreshed hourly.',
+    icon: HiTrendingUp,
   },
   {
     href: '/vitamins',
