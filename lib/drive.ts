@@ -81,6 +81,8 @@ async function accessToken(scope = SCOPE): Promise<string> {
 /** Read-only token for files shared with the service account (KeyCrate's audio folder). */
 export const driveReadToken = () => accessToken('https://www.googleapis.com/auth/drive.readonly');
 export const driveCredentialsSet = () => Boolean(credentials());
+/** The service account's address: folders shared with it become readable by the site. */
+export const serviceAccountEmail = () => credentials()?.email ?? null;
 
 export interface DriveFile {
   id: string;
