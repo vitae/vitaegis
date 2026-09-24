@@ -1,12 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { newId } from '@/lib/keycrate/db';
 import { setTransitions, TRANSITION_LABEL } from '@/lib/keycrate/harmonic';
 import { buildFromCurve } from '@/lib/keycrate/suggest';
-import { matchTracklist, parseTracklist, type LineMatch } from '@/lib/keycrate/tracklist';
+import {
+  matchTracklist,
+  parseTracklist,
+  type LineMatch,
+  type ParsedLine,
+} from '@/lib/keycrate/tracklist';
 import type { Camelot, JourneyCurve, Track } from '@/lib/keycrate/types';
 import { formatBpm } from '../_lib/download';
 import { useKeyCrate } from '../_state/store';
@@ -30,16 +35,56 @@ const SAMPLE = `0:00 Bonobo – Kerala
 31:00 Overmono – So U Kno
 36:20 Goldie – Inner City Life`;
 
+/** Reads a dropped/picked file as text, including the UTF-16 that rekordbox writes for .txt exports. */
+async function readTextFile(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder('utf-16le').decode(bytes);
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder('utf-16be').decode(bytes);
+  // No BOM but every other byte is zero: UTF-16 LE without a BOM.
+  const sample = bytes.subarray(0, 400);
+  let zeros = 0;
+  for (let i = 1; i < sample.length; i += 2) if (sample[i] === 0) zeros++;
+  if (sample.length > 8 && zeros > sample.length / 4)
+    return new TextDecoder('utf-16le').decode(bytes);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 export default function SetStudy() {
   const { state, actions } = useKeyCrate();
   const router = useRouter();
   const [text, setText] = useState('');
   const [title, setTitle] = useState('Untitled study');
-  const [matches, setMatches] = useState<LineMatch[] | null>(null);
+  const [lines, setLines] = useState<ParsedLine[] | null>(null);
+  /** Manual picks for lines the matcher missed: line index → track id. */
+  const [overrides, setOverrides] = useState<Record<number, string>>({});
+  const [dragging, setDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const analyse = () => {
-    const lines = parseTracklist(text);
-    setMatches(matchTracklist(lines, state.tracks));
+  const analyse = (source = text) => {
+    setLines(parseTracklist(source));
+    setOverrides({});
+  };
+
+  // Matching re-runs whenever the library changes, so importing the library after pasting
+  // the tracklist (or the library finishing loading) updates the results.
+  const matches = useMemo<LineMatch[] | null>(() => {
+    if (!lines) return null;
+    const byId = new Map(state.tracks.map((t) => [t.id, t]));
+    return matchTracklist(lines, state.tracks).map((m, i) => {
+      const picked = overrides[i] ? byId.get(overrides[i]) : undefined;
+      return picked ? { ...m, status: 'matched', track: picked, confidence: 1 } : m;
+    });
+  }, [lines, overrides, state.tracks]);
+
+  const loadFile = async (file: File) => {
+    try {
+      const content = await readTextFile(file);
+      setText(content.length > 200_000 ? content.slice(0, 200_000) : content);
+      if (title === 'Untitled study') setTitle(file.name.replace(/\.[^.]+$/, ''));
+      analyse(content);
+    } catch (err) {
+      actions.toast(`Couldn't read ${file.name}: ${err instanceof Error ? err.message : err}`);
+    }
   };
 
   const matched = useMemo(
@@ -114,8 +159,9 @@ export default function SetStudy() {
           </Link>
           <h1 className="text-2xl font-medium text-white">Set Study</h1>
           <p className="text-xs text-[#808880]">
-            Paste a tracklist in any format. Lines are matched to your library of{' '}
-            {state.tracks.length.toLocaleString()} tracks.
+            Paste a tracklist in any format, or import a rekordbox/Serato history export, an M3U or
+            a playlist XML. Lines are matched to your library of{' '}
+            {state.ready ? state.tracks.length.toLocaleString() : '…'} tracks.
           </p>
         </div>
         <AuthPanel />
@@ -132,17 +178,42 @@ export default function SetStudy() {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onDragOver={(e) => {
+              if (!e.dataTransfer.types.includes('Files')) return;
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              const f = e.dataTransfer.files[0];
+              if (!f) return;
+              e.preventDefault();
+              setDragging(false);
+              void loadFile(f);
+            }}
             rows={10}
             placeholder={
               '0:00 Artist – Title (Remix)\n1. Artist - Title\nw/ Artist - Title [Label]'
             }
             aria-label="Tracklist"
-            className={`${inputClass} min-h-[200px] py-2 font-mono text-sm`}
+            className={`${inputClass} min-h-[200px] py-2 font-mono text-sm ${dragging ? 'border-[#00ff00]' : ''}`}
+          />
+          <input
+            ref={fileRef}
+            type="file"
+            className="sr-only"
+            data-testid="kc-study-file"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (f) void loadFile(f);
+            }}
           />
           <div className="flex flex-wrap gap-2">
-            <Button variant="primary" onClick={analyse} disabled={!text.trim()}>
+            <Button variant="primary" onClick={() => analyse()} disabled={!text.trim()}>
               Analyse
             </Button>
+            <Button onClick={() => fileRef.current?.click()}>Import file</Button>
             <Button onClick={() => setText(SAMPLE)}>Paste a sample</Button>
             <Button
               onClick={() =>
@@ -173,7 +244,7 @@ export default function SetStudy() {
                       onClick={() => {
                         setTitle(s.title);
                         setText(s.sourceText);
-                        setMatches(null);
+                        analyse(s.sourceText);
                       }}
                     >
                       {s.title}
@@ -198,6 +269,19 @@ export default function SetStudy() {
           {matched.length > 0 && <Timeline tracks={matched} className="mt-2" />}
         </div>
       </div>
+
+      {matches && state.ready && state.tracks.length === 0 && (
+        <p
+          role="alert"
+          className="mt-6 rounded-md border border-[#ff0000]/60 px-3 py-2 text-sm text-[#ff0000]"
+        >
+          Your library is empty on this device, so nothing can match yet.{' '}
+          <Link href="/keycrate" className="underline">
+            Import your rekordbox or Traktor collection
+          </Link>{' '}
+          first; this list re-checks as soon as it&apos;s loaded.
+        </p>
+      )}
 
       {matches && summary && (
         <div className="mt-6 grid gap-6 md:grid-cols-[1fr_280px]">
@@ -257,6 +341,22 @@ export default function SetStudy() {
                         >
                           {m.status === 'id' ? 'unreleased ID' : 'not in library'}
                         </span>
+                        {m.status === 'missing' && m.candidate && (
+                          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#808880]">
+                            <span className="min-w-0 truncate">
+                              Closest: {m.candidate.title} · {m.candidate.artist}
+                            </span>
+                            <button
+                              type="button"
+                              className="text-[#00ff00] underline"
+                              onClick={() =>
+                                setOverrides((o) => ({ ...o, [i]: (m.candidate as Track).id }))
+                              }
+                            >
+                              Use this
+                            </button>
+                          </span>
+                        )}
                       </span>
                     )}
                   </li>

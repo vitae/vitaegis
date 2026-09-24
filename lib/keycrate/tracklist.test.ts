@@ -106,3 +106,105 @@ describe('matchTracklist', () => {
     expect(m[1].track?.id).toBe('2');
   });
 });
+
+describe('tracklists copied out of DJ software', () => {
+  const t = (id: string, artist: string, title: string, location?: string): Track => ({
+    id,
+    sourceId: id,
+    artist,
+    title,
+    camelot: '8A',
+    bpm: 124,
+    durationS: 300,
+    energy: null,
+    rating: null,
+    tags: [],
+    location,
+  });
+  const lib = [
+    t('glue', 'Bicep', 'Glue', '/Users/dj/Music/Bicep - Glue.mp3'),
+    t('horizon', 'Artbat', 'Horizon - Extended Mix', '/Users/dj/Music/artbat_horizon.aiff'),
+    t('latch', 'Disclosure, Sam Smith', 'Latch'),
+    t('pacific', '808 State', 'Pacific State'),
+    t('jp', '坂本龍一', '戦場のメリークリスマス'),
+    t('ru', 'Кино', 'Группа крови'),
+    t('drugs', 'Mau P', 'Drugs From Amsterdam'),
+  ];
+  const ids = (text: string) =>
+    matchTracklist(parseTracklist(text), lib).map((m) => (m.track ? m.track.id : m.status));
+
+  it('reads a rekordbox history export (tab-separated with a header)', () => {
+    const txt = [
+      '#\tArtwork\tTrack Title\tArtist\tAlbum\tGenre\tBPM\tRating\tTime\tKey\tDate Added',
+      '1\t\tHorizon - Extended Mix\tArtbat\t\tMelodic House\t124.00\t\t6:12\t8A\t2026-09-01',
+      '2\t\tGlue\tBicep\t\tElectronica\t124.00\t\t4:25\t8A\t2026-09-01',
+    ].join('\r\n');
+    expect(ids(txt)).toEqual(['horizon', 'glue']);
+  });
+
+  it('survives a UTF-16 export read as UTF-8', () => {
+    const utf16ish = '\uFEFF#\tTrack Title\tArtist\n1\tGlue\tBicep\n'.split('').join('\u0000');
+    expect(ids(utf16ish)).toEqual(['glue']);
+  });
+
+  it('reads tab rows without a header, whichever column comes first', () => {
+    expect(ids('1\tGlue\tBicep\t124.00\t8A\n2\tMau P\tDrugs From Amsterdam\t126\t8A')).toEqual([
+      'glue',
+      'drugs',
+    ]);
+  });
+
+  it('reads CSV with a header, like KeyCrate’s own export', () => {
+    const csv =
+      'position,artist,title,key,bpm\n1,Bicep,Glue,8A,124\n2,"Disclosure, Sam Smith",Latch,8A,122\n';
+    expect(ids(csv)).toEqual(['glue', 'latch']);
+  });
+
+  it('reads M3U8 and matches by file path first', () => {
+    const m3u = [
+      '#EXTM3U',
+      '#PLAYLIST:Friday',
+      '#EXTINF:265,Bicep - Glue',
+      '/Users/dj/Music/Bicep - Glue.mp3',
+      '#EXTINF:372,Horizon',
+      'file://localhost/Users/dj/Music/artbat_horizon.aiff',
+      'C:\\Music\\Mau P - Drugs From Amsterdam.mp3',
+    ].join('\n');
+    expect(ids(m3u)).toEqual(['glue', 'horizon', 'drugs']);
+  });
+
+  it('reads a rekordbox playlist XML in playlist order', () => {
+    const xml = `<DJ_PLAYLISTS><COLLECTION Entries="2">
+      <TRACK TrackID="7" Name="Glue" Artist="Bicep" Location="file://localhost/Users/dj/Music/Bicep%20-%20Glue.mp3"/>
+      <TRACK TrackID="9" Name="Latch" Artist="Disclosure &amp; Sam Smith"/>
+    </COLLECTION><PLAYLISTS><NODE Type="0" Name="ROOT"><NODE Name="Set" Type="1" Entries="2">
+      <TRACK Key="9"/><TRACK Key="7"/>
+    </NODE></NODE></PLAYLISTS></DJ_PLAYLISTS>`;
+    expect(ids(xml)).toEqual(['latch', 'glue']);
+  });
+
+  it('keeps non-Latin names, zero-padded numbering, key/BPM tags and numeric artists', () => {
+    expect(
+      ids(
+        [
+          '坂本龍一 - 戦場のメリークリスマス',
+          'Кино - Группа крови',
+          '01 Bicep - Glue',
+          '#2 Bicep - Glue',
+          'Mau P - Drugs From Amsterdam 8A 126',
+          'Mau P - Drugs From Amsterdam (8A)',
+          '808 State - Pacific State',
+          'Glue - Bicep',
+        ].join('\n'),
+      ),
+    ).toEqual(['jp', 'ru', 'glue', 'glue', 'drugs', 'drugs', 'pacific', 'glue']);
+    expect(parseLine('Mau P - Drugs From Amsterdam 8A 126')?.title).toBe('Drugs From Amsterdam');
+    expect(parseLine('808 State - Pacific State')?.artist).toBe('808 State');
+  });
+
+  it('offers the closest track when a line falls short', () => {
+    const [m] = matchTracklist(parseTracklist('Bicep - Apricots'), lib);
+    expect(m.status).toBe('missing');
+    expect(m.candidate?.id).toBe('glue');
+  });
+});
