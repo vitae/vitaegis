@@ -3,6 +3,7 @@
    rekordbox playlist XML (re-import with cues intact), M3U8, CSV.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
+import { KEY_NAMES, normalizeKey } from './camelot';
 import { setTransitions, TRANSITION_LABEL } from './harmonic';
 import type { PlaylistSettings, Track } from './types';
 
@@ -21,6 +22,18 @@ export function pathToLocation(path: string): string {
   const normalized = path.replace(/\\/g, '/');
   const withSlash = /^[A-Za-z]:\//.test(normalized) ? `/${normalized}` : normalized;
   return `file://localhost${encodeURI(withSlash).replace(/#/g, '%23').replace(/\?/g, '%3F')}`;
+}
+
+/**
+ * The key as rekordbox writes it ("Am", "F#m", "Db"): the original spelling when it came from
+ * rekordbox and still means the same key, otherwise converted from Camelot. rekordbox doesn't
+ * read "8A" in Tonality.
+ */
+export function rekordboxTonality(t: Pick<Track, 'camelot' | 'keyRaw'>): string | null {
+  if (!t.camelot) return null;
+  if (t.keyRaw && /^[A-G][#b]?m?$/.test(t.keyRaw) && normalizeKey(t.keyRaw) === t.camelot)
+    return t.keyRaw;
+  return KEY_NAMES[t.camelot].replace(' minor', 'm').replace(' major', '');
 }
 
 /**
@@ -46,7 +59,7 @@ export function toRekordboxXml(name: string, tracks: Track[]): string {
       t.label ? `Label="${escapeXml(t.label)}"` : '',
       t.durationS !== null ? `TotalTime="${t.durationS}"` : '',
       t.bpm !== null ? `AverageBpm="${t.bpm.toFixed(2)}"` : '',
-      t.camelot ? `Tonality="${t.camelot}"` : '',
+      t.camelot ? `Tonality="${escapeXml(rekordboxTonality(t) ?? '')}"` : '',
       t.location ? `Location="${escapeXml(pathToLocation(t.location))}"` : '',
     ].filter(Boolean);
     lines.push(`    <TRACK ${attrs.join(' ')}/>`);

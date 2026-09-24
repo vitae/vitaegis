@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { Camelot } from '@/lib/keycrate/types';
 import { useKeyCrate } from '../_state/store';
+import { AudioSources } from './Audio';
 import AuthPanel from './AuthPanel';
 import ImportPanel from './ImportPanel';
 import PlaylistTable from './PlaylistTable';
@@ -108,6 +109,9 @@ export default function KeyCrateApp() {
         <ImportPanel />
         <AuthPanel />
       </div>
+      <div className="mt-2">
+        <AudioSources />
+      </div>
 
       {state.storageError && (
         <p
@@ -122,7 +126,7 @@ export default function KeyCrateApp() {
       {!state.ready ? (
         <p className="mt-6 text-sm text-[#808880]">Opening your crate…</p>
       ) : (
-        <div className="mt-4 grid flex-1 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_360px_minmax(0,1.1fr)] lg:gap-8">
+        <div className="mt-4 grid flex-1 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_400px_minmax(0,1.1fr)] lg:gap-8">
           <div className="min-h-[60vh] lg:h-[calc(100vh-var(--nav-top)-220px)] lg:min-h-[520px]">
             <Library />
           </div>

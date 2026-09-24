@@ -9,6 +9,7 @@ import type { Track } from '@/lib/keycrate/types';
 import { formatBpm, formatDuration } from '../_lib/download';
 import { useKeyCrate } from '../_state/store';
 import { Button, inputClass, KeyBadge, SectionTitle, TRANSITION_COLOR } from './ui';
+import { PlayButton } from './Audio';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    Library: search, filters and a virtualized list. Tap a row to append it to the set.
@@ -231,6 +232,9 @@ export default function Library() {
                   className="absolute left-0 top-0 flex w-full items-stretch"
                   style={{ height: v.size, transform: `translateY(${v.start}px)` }}
                 >
+                  <span className="flex shrink-0 items-center pl-2">
+                    <PlayButton track={t} />
+                  </span>
                   <button
                     type="button"
                     onClick={() => actions.addTrack(t.id)}

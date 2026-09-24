@@ -39,10 +39,11 @@ export const driveConfigured = () => Boolean(credentials() && process.env.GDRIVE
 const b64url = (b: Buffer | string) =>
   Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-/** Cached until shortly before expiry; tokens last an hour. */
-let cached: { token: string; expires: number } | null = null;
+/** Cached per scope until shortly before expiry; tokens last an hour. */
+const cachedTokens = new Map<string, { token: string; expires: number }>();
 
-async function accessToken(): Promise<string> {
+async function accessToken(scope = SCOPE): Promise<string> {
+  const cached = cachedTokens.get(scope);
   if (cached && cached.expires - 60 > Date.now() / 1000) return cached.token;
 
   const creds = credentials();
@@ -54,7 +55,7 @@ async function accessToken(): Promise<string> {
 
   const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
   const claims = b64url(
-    JSON.stringify({ iss: email, scope: SCOPE, aud: TOKEN_URL, exp: now + 3600, iat: now }),
+    JSON.stringify({ iss: email, scope, aud: TOKEN_URL, exp: now + 3600, iat: now }),
   );
   const signer = createSign('RSA-SHA256');
   signer.update(`${header}.${claims}`);
@@ -73,9 +74,13 @@ async function accessToken(): Promise<string> {
   if (!res.ok || !json.access_token) {
     throw new Error(`Drive token failed: ${res.status} ${JSON.stringify(json).slice(0, 300)}`);
   }
-  cached = { token: json.access_token, expires: now + (json.expires_in ?? 3600) };
-  return cached.token;
+  cachedTokens.set(scope, { token: json.access_token, expires: now + (json.expires_in ?? 3600) });
+  return json.access_token as string;
 }
+
+/** Read-only token for files shared with the service account (KeyCrate's audio folder). */
+export const driveReadToken = () => accessToken('https://www.googleapis.com/auth/drive.readonly');
+export const driveCredentialsSet = () => Boolean(credentials());
 
 export interface DriveFile {
   id: string;

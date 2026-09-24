@@ -15,6 +15,7 @@ import {
 import type { Camelot, JourneyCurve, Track } from '@/lib/keycrate/types';
 import { formatBpm } from '../_lib/download';
 import { useKeyCrate } from '../_state/store';
+import { PlayButton } from './Audio';
 import AuthPanel from './AuthPanel';
 import Timeline from './Timeline';
 import Wheel from './Wheel';
@@ -308,6 +309,7 @@ export default function SetStudy() {
                     </span>
                     {m.status === 'matched' && m.track ? (
                       <>
+                        <PlayButton track={m.track} />
                         <KeyBadge camelot={m.track.camelot} muted />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-white">
