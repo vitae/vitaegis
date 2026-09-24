@@ -79,26 +79,26 @@ export default function StocksBoard({ rows, asOf, source }: Props) {
         </div>
       </div>
 
-      <div className="-mx-4 mt-6 overflow-x-auto sm:mx-0">
-        <table className={`w-full min-w-[32rem] border-collapse text-left ${styles.numeric}`}>
+      <div className="mt-6">
+        <table className={`w-full border-collapse text-left ${styles.numeric}`}>
           <caption className="sr-only">
             Twelve tickers with their Dec 31, 2025 close, latest close and percent change
           </caption>
           <thead>
             <tr className="border-b border-white/20 text-xs font-normal text-vitae-gray">
-              <th scope="col" className="py-2 pl-4 pr-2 font-normal sm:pl-0">
+              <th scope="col" className="w-6 py-2 pr-2 font-normal sm:w-8">
                 #
               </th>
               <th scope="col" className="py-2 pr-2 font-normal">
                 Ticker
               </th>
-              <th scope="col" className="py-2 pr-2 text-right font-normal">
+              <th scope="col" className="w-1/5 py-2 pr-2 text-right font-normal">
                 Dec 31
               </th>
-              <th scope="col" className="py-2 pr-2 text-right font-normal">
+              <th scope="col" className="w-1/5 py-2 pr-2 text-right font-normal">
                 Latest
               </th>
-              <th scope="col" className="py-2 pr-4 text-right font-normal sm:pr-0">
+              <th scope="col" className="w-1/5 py-2 text-right font-normal">
                 Change
               </th>
             </tr>
@@ -112,15 +112,17 @@ export default function StocksBoard({ rows, asOf, source }: Props) {
                   key={r.ticker}
                   className={`${styles.row} border-b border-white/10 hover:bg-white/[0.04]`}
                 >
-                  <td className="py-3 pl-4 pr-2 text-sm text-vitae-gray sm:pl-0">{i + 1}</td>
+                  <td className="py-3 pr-2 text-xs text-vitae-gray sm:text-sm">{i + 1}</td>
                   <td className="py-3 pr-2">
-                    <span className="block font-medium text-white">{r.ticker}</span>
-                    <span className="block text-sm text-vitae-gray">{r.name}</span>
+                    <span className="block text-sm font-medium text-white sm:text-base">{r.ticker}</span>
+                    <span className="block text-xs leading-tight text-vitae-gray sm:text-sm">
+                      {r.name}
+                    </span>
                   </td>
-                  <td className="py-3 pr-2 text-right text-sm text-vitae-gray">{price(r.start)}</td>
-                  <td className="py-3 pr-2 text-right text-white">{price(r.end)}</td>
+                  <td className="whitespace-nowrap py-3 pr-2 text-right text-xs text-vitae-gray sm:text-sm">{price(r.start)}</td>
+                  <td className="whitespace-nowrap py-3 pr-2 text-right text-sm text-white sm:text-base">{price(r.end)}</td>
                   <td
-                    className={`${styles.change} py-3 pr-4 text-right font-medium sm:pr-0 ${
+                    className={`${styles.change} whitespace-nowrap py-3 text-right text-sm font-medium sm:text-base ${
                       upRow ? 'text-vitae-green' : 'text-vitae-red'
                     }`}
                   >
