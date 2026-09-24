@@ -19,3 +19,9 @@ one subfolder per project. It is gitignored and is never deployed.
 A Stop hook (`.claude/hooks/auto-commit-push.js`) commits and pushes every
 working-tree change after each Claude Code turn. Anything not gitignored goes to
 GitHub, so keep private material inside `PROJECTS/` or `.claude/`.
+
+## Shipping
+
+Push live immediately. When a change passes typecheck, lint and tests, commit
+it, push it, and merge it to `main` right away so Vercel deploys to production.
+Do not wait for preview approval or leave PRs in draft.
