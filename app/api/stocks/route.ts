@@ -3,6 +3,8 @@ import { getStockPrices, STOCKS_REVALIDATE_SECONDS } from '@/lib/stocks';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
+// A cold fetch of ~50 tickers takes several seconds; leave room over the platform default.
+export const maxDuration = 60;
 
 // Same hourly fetch the /stocks page uses, exposed as JSON:
 // { asOf, prices: { [ticker]: close }, starts: { [ticker]: { [period]: close } },

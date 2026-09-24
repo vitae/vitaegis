@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LOOKBACK_KEYS, referenceFor, type Series } from './stocks-periods';
+import { closeOnOrBefore, LOOKBACK_KEYS, referenceFor, type Series } from './stocks-periods';
 
 // Weekday bars at 13:30 UTC from start to end inclusive, close = bar index.
 function weekdays(start: string, end: string): Series {
@@ -56,5 +56,24 @@ describe('referenceFor', () => {
     expect(referenceFor(short, '6m')).toBeNull();
     expect(referenceFor(short, '5y')).toBeNull();
     expect(referenceFor({ times: [1], closes: [1] }, '1d')).toBeNull();
+  });
+});
+
+describe('closeOnOrBefore', () => {
+  const series = weekdays('2025-12-01', '2026-01-09');
+  const at = (iso: string) => Date.parse(iso) / 1000;
+
+  it('finds the last bar on or before a date', () => {
+    const ref = closeOnOrBefore(series, at('2025-12-31T23:59:59Z'));
+    expect(ref && new Date(ref.time * 1000).toISOString().slice(0, 10)).toBe('2025-12-31');
+  });
+
+  it('never returns the latest bar', () => {
+    const ref = closeOnOrBefore(series, at('2030-01-01T00:00:00Z'));
+    expect(ref?.close).toBe(series.closes.length - 2);
+  });
+
+  it('returns null before the first bar', () => {
+    expect(closeOnOrBefore(series, at('2020-01-01T00:00:00Z'))).toBeNull();
   });
 });

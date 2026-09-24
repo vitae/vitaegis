@@ -5,13 +5,15 @@ import StocksBoard from './StocksBoard';
 import { stocks } from './data';
 
 export const revalidate = 3600;
+// A cold fetch of ~50 tickers takes several seconds; leave room over the platform default.
+export const maxDuration = 60;
 
 export const metadata: Metadata = {
   title: 'Stocks | VITAEGIS',
-  description: 'Twelve tickers over 1 day to 5 years, refreshed hourly.',
+  description: 'Chips, memory, miners and the market over 1 day to 5 years, refreshed hourly.',
   openGraph: {
     title: 'Stocks | VITAEGIS',
-    description: 'Twelve tickers over 1 day to 5 years, refreshed hourly.',
+    description: 'Chips, memory, miners and the market over 1 day to 5 years, refreshed hourly.',
     type: 'website',
   },
 };
@@ -29,6 +31,7 @@ export default async function StocksPage() {
   const rows = stocks.map((s) => ({
     ticker: s.ticker,
     name: s.name,
+    group: s.group,
     end: prices[s.ticker] ?? s.end,
     starts: starts[s.ticker] ?? { ytd: s.start },
   }));
@@ -57,8 +60,9 @@ export default async function StocksPage() {
           <p className="text-sm text-vitae-gray">Stocks</p>
           <h1 className="mt-2 text-4xl font-semibold text-vitae-green sm:text-5xl">Wealth Board</h1>
           <p className="mt-4 max-w-xl text-base font-light text-white/70">
-            Twelve tickers, ranked by how far they have moved over the period you pick, from one day
-            to five years. Prices are daily closes from Yahoo Finance, refreshed hourly.
+            The market, big tech, chipmakers, memory and hardware, and the miners behind gold,
+            copper and uranium, ranked by how far they have moved over the period you pick. Prices
+            are daily closes from Nasdaq, refreshed hourly.
           </p>
         </header>
 
@@ -66,7 +70,8 @@ export default async function StocksPage() {
 
         <p className="mt-8 text-xs font-light leading-relaxed text-vitae-gray">
           Not investment advice. Closes are adjusted for splits but not dividends, in US dollars;
-          Bitcoin is the daily close in UTC. When the live feed is unavailable the board shows the
+          Bitcoin trades around the clock, so its daily close is the data source&apos;s cutoff. If
+          Nasdaq is unavailable for a ticker the board uses Yahoo Finance, and if both are down, the
           last saved snapshot.
         </p>
       </div>

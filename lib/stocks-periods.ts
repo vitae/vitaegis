@@ -4,7 +4,7 @@ import type { PeriodKey } from '@/app/stocks/data';
    VITAEGIS - Stocks lookback periods
    Given one ticker's daily closes, find the close each period compares against:
    the last close on or before (latest bar − period). 1D is simply the previous
-   bar. YTD is not computed here; it uses the fixed `start` in data.ts.
+   bar. YTD uses `closeOnOrBefore` with the Dec 31, 2025 date.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 export interface Series {
@@ -49,14 +49,18 @@ function target(latest: number, key: Exclude<LookbackKey, '1d'>): number {
   return Math.floor(d.getTime() / 1000);
 }
 
+/** Last bar at or before `t` (Unix seconds), skipping the latest bar. Null if there is none. */
+export function closeOnOrBefore(series: Series, t: number): Reference | null {
+  for (let i = series.times.length - 2; i >= 0; i--) {
+    if (series.times[i] <= t) return { close: series.closes[i], time: series.times[i] };
+  }
+  return null;
+}
+
 /** Close to compare the latest bar against, or null when history does not reach back far enough. */
 export function referenceFor(series: Series, key: LookbackKey): Reference | null {
   const n = series.times.length;
   if (n < 2) return null;
   if (key === '1d') return { close: series.closes[n - 2], time: series.times[n - 2] };
-  const t = target(series.times[n - 1], key);
-  for (let i = n - 2; i >= 0; i--) {
-    if (series.times[i] <= t) return { close: series.closes[i], time: series.times[i] };
-  }
-  return null;
+  return closeOnOrBefore(series, target(series.times[n - 1], key));
 }

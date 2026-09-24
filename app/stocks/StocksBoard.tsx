@@ -1,21 +1,24 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { defaultPeriod, periods, type PeriodKey } from './data';
+import { defaultPeriod, groups, periods, type GroupKey, type PeriodKey } from './data';
 import styles from './stocks.module.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Stocks board
    One ranked table: ticker, name, start, end, change over the chosen period
-   (1D … 5Y, YTD by default). Sort by change or by ticker. Green up, red down,
+   (1D … 5Y, YTD by default), filtered to one group or all. Sort by change or
+   by ticker. Green up, red down,
    gray for the rest; a ticker with no start close for the period shows a dash.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 type SortKey = 'change' | 'ticker';
+type GroupFilter = 'all' | GroupKey;
 
 export interface BoardRow {
   ticker: string;
   name: string;
+  group: GroupKey;
   /** Latest close. */
   end: number;
   /** Start close per period; a missing key means no data for that period. */
@@ -53,20 +56,26 @@ const change = (n: number) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(1)}%
 export default function StocksBoard({ rows, startDates, asOf, source }: Props) {
   const [sort, setSort] = useState<SortKey>('change');
   const [period, setPeriod] = useState<PeriodKey>(defaultPeriod);
+  const [group, setGroup] = useState<GroupFilter>('all');
   const current = periods.find((p) => p.key === period) ?? periods[0];
 
+  const shown = useMemo(
+    () => (group === 'all' ? rows : rows.filter((r) => r.group === group)),
+    [rows, group],
+  );
+
   const sorted = useMemo(() => {
-    const list = [...rows];
+    const list = [...shown];
     if (sort === 'ticker') list.sort((a, b) => a.ticker.localeCompare(b.ticker));
     // Tickers with no data for the period sink to the bottom.
     else list.sort((a, b) => (pct(b, period) ?? -Infinity) - (pct(a, period) ?? -Infinity));
     return list;
-  }, [rows, sort, period]);
+  }, [shown, sort, period]);
 
-  const changes = rows.map((r) => pct(r, period)).filter((p): p is number => p !== null);
+  const changes = shown.map((r) => pct(r, period)).filter((p): p is number => p !== null);
   const up = changes.filter((p) => p >= 0).length;
   const down = changes.length - up;
-  const missing = rows.length - changes.length;
+  const missing = shown.length - changes.length;
   const heading = period === 'ytd' ? current.long : `Past ${current.long}`;
 
   const toggle = (key: SortKey, text: string) => {
@@ -110,8 +119,29 @@ export default function StocksBoard({ rows, startDates, asOf, source }: Props) {
         </div>
       </div>
 
+      <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Group">
+        {[{ key: 'all' as const, label: 'All' }, ...groups].map((g) => {
+          const active = g.key === group;
+          return (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => setGroup(g.key)}
+              aria-pressed={active}
+              className={`rounded-full border px-3 py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-vitae-green focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:text-sm motion-safe:transition-colors ${
+                active
+                  ? 'border-white bg-white text-black'
+                  : 'border-white/20 text-vitae-gray hover:border-white/60 hover:text-white'
+              }`}
+            >
+              {g.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div
-        className="mt-6 grid grid-cols-8 gap-1 rounded-full border border-white/15 p-1"
+        className="mt-3 grid grid-cols-8 gap-1 rounded-full border border-white/15 p-1"
         role="group"
         aria-label="Time period"
       >
@@ -137,8 +167,7 @@ export default function StocksBoard({ rows, startDates, asOf, source }: Props) {
       <div className="mt-4">
         <table className={`w-full border-collapse text-left ${styles.numeric}`}>
           <caption className="sr-only">
-            Twelve tickers with their close at the start of the period, latest close and percent
-            change
+            Tickers with their close at the start of the period, latest close and percent change
           </caption>
           <thead>
             <tr className="border-b border-white/20 text-xs font-normal text-vitae-gray">
