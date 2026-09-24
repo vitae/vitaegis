@@ -50,16 +50,20 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 | `NEXT_PUBLIC_SUPABASE_URL` | Already set. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | New. The browser and the share page query as the user / anon so RLS applies. Without it KeyCrate is local-only and hides sign-in. |
 | `KEYCRATE_ALLOWED_EMAILS` | Comma-separated emails allowed to sign in. Unset means anyone can sign in, but Google Drive audio then streams to nobody: streaming needs your email here. |
-| `KEYCRATE_DRIVE_FOLDER_ID` | New, for Google Drive audio. The id at the end of the folder's URL (`drive.google.com/drive/folders/<id>`). |
+| `KEYCRATE_DRIVE_FOLDER_NAME` | Optional. Name of the shared Drive folder with the music; defaults to `USB`. |
+| `KEYCRATE_DRIVE_FOLDER_ID` | Optional. Pins one folder by id (`drive.google.com/drive/folders/<id>`) instead of finding it by name. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` (or `_EMAIL` + `_KEY`) | Already set for the content pipeline; KeyCrate reuses it read-only. |
 
 ### Google Drive audio
 
-1. Put the WAVs in one Drive folder (subfolders are fine, e.g. a copy of the USB `Contents` folder).
-2. Share the folder with the service account's email (the `client_email` in `GOOGLE_SERVICE_ACCOUNT_JSON`) as
-   **Viewer**.
-3. Set `KEYCRATE_DRIVE_FOLDER_ID` and `KEYCRATE_ALLOWED_EMAILS` in Vercel and redeploy.
-4. Sign in on `/keycrate`: the **Drive** chip lists the folder and the ▶ buttons light up.
+1. Put the music in a Drive folder named **USB** (subfolders are fine, e.g. a copy of the USB `Contents`
+   folder). Another name works with `KEYCRATE_DRIVE_FOLDER_NAME`, or pin one folder with
+   `KEYCRATE_DRIVE_FOLDER_ID`.
+2. Share that folder as **Viewer** with the site's service account,
+   `vitaegis@gen-lang-client-0892329659.iam.gserviceaccount.com` (the `client_email` in
+   `GOOGLE_SERVICE_ACCOUNT_JSON`). Until it's shared, `/keycrate` shows this address in red under the Drive chip.
+3. Make sure `KEYCRATE_ALLOWED_EMAILS` includes your email, then sign in on `/keycrate`: the Drive chip lists the
+   folder (re-checked every 10 minutes, no redeploy needed) and the ▶ buttons light up.
 
 ## Supabase
 

@@ -1,13 +1,14 @@
 import 'server-only';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { driveCredentialsSet, driveReadToken } from '@/lib/drive';
+import { driveCredentialsSet, driveReadToken, serviceAccountEmail } from '@/lib/drive';
 import { isAudioFile } from './audio';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    KeyCrate · audio from Google Drive
    The DJ keeps their WAVs in a Drive folder shared (Viewer) with the site's service
-   account; KEYCRATE_DRIVE_FOLDER_ID names it. The browser never gets a Google token:
+   account. KEYCRATE_DRIVE_FOLDER_ID names it; without it, the shared folder called
+   KEYCRATE_DRIVE_FOLDER_NAME (default "USB") is used. The browser never gets a Google token:
    /api/keycrate/audio lists the folder and /api/keycrate/audio/[id] streams one file.
    Both need a signed-in KeyCrate user on KEYCRATE_ALLOWED_EMAILS, because the music is
    private and would otherwise be streamable by anyone.
@@ -16,13 +17,47 @@ import { isAudioFile } from './audio';
 const API = 'https://www.googleapis.com/drive/v3/files';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
 
-export const audioFolderId = () => process.env.KEYCRATE_DRIVE_FOLDER_ID?.trim() || null;
+export const audioFolderName = () => process.env.KEYCRATE_DRIVE_FOLDER_NAME?.trim() || 'USB';
+
+/** Thrown when the folder isn't shared with the service account yet; the UI shows how to fix it. */
+export class FolderNotSharedError extends Error {}
+
+let resolvedFolder: { id: string; name: string; at: number } | null = null;
+
+/**
+ * The audio folder's id: KEYCRATE_DRIVE_FOLDER_ID when set, otherwise the folder named
+ * "USB" (most recently changed, if several) that has been shared with the service account.
+ * Cached for 10 minutes so a freshly shared folder is picked up without a redeploy.
+ */
+export async function audioFolder(): Promise<{ id: string; name: string }> {
+  const fixed = process.env.KEYCRATE_DRIVE_FOLDER_ID?.trim();
+  if (fixed) return { id: fixed, name: '' };
+  if (resolvedFolder && Date.now() - resolvedFolder.at < 10 * 60_000) return resolvedFolder;
+  const name = audioFolderName().replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const res = await drive('', {
+    q: `name = '${name}' and mimeType = '${FOLDER_MIME}' and trashed = false`,
+    fields: 'files(id, name, modifiedTime)',
+    orderBy: 'modifiedTime desc',
+    pageSize: '10',
+    includeItemsFromAllDrives: 'true',
+  });
+  if (!res.ok) throw new Error(`Drive search failed (${res.status})`);
+  const found = ((await res.json()) as { files: { id: string; name: string }[] }).files[0];
+  if (!found) {
+    const email = serviceAccountEmail();
+    throw new FolderNotSharedError(
+      `Share your Google Drive folder "${audioFolderName()}" with ${email ?? 'the site service account'} (Viewer) so KeyCrate can play it.`,
+    );
+  }
+  resolvedFolder = { id: found.id, name: found.name, at: Date.now() };
+  return resolvedFolder;
+}
 
 export type AudioAuth = { ok: true; email: string } | { ok: false; status: number; error: string };
 
 /** The signed-in KeyCrate user from the Supabase session cookie, checked against the allowlist. */
 export async function audioUser(req: NextRequest): Promise<AudioAuth> {
-  if (!audioFolderId() || !driveCredentialsSet()) {
+  if (!driveCredentialsSet()) {
     return { ok: false, status: 503, error: 'Google Drive audio is not configured' };
   }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -67,7 +102,7 @@ export interface DriveAudioFile {
 
 /** Every audio file under the folder, recursively (subfolders like /Contents/Artist/Album). */
 export async function listAudioFiles(): Promise<{ folderName: string; files: DriveAudioFile[] }> {
-  const root = audioFolderId()!;
+  const root = (await audioFolder()).id;
   const meta = await drive(`/${root}`, { fields: 'name' });
   if (!meta.ok)
     throw new Error(
@@ -139,7 +174,7 @@ async function fileMeta(id: string): Promise<FileMeta | null> {
 
 /** True when the file sits somewhere under the audio folder, so no other shared file can be read. */
 export async function inAudioFolder(id: string): Promise<FileMeta | null> {
-  const root = audioFolderId();
+  const root = (await audioFolder()).id;
   const meta = await fileMeta(id);
   if (!root || !meta || !isAudioFile(meta.name)) return null;
   let frontier = meta.parents;

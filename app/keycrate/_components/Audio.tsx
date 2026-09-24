@@ -110,6 +110,11 @@ export function AudioSources() {
               : 'Link USB / music folder'}
         </button>
       )}
+      {drive.status === 'error' && drive.error && (
+        <p role="alert" className="w-full text-[#ff0000]" data-testid="kc-drive-error">
+          {drive.error}
+        </p>
+      )}
       {(audio.status === 'ready' || drive.status === 'ready') && (
         <span className="text-[#808880]">
           {audio.playableCount.toLocaleString()} of {state.tracks.length.toLocaleString()} tracks
