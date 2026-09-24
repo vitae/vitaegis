@@ -8,10 +8,10 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Stocks | VITAEGIS',
-  description: 'Twelve tickers versus their Dec 31, 2025 close, refreshed hourly.',
+  description: 'Twelve tickers over 1 day to 5 years, refreshed hourly.',
   openGraph: {
     title: 'Stocks | VITAEGIS',
-    description: 'Twelve tickers versus their Dec 31, 2025 close, refreshed hourly.',
+    description: 'Twelve tickers over 1 day to 5 years, refreshed hourly.',
     type: 'website',
   },
 };
@@ -25,8 +25,13 @@ const formatAsOf = (iso: string) =>
   });
 
 export default async function StocksPage() {
-  const { asOf, prices, source } = await getStockPrices();
-  const rows = stocks.map((s) => ({ ...s, end: prices[s.ticker] ?? s.end }));
+  const { asOf, prices, starts, startDates, source } = await getStockPrices();
+  const rows = stocks.map((s) => ({
+    ticker: s.ticker,
+    name: s.name,
+    end: prices[s.ticker] ?? s.end,
+    starts: starts[s.ticker] ?? { ytd: s.start },
+  }));
   const asOfText = source === 'snapshot' ? 'Snapshot' : `Closes as of ${formatAsOf(asOf)}`;
 
   return (
@@ -48,15 +53,15 @@ export default async function StocksPage() {
           <p className="text-sm text-vitae-gray">Stocks</p>
           <h1 className="mt-2 text-4xl font-semibold text-vitae-green sm:text-5xl">Wealth Board</h1>
           <p className="mt-4 max-w-xl text-base font-light text-white/70">
-            Twelve tickers, ranked by how far they have moved since the last close of 2025. Prices are
-            daily closes from Yahoo Finance, refreshed hourly.
+            Twelve tickers, ranked by how far they have moved over the period you pick, from one day to
+            five years. Prices are daily closes from Yahoo Finance, refreshed hourly.
           </p>
         </header>
 
-        <StocksBoard rows={rows} asOf={asOfText} source={source} />
+        <StocksBoard rows={rows} startDates={startDates} asOf={asOfText} source={source} />
 
         <p className="mt-8 text-xs font-light leading-relaxed text-vitae-gray">
-          Not investment advice. Closes are unadjusted, in US dollars; Bitcoin is the daily close in
+          Not investment advice. Closes are adjusted for splits but not dividends, in US dollars; Bitcoin is the daily close in
           UTC. When the live feed is unavailable the board shows the last saved snapshot.
         </p>
       </div>

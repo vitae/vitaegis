@@ -5,7 +5,8 @@ export const runtime = 'nodejs';
 export const revalidate = 3600;
 
 // Same hourly fetch the /stocks page uses, exposed as JSON:
-// { asOf, prices: { [ticker]: close }, source: 'live' | 'snapshot' }.
+// { asOf, prices: { [ticker]: close }, starts: { [ticker]: { [period]: close } },
+//   startDates: { [period]: 'YYYY-MM-DD' }, source: 'live' | 'snapshot' }.
 export async function GET() {
   const data = await getStockPrices();
   return NextResponse.json(data, {
