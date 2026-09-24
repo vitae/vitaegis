@@ -272,7 +272,9 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!state.toast) return;
-    const t = setTimeout(() => dispatch({ type: 'toast', toast: null }), 3500);
+    // Failures carry instructions, so they stay up long enough to read.
+    const ms = state.toast.startsWith('Import failed') ? 10000 : 3500;
+    const t = setTimeout(() => dispatch({ type: 'toast', toast: null }), ms);
     return () => clearTimeout(t);
   }, [state.toast]);
 
@@ -337,6 +339,15 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       new Promise<void>((resolve) => {
         dispatch({ type: 'importing', importing: { parsed: 0, total: null } });
         const worker = new Worker(new URL('../_lib/import.worker.ts', import.meta.url));
+        // A worker that fails to load or crashes (e.g. out of memory) never posts a message;
+        // without this the import button would say "Parsing…" forever.
+        worker.onerror = (e) => {
+          e.preventDefault();
+          worker.terminate();
+          dispatch({ type: 'importing', importing: null });
+          toast(`Import failed: ${e.message || 'the file could not be read'}`);
+          resolve();
+        };
         worker.onmessage = async (e: MessageEvent<ImportMessage>) => {
           const m = e.data;
           if (m.type === 'progress') {

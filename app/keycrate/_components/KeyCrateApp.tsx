@@ -164,9 +164,13 @@ export default function KeyCrateApp() {
 
       {state.toast && (
         <div
-          role="status"
+          role={state.toast.startsWith('Import failed') ? 'alert' : 'status'}
           data-testid="kc-toast"
-          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-md border border-white/20 bg-black px-4 py-2 text-sm text-white"
+          className={`fixed left-1/2 z-50 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-md border bg-black px-4 py-2 text-sm ${
+            state.toast.startsWith('Import failed')
+              ? 'border-[#ff0000] text-[#ff0000]'
+              : 'border-white/20 text-white'
+          }`}
           style={{ bottom: 'calc(var(--nav-bottom) + var(--sab) + 64px)' }}
         >
           {state.toast}

@@ -83,6 +83,40 @@ export function trackFromAttrs(
   };
 }
 
+/** Index of the `>` that closes the tag opened before `from`, skipping `>` inside quoted values. */
+function tagEnd(xml: string, from: number): number {
+  let quote = '';
+  for (let i = from; i < xml.length; i++) {
+    const c = xml[i];
+    if (quote) {
+      if (c === quote) quote = '';
+    } else if (c === '"' || c === "'") {
+      quote = c;
+    } else if (c === '>') {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Thrown for XML that isn't a rekordbox collection, so the UI can say what the file is and how
+ * to export the right one instead of silently importing nothing.
+ */
+export function describeUnsupportedXml(xml: string): string | null {
+  const head = xml.slice(0, 5000);
+  const howTo = 'In rekordbox use File → Export Collection in xml format, then import that file.';
+  // Traktor's .nml also has a <COLLECTION>, so rule it out first.
+  if (/<NML\b/i.test(head)) {
+    return `This is a Traktor collection (.nml), not a rekordbox XML. ${howTo}`;
+  }
+  if (/<plist\b/i.test(head)) {
+    return `This is an Apple Music / iTunes library, not a rekordbox XML. ${howTo}`;
+  }
+  if (/<DJ_PLAYLISTS\b/.test(head) || /<COLLECTION\b/.test(head)) return null;
+  return `This XML isn't a rekordbox collection. ${howTo}`;
+}
+
 export interface ParseProgress {
   parsed: number;
   total: number | null;
@@ -102,6 +136,8 @@ export function parseRekordboxXml(
   xml: string,
   onProgress?: (p: ParseProgress) => void,
 ): ParseResult {
+  const unsupported = describeUnsupportedXml(xml);
+  if (unsupported) throw new Error(unsupported);
   const tracks: Track[] = [];
   const totalMatch = xml.match(/<COLLECTION[^>]*\bEntries="(\d+)"/);
   const total = totalMatch ? Number(totalMatch[1]) : null;
@@ -112,7 +148,8 @@ export function parseRekordboxXml(
   for (;;) {
     const start = xml.indexOf('<TRACK', pos);
     if (start === -1 || start >= end) break;
-    const close = xml.indexOf('>', start);
+    // Titles like "Up -> Down" may carry an unescaped '>', which is legal inside attributes.
+    const close = tagEnd(xml, start);
     if (close === -1) break;
     const selfClosing = xml[close - 1] === '/';
     const attrs = parseAttrs(xml.slice(start + 6, selfClosing ? close - 1 : close));
@@ -160,6 +197,11 @@ export function parseRekordboxXml(
       const ids = Array.from(body.matchAll(/<TRACK\s+Key="(\d+)"/g), (x) => x[1]);
       playlists.push({ name: a.Name ?? '', trackIds: ids });
     }
+  }
+  if (!tracks.length) {
+    throw new Error(
+      'No tracks found in this rekordbox file. Export the whole collection (File → Export Collection in xml format), not a single playlist.',
+    );
   }
   return { tracks, playlists };
 }

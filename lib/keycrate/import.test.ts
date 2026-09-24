@@ -44,6 +44,32 @@ describe('rekordbox XML', () => {
     expect(playlists[0].trackIds.length).toBe(3);
   });
 
+  it('keeps tracks whose attributes contain an unescaped >', () => {
+    const xml = `<DJ_PLAYLISTS><COLLECTION Entries="3">
+      <TRACK TrackID="1" Name="Up -> Down" Artist="X" AverageBpm="124.00" Tonality="Am"/>
+      <TRACK TrackID="2" Name="Next" Artist="Y" AverageBpm="125.00" Tonality="Bm"><TEMPO Inizio="0.1" Bpm="125.00"/></TRACK>
+      <TRACK TrackID="3" Name="Last" Artist="Z" AverageBpm="126.00" Tonality="Em"/>
+    </COLLECTION></DJ_PLAYLISTS>`;
+    const { tracks } = parseRekordboxXml(xml);
+    expect(tracks.map((t) => t.title)).toEqual(['Up -> Down', 'Next', 'Last']);
+    expect(tracks[1].tempo).toEqual([{ at: 0.1, bpm: 125 }]);
+  });
+
+  it('says what the file is instead of importing nothing', () => {
+    expect(() =>
+      parseRekordboxXml(
+        '<?xml version="1.0"?><NML VERSION="19"><COLLECTION ENTRIES="1"></COLLECTION></NML>',
+      ),
+    ).toThrow(/Traktor/);
+    expect(() => parseRekordboxXml('<?xml version="1.0"?><plist><dict/></plist>')).toThrow(
+      /iTunes/,
+    );
+    expect(() => parseRekordboxXml('<foo/>')).toThrow(/Export Collection in xml format/);
+    expect(() =>
+      parseRekordboxXml('<DJ_PLAYLISTS><COLLECTION Entries="0"></COLLECTION></DJ_PLAYLISTS>'),
+    ).toThrow(/No tracks/);
+  });
+
   it('normalises whatever key spelling rekordbox used', () => {
     const { tracks } = parseRekordboxXml(fixture);
     expect(tracks.find((t) => t.title === 'Flat Spelling')!.camelot).toBe('2A');
