@@ -56,11 +56,6 @@ describe('rekordbox XML', () => {
   });
 
   it('says what the file is instead of importing nothing', () => {
-    expect(() =>
-      parseRekordboxXml(
-        '<?xml version="1.0"?><NML VERSION="19"><COLLECTION ENTRIES="1"></COLLECTION></NML>',
-      ),
-    ).toThrow(/Traktor/);
     expect(() => parseRekordboxXml('<?xml version="1.0"?><plist><dict/></plist>')).toThrow(
       /iTunes/,
     );

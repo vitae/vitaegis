@@ -1,11 +1,9 @@
-/* KeyCrate import worker: parses rekordbox XML or CSV off the main thread. */
+/* KeyCrate import worker: parses rekordbox XML, Traktor NML or CSV off the main thread. */
 
-import { parseCsvTracks } from '@/lib/keycrate/csv';
-import { parseRekordboxXml } from '@/lib/keycrate/rekordbox';
+import { parseLibraryText } from '@/lib/keycrate/library';
 import type { Track } from '@/lib/keycrate/types';
 
 export interface ImportRequest {
-  kind: 'xml' | 'csv';
   text: string;
 }
 
@@ -20,14 +18,8 @@ const ctx = self as unknown as {
 };
 
 ctx.onmessage = (e) => {
-  const { kind, text } = e.data;
   try {
-    if (kind === 'csv') {
-      const tracks = parseCsvTracks(text);
-      ctx.postMessage({ type: 'done', tracks, playlists: [] });
-      return;
-    }
-    const { tracks, playlists } = parseRekordboxXml(text, (p) =>
+    const { tracks, playlists } = parseLibraryText(e.data.text, (p) =>
       ctx.postMessage({ type: 'progress', parsed: p.parsed, total: p.total }),
     );
     ctx.postMessage({ type: 'done', tracks, playlists });

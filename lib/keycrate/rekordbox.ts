@@ -84,7 +84,7 @@ export function trackFromAttrs(
 }
 
 /** Index of the `>` that closes the tag opened before `from`, skipping `>` inside quoted values. */
-function tagEnd(xml: string, from: number): number {
+export function tagEnd(xml: string, from: number): number {
   let quote = '';
   for (let i = from; i < xml.length; i++) {
     const c = xml[i];
@@ -105,16 +105,13 @@ function tagEnd(xml: string, from: number): number {
  */
 export function describeUnsupportedXml(xml: string): string | null {
   const head = xml.slice(0, 5000);
-  const howTo = 'In rekordbox use File → Export Collection in xml format, then import that file.';
-  // Traktor's .nml also has a <COLLECTION>, so rule it out first.
-  if (/<NML\b/i.test(head)) {
-    return `This is a Traktor collection (.nml), not a rekordbox XML. ${howTo}`;
-  }
+  const howTo =
+    'In rekordbox use File → Export Collection in xml format; from Traktor import its collection.nml.';
   if (/<plist\b/i.test(head)) {
-    return `This is an Apple Music / iTunes library, not a rekordbox XML. ${howTo}`;
+    return `This is an Apple Music / iTunes library, not a DJ library. ${howTo}`;
   }
   if (/<DJ_PLAYLISTS\b/.test(head) || /<COLLECTION\b/.test(head)) return null;
-  return `This XML isn't a rekordbox collection. ${howTo}`;
+  return `This XML isn't a rekordbox or Traktor collection. ${howTo}`;
 }
 
 export interface ParseProgress {

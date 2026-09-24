@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { useKeyCrate } from '../_state/store';
 import { Button } from './ui';
 
-/* Import bar: rekordbox XML or CSV through the worker, the sample library, saved playlists. */
+/* Import bar: rekordbox XML, Traktor NML or CSV through the worker, the sample library, saved playlists. */
 
 export default function ImportPanel() {
   const { state, actions } = useKeyCrate();
@@ -17,7 +17,7 @@ export default function ImportPanel() {
       <input
         ref={fileRef}
         type="file"
-        accept=".xml,.csv,text/xml,application/xml,text/csv"
+        // No accept filter: some phones grey out .xml/.nml files. The importer checks the content.
         className="sr-only"
         data-testid="kc-file"
         onChange={async (e) => {
@@ -31,7 +31,7 @@ export default function ImportPanel() {
           ? `Parsing ${importing.parsed.toLocaleString()}${importing.total ? ` / ${importing.total.toLocaleString()}` : ''}…`
           : tracks.length
             ? 'Import again'
-            : 'Import rekordbox XML or CSV'}
+            : 'Import rekordbox XML, Traktor NML or CSV'}
       </Button>
       {tracks.length === 0 && (
         <Button onClick={actions.loadSample} disabled={!!importing} data-testid="kc-sample">

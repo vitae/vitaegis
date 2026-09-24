@@ -5,10 +5,13 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 
 ## How it works
 
-- **Import**: `File → Export Collection in xml format` in rekordbox, then drop the file on the page. Parsing
-  runs in a Web Worker (`app/keycrate/_lib/import.worker.ts`) so 20k+ tracks never block the UI. CSV with
-  `artist, title, key, bpm, genre, duration` columns works too. Re-imports merge by TrackID (or
-  artist+title+duration for CSV rows) and keep energy, tags and playlists.
+- **Import**: `File → Export Collection in xml format` in rekordbox, or Traktor's `collection.nml`, or a CSV
+  with `artist, title, key, bpm, genre, duration` columns. Pick the file or drop it anywhere on the page; the
+  format is read from the content (`lib/keycrate/library.ts`), so the file name and extension don't matter.
+  Parsing runs in a Web Worker (`app/keycrate/_lib/import.worker.ts`) so 20k+ tracks never block the UI; if
+  the worker can't run in that browser, it parses on the page instead. Re-imports merge by TrackID (or
+  artist+title+duration for Traktor and CSV rows) and keep energy, tags and playlists. Files that aren't a
+  DJ library (an iTunes XML, say) get an error that says what to export instead.
 - **Keys**: every spelling (`Am`, `A min`, `A minor`, `8A`, Open Key `1m`, `D#m` = `Ebm` = `2A`) is
   normalised to Camelot in `lib/keycrate/camelot.ts`.
 - **Engine** (`lib/keycrate/harmonic.ts`): classifies each move as same / perfect 5th / relative / diagonal /
@@ -22,7 +25,9 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 - **Exports** (`lib/keycrate/export.ts`): rekordbox playlist XML (TrackIDs, so cues survive re-import),
   M3U8 from `Location`, CSV, and a read-only share link at `/keycrate/set/[id]`.
 - **Storage**: IndexedDB on the device for everything. Signing in (magic link) adds a cloud copy in
-  Supabase, uploaded in chunks of 500.
+  Supabase, uploaded in chunks of 500. If IndexedDB is blocked or hangs (private browsing, in-app browsers,
+  another tab holding an old version), the page carries on in memory and shows a red notice instead of
+  sitting on "Opening your crate…".
 
 ## Env vars (Vercel)
 
