@@ -6,6 +6,7 @@ import type { Camelot } from '@/lib/keycrate/types';
 import { useKeyCrate } from '../_state/store';
 import AuthPanel from './AuthPanel';
 import ImportPanel from './ImportPanel';
+import PlaylistTable from './PlaylistTable';
 import Library from './Library';
 import SetPanel from './SetPanel';
 import Wheel from './Wheel';
@@ -148,6 +149,7 @@ export default function KeyCrateApp() {
                 Clear key filter
               </Button>
             )}
+            <PlaylistTable />
           </div>
 
           {/* The set panel is mounted once: here on desktop, in the sheet on mobile. */}
