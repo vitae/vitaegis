@@ -1,0 +1,23 @@
+# Build output and dependencies
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+package-lock.json
+skills-lock.json
+
+# Not code, or not ours
+public/
+supabase/
+fixtures/
+.agents/
+PROJECTS/
+*.html
+*.md
+
+# Generated data, and a hand-aligned one-record-per-line table
+app/run/geometry.ts
+app/travel/_radar/land.ts
+app/happy-hour/data.ts
