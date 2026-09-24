@@ -44,7 +44,10 @@ export function parseCsv(text: string): string[][] {
 
 function detectDelimiter(text: string): string {
   const head = text.slice(0, 2000).split(/\r?\n/)[0] ?? '';
-  const counts: Array<[string, number]> = [',', ';', '\t'].map((d) => [d, head.split(d).length - 1]);
+  const counts: Array<[string, number]> = [',', ';', '\t'].map((d) => [
+    d,
+    head.split(d).length - 1,
+  ]);
   counts.sort((a, b) => b[1] - a[1]);
   return counts[0][1] > 0 ? counts[0][0] : ',';
 }
@@ -109,7 +112,8 @@ export function parseCsvTracks(text: string): Track[] {
   const map = mapHeader(rows[0]);
   if (map.title === undefined) return [];
   const out: Track[] = [];
-  const get = (row: string[], f: string) => (map[f] === undefined ? undefined : row[map[f]]?.trim());
+  const get = (row: string[], f: string) =>
+    map[f] === undefined ? undefined : row[map[f]]?.trim();
   for (const row of rows.slice(1)) {
     const title = get(row, 'title') ?? '';
     if (!title) continue;
@@ -133,8 +137,14 @@ export function parseCsvTracks(text: string): Track[] {
       durationS,
       genre: get(row, 'genre') || undefined,
       label: get(row, 'label') || undefined,
-      energy: Number.isFinite(energyRaw) && energyRaw >= 1 && energyRaw <= 10 ? Math.round(energyRaw) : null,
-      rating: Number.isFinite(ratingRaw) && ratingRaw >= 0 && ratingRaw <= 5 ? Math.round(ratingRaw) : null,
+      energy:
+        Number.isFinite(energyRaw) && energyRaw >= 1 && energyRaw <= 10
+          ? Math.round(energyRaw)
+          : null,
+      rating:
+        Number.isFinite(ratingRaw) && ratingRaw >= 0 && ratingRaw <= 5
+          ? Math.round(ratingRaw)
+          : null,
       tags: [],
       comments: get(row, 'comments') || undefined,
       location: get(row, 'location') || undefined,

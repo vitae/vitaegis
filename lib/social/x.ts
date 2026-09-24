@@ -21,7 +21,10 @@ async function uploadMedia(token: string, bytes: Buffer, mimeType: string, categ
     cache: 'no-store',
   });
   const initJson = await init.json().catch(() => ({}));
-  if (!init.ok) throw new Error(`X media INIT failed: ${init.status} ${JSON.stringify(initJson).slice(0, 300)}`);
+  if (!init.ok)
+    throw new Error(
+      `X media INIT failed: ${init.status} ${JSON.stringify(initJson).slice(0, 300)}`,
+    );
   const mediaId = initJson?.data?.id ?? initJson?.media_id_string ?? initJson?.id;
   if (!mediaId) throw new Error('X media upload returned no id');
 
@@ -47,7 +50,10 @@ async function uploadMedia(token: string, bytes: Buffer, mimeType: string, categ
     cache: 'no-store',
   });
   const finJson = await fin.json().catch(() => ({}));
-  if (!fin.ok) throw new Error(`X media FINALIZE failed: ${fin.status} ${JSON.stringify(finJson).slice(0, 300)}`);
+  if (!fin.ok)
+    throw new Error(
+      `X media FINALIZE failed: ${fin.status} ${JSON.stringify(finJson).slice(0, 300)}`,
+    );
 
   // Video needs transcoding before it can be attached.
   let state = finJson?.data?.processing_info?.state ?? finJson?.processing_info?.state;
@@ -96,13 +102,22 @@ export async function postToX(
 
   const res = await fetch(`${API}/tweets`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${account.access_token}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${account.access_token}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(body),
     cache: 'no-store',
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`X post failed: ${res.status} ${JSON.stringify(json).slice(0, 400)}`);
+  if (!res.ok)
+    throw new Error(`X post failed: ${res.status} ${JSON.stringify(json).slice(0, 400)}`);
 
   const id = json?.data?.id;
-  return { platform: 'twitter', id, url: id ? `https://x.com/i/web/status/${id}` : undefined, raw: json };
+  return {
+    platform: 'twitter',
+    id,
+    url: id ? `https://x.com/i/web/status/${id}` : undefined,
+    raw: json,
+  };
 }

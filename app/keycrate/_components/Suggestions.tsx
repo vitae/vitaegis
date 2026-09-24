@@ -27,14 +27,16 @@ export default function Suggestions() {
       </SectionTitle>
       {suggestions.length === 0 ? (
         <p className="text-sm text-[#808880]">
-          Nothing fits within ±{state.set.settings.bpmTolerance}% in {state.set.settings.mode} mode. Widen the tolerance or switch modes in settings.
+          Nothing fits within ±{state.set.settings.bpmTolerance}% in {state.set.settings.mode} mode.
+          Widen the tolerance or switch modes in settings.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
           {TRANSITION_ORDER.filter((t) => groups.has(t)).map((type) => (
             <div key={type}>
               <p className="text-xs" style={{ color: TRANSITION_COLOR[type] }}>
-                {TRANSITION_LABEL[type]} <span className="text-[#808880]">· {TRANSITION_FEEL[type]}</span>
+                {TRANSITION_LABEL[type]}{' '}
+                <span className="text-[#808880]">· {TRANSITION_FEEL[type]}</span>
               </p>
               <ul className="mt-1 flex flex-col">
                 {groups.get(type)!.map((s) => (
@@ -53,7 +55,9 @@ export default function Suggestions() {
                         </span>
                         <span className="block truncate text-xs text-[#808880]">{s.reason}</span>
                       </span>
-                      <span className="kc-mono shrink-0 text-xs text-white">{formatBpm(s.track.bpm)}</span>
+                      <span className="kc-mono shrink-0 text-xs text-white">
+                        {formatBpm(s.track.bpm)}
+                      </span>
                     </button>
                   </li>
                 ))}

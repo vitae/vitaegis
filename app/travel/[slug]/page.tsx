@@ -12,7 +12,11 @@ export function generateStaticParams() {
   return travelSlugs.map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const page = findTravelPage((await params).slug);
   if (!page) return {};
   const title = `${page.title} | VITAEGIS Travel`;
@@ -49,9 +53,16 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
     // The site's global CSS pins <html> to the viewport, so this page scrolls inside its own container.
     <main
       className="nav-clear fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
-      style={{ fontFamily: "'Jost', sans-serif", WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+      style={{
+        fontFamily: "'Jost', sans-serif",
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
     >
-      <div className="travel-grid pointer-events-none absolute inset-x-0 top-0 h-[900px]" aria-hidden />
+      <div
+        className="travel-grid pointer-events-none absolute inset-x-0 top-0 h-[900px]"
+        aria-hidden
+      />
 
       <div className="relative mx-auto max-w-6xl px-4 pb-32 pt-10 sm:px-6">
         <nav className="flex flex-wrap gap-x-6 gap-y-2">
@@ -69,7 +80,10 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
           </p>
           <h1
             className="mt-4 text-5xl font-bold uppercase tracking-[0.12em] sm:text-7xl"
-            style={{ color: page.color ?? '#00ff00', textShadow: `0 0 24px ${page.color ?? 'rgba(0,255,0,0.45)'}` }}
+            style={{
+              color: page.color ?? '#00ff00',
+              textShadow: `0 0 24px ${page.color ?? 'rgba(0,255,0,0.45)'}`,
+            }}
           >
             {page.title}
           </h1>
@@ -91,7 +105,9 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
         <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-vitae-green/25 bg-vitae-green/20 lg:grid-cols-4">
           {stats.map((s) => (
             <div key={s.unit} className="bg-black px-4 py-6 text-center">
-              <dd className="text-3xl font-semibold tabular-nums text-white sm:text-4xl">{s.value}</dd>
+              <dd className="text-3xl font-semibold tabular-nums text-white sm:text-4xl">
+                {s.value}
+              </dd>
               <dt className={`${label} mt-2`}>{s.unit}</dt>
             </div>
           ))}
@@ -112,11 +128,18 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
               const chain = waypoints(l);
               const tint = l.hue ? { color: l.hue } : undefined;
               return (
-                <li key={l.n} className={`${glass} p-6 sm:p-8`} style={l.hue ? { borderColor: `${l.hue}55` } : undefined}>
+                <li
+                  key={l.n}
+                  className={`${glass} p-6 sm:p-8`}
+                  style={l.hue ? { borderColor: `${l.hue}55` } : undefined}
+                >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className={label} style={tint}>
-                        Track {l.n} · VTG{l.n} · {l.via?.length ? `${l.via.length} ${l.via.length === 1 ? 'stop' : 'stops'}` : 'Nonstop'}
+                        Track {l.n} · VTG{l.n} ·{' '}
+                        {l.via?.length
+                          ? `${l.via.length} ${l.via.length === 1 ? 'stop' : 'stops'}`
+                          : 'Nonstop'}
                       </p>
                       <h3 className="mt-1 text-2xl font-semibold tracking-[0.08em] text-white">
                         {chain.map((code, i) => (
@@ -130,12 +153,17 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
                           </span>
                         ))}
                       </h3>
-                      <p className="mt-1 font-light text-white/60">{chain.map((c) => airports[c].city).join(' → ')}</p>
+                      <p className="mt-1 font-light text-white/60">
+                        {chain.map((c) => airports[c].city).join(' → ')}
+                      </p>
                     </div>
                     <div className="flex gap-6 sm:text-right">
                       <div>
                         <p className={label}>Fare</p>
-                        <p className="mt-1 text-2xl font-semibold tabular-nums text-vitae-green" style={tint}>
+                        <p
+                          className="mt-1 text-2xl font-semibold tabular-nums text-vitae-green"
+                          style={tint}
+                        >
                           ${l.farePP}
                         </p>
                       </div>
@@ -161,15 +189,20 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
                       <dd className="mt-1 font-light text-white/80">
                         {chain.slice(1).map((code, i) => (
                           <span key={code} className="block tabular-nums">
-                            {chain[i]} → {code} · {Math.round(legMilesBetween(chain[i], code) / 10) * 10} mi
+                            {chain[i]} → {code} ·{' '}
+                            {Math.round(legMilesBetween(chain[i], code) / 10) * 10} mi
                           </span>
                         ))}
                       </dd>
                     </div>
                   </dl>
-                  <p className={`mt-5 font-light leading-relaxed ${l.flag === 'visa' ? 'text-[#ffff00]' : 'text-white/75'}`}>
+                  <p
+                    className={`mt-5 font-light leading-relaxed ${l.flag === 'visa' ? 'text-[#ffff00]' : 'text-white/75'}`}
+                  >
                     {l.flag === 'visa' && (
-                      <span className="mr-2 text-[11px] font-semibold uppercase tracking-[0.25em]">Paperwork</span>
+                      <span className="mr-2 text-[11px] font-semibold uppercase tracking-[0.25em]">
+                        Paperwork
+                      </span>
                     )}
                     {l.note}
                   </p>
@@ -201,10 +234,11 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
 
         <footer className="mt-16 text-center text-sm font-light text-white/40">
           <p className="mx-auto max-w-3xl">
-            Every track originates at Honolulu on Alaska Airlines, Hawaiian, American or a oneworld / Mileage Plan
-            partner. Tracks are typical scheduled routings, not live traffic. Fares are indicative lowest one-way
-            economy prices seen on fare aggregators in September 2026 — a planning budget, not a quote. Entry notes
-            are for US passports. Compiled by Vitaegis.
+            Every track originates at Honolulu on Alaska Airlines, Hawaiian, American or a oneworld
+            / Mileage Plan partner. Tracks are typical scheduled routings, not live traffic. Fares
+            are indicative lowest one-way economy prices seen on fare aggregators in September 2026
+            — a planning budget, not a quote. Entry notes are for US passports. Compiled by
+            Vitaegis.
           </p>
           <Link href="/" className={`${label} mt-4 inline-block hover:text-white`}>
             Health • Stealth • Wealth

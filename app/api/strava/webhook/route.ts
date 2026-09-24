@@ -8,7 +8,10 @@ import { deleteActivity, removeAthlete, syncActivity } from '@/lib/strava';
 
 export async function GET(req: NextRequest) {
   const p = req.nextUrl.searchParams;
-  if (p.get('hub.mode') === 'subscribe' && p.get('hub.verify_token') === process.env.STRAVA_VERIFY_TOKEN) {
+  if (
+    p.get('hub.mode') === 'subscribe' &&
+    p.get('hub.verify_token') === process.env.STRAVA_VERIFY_TOKEN
+  ) {
     return NextResponse.json({ 'hub.challenge': p.get('hub.challenge') });
   }
   return NextResponse.json({ error: 'Verification failed' }, { status: 403 });

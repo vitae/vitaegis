@@ -99,13 +99,13 @@ export default function Home() {
       <MatrixBackground />
 
       {/* Scroll Progress Bar - iOS style thin line */}
-      <div 
+      <div
         className="fixed top-0 left-0 right-0 h-[2px] z-[60] bg-transparent"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div
           className="h-full transition-all duration-100 ease-out"
-          style={{ 
+          style={{
             width: `${scrollProgress}%`,
             background: 'linear-gradient(90deg, #00ff00, #00ff00)',
             boxShadow: '0 0 10px rgba(0, 255, 65, 0.8)',
@@ -116,7 +116,10 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <main ref={containerRef} className="app-content relative z-10 flex flex-col items-center justify-center w-full max-w-screen-md mx-auto px-2">
+      <main
+        ref={containerRef}
+        className="app-content relative z-10 flex flex-col items-center justify-center w-full max-w-screen-md mx-auto px-2"
+      >
         <Suspense fallback={<SkeletonHero />}>
           <section id="hero">
             <HeroSection />

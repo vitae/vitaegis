@@ -1,5 +1,6 @@
 @media (max-width: 768px) {
-  html, body {
+  html,
+  body {
     width: 100%;
     margin: 0;
     padding: 0;
@@ -39,7 +40,7 @@
   --vitae-black: #000000;
   --vitae-white: #ffffff;
   --vitae-gray: #808080;
-  
+
   /* ═══════════════════════════════════════════════════════════════════════════════
      Section Container Utility - Global Alignment
      ═══════════════════════════════════════════════════════════════════════════════ */
@@ -98,10 +99,10 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -110,11 +111,11 @@
 }
 
 html {
-    overflow-x: hidden !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
+  overflow-x: hidden !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
   scroll-behavior: smooth;
   /* Keep in-page anchors clear of the status bar and the nav */
   scroll-padding-top: calc(var(--sat) + var(--nav-top) + 16px);
@@ -126,15 +127,15 @@ html {
 }
 
 body {
-    overflow-x: clip !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
+  overflow-x: clip !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
   font-family: 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
   font-weight: 500;
   background-color: var(--vitae-black);
@@ -157,8 +158,21 @@ body {
 }
 
 /* Ensure Futura Medium is applied everywhere */
-h1, h2, h3, h4, h5, h6,
-p, span, a, button, input, textarea, select, label, div {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a,
+button,
+input,
+textarea,
+select,
+label,
+div {
   font-family: 'Jost', 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
   font-weight: 500;
 }
@@ -237,7 +251,7 @@ body {
   ::-webkit-scrollbar {
     display: none;
   }
-  
+
   * {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -286,7 +300,9 @@ body {
    Touch Interactions
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-button, a, [role="button"] {
+button,
+a,
+[role='button'] {
   /* Minimum touch target size */
   min-height: 44px;
   /* Prevent double-tap zoom */
@@ -294,7 +310,9 @@ button, a, [role="button"] {
 }
 
 /* Active state for touch feedback */
-button:active, a:active, [role="button"]:active {
+button:active,
+a:active,
+[role='button']:active {
   transform: scale(0.98);
   transition: transform 0.1s ease;
 }
@@ -324,16 +342,20 @@ button:active, a:active, [role="button"]:active {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px var(--vitae-green-glow);
   }
   50% {
-    box-shadow: 0 0 40px var(--vitae-green), 0 0 60px var(--vitae-green-glow);
+    box-shadow:
+      0 0 40px var(--vitae-green),
+      0 0 60px var(--vitae-green-glow);
   }
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -368,12 +390,24 @@ button:active, a:active, [role="button"]:active {
 }
 
 /* Animation Delays */
-.animation-delay-100 { animation-delay: 100ms; }
-.animation-delay-200 { animation-delay: 200ms; }
-.animation-delay-300 { animation-delay: 300ms; }
-.animation-delay-400 { animation-delay: 400ms; }
-.animation-delay-500 { animation-delay: 500ms; }
-.animation-delay-600 { animation-delay: 600ms; }
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+.animation-delay-500 {
+  animation-delay: 500ms;
+}
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    Glass Effect Utilities
@@ -399,16 +433,22 @@ button:active, a:active, [role="button"]:active {
 
 .neon-text {
   color: var(--vitae-green);
-  text-shadow: 0 0 10px var(--vitae-green-glow), 0 0 20px var(--vitae-green-glow);
+  text-shadow:
+    0 0 10px var(--vitae-green-glow),
+    0 0 20px var(--vitae-green-glow);
 }
 
 .neon-border {
   border-color: var(--vitae-green);
-  box-shadow: 0 0 10px var(--vitae-green-glow), inset 0 0 10px rgba(0, 255, 65, 0.1);
+  box-shadow:
+    0 0 10px var(--vitae-green-glow),
+    inset 0 0 10px rgba(0, 255, 65, 0.1);
 }
 
 .neon-glow {
-  box-shadow: 0 0 20px var(--vitae-green-glow), 0 0 40px rgba(0, 255, 65, 0.3);
+  box-shadow:
+    0 0 20px var(--vitae-green-glow),
+    0 0 40px rgba(0, 255, 65, 0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -433,10 +473,18 @@ button:active, a:active, [role="button"]:active {
 }
 
 /* Safe area utilities */
-.pt-safe { padding-top: var(--sat); }
-.pb-safe { padding-bottom: var(--sab); }
-.pl-safe { padding-left: var(--sal); }
-.pr-safe { padding-right: var(--sar); }
+.pt-safe {
+  padding-top: var(--sat);
+}
+.pb-safe {
+  padding-bottom: var(--sab);
+}
+.pl-safe {
+  padding-left: var(--sal);
+}
+.pr-safe {
+  padding-right: var(--sar);
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    Responsive Adjustments

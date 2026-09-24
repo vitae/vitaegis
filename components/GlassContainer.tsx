@@ -57,28 +57,27 @@ export default function GlassContainer({
     >
       {/* Top edge glow effect */}
       {glow && (
-        <div 
+        <div
           className="absolute -top-px left-1/2 -translate-x-1/2 w-2/3 h-px"
           style={{
             background: 'linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.5), transparent)',
           }}
         />
       )}
-      
+
       {/* Inner glow for prominent variant */}
       {variant === 'prominent' && (
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at top, rgba(0, 255, 65, 0.05) 0%, transparent 50%)',
+            background:
+              'radial-gradient(ellipse at top, rgba(0, 255, 65, 0.05) 0%, transparent 50%)',
           }}
         />
       )}
-      
+
       {/* Content */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }

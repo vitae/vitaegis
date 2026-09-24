@@ -103,14 +103,34 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(
     {
-      posts: { needsReview, drafting, published, published7, published30, failed, rejected, ingestTotal },
+      posts: {
+        needsReview,
+        drafting,
+        published,
+        published7,
+        published30,
+        failed,
+        rejected,
+        ingestTotal,
+      },
       perPlatform,
       recent,
-      jobs: { queued: jobsQueued, running: jobsRunning, failed: jobsFailed, last: lastJob ?? null, failedList: failedJobs ?? [] },
+      jobs: {
+        queued: jobsQueued,
+        running: jobsRunning,
+        failed: jobsFailed,
+        last: lastJob ?? null,
+        failedList: failedJobs ?? [],
+      },
       research: { sourcesDone, sourcesPending, findings, briefsReady },
       accounts: PLATFORMS.map((p) => {
         const a = accounts.find((x) => x.platform === p);
-        return { platform: p, connected: Boolean(a), name: a?.account_name ?? null, expires_at: a?.expires_at ?? null };
+        return {
+          platform: p,
+          connected: Boolean(a),
+          name: a?.account_name ?? null,
+          expires_at: a?.expires_at ?? null,
+        };
       }),
       env: {
         gemini: Boolean(process.env.GEMINI_API_KEY),

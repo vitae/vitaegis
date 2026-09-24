@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { buildFromCurve, dramaticAllowed, journeyTarget, sampleCurve, suggestNext } from './suggest';
+import {
+  buildFromCurve,
+  dramaticAllowed,
+  journeyTarget,
+  sampleCurve,
+  suggestNext,
+} from './suggest';
 import { setTransitions } from './harmonic';
 import { DEFAULT_SETTINGS, type Camelot, type Track } from './types';
 
 let n = 0;
-const track = (camelot: Camelot | null, bpm: number | null, energy: number | null = null): Track => ({
+const track = (
+  camelot: Camelot | null,
+  bpm: number | null,
+  energy: number | null = null,
+): Track => ({
   id: `t${++n}`,
   sourceId: `t${n}`,
   artist: 'a',
@@ -62,7 +72,9 @@ describe('suggestNext', () => {
   it('dramatic mode allows big moves but only one per N tracks', () => {
     const settings = { ...DEFAULT_SETTINGS, mode: 'dramatic' as const, dramaticEvery: 3 };
     const fresh = suggestNext([last], lib, settings);
-    expect(fresh.map((x) => x.transition.type)).toEqual(expect.arrayContaining(['boost', 'semitone', 'third']));
+    expect(fresh.map((x) => x.transition.type)).toEqual(
+      expect.arrayContaining(['boost', 'semitone', 'third']),
+    );
 
     const set = [track('8A', 124), track('10A', 124), track('10A', 124)]; // boost one step back
     expect(dramaticAllowed(setTransitions(set, settings), 3)).toBe(false);
@@ -103,7 +115,11 @@ describe('buildFromCurve', () => {
       track('11A', 128, 8),
       track('12A', 130, 10),
     ];
-    const set = buildFromCurve(lib, { energy: [2, 10], bpm: [120, 130], length: 4 }, DEFAULT_SETTINGS);
+    const set = buildFromCurve(
+      lib,
+      { energy: [2, 10], bpm: [120, 130], length: 4 },
+      DEFAULT_SETTINGS,
+    );
     expect(set.length).toBe(4);
     expect(set[0].bpm).toBe(120);
     expect(new Set(set.map((t) => t.id)).size).toBe(4);

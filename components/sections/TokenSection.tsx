@@ -1,6 +1,5 @@
 'use client';
 
-
 import GlassContainer from '@/components/GlassContainer';
 import BuyButton from '@/components/BuyButton';
 
@@ -9,7 +8,8 @@ export default function TokenSection() {
   const products = [
     {
       name: 'Matcha Green Tea from Yame, Japan',
-      description: 'Premium ceremonial matcha direct from Yame, Fukuoka. Includes digital NFT certificate.',
+      description:
+        'Premium ceremonial matcha direct from Yame, Fukuoka. Includes digital NFT certificate.',
       image: '/images/matcha.jpg',
       price: '$29.99',
       featured: true,
@@ -35,7 +35,10 @@ export default function TokenSection() {
   ];
 
   return (
-    <section id="token" className="relative min-h-screen flex flex-col items-center justify-center text-center">
+    <section
+      id="token"
+      className="relative min-h-screen flex flex-col items-center justify-center text-center"
+    >
       <div className="section-container flex flex-col items-center justify-center mx-auto w-full max-w-full min-w-0">
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-8">
           <span className="text-vitae-green">NFT Store</span>

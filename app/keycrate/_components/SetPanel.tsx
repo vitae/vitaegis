@@ -1,8 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TRANSITION_LABEL, type Transition } from '@/lib/keycrate/harmonic';
 import { safeFilename, toCsv, toM3u8, toRekordboxXml } from '@/lib/keycrate/export';
@@ -57,9 +70,12 @@ export default function SetPanel() {
 
   const exportAs = (kind: 'xml' | 'm3u8' | 'csv') => {
     const name = set.name.trim() || 'keycrate-set';
-    if (kind === 'xml') downloadText(`${safeFilename(name)}.xml`, toRekordboxXml(name, setTracks), 'application/xml');
-    if (kind === 'm3u8') downloadText(`${safeFilename(name)}.m3u8`, toM3u8(name, setTracks), 'audio/mpegurl');
-    if (kind === 'csv') downloadText(`${safeFilename(name)}.csv`, toCsv(setTracks, set.settings), 'text/csv');
+    if (kind === 'xml')
+      downloadText(`${safeFilename(name)}.xml`, toRekordboxXml(name, setTracks), 'application/xml');
+    if (kind === 'm3u8')
+      downloadText(`${safeFilename(name)}.m3u8`, toM3u8(name, setTracks), 'audio/mpegurl');
+    if (kind === 'csv')
+      downloadText(`${safeFilename(name)}.csv`, toCsv(setTracks, set.settings), 'text/csv');
     setMenu('none');
   };
 
@@ -71,7 +87,13 @@ export default function SetPanel() {
       <SectionTitle
         right={
           <span className="kc-mono text-xs text-[#808880]">
-            {items.length} tracks · {Math.round(totalS / 60)} min{clashes ? <span className="text-[#ff0000]"> · {clashes} clash{clashes > 1 ? 'es' : ''}</span> : null}
+            {items.length} tracks · {Math.round(totalS / 60)} min
+            {clashes ? (
+              <span className="text-[#ff0000]">
+                {' '}
+                · {clashes} clash{clashes > 1 ? 'es' : ''}
+              </span>
+            ) : null}
           </span>
         }
       >
@@ -79,23 +101,61 @@ export default function SetPanel() {
       </SectionTitle>
 
       <div className="flex gap-2">
-        <input value={set.name} onChange={(e) => actions.setName(e.target.value)} aria-label="Set name" className={inputClass} data-testid="kc-set-name" />
-        <Button size="md" onClick={actions.undo} disabled={!derived.canUndo} aria-label="Undo" title="Undo (Ctrl+Z)">
+        <input
+          value={set.name}
+          onChange={(e) => actions.setName(e.target.value)}
+          aria-label="Set name"
+          className={inputClass}
+          data-testid="kc-set-name"
+        />
+        <Button
+          size="md"
+          onClick={actions.undo}
+          disabled={!derived.canUndo}
+          aria-label="Undo"
+          title="Undo (Ctrl+Z)"
+        >
           ↶
         </Button>
-        <Button size="md" onClick={actions.redo} disabled={!derived.canRedo} aria-label="Redo" title="Redo (Ctrl+Shift+Z)">
+        <Button
+          size="md"
+          onClick={actions.redo}
+          disabled={!derived.canRedo}
+          aria-label="Redo"
+          title="Redo (Ctrl+Shift+Z)"
+        >
           ↷
         </Button>
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        <Button size="sm" onClick={() => setMenu(menu === 'settings' ? 'none' : 'settings')} aria-expanded={menu === 'settings'}>
-          {set.settings.mode === 'smooth' ? 'Smooth' : set.settings.mode === 'dramatic' ? 'Dramatic' : 'Journey'} · {set.settings.keyLock ? 'key lock on' : 'key lock off'}
+        <Button
+          size="sm"
+          onClick={() => setMenu(menu === 'settings' ? 'none' : 'settings')}
+          aria-expanded={menu === 'settings'}
+        >
+          {set.settings.mode === 'smooth'
+            ? 'Smooth'
+            : set.settings.mode === 'dramatic'
+              ? 'Dramatic'
+              : 'Journey'}{' '}
+          · {set.settings.keyLock ? 'key lock on' : 'key lock off'}
         </Button>
-        <Button size="sm" onClick={actions.saveSet} disabled={items.length === 0} data-testid="kc-save">
+        <Button
+          size="sm"
+          onClick={actions.saveSet}
+          disabled={items.length === 0}
+          data-testid="kc-save"
+        >
           Save
         </Button>
-        <Button size="sm" onClick={() => setMenu(menu === 'export' ? 'none' : 'export')} disabled={items.length === 0} aria-expanded={menu === 'export'} data-testid="kc-export">
+        <Button
+          size="sm"
+          onClick={() => setMenu(menu === 'export' ? 'none' : 'export')}
+          disabled={items.length === 0}
+          aria-expanded={menu === 'export'}
+          data-testid="kc-export"
+        >
           Export
         </Button>
         <Button
@@ -126,7 +186,11 @@ export default function SetPanel() {
       )}
 
       {menu === 'export' && (
-        <div className="mt-2 flex flex-wrap gap-2 rounded-md border border-white/10 p-2" role="group" aria-label="Export formats">
+        <div
+          className="mt-2 flex flex-wrap gap-2 rounded-md border border-white/10 p-2"
+          role="group"
+          aria-label="Export formats"
+        >
           <Button size="sm" onClick={() => exportAs('xml')} data-testid="kc-export-xml">
             rekordbox XML
           </Button>
@@ -142,10 +206,15 @@ export default function SetPanel() {
 
       <div className="kc-dense mt-3 min-h-0 flex-1 overflow-y-auto" data-testid="kc-set-list">
         {items.length === 0 ? (
-          <p className="rounded-md border border-dashed border-white/15 p-4 text-sm text-[#808880]">Tap tracks in the library to build the set. Drag to reorder, swipe left to remove.</p>
+          <p className="rounded-md border border-dashed border-white/15 p-4 text-sm text-[#808880]">
+            Tap tracks in the library to build the set. Drag to reorder, swipe left to remove.
+          </p>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext items={items.map((_, i) => rowId(i))} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={items.map((_, i) => rowId(i))}
+              strategy={verticalListSortingStrategy}
+            >
               <ol className="flex flex-col">
                 {items.map((it, i) => {
                   const track = derived.trackMap.get(it.trackId);
@@ -153,7 +222,14 @@ export default function SetPanel() {
                   return (
                     <li key={rowId(i)} className="flex flex-col">
                       {into && <TransitionRow t={into} />}
-                      <SetRow id={rowId(i)} index={i} track={track} note={it.note} onRemove={() => actions.removeAt(i)} onNote={(n) => actions.setNote(i, n)} />
+                      <SetRow
+                        id={rowId(i)}
+                        index={i}
+                        track={track}
+                        note={it.note}
+                        onRemove={() => actions.removeAt(i)}
+                        onNote={(n) => actions.setNote(i, n)}
+                      />
                     </li>
                   );
                 })}
@@ -174,14 +250,22 @@ const rowId = (i: number) => `row-${i}`;
 function TransitionRow({ t }: { t: Transition }) {
   const color = TRANSITION_COLOR[t.type];
   return (
-    <div className="flex items-center gap-2 py-1 pl-3 text-xs" style={{ color }} data-testid="kc-transition">
+    <div
+      className="flex items-center gap-2 py-1 pl-3 text-xs"
+      style={{ color }}
+      data-testid="kc-transition"
+    >
       <span aria-hidden>↓</span>
       <span>
         {TRANSITION_LABEL[t.type]}
-        {t.semitoneShift ? ` (${t.effectiveToKey} after ${t.semitoneShift > 0 ? '+' : ''}${t.semitoneShift} st)` : ''}
+        {t.semitoneShift
+          ? ` (${t.effectiveToKey} after ${t.semitoneShift > 0 ? '+' : ''}${t.semitoneShift} st)`
+          : ''}
       </span>
       <span className="kc-mono text-[#808880]">
-        {t.bpmChangePct === null ? 'no BPM' : `${t.bpmChangePct >= 0 ? '+' : ''}${t.bpmChangePct.toFixed(1)}%`}
+        {t.bpmChangePct === null
+          ? 'no BPM'
+          : `${t.bpmChangePct >= 0 ? '+' : ''}${t.bpmChangePct.toFixed(1)}%`}
         {t.bpm && t.bpm.kind !== 'direct' ? ` ${t.bpm.kind}-time` : ''}
         {!t.bpm && t.bpmChangePct !== null ? ' out of range' : ''}
       </span>
@@ -205,7 +289,9 @@ function SetRow({
   onRemove: () => void;
   onNote: (n: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
   const [dx, setDx] = useState(0);
   const start = useRef<{ x: number; y: number } | null>(null);
   const [editingNote, setEditingNote] = useState(false);
@@ -229,13 +315,25 @@ function SetRow({
 
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
-    <div ref={setNodeRef} style={style} className={`relative rounded-md border border-white/10 ${isDragging ? 'z-10 bg-black' : 'bg-black'}`} data-testid="kc-set-row">
-      <div className="absolute inset-y-0 right-0 flex w-24 items-center justify-end pr-3 text-xs text-[#ff0000]" aria-hidden style={{ opacity: dx < -20 ? 1 : 0 }}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative rounded-md border border-white/10 ${isDragging ? 'z-10 bg-black' : 'bg-black'}`}
+      data-testid="kc-set-row"
+    >
+      <div
+        className="absolute inset-y-0 right-0 flex w-24 items-center justify-end pr-3 text-xs text-[#ff0000]"
+        aria-hidden
+        style={{ opacity: dx < -20 ? 1 : 0 }}
+      >
         remove
       </div>
       <div
         className="relative flex items-center gap-2 bg-black py-1.5 pl-1 pr-1"
-        style={{ transform: `translateX(${dx}px)`, transition: dx === 0 ? 'transform 150ms ease' : 'none' }}
+        style={{
+          transform: `translateX(${dx}px)`,
+          transition: dx === 0 ? 'transform 150ms ease' : 'none',
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -251,15 +349,27 @@ function SetRow({
         </button>
         <span className="kc-mono w-5 shrink-0 text-right text-xs text-[#808880]">{index + 1}</span>
         <KeyBadge camelot={track?.camelot ?? null} muted />
-        <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setEditingNote((v) => !v)} aria-label={`Note for ${track?.title ?? 'track'}`}>
-          <span className="block truncate text-sm text-white">{track?.title ?? 'Missing track'}</span>
+        <button
+          type="button"
+          className="min-w-0 flex-1 text-left"
+          onClick={() => setEditingNote((v) => !v)}
+          aria-label={`Note for ${track?.title ?? 'track'}`}
+        >
+          <span className="block truncate text-sm text-white">
+            {track?.title ?? 'Missing track'}
+          </span>
           <span className="block truncate text-xs text-[#808880]">
             {track?.artist}
             {note ? ` · ${note}` : ''}
           </span>
         </button>
         <span className="kc-mono shrink-0 text-xs text-white">{formatBpm(track?.bpm)}</span>
-        <button type="button" onClick={onRemove} className="flex h-10 w-8 shrink-0 items-center justify-center text-[#808880] hover:text-[#ff0000]" aria-label={`Remove track ${index + 1}`}>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="flex h-10 w-8 shrink-0 items-center justify-center text-[#808880] hover:text-[#ff0000]"
+          aria-label={`Remove track ${index + 1}`}
+        >
           ×
         </button>
       </div>

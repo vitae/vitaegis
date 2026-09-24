@@ -15,11 +15,15 @@ export const ui = {
   input:
     'w-full rounded-lg border border-vitae-green/30 bg-black px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-vitae-green focus:outline-none',
   btn: 'rounded-lg border border-vitae-green/50 px-4 py-2 text-sm text-vitae-green hover:bg-vitae-green/10 disabled:opacity-40',
-  btnQuiet: 'rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-40',
-  btnDanger: 'rounded-lg border border-red-500/40 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 disabled:opacity-40',
+  btnQuiet:
+    'rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-40',
+  btnDanger:
+    'rounded-lg border border-red-500/40 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 disabled:opacity-40',
   pill: (on: boolean) =>
     `rounded-full border px-3 py-1 text-xs uppercase tracking-[0.15em] transition-colors ${
-      on ? 'border-vitae-green/60 bg-vitae-green/10 text-vitae-green' : 'border-white/15 text-white/40 hover:border-white/30'
+      on
+        ? 'border-vitae-green/60 bg-vitae-green/10 text-vitae-green'
+        : 'border-white/15 text-white/40 hover:border-white/30'
     }`,
 };
 
@@ -41,7 +45,13 @@ interface AdminShellProps {
   wide?: boolean;
 }
 
-export default function AdminShell({ title, blurb, children, probe = '/api/admin/overview', wide }: AdminShellProps) {
+export default function AdminShell({
+  title,
+  blurb,
+  children,
+  probe = '/api/admin/overview',
+  wide,
+}: AdminShellProps) {
   const pathname = usePathname();
   const [key, setKey] = useState('');
   const [authed, setAuthed] = useState(false);
@@ -96,7 +106,10 @@ export default function AdminShell({ title, blurb, children, probe = '/api/admin
   };
 
   return (
-    <main className="min-h-screen w-full bg-black text-left text-white" style={{ fontFamily: "'Jost', sans-serif" }}>
+    <main
+      className="min-h-screen w-full bg-black text-left text-white"
+      style={{ fontFamily: "'Jost', sans-serif" }}
+    >
       <div className={`mx-auto ${wide ? 'max-w-6xl' : 'max-w-5xl'} px-4 pb-32 pt-4 sm:px-6`}>
         <nav className="flex flex-wrap items-center gap-2">
           {NAV.map((n) => {
@@ -115,7 +128,9 @@ export default function AdminShell({ title, blurb, children, probe = '/api/admin
         </nav>
 
         <p className={`${ui.label} mt-8`}>Vitaegis · admin</p>
-        <h1 className="mt-3 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green">{title}</h1>
+        <h1 className="mt-3 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green">
+          {title}
+        </h1>
         {blurb && <div className="mt-3 max-w-2xl text-sm font-light text-white/60">{blurb}</div>}
 
         {!authed && (
@@ -134,7 +149,8 @@ export default function AdminShell({ title, blurb, children, probe = '/api/admin
             </button>
             {error && <span className="text-sm text-red-400">{error}</span>}
             <p className="w-full text-xs text-white/40">
-              The key is the CONTENT_ADMIN_KEY environment variable on Vercel. It is remembered in this browser only.
+              The key is the CONTENT_ADMIN_KEY environment variable on Vercel. It is remembered in
+              this browser only.
             </p>
           </div>
         )}

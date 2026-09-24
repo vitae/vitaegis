@@ -109,7 +109,10 @@ export async function pushTracks(
   for (const part of chunk(tracks)) {
     const { data, error } = await sb
       .from('kc_tracks')
-      .upsert(part.map((t) => toRow(t, userId)), { onConflict: 'user_id,source_id' })
+      .upsert(
+        part.map((t) => toRow(t, userId)),
+        { onConflict: 'user_id,source_id' },
+      )
       .select('id, source_id');
     if (error) throw new Error(error.message);
     for (const row of data ?? []) {
@@ -122,11 +125,16 @@ export async function pushTracks(
   return ids;
 }
 
-export async function pullTracks(sb: SupabaseClient): Promise<{ tracks: Track[]; cloudIds: Map<string, string> }> {
+export async function pullTracks(
+  sb: SupabaseClient,
+): Promise<{ tracks: Track[]; cloudIds: Map<string, string> }> {
   const tracks: Track[] = [];
   const cloudIds = new Map<string, string>();
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await sb.from('kc_tracks').select('*').range(from, from + 999);
+    const { data, error } = await sb
+      .from('kc_tracks')
+      .select('*')
+      .range(from, from + 999);
     if (error) throw new Error(error.message);
     for (const r of (data ?? []) as Array<TrackRow & { id: string }>) {
       const t = fromRow(r);
@@ -138,7 +146,11 @@ export async function pullTracks(sb: SupabaseClient): Promise<{ tracks: Track[];
   return { tracks, cloudIds };
 }
 
-export async function updateTrackFields(sb: SupabaseClient, cloudId: string, fields: { energy?: number | null; tags?: string[] }) {
+export async function updateTrackFields(
+  sb: SupabaseClient,
+  cloudId: string,
+  fields: { energy?: number | null; tags?: string[] },
+) {
   const { error } = await sb.from('kc_tracks').update(fields).eq('id', cloudId);
   if (error) throw new Error(error.message);
 }
@@ -172,7 +184,7 @@ export async function savePlaylist(
       playlist_id: id,
       track_id: cloudIds.get(it.trackId),
       position: i,
-      transition_type: i > 0 ? transitionTypes[i - 1] ?? null : null,
+      transition_type: i > 0 ? (transitionTypes[i - 1] ?? null) : null,
       note: it.note ?? null,
     }))
     .filter((r) => r.track_id);
@@ -183,14 +195,22 @@ export async function savePlaylist(
   return id;
 }
 
-export async function loadPlaylists(sb: SupabaseClient, cloudToLocal: Map<string, string>): Promise<Playlist[]> {
+export async function loadPlaylists(
+  sb: SupabaseClient,
+  cloudToLocal: Map<string, string>,
+): Promise<Playlist[]> {
   const { data, error } = await sb
     .from('kc_playlists')
-    .select('id, name, mode, target_curve, is_public, created_at, updated_at, kc_playlist_items(track_id, position, note)')
+    .select(
+      'id, name, mode, target_curve, is_public, created_at, updated_at, kc_playlist_items(track_id, position, note)',
+    )
     .order('updated_at', { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []).map((p) => {
-    const items = ((p.kc_playlist_items as Array<{ track_id: string; position: number; note: string | null }>) ?? [])
+    const items = (
+      (p.kc_playlist_items as Array<{ track_id: string; position: number; note: string | null }>) ??
+      []
+    )
       .sort((a, b) => a.position - b.position)
       .map((it) => ({ trackId: cloudToLocal.get(it.track_id) ?? '', note: it.note ?? undefined }))
       .filter((it) => it.trackId);
@@ -198,7 +218,12 @@ export async function loadPlaylists(sb: SupabaseClient, cloudToLocal: Map<string
       id: `cloud:${p.id}`,
       cloudId: p.id as string,
       name: p.name as string,
-      settings: (p.target_curve as PlaylistSettings) ?? { mode: p.mode, dramaticEvery: 4, bpmTolerance: 6, keyLock: false },
+      settings: (p.target_curve as PlaylistSettings) ?? {
+        mode: p.mode,
+        dramaticEvery: 4,
+        bpmTolerance: 6,
+        keyLock: false,
+      },
       items,
       isPublic: p.is_public as boolean,
       createdAt: p.created_at as string,
@@ -219,7 +244,12 @@ export async function setPlaylistPublic(sb: SupabaseClient, cloudId: string, isP
 
 /* ── Set studies ───────────────────────────────────────────────────────────── */
 
-export async function saveStudy(sb: SupabaseClient, userId: string, study: SetStudy, parsed: unknown): Promise<void> {
+export async function saveStudy(
+  sb: SupabaseClient,
+  userId: string,
+  study: SetStudy,
+  parsed: unknown,
+): Promise<void> {
   const { error } = await sb.from('kc_set_studies').upsert({
     user_id: userId,
     title: study.title,

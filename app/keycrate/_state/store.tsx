@@ -7,7 +7,16 @@
    truth; the cloud is an opt-in copy.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  type ReactNode,
+} from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   currentSession,
@@ -22,12 +31,34 @@ import {
   updateTrackFields,
 } from '@/lib/keycrate/cloud';
 import { localDb, newId } from '@/lib/keycrate/db';
-import { EMPTY_FILTERS, filterTracks, indexTracks, type LibraryFilters } from '@/lib/keycrate/filters';
+import {
+  EMPTY_FILTERS,
+  filterTracks,
+  indexTracks,
+  type LibraryFilters,
+} from '@/lib/keycrate/filters';
 import { setTransitions, type Transition } from '@/lib/keycrate/harmonic';
-import { canRedo, canUndo, createHistory, push, redo, reset, undo, type History } from '@/lib/keycrate/history';
+import {
+  canRedo,
+  canUndo,
+  createHistory,
+  push,
+  redo,
+  reset,
+  undo,
+  type History,
+} from '@/lib/keycrate/history';
 import { mergeTracks } from '@/lib/keycrate/merge';
 import { suggestNext, type Suggestion } from '@/lib/keycrate/suggest';
-import { DEFAULT_SETTINGS, type Camelot, type Playlist, type PlaylistItem, type PlaylistSettings, type SetStudy, type Track } from '@/lib/keycrate/types';
+import {
+  DEFAULT_SETTINGS,
+  type Camelot,
+  type Playlist,
+  type PlaylistItem,
+  type PlaylistSettings,
+  type SetStudy,
+  type Track,
+} from '@/lib/keycrate/types';
 import type { ImportMessage, ImportRequest } from '../_lib/import.worker';
 
 export interface CurrentSet {
@@ -66,7 +97,14 @@ const freshSet = (): CurrentSet => ({
 });
 
 type Action =
-  | { type: 'hydrate'; tracks: Track[]; playlists: Playlist[]; studies: SetStudy[]; set: CurrentSet | null; session: Session | null }
+  | {
+      type: 'hydrate';
+      tracks: Track[];
+      playlists: Playlist[];
+      studies: SetStudy[];
+      set: CurrentSet | null;
+      session: Session | null;
+    }
   | { type: 'tracks'; tracks: Track[] }
   | { type: 'track'; track: Track }
   | { type: 'playlists'; playlists: Playlist[] }
@@ -75,7 +113,10 @@ type Action =
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'set'; set: CurrentSet }
-  | { type: 'setMeta'; patch: Partial<Pick<CurrentSet, 'name' | 'settings' | 'cloudId' | 'isPublic'>> }
+  | {
+      type: 'setMeta';
+      patch: Partial<Pick<CurrentSet, 'name' | 'settings' | 'cloudId' | 'isPublic'>>;
+    }
   | { type: 'filters'; filters: LibraryFilters }
   | { type: 'importing'; importing: State['importing'] }
   | { type: 'toast'; toast: string | null }
@@ -87,7 +128,15 @@ type Action =
 function reducer(s: State, a: Action): State {
   switch (a.type) {
     case 'hydrate':
-      return { ...s, ready: true, tracks: a.tracks, playlists: a.playlists, studies: a.studies, set: a.set ?? s.set, session: a.session };
+      return {
+        ...s,
+        ready: true,
+        tracks: a.tracks,
+        playlists: a.playlists,
+        studies: a.studies,
+        set: a.set ?? s.set,
+        session: a.session,
+      };
     case 'tracks':
       return { ...s, tracks: a.tracks };
     case 'track':
@@ -204,7 +253,9 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'hydrate', tracks, playlists, studies, set, session });
     })();
     const sb = supabaseBrowser();
-    const sub = sb?.auth.onAuthStateChange((_event, session) => dispatch({ type: 'session', session }));
+    const sub = sb?.auth.onAuthStateChange((_event, session) =>
+      dispatch({ type: 'session', session }),
+    );
     return () => {
       cancelled = true;
       sub?.data.subscription.unsubscribe();
@@ -235,14 +286,30 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     for (const it of items) used.add(it.trackId);
     return used;
   }, [state.playlists, items]);
-  const filtered = useMemo(() => filterTracks(index, state.filters, usedIds), [index, state.filters, usedIds]);
-  const setTracks = useMemo(() => items.map((it) => trackMap.get(it.trackId)).filter((t): t is Track => !!t), [items, trackMap]);
-  const transitions = useMemo(() => setTransitions(setTracks, state.set.settings), [setTracks, state.set.settings]);
+  const filtered = useMemo(
+    () => filterTracks(index, state.filters, usedIds),
+    [index, state.filters, usedIds],
+  );
+  const setTracks = useMemo(
+    () => items.map((it) => trackMap.get(it.trackId)).filter((t): t is Track => !!t),
+    [items, trackMap],
+  );
+  const transitions = useMemo(
+    () => setTransitions(setTracks, state.set.settings),
+    [setTracks, state.set.settings],
+  );
   const suggestions = useMemo(
-    () => suggestNext(setTracks, state.tracks, state.set.settings, { exclude: new Set(items.map((i) => i.trackId)) }),
+    () =>
+      suggestNext(setTracks, state.tracks, state.set.settings, {
+        exclude: new Set(items.map((i) => i.trackId)),
+      }),
     [setTracks, state.tracks, state.set.settings, items],
   );
-  const genres = useMemo(() => Array.from(new Set(state.tracks.map((t) => t.genre).filter((g): g is string => !!g))).sort(), [state.tracks]);
+  const genres = useMemo(
+    () =>
+      Array.from(new Set(state.tracks.map((t) => t.genre).filter((g): g is string => !!g))).sort(),
+    [state.tracks],
+  );
 
   const derived: Derived = useMemo(
     () => ({
@@ -260,7 +327,10 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
   );
 
   /* ── Actions ─────────────────────────────────────────────────────────── */
-  const toast = useCallback((message: string | null) => dispatch({ type: 'toast', toast: message }), []);
+  const toast = useCallback(
+    (message: string | null) => dispatch({ type: 'toast', toast: message }),
+    [],
+  );
 
   const importText = useCallback(
     (kind: ImportRequest['kind'], text: string) =>
@@ -280,20 +350,28 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
             resolve();
             return;
           }
-          const { tracks, added, updated, remapped } = mergeTracks(stateRef.current.tracks, m.tracks);
+          const { tracks, added, updated, remapped } = mergeTracks(
+            stateRef.current.tracks,
+            m.tracks,
+          );
           await localDb.putTracks(tracks, true);
           dispatch({ type: 'tracks', tracks });
           // Playlists that pointed at a CSV hash now point at the merged row.
           if (remapped.size) {
             const fixed = stateRef.current.playlists.map((p) => ({
               ...p,
-              items: p.items.map((it) => ({ ...it, trackId: remapped.get(it.trackId) ?? it.trackId })),
+              items: p.items.map((it) => ({
+                ...it,
+                trackId: remapped.get(it.trackId) ?? it.trackId,
+              })),
             }));
             for (const p of fixed) await localDb.putPlaylist(p);
             dispatch({ type: 'playlists', playlists: fixed });
           }
           dispatch({ type: 'importing', importing: null });
-          toast(`Imported ${m.tracks.length.toLocaleString()} tracks: ${added.toLocaleString()} new, ${updated.toLocaleString()} updated`);
+          toast(
+            `Imported ${m.tracks.length.toLocaleString()} tracks: ${added.toLocaleString()} new, ${updated.toLocaleString()} updated`,
+          );
           resolve();
         };
         worker.postMessage({ kind, text } satisfies ImportRequest);
@@ -304,7 +382,11 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
   const importFile = useCallback(
     async (file: File) => {
       const text = await file.text();
-      const kind: ImportRequest['kind'] = /\.csv$/i.test(file.name) || (!/\.xml$/i.test(file.name) && !text.trimStart().startsWith('<')) ? 'csv' : 'xml';
+      const kind: ImportRequest['kind'] =
+        /\.csv$/i.test(file.name) ||
+        (!/\.xml$/i.test(file.name) && !text.trimStart().startsWith('<'))
+          ? 'csv'
+          : 'xml';
       await importText(kind, text);
     },
     [importText],
@@ -321,22 +403,34 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'cloudIds', cloudIds: new Map() });
   }, []);
 
-  const updateTrack = useCallback(async (id: string, patch: Partial<Pick<Track, 'energy' | 'tags'>>) => {
-    const track = stateRef.current.tracks.find((t) => t.id === id);
-    if (!track) return;
-    const next = { ...track, ...patch };
-    dispatch({ type: 'track', track: next });
-    await localDb.putTrack(next);
-    const sb = supabaseBrowser();
-    const cloudId = stateRef.current.cloudIds.get(id);
-    if (sb && stateRef.current.session && cloudId) {
-      await updateTrackFields(sb, cloudId, patch).catch(() => undefined);
-    }
-  }, []);
+  const updateTrack = useCallback(
+    async (id: string, patch: Partial<Pick<Track, 'energy' | 'tags'>>) => {
+      const track = stateRef.current.tracks.find((t) => t.id === id);
+      if (!track) return;
+      const next = { ...track, ...patch };
+      dispatch({ type: 'track', track: next });
+      await localDb.putTrack(next);
+      const sb = supabaseBrowser();
+      const cloudId = stateRef.current.cloudIds.get(id);
+      if (sb && stateRef.current.session && cloudId) {
+        await updateTrackFields(sb, cloudId, patch).catch(() => undefined);
+      }
+    },
+    [],
+  );
 
-  const setItems = useCallback((next: PlaylistItem[]) => dispatch({ type: 'items', items: next }), []);
-  const addTrack = useCallback((id: string) => setItems([...stateRef.current.set.history.present, { trackId: id }]), [setItems]);
-  const removeAt = useCallback((i: number) => setItems(stateRef.current.set.history.present.filter((_, j) => j !== i)), [setItems]);
+  const setItems = useCallback(
+    (next: PlaylistItem[]) => dispatch({ type: 'items', items: next }),
+    [],
+  );
+  const addTrack = useCallback(
+    (id: string) => setItems([...stateRef.current.set.history.present, { trackId: id }]),
+    [setItems],
+  );
+  const removeAt = useCallback(
+    (i: number) => setItems(stateRef.current.set.history.present.filter((_, j) => j !== i)),
+    [setItems],
+  );
   const moveItem = useCallback(
     (from: number, to: number) => {
       const cur = stateRef.current.set.history.present;
@@ -349,13 +443,21 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     [setItems],
   );
   const setNote = useCallback(
-    (i: number, note: string) => setItems(stateRef.current.set.history.present.map((it, j) => (j === i ? { ...it, note: note || undefined } : it))),
+    (i: number, note: string) =>
+      setItems(
+        stateRef.current.set.history.present.map((it, j) =>
+          j === i ? { ...it, note: note || undefined } : it,
+        ),
+      ),
     [setItems],
   );
 
   const newSet = useCallback(() => dispatch({ type: 'set', set: freshSet() }), []);
   const setName = useCallback((name: string) => dispatch({ type: 'setMeta', patch: { name } }), []);
-  const setSettings = useCallback((settings: PlaylistSettings) => dispatch({ type: 'setMeta', patch: { settings } }), []);
+  const setSettings = useCallback(
+    (settings: PlaylistSettings) => dispatch({ type: 'setMeta', patch: { settings } }),
+    [],
+  );
 
   const currentAsPlaylist = useCallback((): Playlist => {
     const s = stateRef.current.set;
@@ -384,22 +486,35 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     if (!p) return;
     dispatch({
       type: 'set',
-      set: { id: p.id, cloudId: p.cloudId, name: p.name, isPublic: p.isPublic ?? false, settings: p.settings, history: reset(p.items), createdAt: p.createdAt },
+      set: {
+        id: p.id,
+        cloudId: p.cloudId,
+        name: p.name,
+        isPublic: p.isPublic ?? false,
+        settings: p.settings,
+        history: reset(p.items),
+        createdAt: p.createdAt,
+      },
     });
   }, []);
 
-  const deletePlaylist = useCallback(
-    async (id: string) => {
-      const p = stateRef.current.playlists.find((x) => x.id === id);
-      await localDb.deletePlaylist(id);
-      dispatch({ type: 'playlists', playlists: stateRef.current.playlists.filter((x) => x.id !== id) });
-      const sb = supabaseBrowser();
-      if (p?.cloudId && sb && stateRef.current.session) await deleteCloudPlaylist(sb, p.cloudId).catch(() => undefined);
-    },
+  const deletePlaylist = useCallback(async (id: string) => {
+    const p = stateRef.current.playlists.find((x) => x.id === id);
+    await localDb.deletePlaylist(id);
+    dispatch({
+      type: 'playlists',
+      playlists: stateRef.current.playlists.filter((x) => x.id !== id),
+    });
+    const sb = supabaseBrowser();
+    if (p?.cloudId && sb && stateRef.current.session)
+      await deleteCloudPlaylist(sb, p.cloudId).catch(() => undefined);
+  }, []);
+
+  const setFilters = useCallback(
+    (patch: Partial<LibraryFilters>) =>
+      dispatch({ type: 'filters', filters: { ...stateRef.current.filters, ...patch } }),
     [],
   );
-
-  const setFilters = useCallback((patch: Partial<LibraryFilters>) => dispatch({ type: 'filters', filters: { ...stateRef.current.filters, ...patch } }), []);
   const toggleKey = useCallback(
     (key: Camelot) => {
       const keys = new Set(stateRef.current.filters.keys);
@@ -410,7 +525,10 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     [setFilters],
   );
   const clearFilters = useCallback(() => dispatch({ type: 'filters', filters: EMPTY_FILTERS }), []);
-  const requestSignIn = useCallback((open: boolean) => dispatch({ type: 'signInPrompt', open }), []);
+  const requestSignIn = useCallback(
+    (open: boolean) => dispatch({ type: 'signInPrompt', open }),
+    [],
+  );
 
   const signOut = useCallback(async () => {
     await cloudSignOut();
@@ -431,7 +549,12 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       const tracks = stateRef.current.tracks;
       let cloudIds = new Map<string, string>();
       if (tracks.length) {
-        cloudIds = await pushTracks(sb, session.user.id, tracks, (done, total) => dispatch({ type: 'busy', busy: `Uploading ${done.toLocaleString()} / ${total.toLocaleString()}…` }));
+        cloudIds = await pushTracks(sb, session.user.id, tracks, (done, total) =>
+          dispatch({
+            type: 'busy',
+            busy: `Uploading ${done.toLocaleString()} / ${total.toLocaleString()}…`,
+          }),
+        );
       }
       dispatch({ type: 'busy', busy: 'Pulling cloud copy…' });
       const pulled = await pullTracks(sb);
@@ -442,7 +565,8 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
           await localDb.putTracks(merged.tracks, true);
           dispatch({ type: 'tracks', tracks: merged.tracks });
         }
-        for (const [local, cloud] of pulled.cloudIds) cloudIds.set(merged.remapped.get(local) ?? local, cloud);
+        for (const [local, cloud] of pulled.cloudIds)
+          cloudIds.set(merged.remapped.get(local) ?? local, cloud);
       }
       dispatch({ type: 'cloudIds', cloudIds });
       const cloudToLocal = new Map(Array.from(cloudIds, ([l, c]) => [c, l]));
@@ -456,7 +580,10 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
           await localDb.putPlaylist(r);
         }
       }
-      dispatch({ type: 'playlists', playlists: merged.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)) });
+      dispatch({
+        type: 'playlists',
+        playlists: merged.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+      });
       toast(`Synced ${tracks.length.toLocaleString()} tracks and ${remote.length} playlists`);
     } catch (e) {
       toast(`Sync failed: ${e instanceof Error ? e.message : String(e)}`);
@@ -474,7 +601,9 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     }
     try {
       // Every track in the set must exist in the cloud first.
-      const missing = stateRef.current.set.history.present.some((it) => !stateRef.current.cloudIds.has(it.trackId));
+      const missing = stateRef.current.set.history.present.some(
+        (it) => !stateRef.current.cloudIds.has(it.trackId),
+      );
       if (missing) await syncLibrary();
       dispatch({ type: 'busy', busy: 'Saving playlist…' });
       const p = currentAsPlaylist();
@@ -482,11 +611,20 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
         p.items.map((it) => trackMap.get(it.trackId)).filter((t): t is Track => !!t),
         p.settings,
       ).map((t) => t.type);
-      const cloudId = await cloudSavePlaylist(sb, session.user.id, p, stateRef.current.cloudIds, types);
+      const cloudId = await cloudSavePlaylist(
+        sb,
+        session.user.id,
+        p,
+        stateRef.current.cloudIds,
+        types,
+      );
       const saved: Playlist = { ...p, cloudId };
       await localDb.putPlaylist(saved);
       dispatch({ type: 'setMeta', patch: { cloudId } });
-      dispatch({ type: 'playlists', playlists: [saved, ...stateRef.current.playlists.filter((x) => x.id !== saved.id)] });
+      dispatch({
+        type: 'playlists',
+        playlists: [saved, ...stateRef.current.playlists.filter((x) => x.id !== saved.id)],
+      });
       toast('Saved to the cloud');
     } catch (e) {
       toast(`Cloud save failed: ${e instanceof Error ? e.message : String(e)}`);
@@ -511,7 +649,10 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
 
   const saveStudy = useCallback(async (study: SetStudy) => {
     await localDb.putStudy(study);
-    dispatch({ type: 'studies', studies: [study, ...stateRef.current.studies.filter((s) => s.id !== study.id)] });
+    dispatch({
+      type: 'studies',
+      studies: [study, ...stateRef.current.studies.filter((s) => s.id !== study.id)],
+    });
   }, []);
   const deleteStudy = useCallback(async (id: string) => {
     await localDb.deleteStudy(id);
@@ -549,7 +690,34 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       saveStudy,
       deleteStudy,
     }),
-    [importFile, loadSample, clearLibrary, updateTrack, addTrack, removeAt, moveItem, setNote, setItems, newSet, setName, setSettings, saveSet, loadPlaylist, deletePlaylist, setFilters, toggleKey, clearFilters, toast, requestSignIn, signOut, syncLibrary, saveToCloud, share, saveStudy, deleteStudy],
+    [
+      importFile,
+      loadSample,
+      clearLibrary,
+      updateTrack,
+      addTrack,
+      removeAt,
+      moveItem,
+      setNote,
+      setItems,
+      newSet,
+      setName,
+      setSettings,
+      saveSet,
+      loadPlaylist,
+      deletePlaylist,
+      setFilters,
+      toggleKey,
+      clearFilters,
+      toast,
+      requestSignIn,
+      signOut,
+      syncLibrary,
+      saveToCloud,
+      share,
+      saveStudy,
+      deleteStudy,
+    ],
   );
 
   const value = useMemo(() => ({ state, derived, actions }), [state, derived, actions]);

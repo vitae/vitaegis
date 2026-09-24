@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
   const source = req.nextUrl.searchParams.get('source');
   let q = db
     .from('research_findings')
-    .select('id, kind, text, evidence, location, topic, strength, created_at, source:research_sources(id, title, author, kind, url)')
+    .select(
+      'id, kind, text, evidence, location, topic, strength, created_at, source:research_sources(id, title, author, kind, url)',
+    )
     .order('created_at', { ascending: false })
     .limit(500);
   if (topic) q = q.eq('topic', topic);

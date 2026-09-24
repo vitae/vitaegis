@@ -9,9 +9,16 @@ const BUCKET = 'content';
 const MAX_BYTES = 40 * 1024 * 1024;
 
 const EXT: Record<string, string> = {
-  'image/jpeg': 'jpg', 'image/png': 'png', 'image/heic': 'heic', 'image/webp': 'webp',
-  'video/mp4': 'mp4', 'video/quicktime': 'mov',
-  'audio/m4a': 'm4a', 'audio/x-m4a': 'm4a', 'audio/mpeg': 'mp3', 'audio/wav': 'wav',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/heic': 'heic',
+  'image/webp': 'webp',
+  'video/mp4': 'mp4',
+  'video/quicktime': 'mov',
+  'audio/m4a': 'm4a',
+  'audio/x-m4a': 'm4a',
+  'audio/mpeg': 'mp3',
+  'audio/wav': 'wav',
 };
 
 const kindFor = (mime: string) =>
@@ -51,7 +58,10 @@ export async function POST(req: NextRequest) {
         storagePath = `captured/${Date.now()}-${crypto.randomUUID()}.${EXT[mime] ?? 'bin'}`;
         const { error } = await db.storage
           .from(BUCKET)
-          .upload(storagePath, Buffer.from(await file.arrayBuffer()), { contentType: mime, upsert: false });
+          .upload(storagePath, Buffer.from(await file.arrayBuffer()), {
+            contentType: mime,
+            upsert: false,
+          });
         if (error) throw new Error(error.message);
       }
     } else {

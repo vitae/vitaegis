@@ -33,7 +33,9 @@ export default function ProjectCard({ project, index = 0, reveal = true }: Proje
       </div>
 
       <h3 className="text-base sm:text-lg font-semibold text-white mb-1">{project.title}</h3>
-      <p className="text-xs sm:text-sm text-white/60 leading-relaxed flex-1">{project.description}</p>
+      <p className="text-xs sm:text-sm text-white/60 leading-relaxed flex-1">
+        {project.description}
+      </p>
 
       <span className="mt-4 inline-flex items-center gap-1 text-xs text-vitae-green/80 group-hover:text-vitae-green transition-colors">
         Open

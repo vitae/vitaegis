@@ -42,18 +42,27 @@ export const KEY_NAMES: Record<Camelot, string> = {
 
 /** Pitch class (0 = C) of each note name, sharps and flats included. */
 const PITCH_CLASS: Record<string, number> = {
-  C: 0, 'B#': 0,
-  'C#': 1, DB: 1,
+  C: 0,
+  'B#': 0,
+  'C#': 1,
+  DB: 1,
   D: 2,
-  'D#': 3, EB: 3,
-  E: 4, FB: 4,
-  F: 5, 'E#': 5,
-  'F#': 6, GB: 6,
+  'D#': 3,
+  EB: 3,
+  E: 4,
+  FB: 4,
+  F: 5,
+  'E#': 5,
+  'F#': 6,
+  GB: 6,
   G: 7,
-  'G#': 8, AB: 8,
+  'G#': 8,
+  AB: 8,
   A: 9,
-  'A#': 10, BB: 10,
-  B: 11, CB: 11,
+  'A#': 10,
+  BB: 10,
+  B: 11,
+  CB: 11,
 };
 
 /** Camelot number of each minor root, by pitch class (Ab minor = 1A … Db minor = 12A). */
@@ -121,7 +130,7 @@ export function wrapNumber(n: number): number {
 
 /** Signed distance around the wheel from a to b, in -6…+6 steps. */
 export function wheelDistance(a: number, b: number): number {
-  const d = ((b - a) % 12 + 12) % 12;
+  const d = (((b - a) % 12) + 12) % 12;
   return d > 6 ? d - 12 : d;
 }
 

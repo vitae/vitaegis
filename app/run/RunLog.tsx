@@ -1,4 +1,10 @@
-import { activityStats, durationLabel, metersToFeet, metersToMiles, paceMinPerMile } from '@/lib/strava';
+import {
+  activityStats,
+  durationLabel,
+  metersToFeet,
+  metersToMiles,
+  paceMinPerMile,
+} from '@/lib/strava';
 import WeeklyMiles from './WeeklyMiles';
 
 const glass =
@@ -34,7 +40,9 @@ export default async function RunLog() {
     <section id="log" className={`${glass} mt-6 p-6 sm:p-10`}>
       <header className="text-center">
         <p className={label}>Training log</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">Progress</h2>
+        <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+          Progress
+        </h2>
       </header>
 
       <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-vitae-green/25 bg-vitae-green/25 sm:grid-cols-4">
@@ -53,8 +61,8 @@ export default async function RunLog() {
 
       {stats.longest && (
         <p className="mt-6 text-center text-sm font-light text-white/60">
-          Longest so far: {stats.longest.miles.toFixed(1)} miles, {stats.longest.name}, {dayLabel(stats.longest.date)}{' '}
-          {yearOf(stats.longest.date)}.
+          Longest so far: {stats.longest.miles.toFixed(1)} miles, {stats.longest.name},{' '}
+          {dayLabel(stats.longest.date)} {yearOf(stats.longest.date)}.
         </p>
       )}
 
@@ -63,12 +71,24 @@ export default async function RunLog() {
         <table className="mt-4 w-full min-w-[520px] text-left text-sm">
           <thead>
             <tr className="border-b border-vitae-green/25 text-[11px] uppercase tracking-[0.18em] text-white/50">
-              <th scope="col" className="py-2 pr-3 font-medium">Date</th>
-              <th scope="col" className="py-2 pr-3 font-medium">Activity</th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">Miles</th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">Pace</th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">Time</th>
-              <th scope="col" className="py-2 text-right font-medium">Climb</th>
+              <th scope="col" className="py-2 pr-3 font-medium">
+                Date
+              </th>
+              <th scope="col" className="py-2 pr-3 font-medium">
+                Activity
+              </th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">
+                Miles
+              </th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">
+                Pace
+              </th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">
+                Time
+              </th>
+              <th scope="col" className="py-2 text-right font-medium">
+                Climb
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-vitae-green/10">
@@ -76,16 +96,26 @@ export default async function RunLog() {
               <tr key={a.id} className="text-white/80">
                 <td className="whitespace-nowrap py-2.5 pr-3 tabular-nums">
                   <span className="text-white">{dayLabel(a.start_date_local)}</span>
-                  <span className="ml-2 text-xs text-white/45">{weekdayLabel(a.start_date_local)}</span>
+                  <span className="ml-2 text-xs text-white/45">
+                    {weekdayLabel(a.start_date_local)}
+                  </span>
                 </td>
                 <td className="max-w-[220px] truncate py-2.5 pr-3">
                   <span className="text-white">{a.name}</span>
                   <span className="ml-2 text-xs text-white/45">{sportLabel(a.sport_type)}</span>
                 </td>
-                <td className="py-2.5 pr-3 text-right tabular-nums">{metersToMiles(a.distance_m).toFixed(2)}</td>
-                <td className="py-2.5 pr-3 text-right tabular-nums">{paceMinPerMile(a.distance_m, a.moving_time_s) ?? '–'}</td>
-                <td className="py-2.5 pr-3 text-right tabular-nums">{durationLabel(a.moving_time_s)}</td>
-                <td className="py-2.5 text-right tabular-nums">{Math.round(metersToFeet(a.elevation_gain_m))} ft</td>
+                <td className="py-2.5 pr-3 text-right tabular-nums">
+                  {metersToMiles(a.distance_m).toFixed(2)}
+                </td>
+                <td className="py-2.5 pr-3 text-right tabular-nums">
+                  {paceMinPerMile(a.distance_m, a.moving_time_s) ?? '–'}
+                </td>
+                <td className="py-2.5 pr-3 text-right tabular-nums">
+                  {durationLabel(a.moving_time_s)}
+                </td>
+                <td className="py-2.5 text-right tabular-nums">
+                  {Math.round(metersToFeet(a.elevation_gain_m))} ft
+                </td>
               </tr>
             ))}
           </tbody>
@@ -93,7 +123,8 @@ export default async function RunLog() {
       </div>
 
       <p className="mt-6 text-center text-xs font-light text-white/40">
-        Every activity your watch uploads to Strava, oldest kept, newest first. Dates and weeks are Honolulu local time.
+        Every activity your watch uploads to Strava, oldest kept, newest first. Dates and weeks are
+        Honolulu local time.
       </p>
     </section>
   );

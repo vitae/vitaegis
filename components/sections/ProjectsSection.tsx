@@ -27,7 +27,7 @@ export default function ProjectsSection() {
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.15 },
     );
 
     if (sectionRef.current) {
@@ -43,8 +43,15 @@ export default function ProjectsSection() {
       ref={sectionRef}
       className="relative min-h-screen flex flex-col items-center justify-center text-center py-16"
     >
-      <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ width: '100%' }}>
-        <GlassContainer variant="default" glow={true} className="text-center mb-8 sm:mb-12 p-4 sm:p-8 w-full max-w-3xl mx-auto">
+      <div
+        className="section-container flex flex-col items-center justify-center mx-auto"
+        style={{ width: '100%' }}
+      >
+        <GlassContainer
+          variant="default"
+          glow={true}
+          className="text-center mb-8 sm:mb-12 p-4 sm:p-8 w-full max-w-3xl mx-auto"
+        >
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
             <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
               Explore

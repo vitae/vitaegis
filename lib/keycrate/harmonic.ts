@@ -118,7 +118,12 @@ export interface PitchResult {
  * Key a track sounds in once tempo-matched. With key lock the key never moves; without it,
  * anything past ±3% shifts by the nearest whole semitone.
  */
-export function pitchedKey(key: Camelot | null, bpm: number | null, targetBpm: number | null, keyLock: boolean): PitchResult {
+export function pitchedKey(
+  key: Camelot | null,
+  bpm: number | null,
+  targetBpm: number | null,
+  keyLock: boolean,
+): PitchResult {
   if (!bpm || !targetBpm) return { percent: 0, semitones: 0, effectiveKey: key };
   const percent = pitchPercent(bpm, targetBpm);
   if (keyLock || Math.abs(percent) <= PITCH_SHIFT_THRESHOLD_PCT || !key) {
@@ -144,7 +149,11 @@ export interface BpmMatch {
  * Whether `candidate` can be mixed at `current` BPM within `tolerancePct`, directly or by
  * treating it as half-time (70↔140) or double-time (170↔85). Null when nothing fits.
  */
-export function matchBpm(current: number | null, candidate: number | null, tolerancePct: number): BpmMatch | null {
+export function matchBpm(
+  current: number | null,
+  candidate: number | null,
+  tolerancePct: number,
+): BpmMatch | null {
   if (!current || !candidate) return null;
   const tries: Array<[BpmMatchKind, number]> = [
     ['direct', candidate],
@@ -186,9 +195,14 @@ export function classifyTransition(from: Track, to: Track, settings: PlaylistSet
   const type = classifyKeys(from.camelot, pitch.effectiveKey);
 
   const parts: string[] = [TRANSITION_LABEL[type]];
-  if (pitch.semitones !== 0) parts.push(`${pitch.semitones > 0 ? '+' : ''}${pitch.semitones} st pitched`);
+  if (pitch.semitones !== 0)
+    parts.push(`${pitch.semitones > 0 ? '+' : ''}${pitch.semitones} st pitched`);
   if (bpm) {
-    parts.push(bpm.kind === 'direct' ? `${fmtPct(bpm.percent)} BPM` : `${bpm.kind}-time, ${fmtPct(bpm.percent)}`);
+    parts.push(
+      bpm.kind === 'direct'
+        ? `${fmtPct(bpm.percent)} BPM`
+        : `${bpm.kind}-time, ${fmtPct(bpm.percent)}`,
+    );
   } else if (bpmChangePct !== null) {
     parts.push(`${fmtPct(bpmChangePct)} BPM, out of range`);
   } else {
@@ -212,6 +226,7 @@ export function classifyTransition(from: Track, to: Track, settings: PlaylistSet
 /** Transitions between consecutive tracks of a set. */
 export function setTransitions(tracks: Track[], settings: PlaylistSettings): Transition[] {
   const out: Transition[] = [];
-  for (let i = 1; i < tracks.length; i++) out.push(classifyTransition(tracks[i - 1], tracks[i], settings));
+  for (let i = 1; i < tracks.length; i++)
+    out.push(classifyTransition(tracks[i - 1], tracks[i], settings));
   return out;
 }

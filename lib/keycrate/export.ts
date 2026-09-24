@@ -7,7 +7,12 @@ import { setTransitions, TRANSITION_LABEL } from './harmonic';
 import type { PlaylistSettings, Track } from './types';
 
 export function escapeXml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 /** Path → the file://localhost/… form rekordbox writes. */
@@ -47,7 +52,9 @@ export function toRekordboxXml(name: string, tracks: Track[]): string {
     lines.push(`    <TRACK ${attrs.join(' ')}/>`);
   });
   lines.push('  </COLLECTION>', '  <PLAYLISTS>', '    <NODE Type="0" Name="ROOT" Count="1">');
-  lines.push(`      <NODE Name="${escapeXml(name)}" Type="1" KeyType="0" Entries="${tracks.length}">`);
+  lines.push(
+    `      <NODE Name="${escapeXml(name)}" Type="1" KeyType="0" Entries="${tracks.length}">`,
+  );
   tracks.forEach((t, i) => {
     const id = t.sourceId && /^\d+$/.test(t.sourceId) ? t.sourceId : String(1_000_000 + i);
     lines.push(`        <TRACK Key="${escapeXml(id)}"/>`);
@@ -72,7 +79,21 @@ const csvCell = (v: string | number | null | undefined) => {
 
 export function toCsv(tracks: Track[], settings: PlaylistSettings): string {
   const transitions = setTransitions(tracks, settings);
-  const rows = [['position', 'artist', 'title', 'key', 'bpm', 'duration', 'energy', 'genre', 'label', 'transition', 'bpm change %']];
+  const rows = [
+    [
+      'position',
+      'artist',
+      'title',
+      'key',
+      'bpm',
+      'duration',
+      'energy',
+      'genre',
+      'label',
+      'transition',
+      'bpm change %',
+    ],
+  ];
   tracks.forEach((t, i) => {
     const tr = i > 0 ? transitions[i - 1] : null;
     rows.push([

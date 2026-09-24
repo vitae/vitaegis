@@ -6,7 +6,11 @@ export const dynamic = 'force-dynamic';
 const META_VERSION = process.env.META_API_VERSION || 'v21.0';
 const GRAPH = `https://graph.facebook.com/${META_VERSION}`;
 
-async function form(url: string, body: Record<string, string>, headers: Record<string, string> = {}) {
+async function form(
+  url: string,
+  body: Record<string, string>,
+  headers: Record<string, string> = {},
+) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers },
@@ -47,10 +51,15 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: s
         grant_type: 'authorization_code',
         redirect_uri: redirectUri,
       });
-      const me = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
-        headers: { Authorization: `Bearer ${t.access_token}` },
-        cache: 'no-store',
-      }).then((r) => r.json()).catch(() => ({}));
+      const me = await fetch(
+        'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+        {
+          headers: { Authorization: `Bearer ${t.access_token}` },
+          cache: 'no-store',
+        },
+      )
+        .then((r) => r.json())
+        .catch(() => ({}));
       const channel = me?.items?.[0];
       await saveAccount({
         platform: 'youtube',
@@ -79,16 +88,25 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: s
     } else if (platform === 'twitter') {
       const verifier = req.cookies.get('social_verifier')?.value;
       if (!verifier) return NextResponse.redirect(`${back}?social=verifier-missing`);
-      const basic = Buffer.from(`${process.env.X_CLIENT_ID}:${process.env.X_CLIENT_SECRET}`).toString('base64');
+      const basic = Buffer.from(
+        `${process.env.X_CLIENT_ID}:${process.env.X_CLIENT_SECRET}`,
+      ).toString('base64');
       const t = await form(
         'https://api.x.com/2/oauth2/token',
-        { code, grant_type: 'authorization_code', redirect_uri: redirectUri, code_verifier: verifier },
+        {
+          code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+          code_verifier: verifier,
+        },
         { Authorization: `Basic ${basic}` },
       );
       const me = await fetch('https://api.x.com/2/users/me', {
         headers: { Authorization: `Bearer ${t.access_token}` },
         cache: 'no-store',
-      }).then((r) => r.json()).catch(() => ({}));
+      })
+        .then((r) => r.json())
+        .catch(() => ({}));
       await saveAccount({
         platform: 'twitter',
         account_id: me?.data?.id ?? null,

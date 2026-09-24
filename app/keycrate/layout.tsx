@@ -3,7 +3,12 @@ import { Jost } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './keycrate.css';
 
-const jost = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], display: 'swap', variable: '--kc-font' });
+const jost = Jost({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  display: 'swap',
+  variable: '--kc-font',
+});
 
 const description =
   'Harmonic playlist builder for a rekordbox library: browse by Camelot key and BPM, tap tracks into a set, and get in-key suggestions for the next one.';

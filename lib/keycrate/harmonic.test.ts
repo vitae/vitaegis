@@ -121,29 +121,45 @@ describe('matchBpm', () => {
 
 describe('classifyTransition', () => {
   it('reads like the suggestion panel', () => {
-    const t = classifyTransition(track({ camelot: '8A', bpm: 124 }), track({ camelot: '9A', bpm: 126 }), DEFAULT_SETTINGS);
+    const t = classifyTransition(
+      track({ camelot: '8A', bpm: 124 }),
+      track({ camelot: '9A', bpm: 126 }),
+      DEFAULT_SETTINGS,
+    );
     expect(t.type).toBe('fifth');
     expect(t.reason).toBe('Perfect 5th, -1.6% BPM');
     expect(t.clash).toBe(false);
   });
   it('classifies with the pitched key when the tempo match is big', () => {
     // 9A pitched up a semitone becomes 4A: from 8A that is a third, not the fifth it looks like.
-    const t = classifyTransition(track({ camelot: '8A', bpm: 128 }), track({ camelot: '9A', bpm: 120 }), {
-      ...DEFAULT_SETTINGS,
-      bpmTolerance: 8,
-    });
+    const t = classifyTransition(
+      track({ camelot: '8A', bpm: 128 }),
+      track({ camelot: '9A', bpm: 120 }),
+      {
+        ...DEFAULT_SETTINGS,
+        bpmTolerance: 8,
+      },
+    );
     expect(t.semitoneShift).toBe(1);
     expect(t.effectiveToKey).toBe('4A');
     expect(t.type).toBe('third');
-    const locked = classifyTransition(track({ camelot: '8A', bpm: 128 }), track({ camelot: '9A', bpm: 120 }), {
-      ...DEFAULT_SETTINGS,
-      bpmTolerance: 8,
-      keyLock: true,
-    });
+    const locked = classifyTransition(
+      track({ camelot: '8A', bpm: 128 }),
+      track({ camelot: '9A', bpm: 120 }),
+      {
+        ...DEFAULT_SETTINGS,
+        bpmTolerance: 8,
+        keyLock: true,
+      },
+    );
     expect(locked.type).toBe('fifth');
   });
   it('labels half-time matches', () => {
-    const t = classifyTransition(track({ camelot: '8A', bpm: 140 }), track({ camelot: '8A', bpm: 70 }), DEFAULT_SETTINGS);
+    const t = classifyTransition(
+      track({ camelot: '8A', bpm: 140 }),
+      track({ camelot: '8A', bpm: 70 }),
+      DEFAULT_SETTINGS,
+    );
     expect(t.bpm?.kind).toBe('half');
     expect(t.reason).toContain('half-time');
   });

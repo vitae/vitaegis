@@ -15,7 +15,11 @@ function splitCaption(caption: string) {
   return { title, description };
 }
 
-export async function postToYouTube(caption: string, mediaUrl: string, kind: string): Promise<PostResult> {
+export async function postToYouTube(
+  caption: string,
+  mediaUrl: string,
+  kind: string,
+): Promise<PostResult> {
   if (kind !== 'video' || !mediaUrl) throw new Error('YouTube needs a video');
   const account = await accessToken('youtube');
   const { title, description } = splitCaption(caption);
@@ -35,11 +39,17 @@ export async function postToYouTube(caption: string, mediaUrl: string, kind: str
     },
     body: JSON.stringify({
       snippet: { title, description, categoryId: '22' },
-      status: { privacyStatus: process.env.YOUTUBE_PRIVACY || 'public', selfDeclaredMadeForKids: false },
+      status: {
+        privacyStatus: process.env.YOUTUBE_PRIVACY || 'public',
+        selfDeclaredMadeForKids: false,
+      },
     }),
     cache: 'no-store',
   });
-  if (!start.ok) throw new Error(`YouTube session failed: ${start.status} ${(await start.text()).slice(0, 300)}`);
+  if (!start.ok)
+    throw new Error(
+      `YouTube session failed: ${start.status} ${(await start.text()).slice(0, 300)}`,
+    );
   const location = start.headers.get('location');
   if (!location) throw new Error('YouTube returned no resumable upload URL');
 
@@ -51,7 +61,8 @@ export async function postToYouTube(caption: string, mediaUrl: string, kind: str
     cache: 'no-store',
   });
   const json = await put.json().catch(() => ({}));
-  if (!put.ok) throw new Error(`YouTube upload failed: ${put.status} ${JSON.stringify(json).slice(0, 300)}`);
+  if (!put.ok)
+    throw new Error(`YouTube upload failed: ${put.status} ${JSON.stringify(json).slice(0, 300)}`);
 
   return {
     platform: 'youtube',

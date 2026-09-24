@@ -8,7 +8,10 @@ import type { RunRoute, Poi } from './routes';
 
 // Two CDNs, tried in order, so one slow mirror does not blank the map.
 const LEAFLET_SOURCES = [
-  { css: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', js: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js' },
+  {
+    css: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+    js: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  },
   {
     css: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
     js: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
@@ -17,7 +20,8 @@ const LEAFLET_SOURCES = [
 const LABEL_ZOOM = 14; // point-of-interest labels only show from this zoom in
 // Standard OSM tiles, inverted to a dark scheme in run.css.
 const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 let leafletPromise: Promise<any> | null = null;
 function loadLeaflet(): Promise<any> {
@@ -49,7 +53,6 @@ function loadLeaflet(): Promise<any> {
   return leafletPromise;
 }
 
-
 // Great-circle distance in miles, used to space the direction arrows evenly.
 const R_MI = 3958.7613;
 function distMi(a: [number, number], b: [number, number]) {
@@ -74,7 +77,8 @@ function bearing(a: [number, number], b: [number, number]) {
 /** Evenly spaced points along the track, each with the heading at that point. */
 function arrowPoints(latlngs: [number, number][], count: number) {
   const steps: number[] = [0];
-  for (let i = 1; i < latlngs.length; i++) steps.push(steps[i - 1] + distMi(latlngs[i - 1], latlngs[i]));
+  for (let i = 1; i < latlngs.length; i++)
+    steps.push(steps[i - 1] + distMi(latlngs[i - 1], latlngs[i]));
   const total = steps[steps.length - 1];
   if (!total) return [];
   const out: { at: [number, number]; deg: number }[] = [];
@@ -118,15 +122,24 @@ export default function RunMap({ routes, pois, selected, onSelect }: Props) {
           attributionControl: true,
         });
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        L.tileLayer(TILES, { attribution: ATTRIBUTION, maxZoom: 19, className: 'run-tiles' }).addTo(map);
+        L.tileLayer(TILES, { attribution: ATTRIBUTION, maxZoom: 19, className: 'run-tiles' }).addTo(
+          map,
+        );
         // Give the map a view before any layer is added; renderers need one to draw.
-        const all = L.latLngBounds(routes.flatMap((r) => r.coords.map(([lon, lat]) => [lat, lon] as [number, number])));
+        const all = L.latLngBounds(
+          routes.flatMap((r) => r.coords.map(([lon, lat]) => [lat, lon] as [number, number])),
+        );
         map.fitBounds(all, { padding: [20, 20], animate: false });
 
         // Dim halo + coloured line per route, drawn back-to-front so short routes stay clickable.
         [...routes].reverse().forEach((r) => {
           const latlngs = r.coords.map(([lon, lat]) => [lat, lon]);
-          const halo = L.polyline(latlngs, { color: '#000', weight: 8, opacity: 0.55, interactive: false });
+          const halo = L.polyline(latlngs, {
+            color: '#000',
+            weight: 8,
+            opacity: 0.55,
+            interactive: false,
+          });
           const line = L.polyline(latlngs, { color: r.color, weight: 3, opacity: 0.35 });
           line.on('click', () => onSelectRef.current(r.slug));
           line.bindTooltip(r.name, { sticky: true, className: 'run-tip' });
@@ -226,7 +239,9 @@ export default function RunMap({ routes, pois, selected, onSelect }: Props) {
       <div ref={containerRef} className="h-full w-full bg-black" />
       {status !== 'ready' && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-[11px] font-semibold uppercase tracking-[0.25em] text-vitae-green/70">
-          {status === 'loading' ? 'Acquiring satellites…' : 'Map unavailable — links below still work'}
+          {status === 'loading'
+            ? 'Acquiring satellites…'
+            : 'Map unavailable — links below still work'}
         </div>
       )}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vitae-green/60 to-transparent" />

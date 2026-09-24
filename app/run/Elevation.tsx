@@ -4,7 +4,11 @@
 
 import { useMemo, useState } from 'react';
 
-interface Props { profile: [number, number][]; color: string; miles: number }
+interface Props {
+  profile: [number, number][];
+  color: string;
+  miles: number;
+}
 
 export default function Elevation({ profile, color, miles }: Props) {
   const [hover, setHover] = useState<number | null>(null);
@@ -30,7 +34,10 @@ export default function Elevation({ profile, color, miles }: Props) {
     return { path, area, minFt: lo, maxFt: hi, x, y, ticks };
   }, [profile, miles]);
 
-  const idx = hover === null ? null : Math.min(profile.length - 1, Math.max(0, Math.round(hover * (profile.length - 1))));
+  const idx =
+    hover === null
+      ? null
+      : Math.min(profile.length - 1, Math.max(0, Math.round(hover * (profile.length - 1))));
   const pt = idx === null ? null : profile[idx];
 
   const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -61,23 +68,64 @@ export default function Elevation({ profile, color, miles }: Props) {
         </defs>
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-            <text x={padL - 6} y={y(t) + 3} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.45)">
+            <line
+              x1={padL}
+              x2={W - padR}
+              y1={y(t)}
+              y2={y(t)}
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth="1"
+            />
+            <text
+              x={padL - 6}
+              y={y(t) + 3}
+              textAnchor="end"
+              fontSize="9"
+              fill="rgba(255,255,255,0.45)"
+            >
               {t}
             </text>
           </g>
         ))}
         {mileTicks.map((m) => (
-          <text key={m} x={x(m)} y={H - 6} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.45)">
+          <text
+            key={m}
+            x={x(m)}
+            y={H - 6}
+            textAnchor="middle"
+            fontSize="9"
+            fill="rgba(255,255,255,0.45)"
+          >
             {m}
           </text>
         ))}
         <path d={area} fill={`url(#fill-${color.slice(1)})`} />
-        <path d={path} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <path
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
         {pt && (
           <g>
-            <line x1={x(pt[0])} x2={x(pt[0])} y1={padT} y2={H - padB} stroke="rgba(255,255,255,0.35)" strokeDasharray="3 3" />
-            <circle cx={x(pt[0])} cy={y(pt[1])} r="4.5" fill="#000" stroke={color} strokeWidth="2" />
+            <line
+              x1={x(pt[0])}
+              x2={x(pt[0])}
+              y1={padT}
+              y2={H - padB}
+              stroke="rgba(255,255,255,0.35)"
+              strokeDasharray="3 3"
+            />
+            <circle
+              cx={x(pt[0])}
+              cy={y(pt[1])}
+              r="4.5"
+              fill="#000"
+              stroke={color}
+              strokeWidth="2"
+            />
           </g>
         )}
       </svg>

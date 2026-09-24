@@ -57,7 +57,9 @@ export function greatCircleMiles(a: Airport, b: Airport): number {
   const rad = Math.PI / 180;
   const dLat = (b.lat - a.lat) * rad;
   const dLon = (b.lon - a.lon) * rad;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
   return 2 * R_MILES * Math.asin(Math.sqrt(h));
 }
 
@@ -65,6 +67,7 @@ export function greatCircleMiles(a: Airport, b: Airport): number {
 export function legMiles(airports: Airports, leg: Leg): number {
   const codes = waypoints(leg);
   let miles = 0;
-  for (let i = 1; i < codes.length; i++) miles += greatCircleMiles(airports[codes[i - 1]], airports[codes[i]]);
+  for (let i = 1; i < codes.length; i++)
+    miles += greatCircleMiles(airports[codes[i - 1]], airports[codes[i]]);
   return Math.round(miles / 10) * 10;
 }

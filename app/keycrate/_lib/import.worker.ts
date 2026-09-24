@@ -14,7 +14,10 @@ export type ImportMessage =
   | { type: 'done'; tracks: Track[]; playlists: Array<{ name: string; trackIds: string[] }> }
   | { type: 'error'; message: string };
 
-const ctx = self as unknown as { postMessage: (m: ImportMessage) => void; onmessage: ((e: MessageEvent<ImportRequest>) => void) | null };
+const ctx = self as unknown as {
+  postMessage: (m: ImportMessage) => void;
+  onmessage: ((e: MessageEvent<ImportRequest>) => void) | null;
+};
 
 ctx.onmessage = (e) => {
   const { kind, text } = e.data;
@@ -24,7 +27,9 @@ ctx.onmessage = (e) => {
       ctx.postMessage({ type: 'done', tracks, playlists: [] });
       return;
     }
-    const { tracks, playlists } = parseRekordboxXml(text, (p) => ctx.postMessage({ type: 'progress', parsed: p.parsed, total: p.total }));
+    const { tracks, playlists } = parseRekordboxXml(text, (p) =>
+      ctx.postMessage({ type: 'progress', parsed: p.parsed, total: p.total }),
+    );
     ctx.postMessage({ type: 'done', tracks, playlists });
   } catch (err) {
     ctx.postMessage({ type: 'error', message: err instanceof Error ? err.message : String(err) });

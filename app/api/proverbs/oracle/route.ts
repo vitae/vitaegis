@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 }
 
@@ -17,7 +17,7 @@ async function logConsultation(
   supabase: ReturnType<typeof getSupabase>,
   question: string,
   reply: string | null,
-  error: string | null
+  error: string | null,
 ) {
   try {
     await supabase.from('oracle_logs').insert({
@@ -52,19 +52,14 @@ export async function POST(req: Request) {
       await logConsultation(supabase, message, null, `Supabase error: ${dbError.message}`);
       return NextResponse.json(
         { reply: 'ARCHIVE OFFLINE. The vaults are sealed — try again shortly.' },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
     const library = (proverbs || [])
       .map(
-        (
-          p: { text: string; source: string; tag: string; note?: string },
-          i: number
-        ) =>
-          `[${i + 1}] "${p.text}" — ${p.source} [${p.tag}]${
-            p.note ? ` | Note: ${p.note}` : ''
-          }`
+        (p: { text: string; source: string; tag: string; note?: string }, i: number) =>
+          `[${i + 1}] "${p.text}" — ${p.source} [${p.tag}]${p.note ? ` | Note: ${p.note}` : ''}`,
       )
       .join('\n');
 
@@ -100,7 +95,7 @@ ${library || 'No proverbs yet. The archive is empty.'}`,
     await logConsultation(supabase, message, null, errorMessage);
     return NextResponse.json(
       { reply: 'TRANSMISSION FAILED. The oracle could not decode the signal — try again.' },
-      { status: 200 }
+      { status: 200 },
     );
   }
 }

@@ -10,13 +10,18 @@ const API = 'https://open.tiktokapis.com/v2';
 async function call(path: string, token: string, body: unknown) {
   const res = await fetch(`${API}${path}`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json; charset=UTF-8' },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
     body: JSON.stringify(body),
     cache: 'no-store',
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || (json?.error?.code && json.error.code !== 'ok')) {
-    throw new Error(`TikTok ${path} failed: ${res.status} ${JSON.stringify(json?.error ?? json).slice(0, 400)}`);
+    throw new Error(
+      `TikTok ${path} failed: ${res.status} ${JSON.stringify(json?.error ?? json).slice(0, 400)}`,
+    );
   }
   return json;
 }
@@ -50,7 +55,9 @@ export async function postToTikTok(
   // reporting success for a post that never appeared.
   for (let i = 0; i < 20; i++) {
     await new Promise((r) => setTimeout(r, 5000));
-    const status = await call('/post/publish/status/fetch/', account.access_token, { publish_id: publishId });
+    const status = await call('/post/publish/status/fetch/', account.access_token, {
+      publish_id: publishId,
+    });
     const s = status?.data?.status;
     if (s === 'PUBLISH_COMPLETE') {
       return { platform: 'tiktok', id: publishId, raw: status };
@@ -60,5 +67,9 @@ export async function postToTikTok(
     }
   }
   // Still processing: the post is in flight, so record it rather than retrying and double-posting.
-  return { platform: 'tiktok', id: publishId, raw: { status: 'PROCESSING', publish_id: publishId } };
+  return {
+    platform: 'tiktok',
+    id: publishId,
+    raw: { status: 'PROCESSING', publish_id: publishId },
+  };
 }

@@ -30,7 +30,9 @@ export default function WeeklyMiles({ weeks }: { weeks: WeekBucket[] }) {
     const x = (i: number) => padL + i * bandW + (bandW - barW) / 2;
     const y = (mi: number) => padT + (1 - mi / hi) * (H - padT - padB);
     let peak = 0;
-    weeks.forEach((w, i) => { if (w.miles > weeks[peak].miles) peak = i; });
+    weeks.forEach((w, i) => {
+      if (w.miles > weeks[peak].miles) peak = i;
+    });
     return { max: hi, ticks, bandW, barW, x, y, peak };
   }, [weeks]);
 
@@ -48,8 +50,21 @@ export default function WeeklyMiles({ weeks }: { weeks: WeekBucket[] }) {
       >
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-            <text x={padL - 6} y={y(t) + 3} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.45)">
+            <line
+              x1={padL}
+              x2={W - padR}
+              y1={y(t)}
+              y2={y(t)}
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth="1"
+            />
+            <text
+              x={padL - 6}
+              y={y(t) + 3}
+              textAnchor="end"
+              fontSize="9"
+              fill="rgba(255,255,255,0.45)"
+            >
               {t}
             </text>
           </g>
@@ -81,7 +96,13 @@ export default function WeeklyMiles({ weeks }: { weeks: WeekBucket[] }) {
                 onPointerEnter={() => setHover(i)}
               />
               {i % 2 === 0 && (
-                <text x={x(i) + barW / 2} y={H - 8} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.45)">
+                <text
+                  x={x(i) + barW / 2}
+                  y={H - 8}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="rgba(255,255,255,0.45)"
+                >
                   {w.label}
                 </text>
               )}
@@ -102,7 +123,14 @@ export default function WeeklyMiles({ weeks }: { weeks: WeekBucket[] }) {
           </text>
         )}
 
-        <line x1={padL} x2={W - padR} y1={base} y2={base} stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
+        <line
+          x1={padL}
+          x2={W - padR}
+          y1={base}
+          y2={base}
+          stroke="rgba(255,255,255,0.22)"
+          strokeWidth="1"
+        />
       </svg>
 
       <figcaption className="mt-1 flex justify-between text-[11px] uppercase tracking-[0.18em] text-white/50">

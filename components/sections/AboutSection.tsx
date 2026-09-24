@@ -19,7 +19,7 @@ export default function AboutSection() {
           }
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     );
 
     if (sectionRef.current) {
@@ -42,10 +42,17 @@ export default function AboutSection() {
       ref={sectionRef}
       className="relative min-h-screen flex flex-col items-center justify-center text-center"
     >
-      <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ width: '100%' }}>
+      <div
+        className="section-container flex flex-col items-center justify-center mx-auto"
+        style={{ width: '100%' }}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-center w-full max-w-full">
           {/* Left Column - Text Content in Glassmorphic Container */}
-          <GlassContainer variant="default" glow={true} className="p-3 sm:p-6 lg:p-10 w-full max-w-full">
+          <GlassContainer
+            variant="default"
+            glow={true}
+            className="p-3 sm:p-6 lg:p-10 w-full max-w-full"
+          >
             {/* Section Label */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
               <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
@@ -55,8 +62,7 @@ export default function AboutSection() {
 
             {/* Main Heading */}
             <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-              Where Ancient{' '}
-              <span className="text-vitae-green">Wisdom</span>
+              Where Ancient <span className="text-vitae-green">Wisdom</span>
               <br />
               Meets Cyber{' '}
               <span className="bg-gradient-to-r from-vitae-green to-emerald-400 bg-clip-text text-transparent">
@@ -67,10 +73,15 @@ export default function AboutSection() {
             {/* Description */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
               <p>
-                Vitaegis is a portmanteau of the words Vitae and Aegis, which means the protection of life. Vitaegis bridges millennia of spiritual wisdom with modern cyber technology. True wellness extends beyond the physical: it encompasses mind, body, spirit, and now; cyber presence. <br />
-                </p> 
+                Vitaegis is a portmanteau of the words Vitae and Aegis, which means the protection
+                of life. Vitaegis bridges millennia of spiritual wisdom with modern cyber
+                technology. True wellness extends beyond the physical: it encompasses mind, body,
+                spirit, and now; cyber presence. <br />
+              </p>
               <p>
-                We will help you to look within and find inner peace through foundational practices and secret knowledge. Join our community united in our shared pursuit of wellness and enhanced life experiences. <br />
+                We will help you to look within and find inner peace through foundational practices
+                and secret knowledge. Join our community united in our shared pursuit of wellness
+                and enhanced life experiences. <br />
               </p>
             </div>
 

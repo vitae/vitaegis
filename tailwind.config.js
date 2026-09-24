@@ -44,11 +44,12 @@ module.exports = {
       boxShadow: {
         'neon-sm': '0 0 10px rgba(0, 255, 0, 0.5)',
         'neon-md': '0 0 20px rgba(0, 255, 0, 0.5), 0 0 40px rgba(0, 255, 0, 0.3)',
-        'neon-lg': '0 0 40px #00ff00, 0 0 80px rgba(0, 255, 0, 0.5), 0 0 120px rgba(0, 255, 0, 0.25)',
-        'glass': '0 8px 32px rgba(0, 0, 0, 0.4)',
+        'neon-lg':
+          '0 0 40px #00ff00, 0 0 80px rgba(0, 255, 0, 0.5), 0 0 120px rgba(0, 255, 0, 0.25)',
+        glass: '0 8px 32px rgba(0, 0, 0, 0.4)',
       },
       backdropBlur: {
-        'glass': '20px',
+        glass: '20px',
       },
       animation: {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',

@@ -117,13 +117,25 @@ export async function getStockPrices(): Promise<StockPrices> {
         }
       } else {
         prices[row.ticker] = row.end;
-        console.warn('[stocks] falling back to snapshot:', r.reason instanceof Error ? r.reason.message : r.reason);
+        console.warn(
+          '[stocks] falling back to snapshot:',
+          r.reason instanceof Error ? r.reason.message : r.reason,
+        );
       }
     });
     if (live === 0) return snapshot();
-    return { asOf: new Date(newest * 1000).toISOString(), prices, starts, startDates, source: 'live' };
+    return {
+      asOf: new Date(newest * 1000).toISOString(),
+      prices,
+      starts,
+      startDates,
+      source: 'live',
+    };
   } catch (err) {
-    console.warn('[stocks] live fetch failed, serving snapshot:', err instanceof Error ? err.message : err);
+    console.warn(
+      '[stocks] live fetch failed, serving snapshot:',
+      err instanceof Error ? err.message : err,
+    );
     return snapshot();
   }
 }

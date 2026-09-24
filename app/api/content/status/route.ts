@@ -10,7 +10,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest) {
   const admin = process.env.CONTENT_ADMIN_KEY;
-  if (!admin || (req.headers.get('x-admin-key') !== admin && req.nextUrl.searchParams.get('key') !== admin)) {
+  if (
+    !admin ||
+    (req.headers.get('x-admin-key') !== admin && req.nextUrl.searchParams.get('key') !== admin)
+  ) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -39,7 +42,10 @@ export async function GET(req: NextRequest) {
       GOOGLE_OAUTH_CLIENT_ID: has('GOOGLE_OAUTH_CLIENT_ID'),
       GOOGLE_OAUTH_CLIENT_SECRET: has('GOOGLE_OAUTH_CLIENT_SECRET'),
     },
-    tiktok: { TIKTOK_CLIENT_KEY: has('TIKTOK_CLIENT_KEY'), TIKTOK_CLIENT_SECRET: has('TIKTOK_CLIENT_SECRET') },
+    tiktok: {
+      TIKTOK_CLIENT_KEY: has('TIKTOK_CLIENT_KEY'),
+      TIKTOK_CLIENT_SECRET: has('TIKTOK_CLIENT_SECRET'),
+    },
     x: { X_CLIENT_ID: has('X_CLIENT_ID'), X_CLIENT_SECRET: has('X_CLIENT_SECRET') },
   };
 
@@ -68,7 +74,11 @@ export async function GET(req: NextRequest) {
       ),
       env,
       database: db ? { tables, bucket } : 'supabase not configured',
-      connected: accounts.map((a) => ({ platform: a.platform, name: a.account_name, id: a.account_id })),
+      connected: accounts.map((a) => ({
+        platform: a.platform,
+        name: a.account_name,
+        id: a.account_id,
+      })),
     },
     { headers: { 'Cache-Control': 'no-store' } },
   );

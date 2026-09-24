@@ -14,7 +14,8 @@ export function decodeEntities(s: string): string {
   if (s.indexOf('&') === -1) return s;
   return s.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-z]+);/g, (m, e: string) => {
     if (e[0] === '#') {
-      const code = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      const code =
+        e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
       return Number.isFinite(code) ? String.fromCodePoint(code) : m;
     }
     return ENTITIES[e] ?? m;
@@ -49,7 +50,11 @@ const num = (v: string | undefined): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-export function trackFromAttrs(a: Record<string, string>, tempo: TempoMark[], cues: HotCue[]): Track | null {
+export function trackFromAttrs(
+  a: Record<string, string>,
+  tempo: TempoMark[],
+  cues: HotCue[],
+): Track | null {
   const trackId = a.TrackID;
   if (!trackId) return null;
   const bpm = num(a.AverageBpm);
@@ -93,7 +98,10 @@ export interface ParseResult {
  * Parses the whole XML string. `onProgress` fires every 500 tracks so the worker can
  * report back without flooding the main thread.
  */
-export function parseRekordboxXml(xml: string, onProgress?: (p: ParseProgress) => void): ParseResult {
+export function parseRekordboxXml(
+  xml: string,
+  onProgress?: (p: ParseProgress) => void,
+): ParseResult {
   const tracks: Track[] = [];
   const totalMatch = xml.match(/<COLLECTION[^>]*\bEntries="(\d+)"/);
   const total = totalMatch ? Number(totalMatch[1]) : null;

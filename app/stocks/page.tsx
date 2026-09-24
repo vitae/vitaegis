@@ -39,7 +39,11 @@ export default async function StocksPage() {
     // page scrolls inside its own full-viewport container.
     <main
       className="nav-clear fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain bg-black text-left text-white"
-      style={{ fontFamily: "'Jost', sans-serif", WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+      style={{
+        fontFamily: "'Jost', sans-serif",
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
     >
       <div className="relative mx-auto max-w-3xl px-4 pb-32 pt-10 sm:px-6">
         <Link
@@ -53,16 +57,17 @@ export default async function StocksPage() {
           <p className="text-sm text-vitae-gray">Stocks</p>
           <h1 className="mt-2 text-4xl font-semibold text-vitae-green sm:text-5xl">Wealth Board</h1>
           <p className="mt-4 max-w-xl text-base font-light text-white/70">
-            Twelve tickers, ranked by how far they have moved over the period you pick, from one day to
-            five years. Prices are daily closes from Yahoo Finance, refreshed hourly.
+            Twelve tickers, ranked by how far they have moved over the period you pick, from one day
+            to five years. Prices are daily closes from Yahoo Finance, refreshed hourly.
           </p>
         </header>
 
         <StocksBoard rows={rows} startDates={startDates} asOf={asOfText} source={source} />
 
         <p className="mt-8 text-xs font-light leading-relaxed text-vitae-gray">
-          Not investment advice. Closes are adjusted for splits but not dividends, in US dollars; Bitcoin is the daily close in
-          UTC. When the live feed is unavailable the board shows the last saved snapshot.
+          Not investment advice. Closes are adjusted for splits but not dividends, in US dollars;
+          Bitcoin is the daily close in UTC. When the live feed is unavailable the board shows the
+          last saved snapshot.
         </p>
       </div>
     </main>

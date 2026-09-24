@@ -113,7 +113,10 @@ export default function ProverbsPage() {
         body: JSON.stringify({ message: userMsg }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: 'assistant', text: data.reply || data.error || 'No response received.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: data.reply || data.error || 'No response received.' },
+      ]);
     } catch (err) {
       const detail = err instanceof Error ? err.message : 'Unknown error';
       console.error('Oracle fetch failed:', detail);
@@ -219,8 +222,7 @@ export default function ProverbsPage() {
             }}
           >
             <span>
-              ARCHIVE:{' '}
-              <span style={{ color: '#00ff9d' }}>{proverbs.length} ENTRIES</span>
+              ARCHIVE: <span style={{ color: '#00ff9d' }}>{proverbs.length} ENTRIES</span>
             </span>
             <span>|</span>
             <span>
@@ -250,8 +252,7 @@ export default function ProverbsPage() {
               style={{
                 background: view === key ? '#00ff9d12' : 'transparent',
                 border: 'none',
-                borderBottom:
-                  view === key ? '2px solid #00ff9d' : '2px solid transparent',
+                borderBottom: view === key ? '2px solid #00ff9d' : '2px solid transparent',
                 color: view === key ? '#00ff9d' : '#00ff9d44',
                 padding: '10px 24px',
                 cursor: 'pointer',
@@ -303,11 +304,8 @@ export default function ProverbsPage() {
                     style={{
                       maxWidth: '88%',
                       padding: '12px 16px',
-                      background:
-                        m.role === 'user' ? '#00cfff08' : '#00ff9d08',
-                      border: `1px solid ${
-                        m.role === 'user' ? '#00cfff1a' : '#00ff9d1a'
-                      }`,
+                      background: m.role === 'user' ? '#00cfff08' : '#00ff9d08',
+                      border: `1px solid ${m.role === 'user' ? '#00cfff1a' : '#00ff9d1a'}`,
                       fontSize: 13,
                       lineHeight: 1.75,
                       color: m.role === 'user' ? '#00cfff' : '#c0ffd8',
@@ -422,19 +420,11 @@ export default function ProverbsPage() {
                   key={t}
                   onClick={() => setFilterTag(t)}
                   style={{
-                    background:
-                      filterTag === t
-                        ? `${TAG_COLORS[t] || '#00ff9d'}18`
-                        : 'transparent',
+                    background: filterTag === t ? `${TAG_COLORS[t] || '#00ff9d'}18` : 'transparent',
                     border: `1px solid ${
-                      filterTag === t
-                        ? TAG_COLORS[t] || '#00ff9d'
-                        : '#00ff9d1a'
+                      filterTag === t ? TAG_COLORS[t] || '#00ff9d' : '#00ff9d1a'
                     }`,
-                    color:
-                      filterTag === t
-                        ? TAG_COLORS[t] || '#00ff9d'
-                        : '#00ff9d44',
+                    color: filterTag === t ? TAG_COLORS[t] || '#00ff9d' : '#00ff9d44',
                     padding: '5px 12px',
                     cursor: 'pointer',
                     fontSize: 10,

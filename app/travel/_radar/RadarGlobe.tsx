@@ -17,7 +17,15 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { BloomEffect, EffectComposer, EffectPass, RenderPass } from 'postprocessing';
-import { legMiles, waypoints, type Airport, type Airports, type Leg, type Overview, type Rejected } from './geo';
+import {
+  legMiles,
+  waypoints,
+  type Airport,
+  type Airports,
+  type Leg,
+  type Overview,
+  type Rejected,
+} from './geo';
 import { LAND } from './land';
 
 const GREEN = '#00ff00';
@@ -40,7 +48,11 @@ const R_JET = 1.0075;
 function toVec(lat: number, lon: number, r = 1): THREE.Vector3 {
   const phi = lat * RAD;
   const lam = lon * RAD;
-  return new THREE.Vector3(Math.cos(phi) * Math.sin(lam), Math.sin(phi), Math.cos(phi) * Math.cos(lam)).multiplyScalar(r);
+  return new THREE.Vector3(
+    Math.cos(phi) * Math.sin(lam),
+    Math.sin(phi),
+    Math.cos(phi) * Math.cos(lam),
+  ).multiplyScalar(r);
 }
 
 function slerpTo(out: THREE.Vector3, a: THREE.Vector3, b: THREE.Vector3, t: number): THREE.Vector3 {
@@ -69,7 +81,12 @@ interface Route {
 }
 
 /** Point on a lifted great-circle segment, written into `out` so the render loop allocates nothing. */
-function arcPointTo(out: THREE.Vector3, s: Pick<Segment, 'a' | 'b' | 'lift'>, t: number, r = R_ROUTE): THREE.Vector3 {
+function arcPointTo(
+  out: THREE.Vector3,
+  s: Pick<Segment, 'a' | 'b' | 'lift'>,
+  t: number,
+  r = R_ROUTE,
+): THREE.Vector3 {
   return slerpTo(out, s.a, s.b, t).multiplyScalar(r + s.lift * Math.sin(Math.PI * t));
 }
 
@@ -96,10 +113,18 @@ function buildRoute(airports: Airports, codes: string[], liftScale = 1, r = R_RO
   let start = 0;
   angles.forEach((angle, i) => {
     const end = i === angles.length - 1 ? 1 : start + angle / total;
-    const seg = { a: vecs[i], b: vecs[i + 1], angle, lift: (0.035 + 0.24 * (angle / Math.PI)) * liftScale, start, end };
+    const seg = {
+      a: vecs[i],
+      b: vecs[i + 1],
+      angle,
+      lift: (0.035 + 0.24 * (angle / Math.PI)) * liftScale,
+      start,
+      end,
+    };
     segments.push(seg);
     const steps = Math.max(24, Math.round(angle * 70));
-    for (let k = i === 0 ? 0 : 1; k <= steps; k++) points.push(arcPointTo(new THREE.Vector3(), seg, k / steps, r));
+    for (let k = i === 0 ? 0 : 1; k <= steps; k++)
+      points.push(arcPointTo(new THREE.Vector3(), seg, k / steps, r));
     start = end;
   });
   return { segments, angle: total, points };
@@ -132,7 +157,14 @@ function landDots(): THREE.Points {
   g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   return new THREE.Points(
     g,
-    new THREE.PointsMaterial({ color: GREEN, size: 0.0135, sizeAttenuation: true, transparent: true, opacity: 0.62, toneMapped: false })
+    new THREE.PointsMaterial({
+      color: GREEN,
+      size: 0.0135,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.62,
+      toneMapped: false,
+    }),
   );
 }
 
@@ -145,7 +177,15 @@ function graticule(): THREE.LineSegments {
     for (let lat = -80; lat < 80; lat += 4) push(toVec(lat, lon), toVec(lat + 4, lon));
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-  return new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: GREEN, transparent: true, opacity: 0.07, toneMapped: false }));
+  return new THREE.LineSegments(
+    g,
+    new THREE.LineBasicMaterial({
+      color: GREEN,
+      transparent: true,
+      opacity: 0.07,
+      toneMapped: false,
+    }),
+  );
 }
 
 /** Thin green rim light so the globe reads as a sphere against black. */
@@ -161,7 +201,7 @@ function atmosphere(): THREE.Mesh {
         'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
       fragmentShader:
         'varying vec3 vN; void main(){ float i = 0.75 * pow(clamp(-vN.z / 0.47, 0.0, 1.0), 2.6); gl_FragColor = vec4(0.0, 1.0, 0.2, 1.0) * i; }',
-    })
+    }),
   );
 }
 
@@ -260,8 +300,18 @@ function writeRamp(line: Line2, color: string, tail = 0, curve = 1.6) {
 /** Fighter planform, nose along +Y, wingspan 1.24 units. Drawn once, shared by every track. */
 function jetGeometry(): THREE.ShapeGeometry {
   const half: [number, number][] = [
-    [0, 1], [0.07, 0.62], [0.13, 0.3], [0.62, -0.1], [0.62, -0.26], [0.21, -0.22],
-    [0.24, -0.5], [0.42, -0.64], [0.42, -0.78], [0.13, -0.7], [0.09, -0.9], [0, -0.94],
+    [0, 1],
+    [0.07, 0.62],
+    [0.13, 0.3],
+    [0.62, -0.1],
+    [0.62, -0.26],
+    [0.21, -0.22],
+    [0.24, -0.5],
+    [0.42, -0.64],
+    [0.42, -0.78],
+    [0.13, -0.7],
+    [0.09, -0.9],
+    [0, -0.94],
   ];
   const pts = half.map(([x, y]) => new THREE.Vector2(x, y));
   for (const [x, y] of half.slice(1, -1).reverse()) pts.push(new THREE.Vector2(-x, y));
@@ -290,11 +340,17 @@ function makeBlip(airport: Airport, isHome: boolean, labelLayer: HTMLElement): B
   const hue = airport.hue ?? GREEN;
   const dot = new THREE.Mesh(
     new THREE.CircleGeometry(isHome ? 0.017 : 0.012, 20),
-    new THREE.MeshBasicMaterial({ color: hue, toneMapped: false, transparent: true })
+    new THREE.MeshBasicMaterial({ color: hue, toneMapped: false, transparent: true }),
   );
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.014, 0.0175, 32),
-    new THREE.MeshBasicMaterial({ color: hue, transparent: true, opacity: 0.6, toneMapped: false, side: THREE.DoubleSide })
+    new THREE.MeshBasicMaterial({
+      color: hue,
+      transparent: true,
+      opacity: 0.6,
+      toneMapped: false,
+      side: THREE.DoubleSide,
+    }),
   );
   anchor.add(dot, ring);
 
@@ -306,11 +362,23 @@ function makeBlip(airport: Airport, isHome: boolean, labelLayer: HTMLElement): B
   code.style.cssText = 'font-weight:600;letter-spacing:0.14em';
   const city = document.createElement('div');
   city.textContent = airport.city;
-  city.style.cssText = 'font-size:9px;letter-spacing:0.12em;color:rgba(255,255,255,0.75);text-transform:uppercase';
+  city.style.cssText =
+    'font-size:9px;letter-spacing:0.12em;color:rgba(255,255,255,0.75);text-transform:uppercase';
   label.append(code, city);
   labelLayer.appendChild(label);
 
-  return { airport, anchor, dot, ring, phase: (airport.lon + 180) / 47, on: false, dim: false, label, code, city };
+  return {
+    airport,
+    anchor,
+    dot,
+    ring,
+    phase: (airport.lon + 180) / 47,
+    on: false,
+    dim: false,
+    label,
+    code,
+    city,
+  };
 }
 
 /** Target-designator box and data block, pinned to the jet from the HTML layer. */
@@ -379,11 +447,35 @@ const CLICK_SLOP = 4;
 /** Screen-space distance (px) within which a track is under the pointer. */
 const HIT_RADIUS = 12;
 
-export default function RadarGlobe({ airports, legs, rejected, home, overview, active, selected, hovered, running, still, onHover, onSelect, onDrag }: RadarGlobeProps) {
+export default function RadarGlobe({
+  airports,
+  legs,
+  rejected,
+  home,
+  overview,
+  active,
+  selected,
+  hovered,
+  running,
+  still,
+  onHover,
+  onSelect,
+  onDrag,
+}: RadarGlobeProps) {
   const mount = useRef<HTMLDivElement>(null);
   const labels = useRef<HTMLDivElement>(null);
   // Live values the render loop reads without re-creating the scene.
-  const live = useRef({ selected, hovered, running, still, overview, active, yaw: 0, pitch: 0, wake: () => {} });
+  const live = useRef({
+    selected,
+    hovered,
+    running,
+    still,
+    overview,
+    active,
+    yaw: 0,
+    pitch: 0,
+    wake: () => {},
+  });
   const pointer = useRef<{ x: number; y: number; moved: number } | null>(null);
   /** Screen-space hit test, installed by the scene effect. */
   const hit = useRef<(x: number, y: number) => number | null>(() => null);
@@ -403,7 +495,10 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
     const labelLayer = labels.current;
     if (!host || !labelLayer) return;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: false,
+      powerPreference: 'high-performance',
+    });
     renderer.setClearColor(0x000000, 1);
     renderer.domElement.style.cssText = 'display:block;width:100%;height:100%;touch-action:pan-y';
     host.appendChild(renderer.domElement);
@@ -417,9 +512,12 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
     tilt.add(spin);
     scene.add(atmosphere(), tilt);
     spin.add(
-      new THREE.Mesh(new THREE.SphereGeometry(0.996, 64, 64), new THREE.MeshBasicMaterial({ color: 0x000600 })),
+      new THREE.Mesh(
+        new THREE.SphereGeometry(0.996, 64, 64),
+        new THREE.MeshBasicMaterial({ color: 0x000600 }),
+      ),
       graticule(),
-      landDots()
+      landDots(),
     );
 
     const lineMaterials: LineMaterial[] = [];
@@ -429,7 +527,14 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       return line;
     };
     if (rejected) {
-      track(fatLine(buildRoute(airports, waypoints(rejected), 1.25).points, { color: RED, width: 1.2, opacity: 0.6, dashed: true }));
+      track(
+        fatLine(buildRoute(airports, waypoints(rejected), 1.25).points, {
+          color: RED,
+          width: 1.2,
+          opacity: 0.6,
+          dashed: true,
+        }),
+      );
     }
 
     const jetGeom = jetGeometry();
@@ -442,18 +547,42 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       const hue = leg.hue ?? GREEN;
       const line = track(fatLine(route.points, { color: hue, width: 1.1, opacity: 0.32 }));
       const flow = track(
-        fatLine(buildRoute(airports, codes, 1, R_FLOW).points, { color: hue, width: 1.6, opacity: 0.55, dashed: true, dashSize: 0.014, gapSize: 0.034, additive: true })
+        fatLine(buildRoute(airports, codes, 1, R_FLOW).points, {
+          color: hue,
+          width: 1.6,
+          opacity: 0.55,
+          dashed: true,
+          dashSize: 0.014,
+          gapSize: 0.034,
+          additive: true,
+        }),
       );
       const trail = track(liveLine(TRAIL_PTS + 1, 2.4));
       const leader = track(liveLine(2, 1.4));
       writeRamp(trail, hue);
       writeRamp(leader, hue, 1);
 
-      const jet = new THREE.Mesh(jetGeom, new THREE.MeshBasicMaterial({ color: leg.hue ?? GREEN, side: THREE.DoubleSide, toneMapped: false, transparent: true }));
+      const jet = new THREE.Mesh(
+        jetGeom,
+        new THREE.MeshBasicMaterial({
+          color: leg.hue ?? GREEN,
+          side: THREE.DoubleSide,
+          toneMapped: false,
+          transparent: true,
+        }),
+      );
       jet.matrixAutoUpdate = false;
       const burner = new THREE.Mesh(
         burnerGeom,
-        new THREE.MeshBasicMaterial({ color: '#c8ffd8', transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({
+          color: '#c8ffd8',
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+          side: THREE.DoubleSide,
+        }),
       );
       burner.position.set(0, -1.02, 0.02);
       jet.add(burner);
@@ -467,8 +596,18 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       const nm = legMiles(airports, leg) * 0.869;
 
       return {
-        leg, route, index, line, flow, trail, leader, jet, burner,
-        cruiseFL, cruiseKt, nm,
+        leg,
+        route,
+        index,
+        line,
+        flow,
+        trail,
+        leader,
+        jet,
+        burner,
+        cruiseFL,
+        cruiseKt,
+        nm,
         tag: makeTag(labelLayer, `VTG${leg.n}`),
         speed: 0.11 / Math.max(route.angle, 0.25),
         size: 0.032,
@@ -485,7 +624,17 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
 
     const composer = new EffectComposer(renderer, { multisampling: 4 });
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new EffectPass(camera, new BloomEffect({ intensity: 1.1, luminanceThreshold: 0.12, luminanceSmoothing: 0.4, mipmapBlur: true })));
+    composer.addPass(
+      new EffectPass(
+        camera,
+        new BloomEffect({
+          intensity: 1.1,
+          luminanceThreshold: 0.12,
+          luminanceSmoothing: 0.4,
+          mipmapBlur: true,
+        }),
+      ),
+    );
 
     let size = 0;
     const resize = () => {
@@ -506,7 +655,11 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       if (sel === null) return live.current.overview;
       const f = flights[sel];
       const mid = toLatLon(routePointTo(new THREE.Vector3(), f.route, 0.5));
-      return { lat: mid.lat * 0.85 + 3, lon: mid.lon, dist: THREE.MathUtils.clamp(2.35 + f.route.angle * 1.2, 2.6, 4.4) };
+      return {
+        lat: mid.lat * 0.85 + 3,
+        lon: mid.lon,
+        dist: THREE.MathUtils.clamp(2.35 + f.route.angle * 1.2, 2.6, 4.4),
+      };
     };
 
     const current = { ...live.current.overview };
@@ -593,7 +746,11 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
         if (f.dim) continue;
         for (const p of f.route.points) {
           hitPt.copy(p).applyMatrix4(spin.matrixWorld);
-          const facing = toCamera.copy(camera.position).sub(hitPt).normalize().dot(hitNormal.copy(hitPt).normalize());
+          const facing = toCamera
+            .copy(camera.position)
+            .sub(hitPt)
+            .normalize()
+            .dot(hitNormal.copy(hitPt).normalize());
           if (facing < 0.05) continue;
           hitPt.project(camera);
           const dx = (hitPt.x * 0.5 + 0.5) * size - x;
@@ -613,8 +770,16 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       const l = live.current;
       const delta = Math.min(clock.getDelta(), 0.1);
       const time = clock.elapsedTime;
-      if (appliedActive !== l.active || appliedSelection !== l.selected || appliedHover !== l.hovered) {
-        applyStyles((appliedSelection = l.selected), (appliedHover = l.hovered), (appliedActive = l.active));
+      if (
+        appliedActive !== l.active ||
+        appliedSelection !== l.selected ||
+        appliedHover !== l.hovered
+      ) {
+        applyStyles(
+          (appliedSelection = l.selected),
+          (appliedHover = l.hovered),
+          (appliedActive = l.active),
+        );
       }
 
       const target = targetFor(l.selected);
@@ -636,13 +801,19 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
         forward.subVectors(ahead, pos).normalize();
         right.crossVectors(forward, normal).normalize();
         forward.crossVectors(normal, right);
-        f.jet.matrix.makeBasis(right, forward, normal).scale(scale.setScalar(f.size)).setPosition(pos);
+        f.jet.matrix
+          .makeBasis(right, forward, normal)
+          .scale(scale.setScalar(f.size))
+          .setPosition(pos);
         f.jet.matrixWorldNeedsUpdate = true;
-        f.burner.material.opacity = (f.dim ? 0.15 : 1) * (l.still ? 0.7 : 0.45 + 0.55 * Math.abs(Math.sin(time * 29 + f.index * 1.7)));
+        f.burner.material.opacity =
+          (f.dim ? 0.15 : 1) *
+          (l.still ? 0.7 : 0.45 + 0.55 * Math.abs(Math.sin(time * 29 + f.index * 1.7)));
 
         // Exhaust trail behind, velocity vector ahead. Both compress at the ends of the route.
         const t0 = Math.max(0, t - TRAIL);
-        for (let i = 0; i <= TRAIL_PTS; i++) routePointTo(trailPts[i], f.route, t0 + ((t - t0) * i) / TRAIL_PTS, R_TRAIL);
+        for (let i = 0; i <= TRAIL_PTS; i++)
+          routePointTo(trailPts[i], f.route, t0 + ((t - t0) * i) / TRAIL_PTS, R_TRAIL);
         writePositions(f.trail, trailPts);
         routePointTo(leaderPts[0], f.route, t, R_JET);
         routePointTo(leaderPts[1], f.route, Math.min(1, t + LEADER), R_JET);
@@ -654,7 +825,10 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
         // Data block, refreshed at a readable cadence rather than every frame.
         if (f.tag.at < 0 || time - f.tag.at > 0.15) {
           f.tag.at = time;
-          const profile = Math.min(THREE.MathUtils.smoothstep(t, 0, 0.12), 1 - THREE.MathUtils.smoothstep(t, 0.84, 1));
+          const profile = Math.min(
+            THREE.MathUtils.smoothstep(t, 0, 0.12),
+            1 - THREE.MathUtils.smoothstep(t, 0.84, 1),
+          );
           const alt = Math.round((f.cruiseFL * 100 * profile) / 100) * 100;
           const gs = Math.round(150 + (f.cruiseKt - 150) * profile);
           const hdg = bearing(toLatLon(pos), toLatLon(ahead));
@@ -671,10 +845,15 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
       for (const f of flights) {
         if (f.dim) continue;
         f.jet.getWorldPosition(world);
-        const facing = toCamera.copy(camera.position).sub(world).normalize().dot(normal.copy(world).normalize());
+        const facing = toCamera
+          .copy(camera.position)
+          .sub(world)
+          .normalize()
+          .dot(normal.copy(world).normalize());
         world.project(camera);
         f.tag.root.style.transform = `translate(${((world.x * 0.5 + 0.5) * size).toFixed(1)}px, ${((-world.y * 0.5 + 0.5) * size).toFixed(1)}px)`;
-        f.tag.root.style.opacity = facing > (f.index === l.selected || f.index === l.hovered ? 0.02 : 0.1) ? '1' : '0';
+        f.tag.root.style.opacity =
+          facing > (f.index === l.selected || f.index === l.hovered ? 0.02 : 0.1) ? '1' : '0';
       }
 
       for (const b of blips) {
@@ -685,7 +864,11 @@ export default function RadarGlobe({ airports, legs, rejected, home, overview, a
 
         // Pin the HTML label to the blip; hide it once the airport turns over the horizon.
         b.anchor.getWorldPosition(world);
-        const facing = toCamera.copy(camera.position).sub(world).normalize().dot(normal.copy(world).normalize());
+        const facing = toCamera
+          .copy(camera.position)
+          .sub(world)
+          .normalize()
+          .dot(normal.copy(world).normalize());
         world.project(camera);
         const x = (world.x * 0.5 + 0.5) * size;
         const y = (-world.y * 0.5 + 0.5) * size;

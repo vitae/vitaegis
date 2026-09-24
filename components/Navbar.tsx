@@ -1,9 +1,8 @@
-"use client";
+'use client';
 
-
-import Link from "next/link";
-import { motion } from "framer-motion";
-import MobileMenu from "./MobileMenu";
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import MobileMenu from './MobileMenu';
 
 export default function Navbar() {
   return (
@@ -19,18 +18,14 @@ export default function Navbar() {
           <div
             className="w-10 h-10 bg-[#00ff6a] text-black flex items-center justify-center font-bold rounded-lg transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,255,106,0.5)]"
             style={{
-              boxShadow: "0 0 15px rgba(0, 255, 106, 0.3)",
+              boxShadow: '0 0 15px rgba(0, 255, 106, 0.3)',
             }}
           >
             VV
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-[#00ff6a] neon-text-subtle tracking-wide">
-              
-            </span>
-            <span className="text-[10px] text-gray-500 tracking-[0.2em] uppercase">
-      
-            </span>
+            <span className="font-semibold text-[#00ff6a] neon-text-subtle tracking-wide"></span>
+            <span className="text-[10px] text-gray-500 tracking-[0.2em] uppercase"></span>
           </div>
         </Link>
 

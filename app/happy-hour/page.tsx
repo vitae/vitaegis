@@ -61,7 +61,9 @@ function SpotSection({ spot }: { spot: Spot }) {
           {spot.rank ? `No. ${spot.rank} · ` : 'Beyond Happy Hour · '}
           {spot.area}
         </p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">{spot.name}</h2>
+        <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+          {spot.name}
+        </h2>
         <p className="mt-2 text-lg font-light italic text-white/60">{spot.tagline}</p>
       </header>
 
@@ -157,8 +159,13 @@ export default function HappyHourPage() {
                 <div className="grid grid-cols-[2.5rem_1fr] gap-x-2">
                   <span className="font-semibold text-vitae-green">{spot.rank || '✦'}</span>
                   <div>
-                    <a href={`#${spot.slug}`} className="group flex flex-col gap-x-3 sm:flex-row sm:items-baseline">
-                      <span className="text-lg font-medium group-hover:text-vitae-green">{spot.name}</span>
+                    <a
+                      href={`#${spot.slug}`}
+                      className="group flex flex-col gap-x-3 sm:flex-row sm:items-baseline"
+                    >
+                      <span className="text-lg font-medium group-hover:text-vitae-green">
+                        {spot.name}
+                      </span>
                       <span className="text-sm uppercase tracking-wider text-white/60 sm:ml-auto sm:text-right">
                         {hoursOf(spot)}
                       </span>
@@ -184,8 +191,12 @@ export default function HappyHourPage() {
             <li className="py-4">
               <a href="#late-night" className="group flex items-baseline gap-x-3">
                 <span className="w-10 font-semibold text-vitae-green">✦</span>
-                <span className="text-lg font-medium group-hover:text-vitae-green">Late Night, Food First</span>
-                <span className="ml-auto text-sm uppercase tracking-wider text-white/60">After 9 PM</span>
+                <span className="text-lg font-medium group-hover:text-vitae-green">
+                  Late Night, Food First
+                </span>
+                <span className="ml-auto text-sm uppercase tracking-wider text-white/60">
+                  After 9 PM
+                </span>
               </a>
             </li>
             <li className="py-4">
@@ -194,13 +205,16 @@ export default function HappyHourPage() {
                 <span className="text-lg font-medium group-hover:text-vitae-green">
                   Tomahawk &amp; Steak for Two
                 </span>
-                <span className="ml-auto text-sm uppercase tracking-wider text-white/60">The steakhouses</span>
+                <span className="ml-auto text-sm uppercase tracking-wider text-white/60">
+                  The steakhouses
+                </span>
               </a>
             </li>
           </ol>
           <p className="mt-6 text-center text-sm font-light italic text-white/50">
-            Ranked by the strength of the food offer. Prices as published on each restaurant&apos;s own
-            site, September 2026. Hawaiʻi tax of 4.712% is added everywhere; gratuity is additional.
+            Ranked by the strength of the food offer. Prices as published on each restaurant&apos;s
+            own site, September 2026. Hawaiʻi tax of 4.712% is added everywhere; gratuity is
+            additional.
           </p>
         </nav>
 
@@ -214,7 +228,9 @@ export default function HappyHourPage() {
           <section id="late-night" className={`${glass} scroll-mt-24 p-6 sm:p-10`}>
             <header className="text-center">
               <p className={label}>After Nine · Honolulu &amp; Waikiki</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-wide sm:text-4xl">Late Night, Food First</h2>
+              <h2 className="mt-2 text-3xl font-semibold tracking-wide sm:text-4xl">
+                Late Night, Food First
+              </h2>
               <p className="mt-2 text-lg font-light italic text-white/60">
                 The second sessions where the kitchen, not the bar, is the point.
               </p>
@@ -232,7 +248,10 @@ export default function HappyHourPage() {
                     >
                       {row.address}
                     </a>
-                    <a href={telUrl(row.phone)} className="text-sm font-light text-white/55 hover:text-vitae-green">
+                    <a
+                      href={telUrl(row.phone)}
+                      className="text-sm font-light text-white/55 hover:text-vitae-green"
+                    >
                       {row.phone}
                     </a>
                   </div>
@@ -241,7 +260,9 @@ export default function HappyHourPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-center text-sm font-light italic text-white/55">{lateNightLeftOut}</p>
+            <p className="mt-5 text-center text-sm font-light italic text-white/55">
+              {lateNightLeftOut}
+            </p>
           </section>
 
           {/* Steak for two */}
@@ -268,7 +289,10 @@ export default function HappyHourPage() {
                     >
                       {row.address}
                     </a>
-                    <a href={telUrl(row.phone)} className="text-sm font-light text-white/55 hover:text-vitae-green">
+                    <a
+                      href={telUrl(row.phone)}
+                      className="text-sm font-light text-white/55 hover:text-vitae-green"
+                    >
                       {row.phone}
                     </a>
                   </div>
@@ -278,8 +302,8 @@ export default function HappyHourPage() {
               ))}
             </ul>
             <p className="mt-5 text-center text-sm font-light italic text-white/55">
-              Roy&apos;s and Solera carry no tomahawk or for-two. d.k Steak House and BLT Steak have closed.
-              Tax and gratuity are additional throughout.
+              Roy&apos;s and Solera carry no tomahawk or for-two. d.k Steak House and BLT Steak have
+              closed. Tax and gratuity are additional throughout.
             </p>
           </section>
         </div>

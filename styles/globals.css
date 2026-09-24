@@ -15,17 +15,18 @@
   --vitae-green-glow: #00ff0080;
   --vitae-black: #000000;
   --vitae-white: #ffffff;
-  
+
   /* Semantic colors */
   --color-primary: var(--vitae-green);
   --color-background: var(--vitae-black);
   --color-text: var(--vitae-white);
   --color-text-muted: rgba(255, 255, 255, 0.6);
-  
+
   /* Glow effects */
   --glow-sm: 0 0 10px var(--vitae-green-glow);
   --glow-md: 0 0 20px var(--vitae-green-glow), 0 0 40px var(--vitae-green-glow);
-  --glow-lg: 0 0 40px var(--vitae-green), 0 0 80px var(--vitae-green-glow), 0 0 120px rgba(0, 255, 65, 0.25);
+  --glow-lg:
+    0 0 40px var(--vitae-green), 0 0 80px var(--vitae-green-glow), 0 0 120px rgba(0, 255, 65, 0.25);
 }
 
 /* Base styles */
@@ -49,8 +50,20 @@ body {
 }
 
 /* Ensure Century Gothic is applied everywhere */
-h1, h2, h3, h4, h5, h6,
-p, span, a, button, input, textarea, select, label {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a,
+button,
+input,
+textarea,
+select,
+label {
   font-family: 'Century Gothic', 'Avant Garde', sans-serif;
 }
 
@@ -113,17 +126,23 @@ button {
 }
 
 /* Input reset */
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: 'Century Gothic', 'Avant Garde', sans-serif;
   background: transparent;
   border: 1px solid rgba(0, 255, 65, 0.3);
   color: var(--vitae-white);
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   border-color: var(--vitae-green);
   box-shadow: var(--glow-sm);
   outline: none;
@@ -148,11 +167,14 @@ input:focus, textarea:focus, select:focus {
 
 /* Animations */
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px var(--vitae-green-glow);
   }
   50% {
-    box-shadow: 0 0 40px var(--vitae-green), 0 0 60px var(--vitae-green-glow);
+    box-shadow:
+      0 0 40px var(--vitae-green),
+      0 0 60px var(--vitae-green-glow);
   }
 }
 

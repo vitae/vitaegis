@@ -4,7 +4,8 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 // Matrix characters - Katakana + numbers
-const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
+const CHARS =
+  'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
 const CHAR_ARRAY = CHARS.split('');
 
 // Configuration
@@ -91,7 +92,7 @@ export default function MatrixBackground() {
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      100
+      100,
     );
     camera.position.z = 10;
     cameraRef.current = camera;
@@ -173,8 +174,7 @@ export default function MatrixBackground() {
           });
 
           stream.nextSpawn =
-            CONFIG.spawnDelayMin +
-            Math.random() * (CONFIG.spawnDelayMax - CONFIG.spawnDelayMin);
+            CONFIG.spawnDelayMin + Math.random() * (CONFIG.spawnDelayMax - CONFIG.spawnDelayMin);
         }
 
         // Update glyphs
@@ -266,12 +266,13 @@ export default function MatrixBackground() {
     <>
       {/* Three.js container */}
       <div ref={containerRef} className="fixed inset-0 -z-10" />
-      
+
       {/* Scanlines overlay */}
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none -z-5"
         style={{
-          background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px)',
+          background:
+            'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px)',
           opacity: 0.3,
         }}
       />

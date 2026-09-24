@@ -39,7 +39,8 @@ export interface IndexedTrack {
 export function indexTracks(tracks: Track[]): IndexedTrack[] {
   return tracks.map((track) => ({
     track,
-    haystack: `${track.artist} ${track.title} ${track.label ?? ''} ${track.tags.join(' ')} ${track.album ?? ''}`.toLowerCase(),
+    haystack:
+      `${track.artist} ${track.title} ${track.label ?? ''} ${track.tags.join(' ')} ${track.album ?? ''}`.toLowerCase(),
   }));
 }
 

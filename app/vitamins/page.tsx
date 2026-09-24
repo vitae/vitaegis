@@ -159,7 +159,10 @@ export default function VitaminsPage() {
           <h2 className={`${label} text-center`}>Daily schedule</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {schedule.map((s) => (
-              <div key={s.slot} className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5">
+              <div
+                key={s.slot}
+                className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5"
+              >
                 <p className={label}>{s.slot}</p>
                 <p className="mt-1 text-sm font-light text-white/50">{s.hint}</p>
                 <ul className="mt-4 divide-y divide-white/10">
@@ -187,7 +190,10 @@ export default function VitaminsPage() {
           <h2 className={label}>Ground rules</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {rules.map((r) => (
-              <div key={r.title} className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5">
+              <div
+                key={r.title}
+                className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5"
+              >
                 <p className={label}>{r.title}</p>
                 <p className="mt-2 font-light leading-relaxed text-white/80">{r.body}</p>
               </div>

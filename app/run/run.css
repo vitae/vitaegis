@@ -71,7 +71,10 @@ div.leaflet-container {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.85);
-  text-shadow: 0 0 4px #000, 0 0 4px #000, 0 1px 2px #000;
+  text-shadow:
+    0 0 4px #000,
+    0 0 4px #000,
+    0 1px 2px #000;
 }
 
 /* Labels clutter at island scale; keep the dots, drop the text until zoomed in. */
@@ -136,5 +139,8 @@ div.leaflet-container {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #fff;
-  text-shadow: 0 0 4px #000, 0 0 4px #000, 0 1px 2px #000;
+  text-shadow:
+    0 0 4px #000,
+    0 0 4px #000,
+    0 1px 2px #000;
 }

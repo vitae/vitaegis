@@ -5,7 +5,14 @@
    (fit to a drawn energy and BPM curve).
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-import { classifyTransition, isDramatic, isSmooth, setTransitions, type Transition, type TransitionType } from './harmonic';
+import {
+  classifyTransition,
+  isDramatic,
+  isSmooth,
+  setTransitions,
+  type Transition,
+  type TransitionType,
+} from './harmonic';
 import type { JourneyCurve, PlaylistSettings, Track } from './types';
 
 export interface Suggestion {
@@ -34,11 +41,16 @@ export function sampleCurve(points: number[], t: number): number {
   const x = Math.min(1, Math.max(0, t)) * (points.length - 1);
   const i = Math.floor(x);
   const f = x - i;
-  return i >= points.length - 1 ? points[points.length - 1] : points[i] * (1 - f) + points[i + 1] * f;
+  return i >= points.length - 1
+    ? points[points.length - 1]
+    : points[i] * (1 - f) + points[i + 1] * f;
 }
 
 /** Target energy and BPM for the track at `position` in a journey. */
-export function journeyTarget(curve: JourneyCurve, position: number): { energy: number; bpm: number } {
+export function journeyTarget(
+  curve: JourneyCurve,
+  position: number,
+): { energy: number; bpm: number } {
   const t = curve.length <= 1 ? 0 : position / (curve.length - 1);
   return { energy: sampleCurve(curve.energy, t), bpm: sampleCurve(curve.bpm, t) };
 }
@@ -60,14 +72,23 @@ export interface SuggestOptions {
  * Top suggestions for what to play after `set`. Empty set → nothing to rank against, so the
  * caller shows the library instead.
  */
-export function suggestNext(set: Track[], library: Track[], settings: PlaylistSettings, opts: SuggestOptions = {}): Suggestion[] {
+export function suggestNext(
+  set: Track[],
+  library: Track[],
+  settings: PlaylistSettings,
+  opts: SuggestOptions = {},
+): Suggestion[] {
   const last = set[set.length - 1];
   if (!last) return [];
   const limit = opts.limit ?? 10;
   const exclude = opts.exclude ?? new Set(set.map((t) => t.id));
   const previous = setTransitions(set, settings);
-  const allowDramatic = settings.mode !== 'smooth' && dramaticAllowed(previous, settings.dramaticEvery);
-  const target = settings.mode === 'journey' && settings.journey ? journeyTarget(settings.journey, set.length) : null;
+  const allowDramatic =
+    settings.mode !== 'smooth' && dramaticAllowed(previous, settings.dramaticEvery);
+  const target =
+    settings.mode === 'journey' && settings.journey
+      ? journeyTarget(settings.journey, set.length)
+      : null;
 
   const out: Suggestion[] = [];
   for (const track of library) {
@@ -113,7 +134,12 @@ export function groupSuggestions(list: Suggestion[]): Map<TransitionType, Sugges
  * Builds a whole set greedily from a library so it follows `curve`: at each step the best
  * suggestion for the next curve point is appended. Used by "Build similar from my crate".
  */
-export function buildFromCurve(library: Track[], curve: JourneyCurve, settings: PlaylistSettings, seed?: Track): Track[] {
+export function buildFromCurve(
+  library: Track[],
+  curve: JourneyCurve,
+  settings: PlaylistSettings,
+  seed?: Track,
+): Track[] {
   const journey: PlaylistSettings = { ...settings, mode: 'journey', journey: curve };
   const target0 = journeyTarget(curve, 0);
   const first =
@@ -121,8 +147,10 @@ export function buildFromCurve(library: Track[], curve: JourneyCurve, settings: 
     [...library]
       .filter((t) => t.bpm && t.camelot)
       .sort((a, b) => {
-        const fa = Math.abs((a.bpm ?? 0) - target0.bpm) + Math.abs((a.energy ?? 5) - target0.energy) * 4;
-        const fb = Math.abs((b.bpm ?? 0) - target0.bpm) + Math.abs((b.energy ?? 5) - target0.energy) * 4;
+        const fa =
+          Math.abs((a.bpm ?? 0) - target0.bpm) + Math.abs((a.energy ?? 5) - target0.energy) * 4;
+        const fb =
+          Math.abs((b.bpm ?? 0) - target0.bpm) + Math.abs((b.energy ?? 5) - target0.energy) * 4;
         return fa - fb;
       })[0];
   if (!first) return [];

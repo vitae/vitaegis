@@ -52,17 +52,13 @@ Respond ONLY with a JSON array. No preamble, no markdown, no backticks. Just raw
     ],
   });
 
-  const raw =
-    response.content[0].type === 'text' ? response.content[0].text : '[]';
+  const raw = response.content[0].type === 'text' ? response.content[0].text : '[]';
 
   try {
     const cleaned = raw.replace(/```json|```/g, '').trim();
     const quotes = JSON.parse(cleaned);
     return NextResponse.json({ quotes });
   } catch {
-    return NextResponse.json(
-      { error: 'Failed to parse quotes from PDF', raw },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to parse quotes from PDF', raw }, { status: 500 });
   }
 }

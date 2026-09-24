@@ -21,7 +21,9 @@ function db() {
   return client;
 }
 
-export async function saveAccount(a: Partial<Account> & { platform: Platform; access_token: string }) {
+export async function saveAccount(
+  a: Partial<Account> & { platform: Platform; access_token: string },
+) {
   const { error } = await db()
     .from('social_accounts')
     .upsert({ ...a, updated_at: new Date().toISOString() });
@@ -38,9 +40,14 @@ async function raw(platform: Platform): Promise<Account | null> {
   return (data as Account) ?? null;
 }
 
-const expiringSoon = (a: Account) => a.expires_at !== null && a.expires_at - 300 <= Math.floor(Date.now() / 1000);
+const expiringSoon = (a: Account) =>
+  a.expires_at !== null && a.expires_at - 300 <= Math.floor(Date.now() / 1000);
 
-async function form(url: string, body: Record<string, string>, headers: Record<string, string> = {}) {
+async function form(
+  url: string,
+  body: Record<string, string>,
+  headers: Record<string, string> = {},
+) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers },
@@ -48,7 +55,8 @@ async function form(url: string, body: Record<string, string>, headers: Record<s
     cache: 'no-store',
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`Token refresh failed: ${res.status} ${JSON.stringify(json).slice(0, 300)}`);
+  if (!res.ok)
+    throw new Error(`Token refresh failed: ${res.status} ${JSON.stringify(json).slice(0, 300)}`);
   return json;
 }
 
@@ -78,7 +86,9 @@ export async function accessToken(platform: Platform): Promise<Account> {
       grant_type: 'refresh_token',
     });
   } else if (platform === 'twitter') {
-    const basic = Buffer.from(`${process.env.X_CLIENT_ID}:${process.env.X_CLIENT_SECRET}`).toString('base64');
+    const basic = Buffer.from(`${process.env.X_CLIENT_ID}:${process.env.X_CLIENT_SECRET}`).toString(
+      'base64',
+    );
     next = await form(
       'https://api.x.com/2/oauth2/token',
       { refresh_token: account.refresh_token, grant_type: 'refresh_token' },

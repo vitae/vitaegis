@@ -80,15 +80,11 @@ export default function AdminLogPage() {
             }}
           >
             <span>
-              TOTAL:{' '}
-              <span style={{ color: '#00ff9d' }}>{logs.length} QUERIES</span>
+              TOTAL: <span style={{ color: '#00ff9d' }}>{logs.length} QUERIES</span>
             </span>
             <span>|</span>
             <span>
-              ERRORS:{' '}
-              <span style={{ color: '#ff0080' }}>
-                {logs.filter((l) => l.error).length}
-              </span>
+              ERRORS: <span style={{ color: '#ff0080' }}>{logs.filter((l) => l.error).length}</span>
             </span>
           </div>
         </div>
@@ -149,9 +145,7 @@ export default function AdminLogPage() {
               >
                 {log.error ? '✕ ERROR' : '◈ SUCCESS'}
               </span>
-              <span
-                style={{ fontSize: 9, letterSpacing: 2, color: '#00ff9d33' }}
-              >
+              <span style={{ fontSize: 9, letterSpacing: 2, color: '#00ff9d33' }}>
                 {new Date(log.created_at).toLocaleString()}
               </span>
             </div>

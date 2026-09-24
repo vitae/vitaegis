@@ -21,12 +21,16 @@ const DASHES = /\s+[-–—]\s+|\s+[-–—](?=\S)|(?<=\S)[–—]\s+/;
 export function parseTimestamp(s: string): number | null {
   const m = s.match(/^\[?(\d{1,2}):(\d{2})(?::(\d{2}))?\]?$/);
   if (!m) return null;
-  return m[3] ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) : Number(m[1]) * 60 + Number(m[2]);
+  return m[3]
+    ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3])
+    : Number(m[1]) * 60 + Number(m[2]);
 }
 
 /** Splits a "Title (Remix)" or "Title [Remix]" into its parts; only bracketed tails that look like mixes. */
 function splitRemix(title: string): { title: string; remix: string | null } {
-  const m = title.match(/^(.*?)\s*[([]([^)\]]*(?:mix|edit|remix|version|dub|bootleg|rework|vip|flip|extended)[^)\]]*)[)\]]\s*$/i);
+  const m = title.match(
+    /^(.*?)\s*[([]([^)\]]*(?:mix|edit|remix|version|dub|bootleg|rework|vip|flip|extended)[^)\]]*)[)\]]\s*$/i,
+  );
   if (!m) return { title: title.trim(), remix: null };
   return { title: m[1].trim(), remix: m[2].trim() };
 }
@@ -49,7 +53,9 @@ export function parseLine(raw: string): ParsedLine | null {
     s = s.slice(ts2[0].length);
   }
   // Trailing "[Label]" or "(Label)" after the title is common on 1001tracklists.
-  s = s.replace(/\s*\[[^\]]*\]\s*$/, (m) => (/(mix|edit|remix|version|dub|bootleg|rework|vip)/i.test(m) ? m : ''));
+  s = s.replace(/\s*\[[^\]]*\]\s*$/, (m) =>
+    /(mix|edit|remix|version|dub|bootleg|rework|vip)/i.test(m) ? m : '',
+  );
   if (!s) return null;
   if (/^id\s*[-–—]\s*id$/i.test(s) || /^id$/i.test(s)) {
     return { raw, artist: 'ID', title: 'ID', remix: null, timestamp, isId: true };

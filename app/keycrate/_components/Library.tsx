@@ -56,20 +56,32 @@ export default function Library() {
           aria-label="Search library"
           className={inputClass}
         />
-        <Button onClick={() => setShowFilters((v) => !v)} aria-expanded={showFilters} aria-controls="kc-filters" className="shrink-0">
+        <Button
+          onClick={() => setShowFilters((v) => !v)}
+          aria-expanded={showFilters}
+          aria-controls="kc-filters"
+          className="shrink-0"
+        >
           Filters{filtering ? ' •' : ''}
         </Button>
       </div>
 
       {showFilters && (
-        <div id="kc-filters" className="mt-2 grid grid-cols-2 gap-2 rounded-md border border-white/10 p-2 text-xs sm:grid-cols-3">
+        <div
+          id="kc-filters"
+          className="mt-2 grid grid-cols-2 gap-2 rounded-md border border-white/10 p-2 text-xs sm:grid-cols-3"
+        >
           <label className="flex flex-col gap-1 text-[#808880]">
             BPM min
             <input
               type="number"
               inputMode="decimal"
               value={filters.bpmMin ?? ''}
-              onChange={(e) => actions.setFilters({ bpmMin: e.target.value === '' ? null : Number(e.target.value) })}
+              onChange={(e) =>
+                actions.setFilters({
+                  bpmMin: e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
               className={inputClass}
             />
           </label>
@@ -79,7 +91,11 @@ export default function Library() {
               type="number"
               inputMode="decimal"
               value={filters.bpmMax ?? ''}
-              onChange={(e) => actions.setFilters({ bpmMax: e.target.value === '' ? null : Number(e.target.value) })}
+              onChange={(e) =>
+                actions.setFilters({
+                  bpmMax: e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
               className={inputClass}
             />
           </label>
@@ -87,7 +103,11 @@ export default function Library() {
             Genre
             <select
               value={Array.from(filters.genres)[0] ?? ''}
-              onChange={(e) => actions.setFilters({ genres: e.target.value ? new Set([e.target.value]) : new Set() })}
+              onChange={(e) =>
+                actions.setFilters({
+                  genres: e.target.value ? new Set([e.target.value]) : new Set(),
+                })
+              }
               className={inputClass}
             >
               <option value="">Any</option>
@@ -100,7 +120,15 @@ export default function Library() {
           </label>
           <label className="flex flex-col gap-1 text-[#808880]">
             Energy at least
-            <select value={filters.energyMin ?? ''} onChange={(e) => actions.setFilters({ energyMin: e.target.value === '' ? null : Number(e.target.value) })} className={inputClass}>
+            <select
+              value={filters.energyMin ?? ''}
+              onChange={(e) =>
+                actions.setFilters({
+                  energyMin: e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
+              className={inputClass}
+            >
               <option value="">Any</option>
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>
@@ -111,7 +139,15 @@ export default function Library() {
           </label>
           <label className="flex flex-col gap-1 text-[#808880]">
             Rating at least
-            <select value={filters.ratingMin ?? ''} onChange={(e) => actions.setFilters({ ratingMin: e.target.value === '' ? null : Number(e.target.value) })} className={inputClass}>
+            <select
+              value={filters.ratingMin ?? ''}
+              onChange={(e) =>
+                actions.setFilters({
+                  ratingMin: e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
+              className={inputClass}
+            >
               <option value="">Any</option>
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
@@ -122,17 +158,34 @@ export default function Library() {
           </label>
           <div className="flex flex-col justify-end gap-1">
             <label className="flex items-center gap-2 text-white">
-              <input type="checkbox" checked={filters.unusedOnly} onChange={(e) => actions.setFilters({ unusedOnly: e.target.checked })} className="h-4 w-4 accent-[#00ff00]" />
+              <input
+                type="checkbox"
+                checked={filters.unusedOnly}
+                onChange={(e) => actions.setFilters({ unusedOnly: e.target.checked })}
+                className="h-4 w-4 accent-[#00ff00]"
+              />
               Not in any playlist
             </label>
             <label className="flex items-center gap-2 text-white">
-              <input type="checkbox" checked={filters.needsAnalysisOnly} onChange={(e) => actions.setFilters({ needsAnalysisOnly: e.target.checked })} className="h-4 w-4 accent-[#00ff00]" />
-              Needs analysis {untagged ? <span className="text-[#ff0000]">({untagged})</span> : null}
+              <input
+                type="checkbox"
+                checked={filters.needsAnalysisOnly}
+                onChange={(e) => actions.setFilters({ needsAnalysisOnly: e.target.checked })}
+                className="h-4 w-4 accent-[#00ff00]"
+              />
+              Needs analysis{' '}
+              {untagged ? <span className="text-[#ff0000]">({untagged})</span> : null}
             </label>
           </div>
           <div className="col-span-2 flex flex-wrap items-center gap-2 sm:col-span-3">
             {Array.from(filters.keys).map((k) => (
-              <button key={k} type="button" onClick={() => actions.toggleKey(k)} className="min-h-0 rounded border border-[#00ff00]/60 px-2 py-0.5 text-[#00ff00]" aria-label={`Remove key filter ${k}`}>
+              <button
+                key={k}
+                type="button"
+                onClick={() => actions.toggleKey(k)}
+                className="min-h-0 rounded border border-[#00ff00]/60 px-2 py-0.5 text-[#00ff00]"
+                aria-label={`Remove key filter ${k}`}
+              >
                 {k} ×
               </button>
             ))}
@@ -147,13 +200,22 @@ export default function Library() {
 
       {last && (
         <p className="mt-2 text-xs text-[#808880]">
-          Mixing out of <span className="text-white">{last.camelot ?? '?'}</span> at <span className="text-white">{formatBpm(last.bpm)}</span>. Left edge shows the move.
+          Mixing out of <span className="text-white">{last.camelot ?? '?'}</span> at{' '}
+          <span className="text-white">{formatBpm(last.bpm)}</span>. Left edge shows the move.
         </p>
       )}
 
-      <div ref={parentRef} className="kc-dense mt-2 min-h-[240px] flex-1 overflow-y-auto rounded-md border border-white/10" role="list" aria-label="Tracks" data-testid="kc-library">
+      <div
+        ref={parentRef}
+        className="kc-dense mt-2 min-h-[240px] flex-1 overflow-y-auto rounded-md border border-white/10"
+        role="list"
+        aria-label="Tracks"
+        data-testid="kc-library"
+      >
         {tracks.length === 0 ? (
-          <p className="p-4 text-sm text-[#808880]">Nothing here yet. Import a rekordbox XML or CSV above, or load the sample library.</p>
+          <p className="p-4 text-sm text-[#808880]">
+            Nothing here yet. Import a rekordbox XML or CSV above, or load the sample library.
+          </p>
         ) : filtered.length === 0 ? (
           <p className="p-4 text-sm text-[#808880]">No tracks match these filters.</p>
         ) : (
@@ -177,7 +239,16 @@ export default function Library() {
                     aria-label={`Add ${t.artist} – ${t.title}${type ? `, ${TRANSITION_LABEL[type]}` : ''}`}
                     data-testid="kc-track"
                   >
-                    <KeyBadge camelot={t.camelot} muted={!!type && type !== 'same' && type !== 'fifth' && type !== 'relative' && type !== 'diagonal'} />
+                    <KeyBadge
+                      camelot={t.camelot}
+                      muted={
+                        !!type &&
+                        type !== 'same' &&
+                        type !== 'fifth' &&
+                        type !== 'relative' &&
+                        type !== 'diagonal'
+                      }
+                    />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm text-white">{t.title}</span>
                       <span className="block truncate text-xs text-[#808880]">
@@ -187,7 +258,9 @@ export default function Library() {
                       </span>
                     </span>
                     <span className="kc-mono shrink-0 text-right text-xs text-[#808880]">
-                      <span className={`block ${t.bpm ? 'text-white' : 'text-[#ff0000]'}`}>{formatBpm(t.bpm)}</span>
+                      <span className={`block ${t.bpm ? 'text-white' : 'text-[#ff0000]'}`}>
+                        {formatBpm(t.bpm)}
+                      </span>
                       <span className="block">{formatDuration(t.durationS)}</span>
                     </span>
                   </button>
@@ -216,7 +289,12 @@ function TrackEditor({ track, onClose }: { track: Track; onClose: () => void }) 
   const [energy, setEnergy] = useState<number>(track.energy ?? 5);
   const [tags, setTags] = useState(track.tags.join(', '));
   return (
-    <div role="dialog" aria-modal="true" aria-label={`Edit ${track.title}`} className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 sm:items-center">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Edit ${track.title}`}
+      className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 sm:items-center"
+    >
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -237,11 +315,23 @@ function TrackEditor({ track, onClose }: { track: Track; onClose: () => void }) 
         </p>
         <label className="mt-4 block text-xs text-[#808880]">
           Energy <span className="text-white">{energy}</span>
-          <input type="range" min={1} max={10} value={energy} onChange={(e) => setEnergy(Number(e.target.value))} className="mt-1 w-full" />
+          <input
+            type="range"
+            min={1}
+            max={10}
+            value={energy}
+            onChange={(e) => setEnergy(Number(e.target.value))}
+            className="mt-1 w-full"
+          />
         </label>
         <label className="mt-3 block text-xs text-[#808880]">
           Tags, comma separated
-          <input value={tags} onChange={(e) => setTags(e.target.value)} className={`${inputClass} mt-1`} placeholder="opener, peak, closer" />
+          <input
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            className={`${inputClass} mt-1`}
+            placeholder="opener, peak, closer"
+          />
         </label>
         <div className="mt-4 flex justify-end gap-2">
           <Button onClick={onClose}>Cancel</Button>

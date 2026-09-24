@@ -137,7 +137,8 @@ export default function StocksBoard({ rows, startDates, asOf, source }: Props) {
       <div className="mt-4">
         <table className={`w-full border-collapse text-left ${styles.numeric}`}>
           <caption className="sr-only">
-            Twelve tickers with their close at the start of the period, latest close and percent change
+            Twelve tickers with their close at the start of the period, latest close and percent
+            change
           </caption>
           <thead>
             <tr className="border-b border-white/20 text-xs font-normal text-vitae-gray">
@@ -170,13 +171,19 @@ export default function StocksBoard({ rows, startDates, asOf, source }: Props) {
                 >
                   <td className="py-3 pr-2 text-xs text-vitae-gray sm:text-sm">{i + 1}</td>
                   <td className="py-3 pr-2">
-                    <span className="block text-sm font-medium text-white sm:text-base">{r.ticker}</span>
+                    <span className="block text-sm font-medium text-white sm:text-base">
+                      {r.ticker}
+                    </span>
                     <span className="block text-xs leading-tight text-vitae-gray sm:text-sm">
                       {r.name}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap py-3 pr-2 text-right text-xs text-vitae-gray sm:text-sm">{start ? price(start) : '—'}</td>
-                  <td className="whitespace-nowrap py-3 pr-2 text-right text-sm text-white sm:text-base">{price(r.end)}</td>
+                  <td className="whitespace-nowrap py-3 pr-2 text-right text-xs text-vitae-gray sm:text-sm">
+                    {start ? price(start) : '—'}
+                  </td>
+                  <td className="whitespace-nowrap py-3 pr-2 text-right text-sm text-white sm:text-base">
+                    {price(r.end)}
+                  </td>
                   <td
                     className={`${styles.change} whitespace-nowrap py-3 text-right text-sm font-medium sm:text-base ${
                       p === null ? 'text-vitae-gray' : upRow ? 'text-vitae-green' : 'text-vitae-red'

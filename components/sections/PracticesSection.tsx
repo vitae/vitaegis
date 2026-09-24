@@ -9,8 +9,7 @@ const practices = [
     id: 'zen',
     name: 'Zen Meditation',
     subtitle: '禅',
-    description:
-      'Cultivate awareness through breathing exercises. Find stillness in every breath.',
+    description: 'Cultivate awareness through breathing exercises. Find stillness in every breath.',
     icon: GiMeditation,
     color: '#00ff00',
     benefits: ['Clarity', 'Breath', 'Peace'],
@@ -19,8 +18,7 @@ const practices = [
     id: 'yoga',
     name: 'Kundalini Yoga',
     subtitle: 'कुण्डलिनी',
-    description:
-      'Awaken dormant energy with movement. Unlock your hidden power.',
+    description: 'Awaken dormant energy with movement. Unlock your hidden power.',
     icon: GiLotus,
     color: '#ff00ff',
     benefits: ['Flexibility', 'Strength', 'Love'],
@@ -34,7 +32,7 @@ const practices = [
     icon: GiYinYang,
     color: '#4ecdc4',
     benefits: ['Balance', 'Energy', 'Vitality'],
-  }
+  },
 ];
 
 export default function PracticesSection() {
@@ -54,7 +52,7 @@ export default function PracticesSection() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (sectionRef.current) {
@@ -70,9 +68,16 @@ export default function PracticesSection() {
       ref={sectionRef}
       className="relative min-h-screen flex flex-col items-center justify-center text-center"
     >
-      <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ width: '100%' }}>
+      <div
+        className="section-container flex flex-col items-center justify-center mx-auto"
+        style={{ width: '100%' }}
+      >
         {/* Section Header in Glassmorphic Container */}
-        <GlassContainer variant="default" glow={true} className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto">
+        <GlassContainer
+          variant="default"
+          glow={true}
+          className="text-center mb-16 sm:mb-20 p-6 sm:p-8 max-w-3xl mx-auto"
+        >
           <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
             The Three Pillars
           </span>
@@ -80,8 +85,8 @@ export default function PracticesSection() {
             Ancient <span className="text-vitae-green">Practices</span>
           </h2>
           <p className="mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
-            Master the foundational disciplines that form the core of Vitaegis.
-            Each practice provides unique rewards and unlocks higher levels of evolution.
+            Master the foundational disciplines that form the core of Vitaegis. Each practice
+            provides unique rewards and unlocks higher levels of evolution.
           </p>
         </GlassContainer>
 

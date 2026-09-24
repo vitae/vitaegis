@@ -52,36 +52,39 @@ export function useNativeScroll(options: UseNativeScrollOptions = {}) {
   const calculateVelocity = useCallback((currentY: number, currentTime: number) => {
     const deltaY = currentY - lastScrollY.current;
     const deltaTime = currentTime - lastTime.current;
-    
+
     if (deltaTime === 0) return 0;
-    
+
     const instantVelocity = deltaY / deltaTime;
     velocityHistory.current.push(instantVelocity);
-    
+
     // Keep only last 5 velocity samples for smoothing
     if (velocityHistory.current.length > 5) {
       velocityHistory.current.shift();
     }
-    
+
     // Return averaged velocity
     return velocityHistory.current.reduce((a, b) => a + b, 0) / velocityHistory.current.length;
   }, []);
 
   // Determine active section based on scroll position
-  const getActiveSection = useCallback((scrollY: number) => {
-    if (sectionIds.length === 0) return '';
-    
-    const viewportMiddle = scrollY + window.innerHeight / 2;
-    
-    for (let i = sectionIds.length - 1; i >= 0; i--) {
-      const element = document.getElementById(sectionIds[i]);
-      if (element && element.offsetTop <= viewportMiddle) {
-        return sectionIds[i];
+  const getActiveSection = useCallback(
+    (scrollY: number) => {
+      if (sectionIds.length === 0) return '';
+
+      const viewportMiddle = scrollY + window.innerHeight / 2;
+
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const element = document.getElementById(sectionIds[i]);
+        if (element && element.offsetTop <= viewportMiddle) {
+          return sectionIds[i];
+        }
       }
-    }
-    
-    return sectionIds[0];
-  }, [sectionIds]);
+
+      return sectionIds[0];
+    },
+    [sectionIds],
+  );
 
   // Main scroll handler with RAF for smooth performance
   const handleScroll = useCallback(() => {
@@ -94,7 +97,7 @@ export function useNativeScroll(options: UseNativeScrollOptions = {}) {
       const scrollY = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollProgress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
-      
+
       const velocity = calculateVelocity(scrollY, currentTime);
       const direction = velocity > 0.1 ? 'down' : velocity < -0.1 ? 'up' : 'idle';
       const isAtTop = scrollY <= 0;
@@ -125,7 +128,7 @@ export function useNativeScroll(options: UseNativeScrollOptions = {}) {
         clearTimeout(scrollTimeout.current);
       }
       scrollTimeout.current = setTimeout(() => {
-        setState(prev => ({ ...prev, isScrolling: false, direction: 'idle' }));
+        setState((prev) => ({ ...prev, isScrolling: false, direction: 'idle' }));
         velocityHistory.current = [];
       }, 150);
     });
@@ -158,7 +161,7 @@ export function useNativeScroll(options: UseNativeScrollOptions = {}) {
   useEffect(() => {
     // Set up scroll listener with passive flag for performance
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     // Initial call
     handleScroll();
 
@@ -191,7 +194,7 @@ interface PreloadOptions {
 
 export function useIntersectionPreload(
   ref: React.RefObject<HTMLElement>,
-  options: PreloadOptions = {}
+  options: PreloadOptions = {},
 ) {
   const [isNearViewport, setIsNearViewport] = useState(false);
   const [hasBeenVisible, setHasBeenVisible] = useState(false);
@@ -212,7 +215,7 @@ export function useIntersectionPreload(
       {
         rootMargin: options.rootMargin ?? '200px 0px', // Preload 200px before entering viewport
         threshold: options.threshold ?? 0,
-      }
+      },
     );
 
     observer.observe(element);
@@ -288,10 +291,10 @@ export function useTouchFeedback() {
     isBouncing,
     handlers,
     style: {
-      transform: isPressed 
-        ? 'scale(0.97) translateZ(0)' 
-        : isBouncing 
-          ? 'scale(1.02) translateZ(0)' 
+      transform: isPressed
+        ? 'scale(0.97) translateZ(0)'
+        : isBouncing
+          ? 'scale(1.02) translateZ(0)'
           : 'scale(1) translateZ(0)',
       transition: isPressed
         ? 'transform 0.1s ease-out'

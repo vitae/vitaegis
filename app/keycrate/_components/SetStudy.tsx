@@ -42,8 +42,14 @@ export default function SetStudy() {
     setMatches(matchTracklist(lines, state.tracks));
   };
 
-  const matched = useMemo(() => (matches ?? []).filter((m) => m.track).map((m) => m.track as Track), [matches]);
-  const transitions = useMemo(() => setTransitions(matched, state.set.settings), [matched, state.set.settings]);
+  const matched = useMemo(
+    () => (matches ?? []).filter((m) => m.track).map((m) => m.track as Track),
+    [matches],
+  );
+  const transitions = useMemo(
+    () => setTransitions(matched, state.set.settings),
+    [matched, state.set.settings],
+  );
   const summary = useMemo(() => {
     if (!matches) return null;
     const bpms = matched.map((t) => t.bpm).filter((b): b is number => !!b);
@@ -58,7 +64,9 @@ export default function SetStudy() {
         missing: matches.filter((m) => m.status === 'missing').length,
         id: matches.filter((m) => m.status === 'id').length,
       },
-      bpmPath: bpms.length ? `${bpms[0]} → ${Math.max(...bpms)} → ${bpms[bpms.length - 1]}` : 'unknown',
+      bpmPath: bpms.length
+        ? `${bpms[0]} → ${Math.max(...bpms)} → ${bpms[bpms.length - 1]}`
+        : 'unknown',
       keyPath: matched.map((t) => t.camelot ?? '?').join(' → '),
       dramatic,
       genres,
@@ -75,7 +83,11 @@ export default function SetStudy() {
   const buildSimilar = () => {
     const curve = curveFromStudy();
     if (!curve) return;
-    const set = buildFromCurve(state.tracks, curve, { ...state.set.settings, mode: 'journey', journey: curve });
+    const set = buildFromCurve(state.tracks, curve, {
+      ...state.set.settings,
+      mode: 'journey',
+      journey: curve,
+    });
     if (!set.length) {
       actions.toast('Nothing in the crate fits that shape');
       return;
@@ -87,7 +99,10 @@ export default function SetStudy() {
     router.push('/keycrate');
   };
 
-  const path = matched.map((t, i) => ({ key: t.camelot, transition: i > 0 ? transitions[i - 1] : null }));
+  const path = matched.map((t, i) => ({
+    key: t.camelot,
+    transition: i > 0 ? transitions[i - 1] : null,
+  }));
   const available = new Set(state.tracks.map((t) => t.camelot).filter((k): k is Camelot => !!k));
 
   return (
@@ -98,19 +113,29 @@ export default function SetStudy() {
             ← KeyCrate
           </Link>
           <h1 className="text-2xl font-medium text-white">Set Study</h1>
-          <p className="text-xs text-[#808880]">Paste a tracklist in any format. Lines are matched to your library of {state.tracks.length.toLocaleString()} tracks.</p>
+          <p className="text-xs text-[#808880]">
+            Paste a tracklist in any format. Lines are matched to your library of{' '}
+            {state.tracks.length.toLocaleString()} tracks.
+          </p>
         </div>
         <AuthPanel />
       </header>
 
       <div className="mt-4 grid gap-4 md:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-2">
-          <input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Study title" className={inputClass} />
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            aria-label="Study title"
+            className={inputClass}
+          />
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={10}
-            placeholder={'0:00 Artist – Title (Remix)\n1. Artist - Title\nw/ Artist - Title [Label]'}
+            placeholder={
+              '0:00 Artist – Title (Remix)\n1. Artist - Title\nw/ Artist - Title [Label]'
+            }
             aria-label="Tracklist"
             className={`${inputClass} min-h-[200px] py-2 font-mono text-sm`}
           />
@@ -120,7 +145,14 @@ export default function SetStudy() {
             </Button>
             <Button onClick={() => setText(SAMPLE)}>Paste a sample</Button>
             <Button
-              onClick={() => actions.saveStudy({ id: newId(), title, sourceText: text, createdAt: new Date().toISOString() })}
+              onClick={() =>
+                actions.saveStudy({
+                  id: newId(),
+                  title,
+                  sourceText: text,
+                  createdAt: new Date().toISOString(),
+                })
+              }
               disabled={!text.trim()}
             >
               Save study
@@ -146,7 +178,12 @@ export default function SetStudy() {
                     >
                       {s.title}
                     </button>
-                    <button type="button" onClick={() => actions.deleteStudy(s.id)} aria-label={`Delete ${s.title}`} className="hover:text-[#ff0000]">
+                    <button
+                      type="button"
+                      onClick={() => actions.deleteStudy(s.id)}
+                      aria-label={`Delete ${s.title}`}
+                      className="hover:text-[#ff0000]"
+                    >
                       ×
                     </button>
                   </li>
@@ -168,7 +205,8 @@ export default function SetStudy() {
             <SectionTitle
               right={
                 <span className="text-xs">
-                  <span className="text-[#00ff00]">{summary.counts.matched} matched</span> · <span className="text-[#808880]">{summary.counts.missing} not in library</span> ·{' '}
+                  <span className="text-[#00ff00]">{summary.counts.matched} matched</span> ·{' '}
+                  <span className="text-[#808880]">{summary.counts.missing} not in library</span> ·{' '}
                   <span className="text-[#808880]">{summary.counts.id} IDs</span>
                 </span>
               }
@@ -181,22 +219,32 @@ export default function SetStudy() {
                 const into = m.track && prevIdx > 0 ? transitions[prevIdx - 1] : null;
                 return (
                   <li key={i} className="flex items-center gap-3 px-3 py-2 text-sm">
-                    <span className="kc-mono w-12 shrink-0 text-xs text-[#808880]">{m.line.timestamp !== null ? fmtTs(m.line.timestamp) : `${i + 1}.`}</span>
+                    <span className="kc-mono w-12 shrink-0 text-xs text-[#808880]">
+                      {m.line.timestamp !== null ? fmtTs(m.line.timestamp) : `${i + 1}.`}
+                    </span>
                     {m.status === 'matched' && m.track ? (
                       <>
                         <KeyBadge camelot={m.track.camelot} muted />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-white">
-                            {m.track.title} <span className="text-[#808880]">· {m.track.artist}</span>
+                            {m.track.title}{' '}
+                            <span className="text-[#808880]">· {m.track.artist}</span>
                           </span>
                           {into && (
-                            <span className="block text-xs" style={{ color: TRANSITION_COLOR[into.type] }}>
+                            <span
+                              className="block text-xs"
+                              style={{ color: TRANSITION_COLOR[into.type] }}
+                            >
                               {TRANSITION_LABEL[into.type]}
-                              {into.bpmChangePct !== null ? ` · ${into.bpmChangePct >= 0 ? '+' : ''}${into.bpmChangePct.toFixed(1)}% BPM` : ''}
+                              {into.bpmChangePct !== null
+                                ? ` · ${into.bpmChangePct >= 0 ? '+' : ''}${into.bpmChangePct.toFixed(1)}% BPM`
+                                : ''}
                             </span>
                           )}
                         </span>
-                        <span className="kc-mono shrink-0 text-xs text-white">{formatBpm(m.track.bpm)}</span>
+                        <span className="kc-mono shrink-0 text-xs text-white">
+                          {formatBpm(m.track.bpm)}
+                        </span>
                       </>
                     ) : (
                       <span className="min-w-0 flex-1">
@@ -204,7 +252,11 @@ export default function SetStudy() {
                           {m.line.artist} – {m.line.title}
                           {m.line.remix ? ` (${m.line.remix})` : ''}
                         </span>
-                        <span className={`block text-xs ${m.status === 'id' ? 'text-[#808880]' : 'text-[#ff0000]'}`}>{m.status === 'id' ? 'unreleased ID' : 'not in library'}</span>
+                        <span
+                          className={`block text-xs ${m.status === 'id' ? 'text-[#808880]' : 'text-[#ff0000]'}`}
+                        >
+                          {m.status === 'id' ? 'unreleased ID' : 'not in library'}
+                        </span>
                       </span>
                     )}
                   </li>
@@ -238,7 +290,9 @@ export default function SetStudy() {
               </div>
               <div>
                 <dt className="text-[#808880]">Genre changes</dt>
-                <dd className="text-white">{summary.genres.length ? summary.genres.join(' → ') : 'untagged'}</dd>
+                <dd className="text-white">
+                  {summary.genres.length ? summary.genres.join(' → ') : 'untagged'}
+                </dd>
               </div>
             </dl>
           </aside>
@@ -252,5 +306,7 @@ const fmtTs = (s: number) => {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  return h ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}` : `${m}:${String(sec).padStart(2, '0')}`;
+  return h
+    ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+    : `${m}:${String(sec).padStart(2, '0')}`;
 };

@@ -38,9 +38,6 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error('Stripe error:', err);
     // Return more details for debugging (do not expose stack in production)
-    return NextResponse.json(
-      { error: err.message, stack: err.stack },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 });
   }
 }

@@ -18,7 +18,13 @@ function line(values: Array<number | null>, min: number, max: number): string {
   return pts.join(' ');
 }
 
-export default function Timeline({ tracks, className = '' }: { tracks: Track[]; className?: string }) {
+export default function Timeline({
+  tracks,
+  className = '',
+}: {
+  tracks: Track[];
+  className?: string;
+}) {
   if (tracks.length === 0) return null;
   const bpms = tracks.map((t) => (t.bpm ? t.bpm : null));
   const energies = tracks.map((t) => t.energy);
@@ -28,14 +34,35 @@ export default function Timeline({ tracks, className = '' }: { tracks: Track[]; 
   const hasEnergy = energies.some((e) => e !== null);
   return (
     <figure className={className}>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="BPM and energy across the set">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="h-auto w-full"
+        role="img"
+        aria-label="BPM and energy across the set"
+      >
         <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="rgba(255,255,255,0.12)" />
-        <path d={line(bpms, bmin, bmax)} fill="none" stroke="#00ff00" strokeWidth={1.5} strokeLinejoin="round" />
-        {hasEnergy && <path d={line(energies, 1, 10)} fill="none" stroke="#808880" strokeWidth={1.5} strokeDasharray="3 3" strokeLinejoin="round" />}
+        <path
+          d={line(bpms, bmin, bmax)}
+          fill="none"
+          stroke="#00ff00"
+          strokeWidth={1.5}
+          strokeLinejoin="round"
+        />
+        {hasEnergy && (
+          <path
+            d={line(energies, 1, 10)}
+            fill="none"
+            stroke="#808880"
+            strokeWidth={1.5}
+            strokeDasharray="3 3"
+            strokeLinejoin="round"
+          />
+        )}
       </svg>
       <figcaption className="kc-mono flex justify-between text-[11px] text-[#808880]">
         <span>
-          <span className="text-[#00ff00]">—</span> BPM {known.length ? `${Math.min(...known)}–${Math.max(...known)}` : '(none)'}
+          <span className="text-[#00ff00]">—</span> BPM{' '}
+          {known.length ? `${Math.min(...known)}–${Math.max(...known)}` : '(none)'}
         </span>
         <span>
           <span>- -</span> energy {hasEnergy ? '1–10' : '(unrated)'}

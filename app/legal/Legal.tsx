@@ -22,7 +22,11 @@ export function LegalPage({
     // page scrolls inside its own full-viewport container.
     <main
       className="nav-clear fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
-      style={{ fontFamily: "'Jost', sans-serif", WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+      style={{
+        fontFamily: "'Jost', sans-serif",
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
     >
       <div className="relative mx-auto max-w-3xl px-4 pb-32 pt-10 sm:px-6">
         <Link href="/" className={`${label} hover:text-white`}>
@@ -38,7 +42,9 @@ export function LegalPage({
             {title}
           </h1>
           <p className="mt-6 text-lg font-light leading-relaxed text-white/70">{intro}</p>
-          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-white/40">Last updated {updated}</p>
+          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-white/40">
+            Last updated {updated}
+          </p>
         </header>
 
         <div className={`${glass} p-6 sm:p-10`}>{children}</div>
@@ -51,7 +57,9 @@ export function Section({ heading, children }: { heading: string; children: Reac
   return (
     <section className="border-t border-vitae-green/15 py-7 first:border-t-0 first:pt-0">
       <h2 className="text-xl font-semibold tracking-wide text-white sm:text-2xl">{heading}</h2>
-      <div className="mt-3 space-y-3 text-sm font-light leading-relaxed text-white/70">{children}</div>
+      <div className="mt-3 space-y-3 text-sm font-light leading-relaxed text-white/70">
+        {children}
+      </div>
     </section>
   );
 }

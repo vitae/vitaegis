@@ -35,9 +35,16 @@ export default function KeyCrateApp() {
   const desktop = useDesktop();
   const items = state.set.history.present;
 
-  const available = useMemo(() => new Set(state.tracks.map((t) => t.camelot).filter((k): k is Camelot => !!k)), [state.tracks]);
+  const available = useMemo(
+    () => new Set(state.tracks.map((t) => t.camelot).filter((k): k is Camelot => !!k)),
+    [state.tracks],
+  );
   const path = useMemo(
-    () => derived.setTracks.map((t, i) => ({ key: t.camelot, transition: i > 0 ? derived.transitions[i - 1] : null })),
+    () =>
+      derived.setTracks.map((t, i) => ({
+        key: t.camelot,
+        transition: i > 0 ? derived.transitions[i - 1] : null,
+      })),
     [derived.setTracks, derived.transitions],
   );
 
@@ -60,7 +67,10 @@ export default function KeyCrateApp() {
           <p className="text-xs text-[#808880]">Harmonic set builder for your rekordbox library.</p>
         </div>
         <nav className="flex items-center gap-2 text-sm" aria-label="KeyCrate pages">
-          <Link href="/keycrate/study" className="rounded-md border border-white/15 px-3 py-2 hover:border-white/40">
+          <Link
+            href="/keycrate/study"
+            className="rounded-md border border-white/15 px-3 py-2 hover:border-white/40"
+          >
             Set Study
           </Link>
         </nav>
@@ -81,19 +91,32 @@ export default function KeyCrateApp() {
 
           <div className="flex flex-col items-center">
             <h2 className="mb-2 self-start text-base font-medium">Camelot wheel</h2>
-            <Wheel selected={state.filters.keys} onToggle={actions.toggleKey} path={path} available={available} />
+            <Wheel
+              selected={state.filters.keys}
+              onToggle={actions.toggleKey}
+              path={path}
+              available={available}
+            />
             <p className="mt-2 text-center text-xs text-[#808880]">
-              Outer ring major (B), inner ring minor (A). Neighbours mix; the set&apos;s path is drawn on top.
+              Outer ring major (B), inner ring minor (A). Neighbours mix; the set&apos;s path is
+              drawn on top.
             </p>
             {state.filters.keys.size > 0 && (
-              <Button size="sm" variant="quiet" onClick={() => actions.setFilters({ keys: new Set() })} className="mt-1">
+              <Button
+                size="sm"
+                variant="quiet"
+                onClick={() => actions.setFilters({ keys: new Set() })}
+                className="mt-1"
+              >
                 Clear key filter
               </Button>
             )}
           </div>
 
           {/* The set panel is mounted once: here on desktop, in the sheet on mobile. */}
-          <div className="hidden lg:block lg:h-[calc(100vh-var(--nav-top)-220px)] lg:min-h-[520px]">{desktop && <SetPanel />}</div>
+          <div className="hidden lg:block lg:h-[calc(100vh-var(--nav-top)-220px)] lg:min-h-[520px]">
+            {desktop && <SetPanel />}
+          </div>
         </div>
       )}
 
@@ -125,15 +148,27 @@ export default function KeyCrateApp() {
           aria-label="Set"
           aria-hidden={!sheetOpen}
         >
-          <button type="button" onClick={() => setSheetOpen(false)} className="mx-auto mb-2 flex h-8 w-full items-center justify-center" aria-label="Close set">
+          <button
+            type="button"
+            onClick={() => setSheetOpen(false)}
+            className="mx-auto mb-2 flex h-8 w-full items-center justify-center"
+            aria-label="Close set"
+          >
             <span className="h-1 w-12 rounded-full bg-white/40" />
           </button>
-          <div className="min-h-0 flex-1 overflow-y-auto">{sheetOpen && !desktop && <SetPanel />}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {sheetOpen && !desktop && <SetPanel />}
+          </div>
         </div>
       </div>
 
       {state.toast && (
-        <div role="status" data-testid="kc-toast" className="fixed left-1/2 z-50 -translate-x-1/2 rounded-md border border-white/20 bg-black px-4 py-2 text-sm text-white" style={{ bottom: 'calc(var(--nav-bottom) + var(--sab) + 64px)' }}>
+        <div
+          role="status"
+          data-testid="kc-toast"
+          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-md border border-white/20 bg-black px-4 py-2 text-sm text-white"
+          style={{ bottom: 'calc(var(--nav-bottom) + var(--sab) + 64px)' }}
+        >
           {state.toast}
         </div>
       )}

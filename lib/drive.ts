@@ -63,7 +63,10 @@ async function accessToken(): Promise<string> {
   const res = await fetch(TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }),
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
     cache: 'no-store',
   });
   const json = await res.json().catch(() => ({}));
@@ -74,10 +77,20 @@ async function accessToken(): Promise<string> {
   return cached.token;
 }
 
-export interface DriveFile { id: string; name: string; webViewLink?: string }
+export interface DriveFile {
+  id: string;
+  name: string;
+  webViewLink?: string;
+}
 
 /** Small files: metadata and bytes in one multipart/related request. */
-async function uploadMultipart(token: string, name: string, mimeType: string, bytes: Buffer, parents: string[]) {
+async function uploadMultipart(
+  token: string,
+  name: string,
+  mimeType: string,
+  bytes: Buffer,
+  parents: string[],
+) {
   const boundary = `vitaegis_${Date.now().toString(36)}`;
   const body = Buffer.concat([
     Buffer.from(
@@ -89,31 +102,48 @@ async function uploadMultipart(token: string, name: string, mimeType: string, by
     Buffer.from(`\r\n--${boundary}--`),
   ]);
 
-  const res = await fetch(`${UPLOAD_URL}?uploadType=multipart&fields=id,name,webViewLink&supportsAllDrives=true`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
-    body: new Uint8Array(body),
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `${UPLOAD_URL}?uploadType=multipart&fields=id,name,webViewLink&supportsAllDrives=true`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`,
+      },
+      body: new Uint8Array(body),
+      cache: 'no-store',
+    },
+  );
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`Drive upload failed: ${res.status} ${JSON.stringify(json).slice(0, 300)}`);
+  if (!res.ok)
+    throw new Error(`Drive upload failed: ${res.status} ${JSON.stringify(json).slice(0, 300)}`);
   return json as DriveFile;
 }
 
 /** Anything over 5 MB, which is most Veo clips: open a session, then send the bytes. */
-async function uploadResumable(token: string, name: string, mimeType: string, bytes: Buffer, parents: string[]) {
-  const start = await fetch(`${UPLOAD_URL}?uploadType=resumable&fields=id,name,webViewLink&supportsAllDrives=true`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json; charset=UTF-8',
-      'X-Upload-Content-Type': mimeType,
-      'X-Upload-Content-Length': String(bytes.length),
+async function uploadResumable(
+  token: string,
+  name: string,
+  mimeType: string,
+  bytes: Buffer,
+  parents: string[],
+) {
+  const start = await fetch(
+    `${UPLOAD_URL}?uploadType=resumable&fields=id,name,webViewLink&supportsAllDrives=true`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json; charset=UTF-8',
+        'X-Upload-Content-Type': mimeType,
+        'X-Upload-Content-Length': String(bytes.length),
+      },
+      body: JSON.stringify({ name, parents }),
+      cache: 'no-store',
     },
-    body: JSON.stringify({ name, parents }),
-    cache: 'no-store',
-  });
-  if (!start.ok) throw new Error(`Drive session failed: ${start.status} ${(await start.text()).slice(0, 200)}`);
+  );
+  if (!start.ok)
+    throw new Error(`Drive session failed: ${start.status} ${(await start.text()).slice(0, 200)}`);
   const location = start.headers.get('location');
   if (!location) throw new Error('Drive returned no resumable upload URL');
 
@@ -124,7 +154,8 @@ async function uploadResumable(token: string, name: string, mimeType: string, by
     cache: 'no-store',
   });
   const json = await put.json().catch(() => ({}));
-  if (!put.ok) throw new Error(`Drive upload failed: ${put.status} ${JSON.stringify(json).slice(0, 300)}`);
+  if (!put.ok)
+    throw new Error(`Drive upload failed: ${put.status} ${JSON.stringify(json).slice(0, 300)}`);
   return json as DriveFile;
 }
 
@@ -142,7 +173,13 @@ export async function uploadToDrive(
 }
 
 /** A readable, sortable filename: date, subject, then the slide number. */
-export function driveName(caption: string, kind: string, index: number, total: number, ext: string) {
+export function driveName(
+  caption: string,
+  kind: string,
+  index: number,
+  total: number,
+  ext: string,
+) {
   const date = new Date().toISOString().slice(0, 10);
   const slug =
     (caption || 'vitaegis')

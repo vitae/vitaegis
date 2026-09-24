@@ -28,7 +28,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     .eq('id', id)
     .single();
   // A slide deck has several files; ?i= picks one, defaulting to the first.
-  const paths: string[] = post?.media_paths?.length ? post.media_paths : post?.media_path ? [post.media_path] : [];
+  const paths: string[] = post?.media_paths?.length
+    ? post.media_paths
+    : post?.media_path
+      ? [post.media_path]
+      : [];
   const index = Number(req.nextUrl.searchParams.get('i') ?? 0);
   const path = paths[Number.isFinite(index) && index >= 0 ? index : 0];
   if (!path) return NextResponse.json({ error: 'No media' }, { status: 404 });

@@ -4,7 +4,11 @@ import { LOOKBACK_KEYS, referenceFor, type Series } from './stocks-periods';
 // Weekday bars at 13:30 UTC from start to end inclusive, close = bar index.
 function weekdays(start: string, end: string): Series {
   const series: Series = { times: [], closes: [] };
-  for (let d = new Date(`${start}T13:30:00Z`); d <= new Date(`${end}T13:30:00Z`); d.setUTCDate(d.getUTCDate() + 1)) {
+  for (
+    let d = new Date(`${start}T13:30:00Z`);
+    d <= new Date(`${end}T13:30:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1)
+  ) {
     const day = d.getUTCDay();
     if (day === 0 || day === 6) continue;
     series.times.push(d.getTime() / 1000);

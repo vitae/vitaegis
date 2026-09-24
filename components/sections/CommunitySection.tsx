@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FaDiscord, FaTwitter, FaTelegram, FaGithub, FaYoutube, FaTwitch, FaInstagram, FaFacebook } from 'react-icons/fa';
+import {
+  FaDiscord,
+  FaTwitter,
+  FaTelegram,
+  FaGithub,
+  FaYoutube,
+  FaTwitch,
+  FaInstagram,
+  FaFacebook,
+} from 'react-icons/fa';
 import GlassButton from '@/components/GlassButton';
 import GlassContainer from '@/components/GlassContainer';
 
@@ -11,7 +20,7 @@ const socials = [
   { name: 'YouTube', icon: FaYoutube, href: '#', members: '3M', color: '#FF0000' },
   { name: 'Twitter', icon: FaTwitter, href: '#', members: '2.5M', color: '#00ff00' },
   { name: 'Twitch', icon: FaTwitch, href: '#', members: '5.8K', color: '#ff00ff' },
-   { name: 'Discord', icon: FaDiscord, href: '#', members: '20K', color: '#7289DA' },
+  { name: 'Discord', icon: FaDiscord, href: '#', members: '20K', color: '#7289DA' },
 ];
 
 export default function CommunitySection() {
@@ -31,7 +40,7 @@ export default function CommunitySection() {
           }
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     );
 
     if (sectionRef.current) {
@@ -47,9 +56,16 @@ export default function CommunitySection() {
       ref={sectionRef}
       className="relative min-h-screen flex flex-col items-center justify-center text-center"
     >
-      <div className="section-container flex flex-col items-center justify-center mx-auto" style={{ width: '100%' }}>
+      <div
+        className="section-container flex flex-col items-center justify-center mx-auto"
+        style={{ width: '100%' }}
+      >
         {/* Section Header in Glassmorphic Container */}
-        <GlassContainer variant="default" glow={true} className="text-center mb-12 sm:mb-20 p-4 sm:p-8 w-full max-w-3xl mx-auto">
+        <GlassContainer
+          variant="default"
+          glow={true}
+          className="text-center mb-12 sm:mb-20 p-4 sm:p-8 w-full max-w-3xl mx-auto"
+        >
           <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
             <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
               Join the Movement
@@ -61,7 +77,8 @@ export default function CommunitySection() {
           </h2>
 
           <p className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
-            Connect with practitioners worldwide. Share your journey, learn from masters, and grow together.
+            Connect with practitioners worldwide. Share your journey, learn from masters, and grow
+            together.
           </p>
         </GlassContainer>
 
@@ -116,7 +133,7 @@ export default function CommunitySection() {
                 }}
               />
             </div>
-            
+
             {/* Top edge glow */}
             <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
@@ -147,8 +164,7 @@ export default function CommunitySection() {
                     Subscribe
                   </GlassButton>
                 </div>
-                <p className="mt-3 text-xs text-white/40">
-                </p>
+                <p className="mt-3 text-xs text-white/40"></p>
               </div>
             </div>
           </div>

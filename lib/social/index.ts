@@ -33,8 +33,8 @@ export interface PublishOutcome {
 export function eligible(platforms: Platform[], mediaKind: string | undefined) {
   const isVideo = mediaKind === 'video';
   return platforms.filter((p) => {
-    if (p === 'youtube' || p === 'tiktok') return isVideo;  // both are video-only here
-    if (p === 'instagram') return Boolean(mediaKind && mediaKind !== 'none');  // IG always needs media
+    if (p === 'youtube' || p === 'tiktok') return isVideo; // both are video-only here
+    if (p === 'instagram') return Boolean(mediaKind && mediaKind !== 'none'); // IG always needs media
     return true;
   });
 }
@@ -68,9 +68,12 @@ export async function publish(input: PublishInput): Promise<PublishOutcome> {
       // Instagram takes the whole deck as a carousel and X takes up to four stills;
       // the rest take the first file.
       if (platform === 'facebook') results[platform] = await postToFacebook(caption, urls[0], kind);
-      else if (platform === 'instagram') results[platform] = await postToInstagram(caption, urls, kind!);
-      else if (platform === 'youtube') results[platform] = await postToYouTube(caption, urls[0], kind!);
-      else if (platform === 'tiktok') results[platform] = await postToTikTok(caption, urls[0], kind!, ai);
+      else if (platform === 'instagram')
+        results[platform] = await postToInstagram(caption, urls, kind!);
+      else if (platform === 'youtube')
+        results[platform] = await postToYouTube(caption, urls[0], kind!);
+      else if (platform === 'tiktok')
+        results[platform] = await postToTikTok(caption, urls[0], kind!, ai);
       else if (platform === 'twitter') results[platform] = await postToX(caption, urls, kind, ai);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

@@ -32,20 +32,42 @@ function Trace({ polyline, color = '#00ff00' }: { polyline: string | null; color
   if (pts.length < 2) return null;
   const lats = pts.map((p) => p[0]);
   const lons = pts.map((p) => p[1]);
-  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const minLat = Math.min(...lats),
+    maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons),
+    maxLon = Math.max(...lons);
   const kx = Math.cos(((minLat + maxLat) / 2) * (Math.PI / 180));
   const w = (maxLon - minLon) * kx || 1e-6;
   const h = maxLat - minLat || 1e-6;
   const scale = 100 / Math.max(w, h);
-  const ox = (100 - w * scale) / 2, oy = (100 - h * scale) / 2;
+  const ox = (100 - w * scale) / 2,
+    oy = (100 - h * scale) / 2;
   const d = pts
-    .map(([lat, lon], i) => `${i ? 'L' : 'M'}${(ox + (lon - minLon) * kx * scale).toFixed(1)} ${(oy + (maxLat - lat) * scale).toFixed(1)}`)
+    .map(
+      ([lat, lon], i) =>
+        `${i ? 'L' : 'M'}${(ox + (lon - minLon) * kx * scale).toFixed(1)} ${(oy + (maxLat - lat) * scale).toFixed(1)}`,
+    )
     .join(' ');
   return (
     <svg viewBox="-4 -4 108 108" className="h-full w-full" aria-hidden>
-      <path d={d} fill="none" stroke="#000" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round" opacity="0.6" />
-      <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" style={{ filter: `drop-shadow(0 0 3px ${color})` }} />
+      <path
+        d={d}
+        fill="none"
+        stroke="#000"
+        strokeWidth="5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        style={{ filter: `drop-shadow(0 0 3px ${color})` }}
+      />
     </svg>
   );
 }
@@ -53,7 +75,11 @@ function Trace({ polyline, color = '#00ff00' }: { polyline: string | null; color
 function when(iso: string) {
   const d = new Date(iso);
   const days = Math.floor((Date.now() - d.getTime()) / 86_400_000);
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Pacific/Honolulu' });
+  const time = d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'Pacific/Honolulu',
+  });
   if (days === 0) return `Today · ${time}`;
   if (days === 1) return `Yesterday · ${time}`;
   return `${d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Pacific/Honolulu' })} · ${time}`;
@@ -106,7 +132,9 @@ export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] 
           <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-vitae-green align-middle shadow-[0_0_8px_#00ff00]" />
           Live from Strava · {latest.device_name ?? 'Apple Watch Ultra'}
         </p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">{latest.name}</h2>
+        <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+          {latest.name}
+        </h2>
         <p className="mt-2 text-sm font-light text-white/60">
           {sportLabel(latest.sport_type)} · {when(latest.start_date)}
         </p>
@@ -117,7 +145,14 @@ export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] 
           <Stat value={miles.toFixed(2)} unit="miles" />
           <Stat value={pace ?? '–'} unit="pace /mi" />
           <Stat value={durationLabel(latest.moving_time_s)} unit="moving" />
-          <Stat value={latest.average_heartrate ? `${Math.round(latest.average_heartrate)}` : `+${Math.round(metersToFeet(latest.elevation_gain_m))}`} unit={latest.average_heartrate ? 'avg bpm' : 'ft climbed'} />
+          <Stat
+            value={
+              latest.average_heartrate
+                ? `${Math.round(latest.average_heartrate)}`
+                : `+${Math.round(metersToFeet(latest.elevation_gain_m))}`
+            }
+            unit={latest.average_heartrate ? 'avg bpm' : 'ft climbed'}
+          />
         </dl>
         <div className="mx-auto h-40 w-40 md:h-full md:w-full">
           <Trace polyline={latest.summary_polyline} />
@@ -126,7 +161,9 @@ export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] 
 
       <p className="mt-6 text-center text-xs font-light text-white/40">
         Pushed by Strava webhooks the moment the watch uploads; this page re-checks every minute.
-        {updatedAt ? ` Last check ${updatedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.` : ''}
+        {updatedAt
+          ? ` Last check ${updatedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`
+          : ''}
       </p>
     </section>
   );

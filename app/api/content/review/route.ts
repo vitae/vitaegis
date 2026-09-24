@@ -27,10 +27,15 @@ export async function GET(req: NextRequest) {
   const q = sp.get('q')?.trim();
   const before = sp.get('before');
 
-  let query = db.from('content_posts').select('*').order('created_at', { ascending: false }).limit(PAGE + 1);
+  let query = db
+    .from('content_posts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(PAGE + 1);
   if (status === 'needs') query = query.in('status', ['ready', 'draft', 'failed']);
   else if (status !== 'all') query = query.eq('status', status);
-  if (platform && (PLATFORMS as string[]).includes(platform)) query = query.contains('platforms', [platform]);
+  if (platform && (PLATFORMS as string[]).includes(platform))
+    query = query.contains('platforms', [platform]);
   if (q) query = query.ilike('captions->>default', `%${q}%`);
   if (before) query = query.lt('created_at', before);
 
@@ -46,7 +51,9 @@ export async function GET(req: NextRequest) {
   const [{ data: ingests }, { data: jobs }] = await Promise.all([
     ingestIds.length
       ? db.from('content_ingest').select('id, kind, note, captured_at').in('id', ingestIds)
-      : Promise.resolve({ data: [] as { id: string; kind: string; note: string; captured_at: string }[] }),
+      : Promise.resolve({
+          data: [] as { id: string; kind: string; note: string; captured_at: string }[],
+        }),
     postIds.length
       ? db
           .from('content_jobs')
@@ -66,13 +73,13 @@ export async function GET(req: NextRequest) {
   const posts = await Promise.all(
     page.map(async (p) => ({
       ...p,
-      source: p.ingest_id ? ingestById.get(p.ingest_id) ?? null : null,
+      source: p.ingest_id ? (ingestById.get(p.ingest_id) ?? null) : null,
       jobs: jobsByPost.get(p.id) ?? [],
       // Signed URLs expire; hand the screen fresh ones each load, one per slide.
       media_urls: await Promise.all(
-        ((p.media_paths?.length ? p.media_paths : p.media_path ? [p.media_path] : []) as string[]).map((path) =>
-          signedUrl(path).catch(() => null),
-        ),
+        (
+          (p.media_paths?.length ? p.media_paths : p.media_path ? [p.media_path] : []) as string[]
+        ).map((path) => signedUrl(path).catch(() => null)),
       ).then((urls) => urls.filter(Boolean)),
     })),
   );
@@ -127,22 +134,34 @@ export async function POST(req: NextRequest) {
     captions?: Record<string, string>;
     platforms?: Platform[];
   };
-  if (!id || !action) return NextResponse.json({ error: 'Send an id and an action' }, { status: 400 });
+  if (!id || !action)
+    return NextResponse.json({ error: 'Send an id and an action' }, { status: 400 });
 
   const { data: post } = await db.from('content_posts').select('*').eq('id', id).single();
   if (!post) return NextResponse.json({ error: 'No such post' }, { status: 404 });
 
   if (action === 'delete') {
-    if (post.status === 'publishing') return NextResponse.json({ error: 'It is publishing right now' }, { status: 409 });
+    if (post.status === 'publishing')
+      return NextResponse.json({ error: 'It is publishing right now' }, { status: 409 });
     const { error } = await db.from('content_posts').delete().eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true, status: 'deleted' });
   }
 
   if (action === 'regenerate') {
-    if (!post.ingest_id) return NextResponse.json({ error: 'No original capture to regenerate from' }, { status: 409 });
-    await db.from('content_posts').update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', id);
-    await db.from('content_ingest').update({ status: 'queued', error: null }).eq('id', post.ingest_id);
+    if (!post.ingest_id)
+      return NextResponse.json(
+        { error: 'No original capture to regenerate from' },
+        { status: 409 },
+      );
+    await db
+      .from('content_posts')
+      .update({ status: 'rejected', updated_at: new Date().toISOString() })
+      .eq('id', id);
+    await db
+      .from('content_ingest')
+      .update({ status: 'queued', error: null })
+      .eq('id', post.ingest_id);
     await queueJob({ kind: 'caption', ingestId: post.ingest_id });
     return NextResponse.json({ ok: true, status: 'rejected', regenerating: true });
   }
@@ -161,11 +180,22 @@ export async function POST(req: NextRequest) {
     patch.approved_at = new Date().toISOString();
   } else if (action === 'retry') {
     if (post.status !== 'failed' && post.status !== 'published') {
-      return NextResponse.json({ error: `Nothing to retry on a ${post.status} post` }, { status: 409 });
+      return NextResponse.json(
+        { error: `Nothing to retry on a ${post.status} post` },
+        { status: 409 },
+      );
     }
-    const done = Object.keys((post.results ?? {}) as Record<string, unknown>).filter((k) => k !== 'drive');
-    const wanted = ((platforms ?? post.platforms ?? []) as string[]).filter((p) => !done.includes(p));
-    if (!wanted.length) return NextResponse.json({ error: 'Every selected platform already has this post' }, { status: 409 });
+    const done = Object.keys((post.results ?? {}) as Record<string, unknown>).filter(
+      (k) => k !== 'drive',
+    );
+    const wanted = ((platforms ?? post.platforms ?? []) as string[]).filter(
+      (p) => !done.includes(p),
+    );
+    if (!wanted.length)
+      return NextResponse.json(
+        { error: 'Every selected platform already has this post' },
+        { status: 409 },
+      );
     patch.status = 'approved';
     patch.error = null;
     patch.approved_at = new Date().toISOString();

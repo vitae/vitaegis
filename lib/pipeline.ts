@@ -3,20 +3,33 @@
 // so nothing depends on one request surviving a Veo render.
 
 import { supabaseAdmin } from './supabase';
-import { downloadVideo, generateImage, pollVideo, startVideo, writeCaptions, type Source } from './google-ai';
+import {
+  downloadVideo,
+  generateImage,
+  pollVideo,
+  startVideo,
+  writeCaptions,
+  type Source,
+} from './google-ai';
 import { publish, type Platform } from './social';
 import { driveConfigured, driveName, uploadToDrive } from './drive';
 import { briefNote, buildBrief, extractSource } from './research';
 import { askJev, choice, jevConfigured } from './jev';
-
 
 const BUCKET = 'content';
 /** Long enough for the publisher to fetch the media and for you to preview it. */
 const SIGNED_URL_TTL = 60 * 60 * 24;
 
 type JobKind =
-  | 'caption' | 'image' | 'slides' | 'video' | 'video_poll' | 'publish'
-  | 'research_extract' | 'research_brief' | 'research_post';
+  | 'caption'
+  | 'image'
+  | 'slides'
+  | 'video'
+  | 'video_poll'
+  | 'publish'
+  | 'research_extract'
+  | 'research_brief'
+  | 'research_post';
 
 interface Job {
   id: string;
@@ -44,14 +57,16 @@ export async function queueJob(job: {
   delaySeconds?: number;
 }) {
   const runAfter = new Date(Date.now() + (job.delaySeconds ?? 0) * 1000).toISOString();
-  const { error } = await db().from('content_jobs').insert({
-    kind: job.kind,
-    post_id: job.postId ?? null,
-    ingest_id: job.ingestId ?? null,
-    operation_name: job.operationName ?? null,
-    payload: job.payload ?? {},
-    run_after: runAfter,
-  });
+  const { error } = await db()
+    .from('content_jobs')
+    .insert({
+      kind: job.kind,
+      post_id: job.postId ?? null,
+      ingest_id: job.ingestId ?? null,
+      operation_name: job.operationName ?? null,
+      payload: job.payload ?? {},
+      run_after: runAfter,
+    });
   if (error) throw new Error(error.message);
 }
 
@@ -61,8 +76,7 @@ async function sourceFrom(path: string | null, kind: string): Promise<Source | u
   const { data, error } = await db().storage.from(BUCKET).download(path);
   if (error || !data) return undefined;
   const mimeType =
-    data.type ||
-    (kind === 'video' ? 'video/mp4' : kind === 'voice' ? 'audio/m4a' : 'image/jpeg');
+    data.type || (kind === 'video' ? 'video/mp4' : kind === 'voice' ? 'audio/m4a' : 'image/jpeg');
   return { mimeType, base64: Buffer.from(await data.arrayBuffer()).toString('base64') };
 }
 
@@ -99,7 +113,11 @@ const MEDIA_ROUTE_OPTIONS: Record<MediaKind, string> = {
  * to Jev, which reads intent ("break this into four lessons" means slides). No key, a
  * failed call, or a low-confidence answer falls back to the old default.
  */
-async function pickMediaKind(note: string, hasFile: boolean, captureKind: string): Promise<MediaKind> {
+async function pickMediaKind(
+  note: string,
+  hasFile: boolean,
+  captureKind: string,
+): Promise<MediaKind> {
   if (/\b(slides?|carousel|deck)\b/i.test(note)) return 'slides';
   if (/\b(veo|generate|render|synthetic)\b/i.test(note)) return 'video';
   if (/\b(illustrate|artwork|render a still)\b/i.test(note)) return 'image';
@@ -131,7 +149,11 @@ async function pickMediaKind(note: string, hasFile: boolean, captureKind: string
 
 /** Stage 1: read the captured item, write the copy, decide still vs clip. */
 async function runCaption(job: Job) {
-  const { data: ingest, error } = await db().from('content_ingest').select('*').eq('id', job.ingest_id!).single();
+  const { data: ingest, error } = await db()
+    .from('content_ingest')
+    .select('*')
+    .eq('id', job.ingest_id!)
+    .single();
   if (error || !ingest) throw new Error('Ingest row is gone');
 
   const source = await sourceFrom(ingest.storage_path, ingest.kind);
@@ -151,7 +173,9 @@ async function runCaption(job: Job) {
       media_kind: mediaKind,
       // A deck or a still belongs on the feeds that show images; clips go everywhere.
       platforms:
-        mediaKind === 'slides' || mediaKind === 'image' || (mediaKind === 'original' && ingest.kind !== 'video')
+        mediaKind === 'slides' ||
+        mediaKind === 'image' ||
+        (mediaKind === 'original' && ingest.kind !== 'video')
           ? ['instagram', 'facebook', 'twitter']
           : ['instagram', 'facebook', 'youtube', 'tiktok', 'twitter'],
       // Nothing synthetic in a passthrough post, so no AI label is owed.
@@ -198,20 +222,31 @@ async function runCaption(job: Job) {
   });
 }
 
-
 /**
  * Copy finished media to Google Drive. Best effort on purpose: an archive failure must
  * never fail a post, so it logs and moves on.
  */
-async function archiveToDrive(postId: string, kind: string, files: { bytes: Buffer; mimeType: string }[]) {
+async function archiveToDrive(
+  postId: string,
+  kind: string,
+  files: { bytes: Buffer; mimeType: string }[],
+) {
   if (!driveConfigured()) return;
   try {
-    const { data: post } = await db().from('content_posts').select('captions').eq('id', postId).single();
+    const { data: post } = await db()
+      .from('content_posts')
+      .select('captions')
+      .eq('id', postId)
+      .single();
     const caption = (post?.captions?.default as string) ?? '';
     const links: string[] = [];
     for (const [i, f] of files.entries()) {
       const ext = f.mimeType.includes('mp4') ? 'mp4' : f.mimeType.includes('jpeg') ? 'jpg' : 'png';
-      const up = await uploadToDrive(driveName(caption, kind, i, files.length, ext), f.mimeType, f.bytes);
+      const up = await uploadToDrive(
+        driveName(caption, kind, i, files.length, ext),
+        f.mimeType,
+        f.bytes,
+      );
       if (up.webViewLink) links.push(up.webViewLink);
     }
     if (links.length) {
@@ -221,14 +256,21 @@ async function archiveToDrive(postId: string, kind: string, files: { bytes: Buff
         .eq('id', postId);
     }
   } catch (err) {
-    console.error(`Drive archive failed for post ${postId}:`, err instanceof Error ? err.message : err);
+    console.error(
+      `Drive archive failed for post ${postId}:`,
+      err instanceof Error ? err.message : err,
+    );
   }
 }
 
 /** Stage 2a: Nano Banana Pro still, using the captured photo as reference when there is one. */
 async function runImage(job: Job) {
   const prompt = String(job.payload.prompt ?? '');
-  const { data: post } = await db().from('content_posts').select('ingest_id').eq('id', job.post_id!).single();
+  const { data: post } = await db()
+    .from('content_posts')
+    .select('ingest_id')
+    .eq('id', job.post_id!)
+    .single();
   let source: Source | undefined;
   if (post?.ingest_id) {
     const { data: ingest } = await db()
@@ -244,7 +286,13 @@ async function runImage(job: Job) {
   await archiveToDrive(job.post_id!, 'still', [{ bytes, mimeType }]);
   await db()
     .from('content_posts')
-    .update({ media_path: path, media_paths: [path], media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })
+    .update({
+      media_path: path,
+      media_paths: [path],
+      media_url: await signedUrl(path),
+      status: 'ready',
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', job.post_id!);
 }
 
@@ -253,7 +301,11 @@ async function runSlides(job: Job) {
   const prompts = (job.payload.prompts as string[] | undefined) ?? [];
   if (!prompts.length) throw new Error('No slide prompts');
 
-  const { data: post } = await db().from('content_posts').select('ingest_id').eq('id', job.post_id!).single();
+  const { data: post } = await db()
+    .from('content_posts')
+    .select('ingest_id')
+    .eq('id', job.post_id!)
+    .single();
   let source: Source | undefined;
   if (post?.ingest_id) {
     const { data: ingest } = await db()
@@ -269,12 +321,15 @@ async function runSlides(job: Job) {
   for (const [i, prompt] of prompts.slice(0, 10).entries()) {
     // Only slide one takes the captured photo as reference; the rest hold the look
     // through the prompt, which keeps the deck consistent without re-priming each time.
-    const { bytes, mimeType } = await generateImage(`${prompt}
+    const { bytes, mimeType } = await generateImage(
+      `${prompt}
 
-Square 1:1 composition.`, {
-      source: i === 0 ? source : undefined,
-      size: '2K',
-    });
+Square 1:1 composition.`,
+      {
+        source: i === 0 ? source : undefined,
+        size: '2K',
+      },
+    );
     const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
     paths.push(await store(`generated/${job.post_id}-${i + 1}.${ext}`, bytes, mimeType));
     archive.push({ bytes, mimeType });
@@ -303,7 +358,12 @@ async function runVideoPoll(job: Job) {
   const { done, uri, error } = await pollVideo(job.operation_name!);
   if (!done) {
     // Not an attempt: re-queue a fresh poll so retries stay reserved for real failures.
-    await queueJob({ kind: 'video_poll', postId: job.post_id!, operationName: job.operation_name!, delaySeconds: 30 });
+    await queueJob({
+      kind: 'video_poll',
+      postId: job.post_id!,
+      operationName: job.operation_name!,
+      delaySeconds: 30,
+    });
     return;
   }
   if (error || !uri) throw new Error(error ?? 'Veo returned no video');
@@ -312,13 +372,23 @@ async function runVideoPoll(job: Job) {
   await archiveToDrive(job.post_id!, 'clip', [{ bytes: video, mimeType: 'video/mp4' }]);
   await db()
     .from('content_posts')
-    .update({ media_path: path, media_paths: [path], media_url: await signedUrl(path), status: 'ready', updated_at: new Date().toISOString() })
+    .update({
+      media_path: path,
+      media_paths: [path],
+      media_url: await signedUrl(path),
+      status: 'ready',
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', job.post_id!);
 }
 
 /** Stage 4: fan out to the networks. Only ever queued by an explicit approval. */
 async function runPublish(job: Job) {
-  const { data: post, error } = await db().from('content_posts').select('*').eq('id', job.post_id!).single();
+  const { data: post, error } = await db()
+    .from('content_posts')
+    .select('*')
+    .eq('id', job.post_id!)
+    .single();
   if (error || !post) throw new Error('Post row is gone');
   if (post.status !== 'approved' && post.status !== 'publishing') {
     throw new Error(`Refusing to publish a post in state "${post.status}"`);
@@ -329,7 +399,11 @@ async function runPublish(job: Job) {
   // Instagram needs a plain URL it can cURL, so a Supabase signed URL will not do.
   const secret = process.env.CONTENT_MEDIA_SECRET || process.env.CONTENT_INGEST_SECRET;
   const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.vitaegis.com';
-  const paths: string[] = post.media_paths?.length ? post.media_paths : post.media_path ? [post.media_path] : [];
+  const paths: string[] = post.media_paths?.length
+    ? post.media_paths
+    : post.media_path
+      ? [post.media_path]
+      : [];
   const mediaUrls = secret
     ? paths.map((_: string, i: number) => `${base}/api/content/media/${post.id}?t=${secret}&i=${i}`)
     : [];
@@ -355,7 +429,9 @@ async function runPublish(job: Job) {
       error:
         [
           ...failed.map((p) => `${p}: ${failures[p]}`),
-          ...(skipped.length ? [`skipped (not connected or wrong media): ${skipped.join(', ')}`] : []),
+          ...(skipped.length
+            ? [`skipped (not connected or wrong media): ${skipped.join(', ')}`]
+            : []),
         ]
           .join(' | ')
           .slice(0, 1000) || null,
@@ -366,7 +442,9 @@ async function runPublish(job: Job) {
     .eq('id', post.id);
 
   if (failed.length && !Object.keys(results).length) {
-    throw new Error(`Every platform failed: ${failed.map((p) => `${p}: ${failures[p]}`).join(' | ')}`);
+    throw new Error(
+      `Every platform failed: ${failed.map((p) => `${p}: ${failures[p]}`).join(' | ')}`,
+    );
   }
 }
 
@@ -383,7 +461,11 @@ async function runResearchExtract(job: Job) {
     const spent = job.attempts >= job.max_attempts;
     await db()
       .from('research_sources')
-      .update({ status: spent ? 'failed' : 'queued', error: message.slice(0, 1000), updated_at: new Date().toISOString() })
+      .update({
+        status: spent ? 'failed' : 'queued',
+        error: message.slice(0, 1000),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', sourceId);
     throw err;
   }
@@ -400,7 +482,11 @@ async function runResearchBrief(job: Job) {
     const spent = job.attempts >= job.max_attempts;
     await db()
       .from('research_briefs')
-      .update({ status: spent ? 'failed' : 'queued', error: message.slice(0, 1000), updated_at: new Date().toISOString() })
+      .update({
+        status: spent ? 'failed' : 'queued',
+        error: message.slice(0, 1000),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', briefId);
     throw err;
   }
@@ -412,9 +498,14 @@ async function runResearchBrief(job: Job) {
  */
 async function runResearchPost(job: Job) {
   const briefId = String(job.payload.briefId ?? '');
-  const { data: brief, error } = await db().from('research_briefs').select('*').eq('id', briefId).single();
+  const { data: brief, error } = await db()
+    .from('research_briefs')
+    .select('*')
+    .eq('id', briefId)
+    .single();
   if (error || !brief) throw new Error('Brief row is gone');
-  if (brief.status !== 'ready' && brief.status !== 'posted') throw new Error(`Brief is ${brief.status}, not ready`);
+  if (brief.status !== 'ready' && brief.status !== 'posted')
+    throw new Error(`Brief is ${brief.status}, not ready`);
   if (brief.ingest_id) return; // already handed over
 
   const { data: ingest, error: iErr } = await db()
@@ -458,7 +549,11 @@ export async function runDueJobs(limit = 3) {
     // Claim it first so an overlapping tick cannot pick up the same row.
     const { data: claimed } = await client
       .from('content_jobs')
-      .update({ state: 'running', attempts: raw.attempts + 1, updated_at: new Date().toISOString() })
+      .update({
+        state: 'running',
+        attempts: raw.attempts + 1,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', raw.id)
       .eq('state', 'queued')
       .select()
@@ -467,7 +562,10 @@ export async function runDueJobs(limit = 3) {
 
     try {
       await STAGES[raw.kind](raw);
-      await client.from('content_jobs').update({ state: 'done', updated_at: new Date().toISOString() }).eq('id', raw.id);
+      await client
+        .from('content_jobs')
+        .update({ state: 'done', updated_at: new Date().toISOString() })
+        .eq('id', raw.id);
       done.push({ id: raw.id, kind: raw.kind, ok: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -478,15 +576,23 @@ export async function runDueJobs(limit = 3) {
           state: spent ? 'failed' : 'queued',
           error: message.slice(0, 1000),
           // Back off 1, then 5 minutes before trying again.
-          run_after: new Date(Date.now() + (raw.attempts + 1) * 60_000 * (raw.attempts ? 5 : 1)).toISOString(),
+          run_after: new Date(
+            Date.now() + (raw.attempts + 1) * 60_000 * (raw.attempts ? 5 : 1),
+          ).toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', raw.id);
       if (spent && raw.post_id) {
-        await client.from('content_posts').update({ status: 'failed', error: message.slice(0, 1000) }).eq('id', raw.post_id);
+        await client
+          .from('content_posts')
+          .update({ status: 'failed', error: message.slice(0, 1000) })
+          .eq('id', raw.post_id);
       }
       if (spent && raw.ingest_id) {
-        await client.from('content_ingest').update({ status: 'failed', error: message.slice(0, 1000) }).eq('id', raw.ingest_id);
+        await client
+          .from('content_ingest')
+          .update({ status: 'failed', error: message.slice(0, 1000) })
+          .eq('id', raw.ingest_id);
       }
       console.error(`content job ${raw.kind} ${raw.id} failed:`, message);
       done.push({ id: raw.id, kind: raw.kind, ok: false, error: message });

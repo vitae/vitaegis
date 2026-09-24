@@ -4,7 +4,8 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 // Matrix characters - Katakana + numbers
-const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
+const CHARS =
+  'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
 const CHAR_ARRAY = CHARS.split('');
 
 // Configuration
@@ -71,35 +72,35 @@ interface Stream {
 }
 
 export default function MatrixBackground() {
-    // Slow down matrix rain on touch/press
-    useEffect(() => {
-      const slowDown = () => {
-        currentSpeed = 0.7;
-        if (speedRestoreTimeout) {
-          clearTimeout(speedRestoreTimeout);
-        }
-        speedRestoreTimeout = window.setTimeout(() => {
-          currentSpeed = CONFIG.speed;
-        }, 1200);
-      };
-      const restoreSpeed = () => {
+  // Slow down matrix rain on touch/press
+  useEffect(() => {
+    const slowDown = () => {
+      currentSpeed = 0.7;
+      if (speedRestoreTimeout) {
+        clearTimeout(speedRestoreTimeout);
+      }
+      speedRestoreTimeout = window.setTimeout(() => {
         currentSpeed = CONFIG.speed;
-        if (speedRestoreTimeout) {
-          clearTimeout(speedRestoreTimeout);
-          speedRestoreTimeout = null;
-        }
-      };
-      window.addEventListener('touchstart', slowDown, { passive: true });
-      window.addEventListener('mousedown', slowDown);
-      window.addEventListener('touchend', restoreSpeed);
-      window.addEventListener('mouseup', restoreSpeed);
-      return () => {
-        window.removeEventListener('touchstart', slowDown);
-        window.removeEventListener('mousedown', slowDown);
-        window.removeEventListener('touchend', restoreSpeed);
-        window.removeEventListener('mouseup', restoreSpeed);
-      };
-    }, []);
+      }, 1200);
+    };
+    const restoreSpeed = () => {
+      currentSpeed = CONFIG.speed;
+      if (speedRestoreTimeout) {
+        clearTimeout(speedRestoreTimeout);
+        speedRestoreTimeout = null;
+      }
+    };
+    window.addEventListener('touchstart', slowDown, { passive: true });
+    window.addEventListener('mousedown', slowDown);
+    window.addEventListener('touchend', restoreSpeed);
+    window.addEventListener('mouseup', restoreSpeed);
+    return () => {
+      window.removeEventListener('touchstart', slowDown);
+      window.removeEventListener('mousedown', slowDown);
+      window.removeEventListener('touchend', restoreSpeed);
+      window.removeEventListener('mouseup', restoreSpeed);
+    };
+  }, []);
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -122,7 +123,7 @@ export default function MatrixBackground() {
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      100
+      100,
     );
     camera.position.z = 10;
     cameraRef.current = camera;
@@ -204,8 +205,7 @@ export default function MatrixBackground() {
           });
 
           stream.nextSpawn =
-            CONFIG.spawnDelayMin +
-            Math.random() * (CONFIG.spawnDelayMax - CONFIG.spawnDelayMin);
+            CONFIG.spawnDelayMin + Math.random() * (CONFIG.spawnDelayMax - CONFIG.spawnDelayMin);
         }
 
         // Update glyphs
@@ -297,12 +297,13 @@ export default function MatrixBackground() {
     <>
       {/* Three.js container - z-0 so it's behind content (z-10) but visible */}
       <div ref={containerRef} className="fixed inset-0 z-0" />
-      
+
       {/* Scanlines overlay */}
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none z-[1]"
         style={{
-          background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px)',
+          background:
+            'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px)',
           opacity: 0.3,
         }}
       />

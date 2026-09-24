@@ -12,7 +12,11 @@ export async function GET(req: NextRequest) {
   const db = supabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 });
 
-  const { data, error } = await db.from('research_briefs').select('*').order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await db
+    .from('research_briefs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ briefs: data ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
 }
@@ -44,13 +48,18 @@ export async function POST(req: NextRequest) {
       .insert({ topic, source_ids: body.source_ids ?? [], status: 'queued' })
       .select()
       .single();
-    if (error || !data) return NextResponse.json({ error: error?.message ?? 'Insert failed' }, { status: 500 });
+    if (error || !data)
+      return NextResponse.json({ error: error?.message ?? 'Insert failed' }, { status: 500 });
     await queueJob({ kind: 'research_brief', payload: { briefId: data.id } });
     return NextResponse.json({ ok: true, id: data.id });
   }
 
   if (!body.id) return NextResponse.json({ error: 'Send an id' }, { status: 400 });
-  const { data: brief } = await db.from('research_briefs').select('id, status, ingest_id').eq('id', body.id).single();
+  const { data: brief } = await db
+    .from('research_briefs')
+    .select('id, status, ingest_id')
+    .eq('id', body.id)
+    .single();
   if (!brief) return NextResponse.json({ error: 'No such brief' }, { status: 404 });
 
   if (body.action === 'delete') {
@@ -60,14 +69,19 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.action === 'rebuild') {
-    await db.from('research_briefs').update({ status: 'queued', error: null, ingest_id: null }).eq('id', body.id);
+    await db
+      .from('research_briefs')
+      .update({ status: 'queued', error: null, ingest_id: null })
+      .eq('id', body.id);
     await queueJob({ kind: 'research_brief', payload: { briefId: body.id } });
     return NextResponse.json({ ok: true });
   }
 
   if (body.action === 'post') {
-    if (brief.status !== 'ready') return NextResponse.json({ error: `Brief is ${brief.status}, not ready` }, { status: 409 });
-    if (brief.ingest_id) return NextResponse.json({ error: 'Already sent to the post queue' }, { status: 409 });
+    if (brief.status !== 'ready')
+      return NextResponse.json({ error: `Brief is ${brief.status}, not ready` }, { status: 409 });
+    if (brief.ingest_id)
+      return NextResponse.json({ error: 'Already sent to the post queue' }, { status: 409 });
     await queueJob({ kind: 'research_post', payload: { briefId: body.id } });
     return NextResponse.json({ ok: true });
   }

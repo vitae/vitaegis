@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 
 const META_VERSION = process.env.META_API_VERSION || 'v21.0';
 
-const base64url = (b: Buffer) => b.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const base64url = (b: Buffer) =>
+  b.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 /**
  * One-time connect for each network. Open
@@ -31,7 +32,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: s
       client_id: process.env.GOOGLE_OAUTH_CLIENT_ID ?? '',
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly',
+      scope:
+        'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly',
       // offline + consent is what actually yields a refresh token.
       access_type: 'offline',
       prompt: 'consent',
@@ -65,7 +67,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: s
       client_id: process.env.META_APP_ID ?? '',
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: 'pages_show_list,pages_manage_posts,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
+      scope:
+        'pages_show_list,pages_manage_posts,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
       state,
     });
     url = `https://www.facebook.com/${META_VERSION}/dialog/oauth?${q}`;

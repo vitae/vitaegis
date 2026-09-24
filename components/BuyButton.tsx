@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
 export default function BuyButton() {
   const [loading, setLoading] = useState(false);
@@ -8,33 +8,25 @@ export default function BuyButton() {
   async function checkout() {
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (error) {
-      console.error("Checkout error:", error);
+      console.error('Checkout error:', error);
       setLoading(false);
     }
   }
 
   return (
-    <button
-      className="btn-neon"
-      disabled={loading}
-      onClick={checkout}
-    >
+    <button className="btn-neon" disabled={loading} onClick={checkout}>
       {loading ? (
         <span className="flex items-center gap-2">
-          <svg
-            className="animate-spin w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
+          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
               cx="12"
@@ -52,7 +44,7 @@ export default function BuyButton() {
           Redirecting...
         </span>
       ) : (
-        "Buy — $9.99"
+        'Buy — $9.99'
       )}
     </button>
   );

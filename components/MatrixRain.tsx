@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // VITAEGIS MATRIX RAIN - Canvas2D Version
@@ -8,7 +8,8 @@ import { useEffect, useRef } from "react";
 // Key techniques: Sawtooth wave illumination, non-colliding multi-stream drops
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const GLYPHS = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*+=<>◊◆◇○●□■△▽∞∑∏√∫≈≠≤≥";
+const GLYPHS =
+  'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*+=<>◊◆◇○●□■△▽∞∑∏√∫≈≠≤≥';
 
 // Deterministic hash for consistent randomness
 const hash = (x: number, y: number): number => {
@@ -52,7 +53,7 @@ export default function MatrixRain({
   fallSpeed = 1,
   density = 1,
   glowIntensity = 1,
-  primaryColor = "#00ff6a",
+  primaryColor = '#00ff6a',
 }: MatrixRainProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -68,7 +69,7 @@ export default function MatrixRain({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     // Parse primary color to RGB
@@ -95,11 +96,11 @@ export default function MatrixRain({
       isSlowed.current = false;
     };
     // Touch/mouse event listeners
-    window.addEventListener("touchstart", slowDown, { passive: true });
-    window.addEventListener("touchend", speedUp, { passive: true });
-    window.addEventListener("mousedown", slowDown);
-    window.addEventListener("mouseup", speedUp);
-    window.addEventListener("mouseleave", speedUp);
+    window.addEventListener('touchstart', slowDown, { passive: true });
+    window.addEventListener('touchend', speedUp, { passive: true });
+    window.addEventListener('mousedown', slowDown);
+    window.addEventListener('mouseup', speedUp);
+    window.addEventListener('mouseleave', speedUp);
 
     const color = hexToRgb(primaryColor);
 
@@ -109,7 +110,7 @@ export default function MatrixRain({
     };
 
     resize();
-    window.addEventListener("resize", resize);
+    window.addEventListener('resize', resize);
 
     const animate = () => {
       // No interpolation: always use currentSpeed
@@ -156,7 +157,7 @@ export default function MatrixRain({
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
 
       // Clear with trail effect
-      ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       ctx.fillRect(0, 0, width, height);
 
       // Draw columns
@@ -179,7 +180,7 @@ export default function MatrixRain({
             // Use currentSpeed for animation
             const sawPos = sawtooth(
               row + elapsed * stream.speed * 10 + stream.phase,
-              stream.period
+              stream.period,
             );
 
             const dropEnd = stream.length / stream.period;
@@ -198,8 +199,7 @@ export default function MatrixRain({
           if (brightness > 0.01) {
             // Cycle glyphs based on brightness
             const cycleTime =
-              elapsed * glyphData.cycleSpeed * (0.3 + brightness * 0.7) +
-              glyphData.cycleOffset;
+              elapsed * glyphData.cycleSpeed * (0.3 + brightness * 0.7) + glyphData.cycleOffset;
             const glyphIndex = Math.floor(cycleTime) % GLYPHS.length;
             const char = GLYPHS[glyphIndex];
 
@@ -233,7 +233,7 @@ export default function MatrixRain({
       }
 
       // Scanline effect
-      ctx.fillStyle = "rgba(0, 0, 0, 0.02)";
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
       for (let i = 0; i < height; i += 4) {
         ctx.fillRect(0, i, width, 2);
       }
@@ -245,10 +245,10 @@ export default function MatrixRain({
         height * 0.2,
         width / 2,
         height / 2,
-        height * 0.9
+        height * 0.9,
       );
-      gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0.5)");
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
@@ -258,12 +258,12 @@ export default function MatrixRain({
     animate();
 
     return () => {
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("touchstart", slowDown);
-      window.removeEventListener("touchend", speedUp);
-      window.removeEventListener("mousedown", slowDown);
-      window.removeEventListener("mouseup", speedUp);
-      window.removeEventListener("mouseleave", speedUp);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('touchstart', slowDown);
+      window.removeEventListener('touchend', speedUp);
+      window.removeEventListener('mousedown', slowDown);
+      window.removeEventListener('mouseup', speedUp);
+      window.removeEventListener('mouseleave', speedUp);
       cancelAnimationFrame(animationRef.current);
     };
   }, [fallSpeed, density, glowIntensity, primaryColor]);
@@ -272,14 +272,14 @@ export default function MatrixRain({
     <canvas
       ref={canvasRef}
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100vw",
-        height: "100vh",
+        width: '100vw',
+        height: '100vh',
         zIndex: -1,
         opacity,
-        pointerEvents: "none",
+        pointerEvents: 'none',
       }}
       aria-hidden="true"
     />

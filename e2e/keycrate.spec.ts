@@ -7,7 +7,9 @@ test('import a rekordbox XML, build a five-track set, export it', async ({ page,
   await page.goto('/keycrate');
   await expect(page.getByRole('heading', { name: 'KeyCrate' })).toBeVisible();
 
-  await page.getByTestId('kc-file').setInputFiles(path.join(process.cwd(), 'fixtures', 'keycrate-sample.xml'));
+  await page
+    .getByTestId('kc-file')
+    .setInputFiles(path.join(process.cwd(), 'fixtures', 'keycrate-sample.xml'));
   await expect(page.getByTestId('kc-toast')).toContainText('Imported 24 tracks');
   await expect(page.getByTestId('kc-library')).toContainText('Glue');
 
@@ -46,7 +48,10 @@ test('import a rekordbox XML, build a five-track set, export it', async ({ page,
   await expect(page.getByTestId('kc-toast')).toContainText('Saved “Smoke set”');
 
   await page.getByTestId('kc-export').click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('kc-export-xml').click()]);
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('kc-export-xml').click(),
+  ]);
   expect(download.suggestedFilename()).toBe('Smoke_set.xml');
   const stream = await download.createReadStream();
   const chunks: Buffer[] = [];

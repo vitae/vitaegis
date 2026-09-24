@@ -27,7 +27,11 @@ export default function ImportPanel() {
         }}
       />
       <Button variant="primary" onClick={() => fileRef.current?.click()} disabled={!!importing}>
-        {importing ? `Parsing ${importing.parsed.toLocaleString()}${importing.total ? ` / ${importing.total.toLocaleString()}` : ''}…` : tracks.length ? 'Import again' : 'Import rekordbox XML or CSV'}
+        {importing
+          ? `Parsing ${importing.parsed.toLocaleString()}${importing.total ? ` / ${importing.total.toLocaleString()}` : ''}…`
+          : tracks.length
+            ? 'Import again'
+            : 'Import rekordbox XML or CSV'}
       </Button>
       {tracks.length === 0 && (
         <Button onClick={actions.loadSample} disabled={!!importing} data-testid="kc-sample">
@@ -40,7 +44,10 @@ export default function ImportPanel() {
             Playlists ({playlists.length})
           </Button>
           {showPlaylists && (
-            <ul className="absolute left-0 top-full z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-md border border-white/15 bg-black p-1" role="menu">
+            <ul
+              className="absolute left-0 top-full z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-md border border-white/15 bg-black p-1"
+              role="menu"
+            >
               {playlists.map((p) => (
                 <li key={p.id} className="flex items-center gap-1">
                   <button
@@ -58,7 +65,12 @@ export default function ImportPanel() {
                       {p.cloudId ? ' · cloud' : ''}
                     </span>
                   </button>
-                  <button type="button" onClick={() => actions.deletePlaylist(p.id)} className="px-2 text-[#808880] hover:text-[#ff0000]" aria-label={`Delete playlist ${p.name}`}>
+                  <button
+                    type="button"
+                    onClick={() => actions.deletePlaylist(p.id)}
+                    className="px-2 text-[#808880] hover:text-[#ff0000]"
+                    aria-label={`Delete playlist ${p.name}`}
+                  >
                     ×
                   </button>
                 </li>
@@ -71,7 +83,12 @@ export default function ImportPanel() {
         <Button
           variant="quiet"
           onClick={() => {
-            if (window.confirm('Clear the local library? Saved playlists stay but lose their tracks until you re-import.')) void actions.clearLibrary();
+            if (
+              window.confirm(
+                'Clear the local library? Saved playlists stay but lose their tracks until you re-import.',
+              )
+            )
+              void actions.clearLibrary();
           }}
         >
           Clear library

@@ -50,9 +50,13 @@ export default function RunGuide() {
                   onClick={() => select(r.slug)}
                   aria-pressed={on}
                   className={`flex h-full w-full flex-col items-start justify-between rounded-xl border px-3 py-3 text-left transition sm:px-4 ${
-                    on ? 'border-white/60 bg-white/[0.06]' : 'border-white/15 bg-black/40 hover:border-white/40'
+                    on
+                      ? 'border-white/60 bg-white/[0.06]'
+                      : 'border-white/15 bg-black/40 hover:border-white/40'
                   }`}
-                  style={on ? { boxShadow: `0 0 24px ${r.color}33`, borderColor: r.color } : undefined}
+                  style={
+                    on ? { boxShadow: `0 0 24px ${r.color}33`, borderColor: r.color } : undefined
+                  }
                 >
                   <span className="flex min-h-[2.5rem] items-start gap-2">
                     <span
@@ -82,14 +86,22 @@ export default function RunGuide() {
           <p className={label} style={{ color: route.color }}>
             {route.kicker}
           </p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">{route.name}</h2>
+          <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+            {route.name}
+          </h2>
           <p className="mt-2 text-lg font-light italic text-white/60">{route.tagline}</p>
         </header>
 
         <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-vitae-green/25 bg-vitae-green/20 sm:grid-cols-4">
-          <Stat value={shownMiles.toFixed(1)} unit={route.officialMiles ? 'miles, official' : 'miles'} />
+          <Stat
+            value={shownMiles.toFixed(1)}
+            unit={route.officialMiles ? 'miles, official' : 'miles'}
+          />
           <Stat value={`+${route.ascentFt}`} unit="ft of climbing" />
-          <Stat value={formatDuration(shownMiles * pace)} unit={`at ${paces.find((p) => p.min === pace)?.label}`} />
+          <Stat
+            value={formatDuration(shownMiles * pace)}
+            unit={`at ${paces.find((p) => p.min === pace)?.label}`}
+          />
           <div className="flex flex-col items-center justify-center bg-black px-3 py-4">
             <label htmlFor="pace" className={label}>
               Your pace
@@ -109,7 +121,9 @@ export default function RunGuide() {
           </div>
         </dl>
 
-        <p className="mx-auto mt-6 max-w-3xl text-center font-light leading-relaxed text-white/75">{route.summary}</p>
+        <p className="mx-auto mt-6 max-w-3xl text-center font-light leading-relaxed text-white/75">
+          {route.summary}
+        </p>
 
         <div className="mt-8">
           <h3 className={`${label} mb-3`}>Elevation</h3>
@@ -122,7 +136,10 @@ export default function RunGuide() {
             <ol className="space-y-3">
               {route.cues.map((c) => (
                 <li key={`${c.mi}-${c.text.slice(0, 12)}`} className="flex gap-3">
-                  <span className="w-10 shrink-0 pt-0.5 text-right text-sm font-semibold tabular-nums" style={{ color: route.color }}>
+                  <span
+                    className="w-10 shrink-0 pt-0.5 text-right text-sm font-semibold tabular-nums"
+                    style={{ color: route.color }}
+                  >
                     {c.mi.toFixed(1)}
                   </span>
                   <span className="text-sm leading-relaxed text-white/80">{c.text}</span>
@@ -138,7 +155,9 @@ export default function RunGuide() {
                   {route.plan.map((s) => (
                     <li key={s.title}>
                       <p className="font-medium text-white">{s.title}</p>
-                      <p className="mt-1 text-sm font-light leading-relaxed text-white/65">{s.body}</p>
+                      <p className="mt-1 text-sm font-light leading-relaxed text-white/65">
+                        {s.body}
+                      </p>
                     </li>
                   ))}
                 </ol>
@@ -151,15 +170,21 @@ export default function RunGuide() {
                   {route.facts.map((f) => (
                     <div key={f.label}>
                       <dt className="font-medium text-white">{f.label}</dt>
-                      <dd className="mt-1 text-sm font-light leading-relaxed text-white/65">{f.value}</dd>
+                      <dd className="mt-1 text-sm font-light leading-relaxed text-white/65">
+                        {f.value}
+                      </dd>
                     </div>
                   ))}
                 </dl>
               </div>
             )}
             <div>
-              <h3 className={`${label} mb-3 border-b border-vitae-green/20 pb-2`}>Marathon overlap</h3>
-              <p className="text-sm font-light leading-relaxed text-white/65">{route.marathonMiles}.</p>
+              <h3 className={`${label} mb-3 border-b border-vitae-green/20 pb-2`}>
+                Marathon overlap
+              </h3>
+              <p className="text-sm font-light leading-relaxed text-white/65">
+                {route.marathonMiles}.
+              </p>
             </div>
           </div>
         </div>

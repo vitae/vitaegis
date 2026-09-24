@@ -64,13 +64,22 @@ export async function exchangeCode(code: string) {
 export async function accessTokenFor(athleteId: number) {
   const db = supabaseAdmin();
   if (!db) throw new Error('Supabase is not configured');
-  const { data, error } = await db.from('strava_tokens').select('*').eq('athlete_id', athleteId).single();
+  const { data, error } = await db
+    .from('strava_tokens')
+    .select('*')
+    .eq('athlete_id', athleteId)
+    .single();
   if (error || !data) throw new Error(`No Strava token for athlete ${athleteId}`);
   if (data.expires_at - 300 > Math.floor(Date.now() / 1000)) return data.access_token as string;
   const t = await tokenRequest({ grant_type: 'refresh_token', refresh_token: data.refresh_token });
   await db
     .from('strava_tokens')
-    .update({ access_token: t.access_token, refresh_token: t.refresh_token, expires_at: t.expires_at, updated_at: new Date().toISOString() })
+    .update({
+      access_token: t.access_token,
+      refresh_token: t.refresh_token,
+      expires_at: t.expires_at,
+      updated_at: new Date().toISOString(),
+    })
     .eq('athlete_id', athleteId);
   return t.access_token;
 }
@@ -147,7 +156,10 @@ function toRow(a: ApiActivity) {
 
 async function api<T>(athleteId: number, path: string): Promise<T> {
   const token = await accessTokenFor(athleteId);
-  const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+  const res = await fetch(`${API}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
   if (!res.ok) throw new Error(`Strava ${path} failed: ${res.status} ${await res.text()}`);
   return res.json();
 }
@@ -173,7 +185,10 @@ export async function backfill(athleteId: number, maxPages = 10, perPage = 200) 
   if (!db) throw new Error('Supabase is not configured');
   let total = 0;
   for (let page = 1; page <= maxPages; page++) {
-    const list = await api<ApiActivity[]>(athleteId, `/athlete/activities?per_page=${perPage}&page=${page}`);
+    const list = await api<ApiActivity[]>(
+      athleteId,
+      `/athlete/activities?per_page=${perPage}&page=${page}`,
+    );
     if (!list.length) break;
     const { error } = await db.from('strava_activities').upsert(list.map(toRow));
     if (error) throw new Error(error.message);
@@ -214,19 +229,34 @@ export function durationLabel(s: number) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  return h ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}` : `${m}:${String(sec).padStart(2, '0')}`;
+  return h
+    ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+    : `${m}:${String(sec).padStart(2, '0')}`;
 }
 
 /** Google polyline decoder (precision 5, as Strava encodes). Returns [lat, lon][]. */
 export function decodePolyline(str: string): [number, number][] {
-  let index = 0, lat = 0, lon = 0;
+  let index = 0,
+    lat = 0,
+    lon = 0;
   const out: [number, number][] = [];
   while (index < str.length) {
-    let b: number, shift = 0, result = 0;
-    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    let b: number,
+      shift = 0,
+      result = 0;
+    do {
+      b = str.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
     lat += result & 1 ? ~(result >> 1) : result >> 1;
-    shift = 0; result = 0;
-    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    shift = 0;
+    result = 0;
+    do {
+      b = str.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
     lon += result & 1 ? ~(result >> 1) : result >> 1;
     out.push([lat / 1e5, lon / 1e5]);
   }
@@ -235,10 +265,19 @@ export function decodePolyline(str: string): [number, number][] {
 
 // ── training log ────────────────────────────────────────────────────────────
 
-export interface WeekBucket { start: string; label: string; miles: number; runs: number; current: boolean }
+export interface WeekBucket {
+  start: string;
+  label: string;
+  miles: number;
+  runs: number;
+  current: boolean;
+}
 export interface ActivityStats {
-  week: number; month: number; year: number;
-  totalRuns: number; totalMiles: number;
+  week: number;
+  month: number;
+  year: number;
+  totalRuns: number;
+  totalMiles: number;
   longest: { miles: number; name: string; date: string } | null;
   weeks: WeekBucket[];
   history: StravaActivity[];
@@ -261,7 +300,10 @@ function weekStart(iso: string) {
   return s;
 }
 
-export async function activityStats(weeksBack = 12, historyLimit = 20): Promise<ActivityStats | null> {
+export async function activityStats(
+  weeksBack = 12,
+  historyLimit = 20,
+): Promise<ActivityStats | null> {
   const db = supabaseAdmin();
   if (!db) return null;
   const { data } = await db
@@ -293,7 +335,10 @@ export async function activityStats(weeksBack = 12, historyLimit = 20): Promise<
     });
   }
 
-  let week = 0, month = 0, year = 0, totalMiles = 0;
+  let week = 0,
+    month = 0,
+    year = 0,
+    totalMiles = 0;
   let longest: ActivityStats['longest'] = null;
   const nowParts = localParts(todayLocal.toISOString());
 
@@ -312,11 +357,14 @@ export async function activityStats(weeksBack = 12, historyLimit = 20): Promise<
       b.runs += 1;
       if (key === thisWeek.toISOString().slice(0, 10)) week += mi;
     }
-    if (!longest || mi > longest.miles) longest = { miles: mi, name: a.name, date: a.start_date_local };
+    if (!longest || mi > longest.miles)
+      longest = { miles: mi, name: a.name, date: a.start_date_local };
   }
 
   return {
-    week, month, year,
+    week,
+    month,
+    year,
     totalRuns: all.length,
     totalMiles,
     longest,

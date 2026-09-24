@@ -5,7 +5,8 @@ import { CONTACT_EMAIL, SITE, LAST_UPDATED } from '../legal/content';
 
 export const metadata: Metadata = {
   title: 'Data Deletion | VITAEGIS',
-  description: 'How to have your data removed from Vitaegis, what gets deleted, and how long it takes.',
+  description:
+    'How to have your data removed from Vitaegis, what gets deleted, and how long it takes.',
 };
 
 export default function DataDeletionPage() {
@@ -35,17 +36,21 @@ export default function DataDeletionPage() {
             ['Roughly when', 'you used the site, which helps if you are unsure what we hold.'],
           ]}
         />
-        <p className="pt-2">
-          You do not need an account, and we will not ask you to explain why.
-        </p>
+        <p className="pt-2">You do not need an account, and we will not ask you to explain why.</p>
       </Section>
 
       <Section heading="What happens next">
         <Bullets
           items={[
             ['Within 3 days', 'we confirm we received the request.'],
-            ['Within 30 days', 'the data is deleted and we email you a short note confirming what was removed.'],
-            ['If we cannot find anything', 'under the details you gave, we tell you that rather than leaving you waiting.'],
+            [
+              'Within 30 days',
+              'the data is deleted and we email you a short note confirming what was removed.',
+            ],
+            [
+              'If we cannot find anything',
+              'under the details you gave, we tell you that rather than leaving you waiting.',
+            ],
           ]}
         />
       </Section>
@@ -64,22 +69,23 @@ export default function DataDeletionPage() {
 
       <Section heading="What we may have to keep">
         <p>
-          Records of completed purchases are retained for tax and accounting reasons, typically seven years.
-          That is a legal obligation rather than a choice, and we strip those records back to the minimum
-          required: the transaction itself, not your wider activity. Stripe holds payment data under its own
-          policy, and you can contact Stripe directly about it.
+          Records of completed purchases are retained for tax and accounting reasons, typically
+          seven years. That is a legal obligation rather than a choice, and we strip those records
+          back to the minimum required: the transaction itself, not your wider activity. Stripe
+          holds payment data under its own policy, and you can contact Stripe directly about it.
         </p>
         <p>
-          Anonymous analytics cannot be traced back to you and therefore cannot be selectively removed.
+          Anonymous analytics cannot be traced back to you and therefore cannot be selectively
+          removed.
         </p>
       </Section>
 
       <Section heading="Revoking access yourself">
         <p>
-          If you connected a social or fitness account, you can cut it off immediately without waiting for
-          us. On Facebook, go to Settings, then Apps and Websites, and remove Vitaegis. On Strava, go to
-          Settings, then My Apps. Revoking access stops any further data reaching us, and we delete what we
-          already hold when you email us.
+          If you connected a social or fitness account, you can cut it off immediately without
+          waiting for us. On Facebook, go to Settings, then Apps and Websites, and remove Vitaegis.
+          On Strava, go to Settings, then My Apps. Revoking access stops any further data reaching
+          us, and we delete what we already hold when you email us.
         </p>
       </Section>
 

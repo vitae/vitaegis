@@ -11,18 +11,16 @@ interface SkeletonProps {
 
 // Base skeleton with shimmer animation
 export function Skeleton({ className = '' }: SkeletonProps) {
-  return (
-    <div 
-      className={`skeleton ${className}`}
-      aria-hidden="true"
-    />
-  );
+  return <div className={`skeleton ${className}`} aria-hidden="true" />;
 }
 
 // Text line skeleton
-export function SkeletonText({ width = '100%', className = '' }: SkeletonProps & { width?: string }) {
+export function SkeletonText({
+  width = '100%',
+  className = '',
+}: SkeletonProps & { width?: string }) {
   return (
-    <div 
+    <div
       className={`skeleton h-[14px] rounded ${className}`}
       style={{ width }}
       aria-hidden="true"
@@ -33,7 +31,7 @@ export function SkeletonText({ width = '100%', className = '' }: SkeletonProps &
 // Avatar/circle skeleton
 export function SkeletonAvatar({ size = 44, className = '' }: SkeletonProps & { size?: number }) {
   return (
-    <div 
+    <div
       className={`skeleton rounded-full ${className}`}
       style={{ width: size, height: size }}
       aria-hidden="true"
@@ -68,7 +66,7 @@ export function SkeletonSection({ className = '' }: SkeletonProps) {
         <SkeletonText width="150px" className="h-[20px]" />
         <SkeletonText width="80px" className="h-[14px]" />
       </div>
-      
+
       {/* Cards grid */}
       <div className="grid grid-cols-2 gap-3">
         <SkeletonCard />
@@ -84,13 +82,13 @@ export function SkeletonHero() {
     <div className="flex flex-col items-center justify-center min-h-screen px-4" aria-hidden="true">
       {/* Badge */}
       <div className="skeleton w-40 h-8 rounded-full mb-6" />
-      
+
       {/* Title */}
       <div className="skeleton w-64 sm:w-80 h-12 sm:h-16 rounded-lg mb-4" />
-      
+
       {/* Underline */}
       <div className="skeleton w-32 h-px mb-8" />
-      
+
       {/* Content box */}
       <div className="skeleton w-full max-w-md h-48 rounded-2xl" />
     </div>

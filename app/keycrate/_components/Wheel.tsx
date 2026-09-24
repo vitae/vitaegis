@@ -20,7 +20,10 @@ const R_INNER = 60;
 // Rounded so server and browser trig agree to the digit and hydration never sees a mismatch.
 const polar = (r: number, deg: number) => {
   const rad = ((deg - 90) * Math.PI) / 180;
-  return [Math.round((C + r * Math.cos(rad)) * 100) / 100, Math.round((C + r * Math.sin(rad)) * 100) / 100] as const;
+  return [
+    Math.round((C + r * Math.cos(rad)) * 100) / 100,
+    Math.round((C + r * Math.sin(rad)) * 100) / 100,
+  ] as const;
 };
 
 function segmentPath(r0: number, r1: number, a0: number, a1: number): string {
@@ -49,7 +52,13 @@ export interface WheelProps {
   className?: string;
 }
 
-export default function Wheel({ selected, onToggle, path = [], available, className = '' }: WheelProps) {
+export default function Wheel({
+  selected,
+  onToggle,
+  path = [],
+  available,
+  className = '',
+}: WheelProps) {
   const segments = useMemo(
     () =>
       CAMELOT_KEYS.map((key) => {
@@ -58,7 +67,12 @@ export default function Wheel({ selected, onToggle, path = [], available, classN
         const a0 = (n - 1) * 30;
         const a1 = a0 + 30;
         const [lx, ly] = polar(isB ? (R_OUTER + R_MID) / 2 : (R_MID + R_INNER) / 2, a0 + 15);
-        return { key, d: segmentPath(isB ? R_MID : R_INNER, isB ? R_OUTER : R_MID, a0, a1), lx, ly };
+        return {
+          key,
+          d: segmentPath(isB ? R_MID : R_INNER, isB ? R_OUTER : R_MID, a0, a1),
+          lx,
+          ly,
+        };
       }),
     [],
   );
@@ -78,8 +92,20 @@ export default function Wheel({ selected, onToggle, path = [], available, classN
         const dim = available && !available.has(key);
         const inner = (
           <>
-            <path d={d} fill={isSel ? '#00ff00' : 'rgba(255,255,255,0.03)'} stroke={isSel ? '#00ff00' : 'rgba(255,255,255,0.18)'} strokeWidth={1} />
-            <text x={lx} y={ly} textAnchor="middle" dominantBaseline="central" fontSize={key.endsWith('B') ? 14 : 12} fill={isSel ? '#000' : dim ? '#808880' : '#fff'}>
+            <path
+              d={d}
+              fill={isSel ? '#00ff00' : 'rgba(255,255,255,0.03)'}
+              stroke={isSel ? '#00ff00' : 'rgba(255,255,255,0.18)'}
+              strokeWidth={1}
+            />
+            <text
+              x={lx}
+              y={ly}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={key.endsWith('B') ? 14 : 12}
+              fill={isSel ? '#000' : dim ? '#808880' : '#fff'}
+            >
               {key}
             </text>
           </>
@@ -117,14 +143,40 @@ export default function Wheel({ selected, onToggle, path = [], available, classN
         if (!prev) return null;
         const t = path[i].transition;
         const color = t ? TRANSITION_COLOR[t.type] : '#808880';
-        return <line key={`l${i}`} x1={prev[0]} y1={prev[1]} x2={pt[0]} y2={pt[1]} stroke={color} strokeWidth={2} strokeLinecap="round" opacity={0.85} />;
+        return (
+          <line
+            key={`l${i}`}
+            x1={prev[0]}
+            y1={prev[1]}
+            x2={pt[0]}
+            y2={pt[1]}
+            stroke={color}
+            strokeWidth={2}
+            strokeLinecap="round"
+            opacity={0.85}
+          />
+        );
       })}
       {points.map((pt, i) =>
         pt ? (
           <g key={`p${i}`}>
-            <circle cx={pt[0]} cy={pt[1]} r={i === 0 ? 7 : 5} fill="#000" stroke={i === path.length - 1 ? '#fff' : '#00ff00'} strokeWidth={2} />
+            <circle
+              cx={pt[0]}
+              cy={pt[1]}
+              r={i === 0 ? 7 : 5}
+              fill="#000"
+              stroke={i === path.length - 1 ? '#fff' : '#00ff00'}
+              strokeWidth={2}
+            />
             {(i === 0 || i === path.length - 1) && (
-              <text x={pt[0]} y={pt[1]} textAnchor="middle" dominantBaseline="central" fontSize={8} fill="#fff">
+              <text
+                x={pt[0]}
+                y={pt[1]}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={8}
+                fill="#fff"
+              >
                 {i + 1}
               </text>
             )}

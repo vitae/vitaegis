@@ -54,11 +54,7 @@ export const viewport: Viewport = {
   themeColor: '#000000',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="scroll-smooth">
       <head>
@@ -66,9 +62,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Jost font - closest free alternative to Futura */}
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" 
-          rel="stylesheet" 
+        <link
+          href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
         />
         {/* iOS PWA settings */}
         <meta name="apple-mobile-web-app-capable" content="yes" />

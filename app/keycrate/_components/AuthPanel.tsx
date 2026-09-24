@@ -24,7 +24,11 @@ export default function AuthPanel() {
         <Button size="sm" onClick={actions.syncLibrary} disabled={!!busy} data-testid="kc-sync">
           {busy ?? 'Sync library'}
         </Button>
-        <Button size="sm" onClick={actions.saveToCloud} disabled={!!busy || state.set.history.present.length === 0}>
+        <Button
+          size="sm"
+          onClick={actions.saveToCloud}
+          disabled={!!busy || state.set.history.present.length === 0}
+        >
           Save set to cloud
         </Button>
         <Button size="sm" variant="quiet" onClick={actions.signOut}>
@@ -39,7 +43,11 @@ export default function AuthPanel() {
       onSubmit={async (e) => {
         e.preventDefault();
         setError(null);
-        const res = await fetch('/api/keycrate/signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        const res = await fetch('/api/keycrate/signin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
         const json = (await res.json().catch(() => ({}))) as { error?: string; allowed?: boolean };
         if (!res.ok) {
           setError(json.error ?? 'Could not send the link');
@@ -47,7 +55,10 @@ export default function AuthPanel() {
         }
         if (json.allowed) {
           const sb = supabaseBrowser();
-          const { error: err } = await sb!.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/keycrate` } });
+          const { error: err } = await sb!.auth.signInWithOtp({
+            email,
+            options: { emailRedirectTo: `${window.location.origin}/keycrate` },
+          });
           if (err) {
             setError(err.message);
             return;
@@ -57,21 +68,40 @@ export default function AuthPanel() {
       }}
       className="flex flex-wrap items-center gap-2"
     >
-      <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" aria-label="Email for magic link" className={`${inputClass} w-56`} />
+      <input
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        aria-label="Email for magic link"
+        className={`${inputClass} w-56`}
+      />
       <Button type="submit" size="md" variant="primary">
         Email me a sign-in link
       </Button>
-      {sent && <span className="text-xs text-[#00ff00]">If that address is allowed, a link is on its way.</span>}
+      {sent && (
+        <span className="text-xs text-[#00ff00]">
+          If that address is allowed, a link is on its way.
+        </span>
+      )}
       {error && <span className="text-xs text-[#ff0000]">{error}</span>}
     </form>
   );
 
   if (signInPrompt) {
     return (
-      <div role="dialog" aria-modal="true" aria-label="Sign in to save to the cloud" className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 sm:items-center">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Sign in to save to the cloud"
+        className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 sm:items-center"
+      >
         <div className="w-full max-w-md rounded-lg border border-white/15 bg-black p-4">
           <p className="text-sm text-white">Sign in to save this set to the cloud and share it.</p>
-          <p className="mb-3 text-xs text-[#808880]">Everything you have built stays on this device either way.</p>
+          <p className="mb-3 text-xs text-[#808880]">
+            Everything you have built stays on this device either way.
+          </p>
           {form}
           <div className="mt-3 flex justify-end">
             <Button variant="quiet" onClick={() => actions.requestSignIn(false)}>

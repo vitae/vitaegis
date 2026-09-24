@@ -24,7 +24,7 @@ const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
       disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     const baseStyles = `
       relative overflow-hidden
@@ -93,7 +93,7 @@ const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
       >
         {/* Inner glow layer */}
         <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-transparent via-[#00ff00]/5 to-[#00ff00]/10" />
-        
+
         {/* Shine effect on hover */}
         <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
           <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -118,7 +118,7 @@ const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
         <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#00ff00]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </button>
     );
-  }
+  },
 );
 
 GlassButton.displayName = 'GlassButton';
@@ -171,7 +171,7 @@ export const GlassIconButton = forwardRef<HTMLButtonElement, GlassIconButtonProp
         </span>
       </button>
     );
-  }
+  },
 );
 
 GlassIconButton.displayName = 'GlassIconButton';
@@ -222,17 +222,21 @@ export const ConnectWalletButton = forwardRef<HTMLButtonElement, ConnectWalletBu
         {/* Content */}
         <span className="relative z-10 flex items-center gap-2">
           {/* Pulse indicator */}
-          <span className={`w-2 h-2 rounded-full ${connected ? 'bg-[#00ff00]' : 'bg-[#00ff00]/50'} shadow-[0_0_10px_#00ff00] animate-pulse`} />
-          
+          <span
+            className={`w-2 h-2 rounded-full ${connected ? 'bg-[#00ff00]' : 'bg-[#00ff00]/50'} shadow-[0_0_10px_#00ff00] animate-pulse`}
+          />
+
           {connected && address ? (
-            <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
+            <span>
+              {address.slice(0, 6)}...{address.slice(-4)}
+            </span>
           ) : (
             <span>Connect Wallet</span>
           )}
         </span>
       </button>
     );
-  }
+  },
 );
 
 ConnectWalletButton.displayName = 'ConnectWalletButton';

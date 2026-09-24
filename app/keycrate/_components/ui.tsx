@@ -29,11 +29,28 @@ export function Button({
   size = 'md',
   className = '',
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: keyof typeof variants; size?: 'sm' | 'md' }) {
-  return <button type="button" className={`${base} ${variants[variant]} ${size === 'sm' ? 'min-h-[32px] py-1' : 'min-h-[40px] py-2'} ${className}`} {...props} />;
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: keyof typeof variants;
+  size?: 'sm' | 'md';
+}) {
+  return (
+    <button
+      type="button"
+      className={`${base} ${variants[variant]} ${size === 'sm' ? 'min-h-[32px] py-1' : 'min-h-[40px] py-2'} ${className}`}
+      {...props}
+    />
+  );
 }
 
-export function Field({ label, children, className = '' }: { label: string; children: ReactNode; className?: string }) {
+export function Field({
+  label,
+  children,
+  className = '',
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <label className={`flex flex-col gap-1 text-xs text-[#808880] ${className}`}>
       <span>{label}</span>
@@ -49,7 +66,11 @@ export function KeyBadge({ camelot, muted = false }: { camelot: string | null; m
   return (
     <span
       className={`kc-mono inline-block min-w-[2.4rem] rounded border px-1.5 py-0.5 text-center text-xs ${
-        camelot ? (muted ? 'border-white/15 text-white' : 'border-[#00ff00]/60 text-[#00ff00]') : 'border-[#ff0000]/50 text-[#ff0000]'
+        camelot
+          ? muted
+            ? 'border-white/15 text-white'
+            : 'border-[#00ff00]/60 text-[#00ff00]'
+          : 'border-[#ff0000]/50 text-[#ff0000]'
       }`}
     >
       {camelot ?? '?'}

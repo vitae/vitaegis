@@ -53,7 +53,8 @@ export const projects: Project[] = [
     href: '/keycrate',
     label: 'KEYCRATE',
     title: 'KeyCrate',
-    description: 'Harmonic set builder for a rekordbox library: Camelot wheel, in-key suggestions, exports.',
+    description:
+      'Harmonic set builder for a rekordbox library: Camelot wheel, in-key suggestions, exports.',
     icon: HiMusicNote,
   },
   {

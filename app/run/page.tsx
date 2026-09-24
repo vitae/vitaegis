@@ -12,7 +12,8 @@ export const metadata: Metadata = {
     'Running routes from Kaimana Beach, shortest to longest: a flat park shakeout, the KCC Saturday market loop, a lighthouse errand run to Planet Fitness and Whole Foods with the bus home, a seven-mile Kahala and Kaimuki loop, a ten-mile south-shore loop and the official Honolulu Marathon course. Maps, elevation, turn-by-turn and GPX.',
   openGraph: {
     title: 'Run · Diamond Head | VITAEGIS',
-    description: 'Six running routes from Kaimana Beach, ordered shortest to longest, with the marathon course for December.',
+    description:
+      'Six running routes from Kaimana Beach, ordered shortest to longest, with the marathon course for December.',
     type: 'article',
   },
 };
@@ -36,9 +37,16 @@ export default function RunPage() {
     // page scrolls inside its own full-viewport container.
     <main
       className="nav-clear fixed inset-0 z-10 w-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-left text-white"
-      style={{ fontFamily: "'Jost', sans-serif", WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+      style={{
+        fontFamily: "'Jost', sans-serif",
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
     >
-      <div className="run-grid pointer-events-none absolute inset-x-0 top-0 h-[700px]" aria-hidden />
+      <div
+        className="run-grid pointer-events-none absolute inset-x-0 top-0 h-[700px]"
+        aria-hidden
+      />
 
       <div className="relative mx-auto max-w-6xl px-4 pb-32 pt-10 sm:px-6">
         <Link href="/" className={`${label} hover:text-white`}>
@@ -57,10 +65,10 @@ export default function RunPage() {
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
             Six routes from the sand at Kaimana Beach, ordered shortest to longest: a flat park
-            shakeout, the Saturday market loop over Diamond Head, the lighthouse errand run to Planet
-            Fitness and Whole Foods with TheBus home, a seven-mile loop back over Kaimuki, a ten-mile
-            south-shore loop, and the official Honolulu Marathon course. {Math.round(totalMiles)} miles
-            in all, mapped and measured.
+            shakeout, the Saturday market loop over Diamond Head, the lighthouse errand run to
+            Planet Fitness and Whole Foods with TheBus home, a seven-mile loop back over Kaimuki, a
+            ten-mile south-shore loop, and the official Honolulu Marathon course.{' '}
+            {Math.round(totalMiles)} miles in all, mapped and measured.
           </p>
         </header>
 
@@ -74,12 +82,16 @@ export default function RunPage() {
         <section className={`${glass} mt-12 p-6 sm:p-10`}>
           <header className="text-center">
             <p className={label}>A week that uses all of them</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">How they fit together</h2>
+            <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+              How they fit together
+            </h2>
           </header>
           <ul className="mx-auto mt-8 max-w-2xl divide-y divide-vitae-green/15">
             {week.map(([day, name, note]) => (
               <li key={day} className="flex items-baseline gap-4 py-3">
-                <span className="w-12 shrink-0 text-sm font-semibold uppercase tracking-[0.2em] text-vitae-green">{day}</span>
+                <span className="w-12 shrink-0 text-sm font-semibold uppercase tracking-[0.2em] text-vitae-green">
+                  {day}
+                </span>
                 <span className="font-medium text-white">{name}</span>
                 <span aria-hidden className="mb-1 flex-1 border-b border-dotted border-white/20" />
                 <span className="text-right text-sm font-light text-white/60">{note}</span>
@@ -87,9 +99,9 @@ export default function RunPage() {
             ))}
           </ul>
           <p className="mx-auto mt-6 max-w-2xl text-center text-sm font-light leading-relaxed text-white/60">
-            Together they rehearse most of the marathon: Kalakaua and Monsarrat, both climbs of Diamond
-            Head Road, Kilauea Avenue and the finish along the park. Only the Kalanianaole out-and-back to
-            Hawaii Kai is missing, and Route 23 from Kahala Mall gets you there.
+            Together they rehearse most of the marathon: Kalakaua and Monsarrat, both climbs of
+            Diamond Head Road, Kilauea Avenue and the finish along the park. Only the Kalanianaole
+            out-and-back to Hawaii Kai is missing, and Route 23 from Kahala Mall gets you there.
           </p>
         </section>
 
@@ -97,13 +109,24 @@ export default function RunPage() {
         <section className={`${glass} mt-6 p-6 sm:p-10`}>
           <header className="text-center">
             <p className={label}>Field notes</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">Before you go</h2>
+            <h2 className="mt-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+              Before you go
+            </h2>
           </header>
           <dl className="mt-8 grid gap-6 md:grid-cols-3">
             {[
-              ['Heat', 'Sunrise is around 6:30 in September and 7:00 by December. Start early; Diamond Head Road has no shade or water after KCC.'],
-              ['Traffic', 'Diamond Head Road is a narrow two-lane with a good sidewalk on the ocean side. On Kalanianaole run the shoulder facing traffic, or save it for race day.'],
-              ['TheBus', 'Adult fare $3 with a HOLO card or exact cash. Route 14 is the only line that stops at the door (Kalakaua Ave + Elks Club); Route 2 is the frequent one, from Kapahulu Ave a mile away.'],
+              [
+                'Heat',
+                'Sunrise is around 6:30 in September and 7:00 by December. Start early; Diamond Head Road has no shade or water after KCC.',
+              ],
+              [
+                'Traffic',
+                'Diamond Head Road is a narrow two-lane with a good sidewalk on the ocean side. On Kalanianaole run the shoulder facing traffic, or save it for race day.',
+              ],
+              [
+                'TheBus',
+                'Adult fare $3 with a HOLO card or exact cash. Route 14 is the only line that stops at the door (Kalakaua Ave + Elks Club); Route 2 is the frequent one, from Kapahulu Ave a mile away.',
+              ],
             ].map(([t, b]) => (
               <div key={t}>
                 <dt className={label}>{t}</dt>
@@ -112,10 +135,11 @@ export default function RunPage() {
             ))}
           </dl>
           <p className="mt-8 border-t border-vitae-green/20 pt-5 text-center text-xs font-light leading-relaxed text-white/45">
-            Routes traced on OpenStreetMap data (© OpenStreetMap contributors, ODbL) with pedestrian routing;
-            distances are measured along the trace and rounded, elevation is from terrain data. Marathon course
-            per honolulumarathon.org; the traced line is a close approximation of the certified course. Business
-            hours and bus times as published September 2026, confirm before you rely on them.
+            Routes traced on OpenStreetMap data (© OpenStreetMap contributors, ODbL) with pedestrian
+            routing; distances are measured along the trace and rounded, elevation is from terrain
+            data. Marathon course per honolulumarathon.org; the traced line is a close approximation
+            of the certified course. Business hours and bus times as published September 2026,
+            confirm before you rely on them.
           </p>
         </section>
       </div>

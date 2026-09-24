@@ -18,7 +18,10 @@ export type JevQuestion =
   | { type: 'choice'; instructions: Rubric; criteria: Record<string, Rubric | null> }
   | { type: 'score'; instructions: Rubric; criteria: Rubric[] };
 
-export interface NoulAnswer { type: 'noul'; noul: number }
+export interface NoulAnswer {
+  type: 'noul';
+  noul: number;
+}
 export interface ChoiceAnswer<K extends string = string> {
   type: 'choice';
   choice: K;
@@ -48,8 +51,10 @@ export interface JevResult<Q extends Record<string, JevQuestion>> {
 export const noul = (instructions: Rubric, criteria?: { true?: Rubric; false?: Rubric }) =>
   ({ type: 'noul', instructions, ...(criteria ? { criteria } : {}) }) as const;
 
-export const choice = <C extends Record<string, Rubric | null>>(instructions: Rubric, criteria: C) =>
-  ({ type: 'choice', instructions, criteria }) as const;
+export const choice = <C extends Record<string, Rubric | null>>(
+  instructions: Rubric,
+  criteria: C,
+) => ({ type: 'choice', instructions, criteria }) as const;
 
 export const score = (instructions: Rubric, criteria: Rubric[]) =>
   ({ type: 'score', instructions, criteria }) as const;

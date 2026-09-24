@@ -88,7 +88,9 @@ function Body({ adminKey }: { adminKey: string }) {
   const [accounts, setAccounts] = useState<{ platform: string; name: string | null }[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, Partial<Record<Platform | 'default', string>>>>({});
+  const [drafts, setDrafts] = useState<
+    Record<string, Partial<Record<Platform | 'default', string>>>
+  >({});
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   const query = useCallback(
@@ -106,7 +108,10 @@ function Body({ adminKey }: { adminKey: string }) {
     async (append = false) => {
       setError('');
       try {
-        const res = await fetch(query(append ? nextBefore : null), { headers: { 'x-admin-key': adminKey }, cache: 'no-store' });
+        const res = await fetch(query(append ? nextBefore : null), {
+          headers: { 'x-admin-key': adminKey },
+          cache: 'no-store',
+        });
         if (!res.ok) throw new Error(String(res.status));
         const body = (await res.json()) as {
           posts: Post[];
@@ -140,9 +145,18 @@ function Body({ adminKey }: { adminKey: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posts]);
 
-  async function act(post: Post, action: 'approve' | 'reject' | 'save' | 'retry' | 'regenerate' | 'delete', platforms?: Platform[]) {
-    if (action === 'delete' && !confirm('Delete this post record? Media stays in the archive.')) return;
-    if (action === 'regenerate' && !confirm('Reject this version and generate a fresh one from the original capture?')) return;
+  async function act(
+    post: Post,
+    action: 'approve' | 'reject' | 'save' | 'retry' | 'regenerate' | 'delete',
+    platforms?: Platform[],
+  ) {
+    if (action === 'delete' && !confirm('Delete this post record? Media stays in the archive.'))
+      return;
+    if (
+      action === 'regenerate' &&
+      !confirm('Reject this version and generate a fresh one from the original capture?')
+    )
+      return;
     setBusy(post.id);
     try {
       const res = await fetch('/api/content/review', {
@@ -181,7 +195,11 @@ function Body({ adminKey }: { adminKey: string }) {
               key={pl}
               href={`/api/social/connect/${pl}?key=${encodeURIComponent(adminKey)}`}
               className={ui.pill(Boolean(acct))}
-              title={acct ? `Connected${acct.name ? ` as ${acct.name}` : ''}. Click to reconnect.` : 'Not connected. Click to connect.'}
+              title={
+                acct
+                  ? `Connected${acct.name ? ` as ${acct.name}` : ''}. Click to reconnect.`
+                  : 'Not connected. Click to connect.'
+              }
             >
               {acct ? '●' : '○'} {pl}
             </a>
@@ -225,7 +243,9 @@ function Body({ adminKey }: { adminKey: string }) {
 
       {posts.length === 0 && (
         <p className="mt-10 text-sm font-light text-white/50">
-          {filter === 'needs' ? 'Nothing waiting. Send something from the Shortcut or post a research brief.' : 'Nothing here.'}
+          {filter === 'needs'
+            ? 'Nothing waiting. Send something from the Shortcut or post a research brief.'
+            : 'Nothing here.'}
         </p>
       )}
 
@@ -237,23 +257,32 @@ function Body({ adminKey }: { adminKey: string }) {
           const landedNames = landed.map(([k]) => k);
           const missing = selected.filter((pl) => !landedNames.includes(pl));
           const showAll = open[p.id];
-          const drive = (p.results as Record<string, unknown> | null)?.drive as string[] | undefined;
+          const drive = (p.results as Record<string, unknown> | null)?.drive as
+            | string[]
+            | undefined;
           return (
             <article key={p.id} className={`${ui.glass} p-5 sm:p-7`}>
               <header className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className={`${ui.label} ${TONE[p.status] ?? 'text-white/50'}`}>
-                  {p.status} · {p.media_kind === 'slides' ? `${p.media_urls?.length ?? 0} slides` : p.media_kind}
+                  {p.status} ·{' '}
+                  {p.media_kind === 'slides' ? `${p.media_urls?.length ?? 0} slides` : p.media_kind}
                   {p.ai_disclosure ? '' : ' · original'}
                 </span>
                 <span className="text-xs text-white/40">
-                  {p.published_at ? `published ${hst(p.published_at)}` : `created ${hst(p.created_at)}`}
+                  {p.published_at
+                    ? `published ${hst(p.published_at)}`
+                    : `created ${hst(p.created_at)}`}
                 </span>
               </header>
 
               {p.source && (
                 <p className="mt-3 text-xs text-white/50">
-                  <span className="uppercase tracking-[0.2em] text-white/30">from {p.source.kind}</span>
-                  {p.source.note ? ` · ${p.source.note.slice(0, 200)}${p.source.note.length > 200 ? '…' : ''}` : ''}
+                  <span className="uppercase tracking-[0.2em] text-white/30">
+                    from {p.source.kind}
+                  </span>
+                  {p.source.note
+                    ? ` · ${p.source.note.slice(0, 200)}${p.source.note.length > 200 ? '…' : ''}`
+                    : ''}
                 </p>
               )}
 
@@ -262,23 +291,41 @@ function Body({ adminKey }: { adminKey: string }) {
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   {landed.map(([pl, r]) =>
                     r?.url ? (
-                      <a key={pl} href={r.url} target="_blank" rel="noreferrer" className={ui.pill(true)}>
+                      <a
+                        key={pl}
+                        href={r.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={ui.pill(true)}
+                      >
                         {pl} ↗
                       </a>
                     ) : (
-                      <span key={pl} className={ui.pill(true)} title={r?.id ? `id ${r.id}` : undefined}>
+                      <span
+                        key={pl}
+                        className={ui.pill(true)}
+                        title={r?.id ? `id ${r.id}` : undefined}
+                      >
                         {pl} ✓
                       </span>
                     ),
                   )}
                   {p.status === 'published' &&
                     missing.map((pl) => (
-                      <span key={pl} className="rounded-full border border-red-500/40 px-3 py-1 text-xs uppercase tracking-[0.15em] text-red-400">
+                      <span
+                        key={pl}
+                        className="rounded-full border border-red-500/40 px-3 py-1 text-xs uppercase tracking-[0.15em] text-red-400"
+                      >
                         {pl} missed
                       </span>
                     ))}
                   {drive?.[0] && (
-                    <a href={drive[0]} target="_blank" rel="noreferrer" className="text-xs text-white/40 hover:text-white">
+                    <a
+                      href={drive[0]}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-white/40 hover:text-white"
+                    >
                       Drive archive ↗
                     </a>
                   )}
@@ -288,7 +335,12 @@ function Body({ adminKey }: { adminKey: string }) {
               {p.media_urls?.length > 0 && (
                 <div className="mt-4">
                   {p.media_kind === 'video' ? (
-                    <video src={p.media_urls[0]} controls playsInline className="max-h-80 rounded-xl border border-white/10" />
+                    <video
+                      src={p.media_urls[0]}
+                      controls
+                      playsInline
+                      className="max-h-80 rounded-xl border border-white/10"
+                    />
                   ) : (
                     // A deck scrolls horizontally in carousel order, numbered as it will post.
                     <div className="flex gap-3 overflow-x-auto pb-2">
@@ -311,9 +363,14 @@ function Body({ adminKey }: { adminKey: string }) {
 
               {/* Captions: editable while pending, collapsed to the default once it is out */}
               <div className="mt-5 space-y-3">
-                {(editable || showAll ? (['default', ...PLATFORMS] as const) : (['default'] as const)).map((k) => (
+                {(editable || showAll
+                  ? (['default', ...PLATFORMS] as const)
+                  : (['default'] as const)
+                ).map((k) => (
                   <label key={k} className="block">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">{k}</span>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                      {k}
+                    </span>
                     <textarea
                       value={caption(p, k)}
                       onChange={(e) => setCaption(p, k, e.target.value)}
@@ -324,7 +381,10 @@ function Body({ adminKey }: { adminKey: string }) {
                   </label>
                 ))}
                 {!editable && (
-                  <button onClick={() => setOpen((o) => ({ ...o, [p.id]: !showAll }))} className="text-xs text-white/40 hover:text-white">
+                  <button
+                    onClick={() => setOpen((o) => ({ ...o, [p.id]: !showAll }))}
+                    className="text-xs text-white/40 hover:text-white"
+                  >
                     {showAll ? 'Hide per-platform copy' : 'Show per-platform copy and job log'}
                   </button>
                 )}
@@ -338,7 +398,9 @@ function Body({ adminKey }: { adminKey: string }) {
                     <button
                       key={pl}
                       disabled={!editable}
-                      onClick={() => act(p, 'save', on ? selected.filter((x) => x !== pl) : [...selected, pl])}
+                      onClick={() =>
+                        act(p, 'save', on ? selected.filter((x) => x !== pl) : [...selected, pl])
+                      }
                       className={`${ui.pill(on)} disabled:opacity-60`}
                     >
                       {pl}
@@ -355,7 +417,15 @@ function Body({ adminKey }: { adminKey: string }) {
                   {p.jobs.map((j) => (
                     <li key={j.id} className="text-xs text-white/40">
                       <span className="text-white/25">{hst(j.updated_at)}</span> · {j.kind} →{' '}
-                      <span className={j.state === 'failed' ? 'text-red-400' : j.state === 'done' ? 'text-white/60' : 'text-vitae-green'}>
+                      <span
+                        className={
+                          j.state === 'failed'
+                            ? 'text-red-400'
+                            : j.state === 'done'
+                              ? 'text-white/60'
+                              : 'text-vitae-green'
+                        }
+                      >
                         {j.state}
                       </span>
                       {j.attempts > 1 ? ` (${j.attempts}/${j.max_attempts})` : ''}
@@ -371,7 +441,13 @@ function Body({ adminKey }: { adminKey: string }) {
                   <>
                     <button
                       disabled={busy === p.id || selected.length === 0}
-                      onClick={() => act(p, p.status === 'failed' && landed.length ? 'retry' : 'approve', selected)}
+                      onClick={() =>
+                        act(
+                          p,
+                          p.status === 'failed' && landed.length ? 'retry' : 'approve',
+                          selected,
+                        )
+                      }
                       className={ui.btn}
                     >
                       {busy === p.id
@@ -380,31 +456,55 @@ function Body({ adminKey }: { adminKey: string }) {
                           ? `Retry ${missing.length} missed`
                           : `Approve and post to ${selected.length}`}
                     </button>
-                    <button disabled={busy === p.id} onClick={() => act(p, 'save', selected)} className={ui.btnQuiet}>
+                    <button
+                      disabled={busy === p.id}
+                      onClick={() => act(p, 'save', selected)}
+                      className={ui.btnQuiet}
+                    >
                       Save edits
                     </button>
                     {p.source && (
-                      <button disabled={busy === p.id} onClick={() => act(p, 'regenerate')} className={ui.btnQuiet}>
+                      <button
+                        disabled={busy === p.id}
+                        onClick={() => act(p, 'regenerate')}
+                        className={ui.btnQuiet}
+                      >
                         Regenerate
                       </button>
                     )}
-                    <button disabled={busy === p.id} onClick={() => act(p, 'reject')} className={ui.btnDanger}>
+                    <button
+                      disabled={busy === p.id}
+                      onClick={() => act(p, 'reject')}
+                      className={ui.btnDanger}
+                    >
                       Reject
                     </button>
                   </>
                 )}
                 {p.status === 'published' && missing.length > 0 && (
-                  <button disabled={busy === p.id} onClick={() => act(p, 'retry', selected)} className={ui.btn}>
+                  <button
+                    disabled={busy === p.id}
+                    onClick={() => act(p, 'retry', selected)}
+                    className={ui.btn}
+                  >
                     Retry {missing.join(', ')}
                   </button>
                 )}
                 {p.status === 'rejected' && p.source && (
-                  <button disabled={busy === p.id} onClick={() => act(p, 'regenerate')} className={ui.btnQuiet}>
+                  <button
+                    disabled={busy === p.id}
+                    onClick={() => act(p, 'regenerate')}
+                    className={ui.btnQuiet}
+                  >
                     Regenerate
                   </button>
                 )}
                 {p.status !== 'publishing' && (
-                  <button disabled={busy === p.id} onClick={() => act(p, 'delete')} className={`${ui.btnDanger} ml-auto`}>
+                  <button
+                    disabled={busy === p.id}
+                    onClick={() => act(p, 'delete')}
+                    className={`${ui.btnDanger} ml-auto`}
+                  >
                     Delete record
                   </button>
                 )}
