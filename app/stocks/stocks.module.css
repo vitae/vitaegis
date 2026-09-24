@@ -1,0 +1,20 @@
+/* Styles Tailwind does not express cleanly for the /stocks board. */
+
+.numeric {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.row {
+  transition: background-color 150ms ease;
+}
+
+.change {
+  transition: color 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .change {
+    transition: none;
+  }
+}

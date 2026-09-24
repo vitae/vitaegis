@@ -8,6 +8,7 @@ import {
   HiAcademicCap,
   HiHeart,
   HiMusicNote,
+  HiTrendingUp,
 } from 'react-icons/hi';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -54,6 +55,13 @@ export const projects: Project[] = [
     title: 'KeyCrate',
     description: 'Harmonic set builder for a rekordbox library: Camelot wheel, in-key suggestions, exports.',
     icon: HiMusicNote,
+  },
+  {
+    href: '/stocks',
+    label: 'STOCKS',
+    title: 'Wealth Board',
+    description: 'Twelve tickers versus their Dec 31, 2025 close, refreshed hourly.',
+    icon: HiTrendingUp,
   },
   {
     href: '/vitamins',
