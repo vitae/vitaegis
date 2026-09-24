@@ -1,19 +1,22 @@
 # Stocks
 
-`/stocks` ranks 52 tickers by their move over a period the visitor picks: 1D, 1W, 1M, 3M,
+`/stocks` ranks 78 tickers by their move over a period the visitor picks: 1D, 1W, 1M, 3M,
 6M, YTD (the default, since the Dec 31, 2025 close), 1Y or 5Y. A group filter narrows the
 board to one of:
 
-| Group             | Tickers                                                                            |
-| ----------------- | ---------------------------------------------------------------------------------- |
-| Market            | SPY, QQQ, GLD, BTC                                                                 |
-| Big Tech          | AAPL, MSFT, GOOGL, AMZN, META, TSLA, COIN                                          |
-| Chips             | NVDA, AMD, INTC, TSM, AVGO, QCOM, ARM, MRVL, TXN, ASML, AMAT, LRCX, KLAC, SMH, SOXX |
-| Memory & Hardware | SNDK, MU, WDC, STX, DELL, HPE, SMCI                                                |
-| Gold & Copper     | NEM, AEM, B, KGC, WPM, FNV, FCX, SCCO, TECK, GDX, COPX                             |
-| Uranium           | CCJ, NXE, UEC, UUUU, DNN, LEU, URA, URNM                                           |
+| Group                 | Tickers                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| Market                | SPY, QQQ, BTC                                                                                             |
+| Big Tech              | AAPL, MSFT, GOOGL, AMZN, META, TSLA, COIN, CSCO, ORCL, NFLX, PLTR                                         |
+| Chips                 | NVDA, AMD, INTC, TSM, AVGO, QCOM, ARM, MRVL, TXN, ADI, NXPI, ON, MCHP, MPWR, GFS, ASML, AMAT, LRCX, KLAC, TER, SNPS, CDNS, SMH, SOXX |
+| Memory & Hardware     | SNDK, MU, WDC, STX, DELL, HPE, SMCI                                                                       |
+| Gold, Silver & Copper | GLD, SLV, CPER, NEM, AEM, B, KGC, WPM, FNV, PAAS, FCX, SCCO, TECK, TMQ, NAK, GDX, SIL, COPX               |
+| Uranium               | CCJ, NXE, UEC, UUUU, DNN, LEU, URA, URNM                                                                  |
+| Core Picks            | BRK.B, JPM, V, LLY, COST, CEG, VST                                                                        |
 
-Barrick trades as `B` since 2025; `GOLD` is now a different company.
+Notes: Barrick trades as `B` since 2025 (`GOLD` is now a different company). TMQ (Trilogy
+Metals, Ambler district) and NAK (Northern Dynasty, Pebble) are the Alaska copper
+developers. GLD, SLV and CPER track the metals themselves.
 
 ## Files
 
@@ -35,7 +38,7 @@ closes.
 
 ## Data sources
 
-One request per ticker, 12 at a time. No API key is needed and none is read.
+One request per ticker, 16 at a time. No API key is needed and none is read.
 
 1. **Nasdaq** (primary), the exchange's own quote API:
 
@@ -45,7 +48,8 @@ One request per ticker, 12 at a time. No API key is needed and none is read.
 
    Rows are newest first, with closes as strings like `"$1,816.57"`. Dates are read as
    noon UTC so they show the same day in US time zones. About 140 KB per ticker. Requests
-   send browser headers (`User-Agent`, `Origin`, `Referer`) and time out after 10 s.
+   send browser headers (`User-Agent`, `Origin`, `Referer`) and time out after 8 s. After 3 Nasdaq failures in one refresh the remaining tickers skip
+   straight to Yahoo, so an outage costs one timeout, not one per ticker.
 
 2. **Yahoo Finance** (backup, per ticker, only when Nasdaq fails or returns nothing):
 
@@ -53,7 +57,7 @@ One request per ticker, 12 at a time. No API key is needed and none is read.
    https://query1.finance.yahoo.com/v8/finance/chart/<SYMBOL>?range=10y&interval=1d
    ```
 
-   Bitcoin is `BTC-USD` there (see `yahooSymbol`). Ten years because `range=5y` starts just
+   Bitcoin is `BTC-USD` and Berkshire `BRK-B` there (see `yahooSymbol`). Ten years because `range=5y` starts just
    after the 5Y mark and leaves no bar to compare against.
 
 Both sources' closes are split-adjusted, not dividend-adjusted, so long periods compare

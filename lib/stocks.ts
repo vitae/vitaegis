@@ -36,12 +36,15 @@ export interface StockPrices {
   source: StockSource;
 }
 
-// Both APIs answer bots with 403/429 or hang; send what a browser sends and give up after 10s.
+// Both APIs answer bots with 403/429 or hang; send what a browser sends and give up after 8s.
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
-const TIMEOUT_MS = 10_000;
-// Tickers fetched at once. ~50 tickers at 12 wide takes a few seconds.
-const CONCURRENCY = 12;
+const TIMEOUT_MS = 8_000;
+// Tickers fetched at once. ~80 tickers at 16 wide takes a few seconds.
+const CONCURRENCY = 16;
+// After this many Nasdaq failures in one refresh, the remaining tickers go straight to Yahoo,
+// so a Nasdaq outage costs one timeout rather than one per ticker.
+const NASDAQ_MAX_FAILURES = 3;
 
 /** Nasdaq history: 5Y plus two weeks, so 5Y still has a bar when its date falls on a holiday. */
 const NASDAQ_HISTORY_DAYS = 5 * 366 + 14;
@@ -145,13 +148,23 @@ async function fetchYahoo(row: StockRow): Promise<Series> {
 
 /* ─── Combined ───────────────────────────────────────────────────────────────── */
 
-/** Nasdaq, then Yahoo. Throws only when both fail or return nothing. */
-async function fetchSeries(row: StockRow): Promise<Series> {
+/** Per-refresh count of Nasdaq failures, shared by every ticker in one `getStockPrices` call. */
+interface Breaker {
+  nasdaqFailures: number;
+}
+
+/** Nasdaq (unless the breaker is open), then Yahoo. Throws only when both fail or return nothing. */
+async function fetchSeries(row: StockRow, breaker: Breaker): Promise<Series> {
   const errors: string[] = [];
-  for (const [name, fetcher] of [
+  const sources = [
     ['nasdaq', fetchNasdaq],
     ['yahoo', fetchYahoo],
-  ] as const) {
+  ] as const;
+  for (const [name, fetcher] of sources) {
+    if (name === 'nasdaq' && breaker.nasdaqFailures >= NASDAQ_MAX_FAILURES) {
+      errors.push('nasdaq: skipped after repeated failures');
+      continue;
+    }
     try {
       const series = await fetcher(row);
       if (series.times.length > 0) return series;
@@ -159,6 +172,7 @@ async function fetchSeries(row: StockRow): Promise<Series> {
     } catch (err) {
       errors.push(`${name}: ${err instanceof Error ? err.message : String(err)}`);
     }
+    if (name === 'nasdaq') breaker.nasdaqFailures++;
   }
   throw new Error(`${row.ticker}: ${errors.join('; ')}`);
 }
@@ -206,7 +220,8 @@ const YTD_CUTOFF = Date.parse(`${startDate}T23:59:59Z`) / 1000;
  */
 export async function getStockPrices(): Promise<StockPrices> {
   try {
-    const settled = await settleAll(stocks, CONCURRENCY, fetchSeries);
+    const breaker: Breaker = { nasdaqFailures: 0 };
+    const settled = await settleAll(stocks, CONCURRENCY, (row) => fetchSeries(row, breaker));
     const prices: Record<string, number> = {};
     const starts = ytdStarts();
     const startDates: StockPrices['startDates'] = { ytd: startDate };

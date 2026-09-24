@@ -5,15 +5,17 @@ import StocksBoard from './StocksBoard';
 import { stocks } from './data';
 
 export const revalidate = 3600;
-// A cold fetch of ~50 tickers takes several seconds; leave room over the platform default.
+// A cold fetch of ~80 tickers takes several seconds; leave room over the platform default.
 export const maxDuration = 60;
 
 export const metadata: Metadata = {
   title: 'Stocks | VITAEGIS',
-  description: 'Chips, memory, miners and the market over 1 day to 5 years, refreshed hourly.',
+  description:
+    'Chips, metals, miners, uranium and core holdings over 1 day to 5 years, refreshed hourly.',
   openGraph: {
     title: 'Stocks | VITAEGIS',
-    description: 'Chips, memory, miners and the market over 1 day to 5 years, refreshed hourly.',
+    description:
+      'Chips, metals, miners, uranium and core holdings over 1 day to 5 years, refreshed hourly.',
     type: 'website',
   },
 };
@@ -60,9 +62,9 @@ export default async function StocksPage() {
           <p className="text-sm text-vitae-gray">Stocks</p>
           <h1 className="mt-2 text-4xl font-semibold text-vitae-green sm:text-5xl">Wealth Board</h1>
           <p className="mt-4 max-w-xl text-base font-light text-white/70">
-            The market, big tech, chipmakers, memory and hardware, and the miners behind gold,
-            copper and uranium, ranked by how far they have moved over the period you pick. Prices
-            are daily closes from Nasdaq, refreshed hourly.
+            The market, big tech, chipmakers, memory and hardware, gold, silver and copper and their
+            miners, uranium, and a handful of core holdings, ranked by how far they have moved over
+            the period you pick. Prices are daily closes from Nasdaq, refreshed hourly.
           </p>
         </header>
 

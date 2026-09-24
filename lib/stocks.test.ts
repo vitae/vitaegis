@@ -94,6 +94,33 @@ describe('getStockPrices', () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 
+  it('stops asking Nasdaq after repeated failures', async () => {
+    let nasdaqCalls = 0;
+    mockFetch((url) => {
+      if (url.includes('api.nasdaq.com')) {
+        nasdaqCalls++;
+        return json({}, 503);
+      }
+      return json(yahooBody);
+    });
+    const data = await getStockPrices();
+    expect(data.source).toBe('live');
+    expect(Object.keys(data.prices)).toHaveLength(stocks.length);
+    // At most one concurrent batch reaches Nasdaq before the breaker opens.
+    expect(nasdaqCalls).toBeLessThanOrEqual(16);
+    expect(nasdaqCalls).toBeLessThan(stocks.length);
+  });
+
+  it('asks Yahoo for BRK-B, not BRK.B', async () => {
+    const urls: string[] = [];
+    mockFetch((url) => {
+      urls.push(url);
+      return url.includes('api.nasdaq.com') ? json({}, 503) : json(yahooBody);
+    });
+    await getStockPrices();
+    expect(urls.some((u) => u.includes('/chart/BRK-B?'))).toBe(true);
+  });
+
   it('serves the snapshot when both sources fail', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockFetch(() => json({}, 500));

@@ -11,8 +11,9 @@ export const groups = [
   { key: 'tech', label: 'Big Tech' },
   { key: 'chips', label: 'Chips' },
   { key: 'hardware', label: 'Memory & Hardware' },
-  { key: 'metals', label: 'Gold & Copper' },
+  { key: 'metals', label: 'Gold, Silver & Copper' },
   { key: 'uranium', label: 'Uranium' },
+  { key: 'core', label: 'Core Picks' },
 ] as const;
 
 export type GroupKey = (typeof groups)[number]['key'];
@@ -42,7 +43,6 @@ export const stocks: StockRow[] = [
   // Market
   { ticker: 'SPY', name: 'S&P 500 ETF', group: 'market', asset: 'etf', start: 681.92, end: 767.81 },
   { ticker: 'QQQ', name: 'Nasdaq 100 ETF', group: 'market', asset: 'etf', start: 614.31, end: 741.21 },
-  { ticker: 'GLD', name: 'Gold ETF', group: 'market', asset: 'etf', start: 396.31, end: 392.88 },
   { ticker: 'BTC', name: 'Bitcoin', group: 'market', asset: 'crypto', start: 87559.9, end: 83931.7 },
 
   // Big Tech
@@ -53,6 +53,10 @@ export const stocks: StockRow[] = [
   { ticker: 'META', name: 'Meta', group: 'tech', asset: 'stocks', start: 660.09, end: 744.1 },
   { ticker: 'TSLA', name: 'Tesla', group: 'tech', asset: 'stocks', start: 449.72, end: 380.12 },
   { ticker: 'COIN', name: 'Coinbase', group: 'tech', asset: 'stocks', start: 226.14, end: 198.13 },
+  { ticker: 'CSCO', name: 'Cisco', group: 'tech', asset: 'stocks', start: 77.03, end: 106.43 },
+  { ticker: 'ORCL', name: 'Oracle', group: 'tech', asset: 'stocks', start: 194.91, end: 144.56 },
+  { ticker: 'NFLX', name: 'Netflix', group: 'tech', asset: 'stocks', start: 93.76, end: 71.36 },
+  { ticker: 'PLTR', name: 'Palantir', group: 'tech', asset: 'stocks', start: 177.75, end: 191.79 },
 
   // Chips: designers, foundries, equipment
   { ticker: 'NVDA', name: 'Nvidia', group: 'chips', asset: 'stocks', start: 186.5, end: 225.51 },
@@ -69,6 +73,15 @@ export const stocks: StockRow[] = [
   { ticker: 'LRCX', name: 'Lam Research', group: 'chips', asset: 'stocks', start: 171.18, end: 307.28 },
   { ticker: 'KLAC', name: 'KLA', group: 'chips', asset: 'stocks', start: 121.508, end: 187.86 },
   { ticker: 'SMH', name: 'Semiconductor ETF', group: 'chips', asset: 'etf', start: 360.13, end: 601.41 },
+  { ticker: 'ADI', name: 'Analog Devices', group: 'chips', asset: 'stocks', start: 271.2, end: 385.23 },
+  { ticker: 'NXPI', name: 'NXP', group: 'chips', asset: 'stocks', start: 217.06, end: 235.44 },
+  { ticker: 'ON', name: 'ON Semi', group: 'chips', asset: 'stocks', start: 54.15, end: 74.1 },
+  { ticker: 'MCHP', name: 'Microchip', group: 'chips', asset: 'stocks', start: 63.72, end: 75.53 },
+  { ticker: 'MPWR', name: 'Monolithic Power', group: 'chips', asset: 'stocks', start: 906.36, end: 1355.47 },
+  { ticker: 'GFS', name: 'GlobalFoundries', group: 'chips', asset: 'stocks', start: 34.92, end: 46.42 },
+  { ticker: 'TER', name: 'Teradyne', group: 'chips', asset: 'stocks', start: 193.56, end: 389.14 },
+  { ticker: 'SNPS', name: 'Synopsys', group: 'chips', asset: 'stocks', start: 469.72, end: 413.06 },
+  { ticker: 'CDNS', name: 'Cadence', group: 'chips', asset: 'stocks', start: 312.58, end: 309.09 },
   { ticker: 'SOXX', name: 'iShares Semi ETF', group: 'chips', asset: 'etf', start: 301.15, end: 565.72 },
 
   // Memory, storage and servers
@@ -80,7 +93,10 @@ export const stocks: StockRow[] = [
   { ticker: 'HPE', name: 'HP Enterprise', group: 'hardware', asset: 'stocks', start: 24.02, end: 62.33 },
   { ticker: 'SMCI', name: 'Supermicro', group: 'hardware', asset: 'stocks', start: 29.27, end: 41.44 },
 
-  // Gold and copper miners
+  // Gold, silver and copper: the metals, then the miners
+  { ticker: 'GLD', name: 'Gold ETF', group: 'metals', asset: 'etf', start: 396.31, end: 392.88 },
+  { ticker: 'SLV', name: 'Silver ETF', group: 'metals', asset: 'etf', start: 64.42, end: 58.16 },
+  { ticker: 'CPER', name: 'Copper ETF', group: 'metals', asset: 'etf', start: 34.96, end: 40.61 },
   { ticker: 'NEM', name: 'Newmont', group: 'metals', asset: 'stocks', start: 99.85, end: 123.55 },
   { ticker: 'AEM', name: 'Agnico Eagle', group: 'metals', asset: 'stocks', start: 169.53, end: 195.57 },
   { ticker: 'B', name: 'Barrick', group: 'metals', asset: 'stocks', start: 43.55, end: 42.49 },
@@ -91,6 +107,10 @@ export const stocks: StockRow[] = [
   { ticker: 'SCCO', name: 'Southern Copper', group: 'metals', asset: 'stocks', start: 143.47, end: 201.94 },
   { ticker: 'TECK', name: 'Teck Resources', group: 'metals', asset: 'stocks', start: 47.89, end: 66.8 },
   { ticker: 'GDX', name: 'Gold Miners ETF', group: 'metals', asset: 'etf', start: 85.77, end: 93.56 },
+  { ticker: 'TMQ', name: 'Trilogy Metals (Alaska)', group: 'metals', asset: 'stocks', start: 4.31, end: 3.31 },
+  { ticker: 'NAK', name: 'Northern Dynasty (Pebble)', group: 'metals', asset: 'stocks', start: 1.97, end: 1.41 },
+  { ticker: 'PAAS', name: 'Pan American Silver', group: 'metals', asset: 'stocks', start: 51.81, end: 48.11 },
+  { ticker: 'SIL', name: 'Silver Miners ETF', group: 'metals', asset: 'etf', start: 83.52, end: 92.22 },
   { ticker: 'COPX', name: 'Copper Miners ETF', group: 'metals', asset: 'etf', start: 71.79, end: 87.03 },
 
   // Uranium miners and fuel
@@ -102,6 +122,15 @@ export const stocks: StockRow[] = [
   { ticker: 'LEU', name: 'Centrus Energy', group: 'uranium', asset: 'stocks', start: 242.76, end: 151.31 },
   { ticker: 'URA', name: 'Uranium ETF', group: 'uranium', asset: 'etf', start: 42.73, end: 41.99 },
   { ticker: 'URNM', name: 'Uranium Miners ETF', group: 'uranium', asset: 'etf', start: 54.89, end: 50.62 },
+
+  // Core picks: compounders across finance, payments, health, retail and AI power
+  { ticker: 'BRK.B', name: 'Berkshire Hathaway', group: 'core', asset: 'stocks', start: 502.65, end: 507.17 },
+  { ticker: 'JPM', name: 'JPMorgan Chase', group: 'core', asset: 'stocks', start: 322.22, end: 337.53 },
+  { ticker: 'V', name: 'Visa', group: 'core', asset: 'stocks', start: 350.71, end: 361.52 },
+  { ticker: 'LLY', name: 'Eli Lilly', group: 'core', asset: 'stocks', start: 1074.68, end: 1150.99 },
+  { ticker: 'COST', name: 'Costco', group: 'core', asset: 'stocks', start: 862.34, end: 904.7 },
+  { ticker: 'CEG', name: 'Constellation Energy', group: 'core', asset: 'stocks', start: 353.27, end: 263.88 },
+  { ticker: 'VST', name: 'Vistra', group: 'core', asset: 'stocks', start: 161.33, end: 137.97 },
 ];
 
 /** Lookback periods the board can compare against. `ytd` uses the fixed `start` closes above. */
@@ -121,4 +150,5 @@ export type PeriodKey = (typeof periods)[number]['key'];
 export const defaultPeriod: PeriodKey = 'ytd';
 
 /** Symbol Yahoo Finance uses for a ticker. */
-export const yahooSymbol = (ticker: string) => (ticker === 'BTC' ? 'BTC-USD' : ticker);
+export const yahooSymbol = (ticker: string) =>
+  ticker === 'BTC' ? 'BTC-USD' : ticker.replace('.', '-'); // BRK.B → BRK-B
