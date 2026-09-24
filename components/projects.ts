@@ -7,6 +7,7 @@ import {
   HiSparkles,
   HiAcademicCap,
   HiHeart,
+  HiMusicNote,
   HiTrendingUp,
 } from 'react-icons/hi';
 
@@ -47,6 +48,13 @@ export const projects: Project[] = [
     description:
       'Six running routes from Kaimana Beach, shortest to longest, with the marathon course for December.',
     icon: HiLightningBolt,
+  },
+  {
+    href: '/keycrate',
+    label: 'KEYCRATE',
+    title: 'KeyCrate',
+    description: 'Harmonic set builder for a rekordbox library: Camelot wheel, in-key suggestions, exports.',
+    icon: HiMusicNote,
   },
   {
     href: '/stocks',
