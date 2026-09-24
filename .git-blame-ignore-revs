@@ -1,0 +1,4 @@
+# Bulk reformats. Use with: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Format the codebase with Prettier
+05ff290c9fb2f884a129f5babf7353573662a2df
