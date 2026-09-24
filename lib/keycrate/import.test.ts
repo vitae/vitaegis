@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fallbackSourceId, parseCsv, parseCsvTracks, parseDuration } from './csv';
 import { mergeTracks, needsAnalysis } from './merge';
 import { decodeEntities, locationToPath, parseRekordboxXml } from './rekordbox';
-import { pathToLocation, toCsv, toM3u8, toRekordboxXml } from './export';
+import { pathToLocation, rekordboxTonality, toCsv, toM3u8, toRekordboxXml } from './export';
 import { DEFAULT_SETTINGS } from './types';
 
 const fixture = readFileSync(join(process.cwd(), 'fixtures', 'keycrate-sample.xml'), 'utf8');
@@ -154,6 +154,23 @@ describe('exports', () => {
     expect(xml).toContain('TrackID="1"');
     expect(xml).toContain('Location="file://localhost/Users/dj/Music/Bicep%20-%20Glue.mp3"');
     expect(pathToLocation('C:\\Music\\a b.mp3')).toBe('file://localhost/C:/Music/a%20b.mp3');
+  });
+  it('writes keys the way rekordbox reads them, and the XML parses back', () => {
+    expect(rekordboxTonality({ camelot: '8A', keyRaw: undefined })).toBe('Am');
+    expect(rekordboxTonality({ camelot: '8B', keyRaw: '8B' })).toBe('C');
+    expect(rekordboxTonality({ camelot: '11A', keyRaw: 'F#m' })).toBe('F#m');
+    expect(rekordboxTonality({ camelot: '2A', keyRaw: 'D#m' })).toBe('D#m');
+    expect(rekordboxTonality({ camelot: null, keyRaw: undefined })).toBeNull();
+    const xml = toRekordboxXml('Friday', set);
+    expect(xml).not.toMatch(/Tonality="\d+[AB]"/);
+    const back = parseRekordboxXml(xml);
+    expect(back.tracks.map((t) => [t.title, t.camelot, t.bpm])).toEqual(
+      set.map((t) => [t.title, t.camelot, t.bpm]),
+    );
+    expect(back.playlists[0]).toMatchObject({
+      name: 'Friday',
+      trackIds: set.map((t) => t.sourceId),
+    });
   });
   it('m3u8 uses locations', () => {
     const m3u = toM3u8('x', set);

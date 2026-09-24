@@ -25,6 +25,7 @@ import { useKeyCrate } from '../_state/store';
 import Settings from './Settings';
 import Suggestions from './Suggestions';
 import Timeline from './Timeline';
+import { PlayButton } from './Audio';
 import { Button, inputClass, KeyBadge, SectionTitle, TRANSITION_COLOR } from './ui';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -348,6 +349,7 @@ function SetRow({
           ⋮⋮
         </button>
         <span className="kc-mono w-5 shrink-0 text-right text-xs text-[#808880]">{index + 1}</span>
+        <PlayButton track={track} />
         <KeyBadge camelot={track?.camelot ?? null} muted />
         <button
           type="button"

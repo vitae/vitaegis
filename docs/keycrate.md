@@ -24,6 +24,20 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   library, read the transitions, and "Build similar from my crate".
 - **Exports** (`lib/keycrate/export.ts`): rekordbox playlist XML (TrackIDs, so cues survive re-import),
   M3U8 from `Location`, CSV, and a read-only share link at `/keycrate/set/[id]`.
+- **Audio** (`app/keycrate/_state/audio.tsx`, `lib/keycrate/audio.ts`, `lib/keycrate/drive-audio.ts`): a ▶ next to
+  every track in the library, the Playlist table, the set and Set Study, with a player bar for seeking. Tracks are
+  matched to files by the file name in the library's Location, then by "Artist - Title" in the file name.
+  - **Google Drive**: WAVs in the folder named by `KEYCRATE_DRIVE_FOLDER_ID`, shared (Viewer) with the site's
+    service account. `/api/keycrate/audio` lists it and `/api/keycrate/audio/[id]` streams one file in 8 MB byte
+    ranges, so seeking works without downloading the whole WAV. Only signed-in users on `KEYCRATE_ALLOWED_EMAILS`
+    can list or stream.
+  - **USB / local folder**: pick the folder; files play straight from the drive and nothing is uploaded.
+    Chrome and Edge remember the folder between visits; other browsers ask each visit. Local files win when both
+    have a track, so a gig doesn't depend on the network.
+- **Playlist → rekordbox**: the Playlist table under the wheel has Save and **rekordbox XML**. The export keeps
+  TrackIDs and file paths and writes keys the way rekordbox reads them (`Am`, `F#m`, `C`). In rekordbox:
+  Preferences → Advanced → rekordbox xml → Imported Library → pick the file, then drag the playlist from the
+  rekordbox xml tree into your playlists.
 - **Storage**: IndexedDB on the device for everything. Signing in (magic link) adds a cloud copy in
   Supabase, uploaded in chunks of 500. If IndexedDB is blocked or hangs (private browsing, in-app browsers,
   another tab holding an old version), the page carries on in memory and shows a red notice instead of
@@ -35,7 +49,17 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Already set. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | New. The browser and the share page query as the user / anon so RLS applies. Without it KeyCrate is local-only and hides sign-in. |
-| `KEYCRATE_ALLOWED_EMAILS` | Optional. Comma-separated emails allowed to sign in. Unset means anyone. |
+| `KEYCRATE_ALLOWED_EMAILS` | Comma-separated emails allowed to sign in. Unset means anyone can sign in, but Google Drive audio then streams to nobody: streaming needs your email here. |
+| `KEYCRATE_DRIVE_FOLDER_ID` | New, for Google Drive audio. The id at the end of the folder's URL (`drive.google.com/drive/folders/<id>`). |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` (or `_EMAIL` + `_KEY`) | Already set for the content pipeline; KeyCrate reuses it read-only. |
+
+### Google Drive audio
+
+1. Put the WAVs in one Drive folder (subfolders are fine, e.g. a copy of the USB `Contents` folder).
+2. Share the folder with the service account's email (the `client_email` in `GOOGLE_SERVICE_ACCOUNT_JSON`) as
+   **Viewer**.
+3. Set `KEYCRATE_DRIVE_FOLDER_ID` and `KEYCRATE_ALLOWED_EMAILS` in Vercel and redeploy.
+4. Sign in on `/keycrate`: the **Drive** chip lists the folder and the ▶ buttons light up.
 
 ## Supabase
 

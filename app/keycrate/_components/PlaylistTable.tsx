@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { safeFilename, toRekordboxXml } from '@/lib/keycrate/export';
 import { TRANSITION_LABEL } from '@/lib/keycrate/harmonic';
 import { normalizeName } from '@/lib/keycrate/tracklist';
 import type { Track } from '@/lib/keycrate/types';
-import { formatBpm } from '../_lib/download';
+import { downloadText, formatBpm } from '../_lib/download';
 import { useKeyCrate } from '../_state/store';
+import { PlayButton } from './Audio';
 import { KeyBadge, TRANSITION_COLOR } from './ui';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -68,6 +70,23 @@ export default function PlaylistTable() {
     if (adding) searchRef.current?.focus();
   }, [adding]);
 
+  const noLocation = derived.setTracks.filter((t) => !t.location).length;
+
+  /** A rekordbox XML with this playlist: File → Import → rekordbox xml, or the rekordbox xml pane. */
+  const exportRekordbox = () => {
+    const name = state.set.name.trim() || 'KeyCrate set';
+    downloadText(
+      `${safeFilename(name)}.xml`,
+      toRekordboxXml(name, derived.setTracks),
+      'application/xml',
+    );
+    actions.toast(
+      noLocation
+        ? `Exported. ${noLocation} track${noLocation === 1 ? ' has' : 's have'} no file path, so rekordbox will show ${noLocation === 1 ? 'it' : 'them'} as missing.`
+        : 'Exported. In rekordbox: Preferences → Advanced → rekordbox xml → pick this file, then drag the playlist in.',
+    );
+  };
+
   const closePicker = () => {
     setAdding(false);
     setQuery('');
@@ -82,22 +101,50 @@ export default function PlaylistTable() {
             {items.length} {items.length === 1 ? 'track' : 'tracks'}
           </span>
         </h2>
-        <button
-          type="button"
-          onClick={() => (adding ? closePicker() : setAdding(true))}
-          aria-expanded={adding}
-          aria-controls="kc-playlist-add"
-          aria-label={adding ? 'Close add songs' : 'Add songs'}
-          title="Add songs"
-          className={`flex h-8 w-8 items-center justify-center rounded-md border text-lg leading-none ${
-            adding
-              ? 'border-[#00ff00] bg-[#00ff00] text-black'
-              : 'border-[#00ff00]/60 text-[#00ff00] hover:bg-[#00ff00]/10'
-          }`}
-        >
-          {adding ? '×' : '+'}
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => void actions.saveSet()}
+            disabled={!items.length || state.busy !== null}
+            className="h-8 rounded-md border border-white/15 px-2.5 text-xs text-white hover:border-white/40 disabled:opacity-40"
+            data-testid="kc-playlist-save"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={exportRekordbox}
+            disabled={!derived.setTracks.length}
+            title="Download a rekordbox XML of this playlist"
+            className="h-8 rounded-md border border-white/15 px-2.5 text-xs text-white hover:border-white/40 disabled:opacity-40"
+            data-testid="kc-playlist-rekordbox"
+          >
+            rekordbox XML
+          </button>
+          <button
+            type="button"
+            onClick={() => (adding ? closePicker() : setAdding(true))}
+            aria-expanded={adding}
+            aria-controls="kc-playlist-add"
+            aria-label={adding ? 'Close add songs' : 'Add songs'}
+            title="Add songs"
+            className={`flex h-8 w-8 items-center justify-center rounded-md border text-lg leading-none ${
+              adding
+                ? 'border-[#00ff00] bg-[#00ff00] text-black'
+                : 'border-[#00ff00]/60 text-[#00ff00] hover:bg-[#00ff00]/10'
+            }`}
+          >
+            {adding ? '×' : '+'}
+          </button>
+        </div>
       </div>
+      <input
+        value={state.set.name}
+        onChange={(e) => actions.setName(e.target.value)}
+        aria-label="Playlist name"
+        placeholder="Playlist name"
+        className="mb-2 min-h-[34px] w-full rounded border border-white/15 bg-black px-2 text-base text-white placeholder:text-[#808880] focus:border-[#00ff00] sm:text-sm"
+      />
 
       {adding && (
         <div id="kc-playlist-add" className="mb-2 rounded-md border border-[#00ff00]/40 p-2">
@@ -163,7 +210,8 @@ export default function PlaylistTable() {
       <div className="max-h-[420px] overflow-y-auto rounded-md border border-white/15">
         <table className="w-full table-fixed border-collapse text-sm">
           <colgroup>
-            <col className="w-8" />
+            <col className="w-10" />
+            <col className="w-7" />
             <col />
             <col className="w-14" />
             <col className="w-12" />
@@ -171,7 +219,10 @@ export default function PlaylistTable() {
           </colgroup>
           <thead className="sticky top-0 z-10 bg-black">
             <tr className="border-b border-white/15 text-left text-[11px] uppercase tracking-wider text-[#808880]">
-              <th scope="col" className="px-2 py-1.5 font-normal">
+              <th scope="col" className="px-1 py-1.5 font-normal">
+                <span className="sr-only">Play</span>
+              </th>
+              <th scope="col" className="px-1 py-1.5 font-normal">
                 #
               </th>
               <th scope="col" className="px-2 py-1.5 font-normal">
@@ -191,7 +242,7 @@ export default function PlaylistTable() {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-2 py-6 text-center text-xs text-[#808880]">
+                <td colSpan={6} className="px-2 py-6 text-center text-xs text-[#808880]">
                   No songs yet. Tap <span className="text-[#00ff00]">+</span> to add some.
                 </td>
               </tr>
@@ -204,7 +255,10 @@ export default function PlaylistTable() {
                   key={`${items[i].trackId}-${i}`}
                   className="kc-row border-b border-white/[0.08] last:border-b-0"
                 >
-                  <td className="kc-mono px-2 py-1.5 text-xs text-[#808880]">{i + 1}</td>
+                  <td className="px-1 py-1.5">
+                    <PlayButton track={t} />
+                  </td>
+                  <td className="kc-mono px-1 py-1.5 text-xs text-[#808880]">{i + 1}</td>
                   <td className="px-2 py-1.5">
                     <span
                       className="block truncate text-white"
