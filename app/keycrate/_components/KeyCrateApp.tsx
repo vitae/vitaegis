@@ -32,6 +32,7 @@ function useDesktop() {
 export default function KeyCrateApp() {
   const { state, derived, actions } = useKeyCrate();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const desktop = useDesktop();
   const items = state.set.history.present;
 
@@ -57,7 +58,33 @@ export default function KeyCrateApp() {
   }, [sheetOpen]);
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-[1500px] flex-col px-4 pb-24 pt-4 sm:px-6 lg:pb-6">
+    <div
+      className="relative mx-auto flex min-h-full w-full max-w-[1500px] flex-col px-4 pb-24 pt-4 sm:px-6 lg:pb-6"
+      // Drop a rekordbox XML, Traktor NML or CSV anywhere on the page to import it.
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes('Files')) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target) setDragging(false);
+      }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.files.length) return;
+        e.preventDefault();
+        setDragging(false);
+        if (!state.importing) void actions.importFile(e.dataTransfer.files[0]);
+      }}
+    >
+      {dragging && (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center border-2 border-dashed border-[#00ff00] bg-black/80 text-lg text-[#00ff00]"
+        >
+          Drop your rekordbox XML, Traktor NML or CSV to import
+        </div>
+      )}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href="/" className="text-xs text-[#808880] hover:text-white">
@@ -80,6 +107,16 @@ export default function KeyCrateApp() {
         <ImportPanel />
         <AuthPanel />
       </div>
+
+      {state.storageError && (
+        <p
+          role="alert"
+          data-testid="kc-storage-error"
+          className="mt-3 rounded-md border border-[#ff0000]/60 px-3 py-2 text-sm text-[#ff0000]"
+        >
+          Couldn&apos;t open on-device storage. {state.storageError}
+        </p>
+      )}
 
       {!state.ready ? (
         <p className="mt-6 text-sm text-[#808880]">Opening your crate…</p>
@@ -164,9 +201,13 @@ export default function KeyCrateApp() {
 
       {state.toast && (
         <div
-          role="status"
+          role={state.toast.startsWith('Import failed') ? 'alert' : 'status'}
           data-testid="kc-toast"
-          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-md border border-white/20 bg-black px-4 py-2 text-sm text-white"
+          className={`fixed left-1/2 z-50 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-md border bg-black px-4 py-2 text-sm ${
+            state.toast.startsWith('Import failed')
+              ? 'border-[#ff0000] text-[#ff0000]'
+              : 'border-white/20 text-white'
+          }`}
           style={{ bottom: 'calc(var(--nav-bottom) + var(--sab) + 64px)' }}
         >
           {state.toast}

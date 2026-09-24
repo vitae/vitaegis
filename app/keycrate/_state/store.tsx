@@ -59,6 +59,7 @@ import {
   type SetStudy,
   type Track,
 } from '@/lib/keycrate/types';
+import { parseLibraryText } from '@/lib/keycrate/library';
 import type { ImportMessage, ImportRequest } from '../_lib/import.worker';
 
 export interface CurrentSet {
@@ -85,6 +86,8 @@ export interface State {
   busy: string | null;
   /** Something asked for the cloud while signed out. */
   signInPrompt: boolean;
+  /** Set when on-device storage (IndexedDB) can't be used: the library then lives in memory. */
+  storageError: string | null;
 }
 
 const freshSet = (): CurrentSet => ({
@@ -123,7 +126,8 @@ type Action =
   | { type: 'session'; session: Session | null }
   | { type: 'cloudIds'; cloudIds: Map<string, string> }
   | { type: 'busy'; busy: string | null }
-  | { type: 'signInPrompt'; open: boolean };
+  | { type: 'signInPrompt'; open: boolean }
+  | { type: 'storageError'; message: string | null };
 
 function reducer(s: State, a: Action): State {
   switch (a.type) {
@@ -169,6 +173,8 @@ function reducer(s: State, a: Action): State {
       return { ...s, busy: a.busy };
     case 'signInPrompt':
       return { ...s, signInPrompt: a.open };
+    case 'storageError':
+      return { ...s, storageError: a.message };
   }
 }
 
@@ -185,7 +191,59 @@ const initial: State = {
   cloudIds: new Map(),
   busy: null,
   signInPrompt: false,
+  storageError: null,
 };
+
+/** Rejects if `p` hasn't settled in `ms`: IndexedDB can hang when another tab blocks it. */
+function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${what} timed out`)), ms)),
+  ]);
+}
+
+const STORAGE_HELP =
+  "Your library won't be kept on this device after you close the page. Private browsing and in-app browsers often block storage; open vitaegis.com/keycrate in Safari or Chrome directly, or close other KeyCrate tabs.";
+
+/** On-device writes never block an action: on failure the crate carries on in memory. */
+async function persist(write: Promise<unknown>, dispatch: (a: Action) => void): Promise<void> {
+  try {
+    await write;
+  } catch (err) {
+    console.error('[keycrate] on-device save failed', err);
+    dispatch({ type: 'storageError', message: STORAGE_HELP });
+  }
+}
+
+/** Parses in a Web Worker; rejects with `workerFailed` set when the worker itself can't run. */
+function parseInWorker(
+  text: string,
+  onProgress: (parsed: number, total: number | null) => void,
+): Promise<{ tracks: Track[] }> {
+  return new Promise((resolve, reject) => {
+    let worker: Worker;
+    try {
+      worker = new Worker(new URL('../_lib/import.worker.ts', import.meta.url));
+    } catch (err) {
+      reject(Object.assign(new Error(String(err)), { workerFailed: true }));
+      return;
+    }
+    // A worker that fails to load or crashes (e.g. out of memory) never posts a message.
+    worker.onerror = (e) => {
+      e.preventDefault();
+      worker.terminate();
+      reject(Object.assign(new Error(e.message || 'import worker failed'), { workerFailed: true }));
+    };
+    worker.onmessage = (e: MessageEvent<ImportMessage>) => {
+      const m = e.data;
+      if (m.type === 'progress') return onProgress(m.parsed, m.total);
+      worker.terminate();
+      if (m.type === 'error') reject(new Error(m.message));
+      else resolve({ tracks: m.tracks });
+    };
+    worker.postMessage({ text } satisfies ImportRequest);
+  });
+}
 
 export interface Derived {
   trackMap: Map<string, Track>;
@@ -241,16 +299,28 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [tracks, playlists, studies, saved, session] = await Promise.all([
-        localDb.getTracks(),
-        localDb.getPlaylists(),
-        localDb.getStudies(),
-        localDb.getMeta<Omit<CurrentSet, 'history'> & { items: PlaylistItem[] }>('current'),
-        currentSession().catch(() => null),
-      ]);
-      if (cancelled) return;
-      const set = saved ? { ...saved, history: createHistory(saved.items) } : null;
-      dispatch({ type: 'hydrate', tracks, playlists, studies, set, session });
+      const session = await withTimeout(currentSession(), 5000, 'Sign-in check').catch(() => null);
+      try {
+        const [tracks, playlists, studies, saved] = await withTimeout(
+          Promise.all([
+            localDb.getTracks(),
+            localDb.getPlaylists(),
+            localDb.getStudies(),
+            localDb.getMeta<Omit<CurrentSet, 'history'> & { items: PlaylistItem[] }>('current'),
+          ]),
+          8000,
+          'Opening on-device storage',
+        );
+        if (cancelled) return;
+        const set = saved ? { ...saved, history: createHistory(saved.items) } : null;
+        dispatch({ type: 'hydrate', tracks, playlists, studies, set, session });
+      } catch (err) {
+        // Never leave the page on "Opening your crate…": carry on with an in-memory crate.
+        if (cancelled) return;
+        console.error('[keycrate] IndexedDB unavailable', err);
+        dispatch({ type: 'hydrate', tracks: [], playlists: [], studies: [], set: null, session });
+        dispatch({ type: 'storageError', message: STORAGE_HELP });
+      }
     })();
     const sb = supabaseBrowser();
     const sub = sb?.auth.onAuthStateChange((_event, session) =>
@@ -267,12 +337,14 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     const { history, ...rest } = set;
-    void localDb.setMeta('current', { ...rest, items: history.present });
+    void persist(localDb.setMeta('current', { ...rest, items: history.present }), dispatch);
   }, [set, ready]);
 
   useEffect(() => {
     if (!state.toast) return;
-    const t = setTimeout(() => dispatch({ type: 'toast', toast: null }), 3500);
+    // Failures carry instructions, so they stay up long enough to read.
+    const ms = state.toast.startsWith('Import failed') ? 10000 : 3500;
+    const t = setTimeout(() => dispatch({ type: 'toast', toast: null }), ms);
     return () => clearTimeout(t);
   }, [state.toast]);
 
@@ -333,72 +405,87 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
   );
 
   const importText = useCallback(
-    (kind: ImportRequest['kind'], text: string) =>
-      new Promise<void>((resolve) => {
-        dispatch({ type: 'importing', importing: { parsed: 0, total: null } });
-        const worker = new Worker(new URL('../_lib/import.worker.ts', import.meta.url));
-        worker.onmessage = async (e: MessageEvent<ImportMessage>) => {
-          const m = e.data;
-          if (m.type === 'progress') {
-            dispatch({ type: 'importing', importing: { parsed: m.parsed, total: m.total } });
-            return;
-          }
-          worker.terminate();
-          if (m.type === 'error') {
-            dispatch({ type: 'importing', importing: null });
-            toast(`Import failed: ${m.message}`);
-            resolve();
-            return;
-          }
-          const { tracks, added, updated, remapped } = mergeTracks(
-            stateRef.current.tracks,
-            m.tracks,
-          );
-          await localDb.putTracks(tracks, true);
-          dispatch({ type: 'tracks', tracks });
-          // Playlists that pointed at a CSV hash now point at the merged row.
-          if (remapped.size) {
-            const fixed = stateRef.current.playlists.map((p) => ({
-              ...p,
-              items: p.items.map((it) => ({
-                ...it,
-                trackId: remapped.get(it.trackId) ?? it.trackId,
-              })),
-            }));
-            for (const p of fixed) await localDb.putPlaylist(p);
-            dispatch({ type: 'playlists', playlists: fixed });
-          }
-          dispatch({ type: 'importing', importing: null });
-          toast(
-            `Imported ${m.tracks.length.toLocaleString()} tracks: ${added.toLocaleString()} new, ${updated.toLocaleString()} updated`,
-          );
-          resolve();
-        };
-        worker.postMessage({ kind, text } satisfies ImportRequest);
-      }),
+    async (text: string) => {
+      const progress = (parsed: number, total: number | null) =>
+        dispatch({ type: 'importing', importing: { parsed, total } });
+      progress(0, null);
+      try {
+        let parsed: Track[];
+        try {
+          parsed = (await parseInWorker(text, progress)).tracks;
+        } catch (err) {
+          if (!(err as { workerFailed?: boolean }).workerFailed) throw err;
+          // The worker couldn't run in this browser: parse here instead (the page may pause).
+          console.warn('[keycrate] import worker failed, parsing on the main thread', err);
+          await new Promise((r) => setTimeout(r, 30));
+          parsed = parseLibraryText(text).tracks;
+        }
+
+        const { tracks, added, updated, remapped } = mergeTracks(stateRef.current.tracks, parsed);
+        dispatch({ type: 'tracks', tracks });
+        // Playlists that pointed at a CSV hash now point at the merged row.
+        let fixed: Playlist[] | null = null;
+        if (remapped.size) {
+          fixed = stateRef.current.playlists.map((p) => ({
+            ...p,
+            items: p.items.map((it) => ({
+              ...it,
+              trackId: remapped.get(it.trackId) ?? it.trackId,
+            })),
+          }));
+          dispatch({ type: 'playlists', playlists: fixed });
+        }
+        const summary = `Imported ${parsed.length.toLocaleString()} tracks: ${added.toLocaleString()} new, ${updated.toLocaleString()} updated`;
+        try {
+          await withTimeout(localDb.putTracks(tracks, true), 20000, 'Saving the library');
+          if (fixed) for (const p of fixed) await localDb.putPlaylist(p);
+          toast(summary);
+        } catch (err) {
+          // The crate still works for this visit; say plainly that it won't be kept.
+          console.error('[keycrate] could not save the library', err);
+          dispatch({ type: 'storageError', message: STORAGE_HELP });
+          toast(`${summary}. Couldn't save them on this device.`);
+        }
+      } catch (err) {
+        toast(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        dispatch({ type: 'importing', importing: null });
+      }
+    },
     [toast],
   );
 
   const importFile = useCallback(
     async (file: File) => {
-      const text = await file.text();
-      const kind: ImportRequest['kind'] =
-        /\.csv$/i.test(file.name) ||
-        (!/\.xml$/i.test(file.name) && !text.trimStart().startsWith('<'))
-          ? 'csv'
-          : 'xml';
-      await importText(kind, text);
+      let text: string;
+      try {
+        text = await file.text();
+      } catch (err) {
+        toast(
+          `Import failed: couldn't read ${file.name} (${err instanceof Error ? err.message : err})`,
+        );
+        return;
+      }
+      // The format is read from the content, so .xml, .nml, .csv or no extension all work.
+      await importText(text);
     },
-    [importText],
+    [importText, toast],
   );
 
   const loadSample = useCallback(async () => {
-    const res = await fetch('/api/keycrate/sample');
-    await importText('xml', await res.text());
-  }, [importText]);
+    try {
+      const res = await fetch('/api/keycrate/sample');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await importText(await res.text());
+    } catch (err) {
+      toast(
+        `Import failed: couldn't load the sample (${err instanceof Error ? err.message : err})`,
+      );
+    }
+  }, [importText, toast]);
 
   const clearLibrary = useCallback(async () => {
-    await localDb.clearTracks();
+    await persist(localDb.clearTracks(), dispatch);
     dispatch({ type: 'tracks', tracks: [] });
     dispatch({ type: 'cloudIds', cloudIds: new Map() });
   }, []);
@@ -409,7 +496,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       if (!track) return;
       const next = { ...track, ...patch };
       dispatch({ type: 'track', track: next });
-      await localDb.putTrack(next);
+      await persist(localDb.putTrack(next), dispatch);
       const sb = supabaseBrowser();
       const cloudId = stateRef.current.cloudIds.get(id);
       if (sb && stateRef.current.session && cloudId) {
@@ -475,7 +562,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
 
   const saveSet = useCallback(async () => {
     const p = currentAsPlaylist();
-    await localDb.putPlaylist(p);
+    await persist(localDb.putPlaylist(p), dispatch);
     const rest = stateRef.current.playlists.filter((x) => x.id !== p.id);
     dispatch({ type: 'playlists', playlists: [p, ...rest] });
     toast(`Saved “${p.name}”`);
@@ -500,7 +587,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
 
   const deletePlaylist = useCallback(async (id: string) => {
     const p = stateRef.current.playlists.find((x) => x.id === id);
-    await localDb.deletePlaylist(id);
+    await persist(localDb.deletePlaylist(id), dispatch);
     dispatch({
       type: 'playlists',
       playlists: stateRef.current.playlists.filter((x) => x.id !== id),
@@ -562,7 +649,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
         const merged = mergeTracks(stateRef.current.tracks, pulled.tracks);
         // Keep local energy/tags, but add tracks that only exist in the cloud.
         if (merged.added) {
-          await localDb.putTracks(merged.tracks, true);
+          await persist(localDb.putTracks(merged.tracks, true), dispatch);
           dispatch({ type: 'tracks', tracks: merged.tracks });
         }
         for (const [local, cloud] of pulled.cloudIds)
@@ -577,7 +664,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
         const local = localById.get(r.cloudId!);
         if (!local) {
           merged.push(r);
-          await localDb.putPlaylist(r);
+          await persist(localDb.putPlaylist(r), dispatch);
         }
       }
       dispatch({
@@ -619,7 +706,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
         types,
       );
       const saved: Playlist = { ...p, cloudId };
-      await localDb.putPlaylist(saved);
+      await persist(localDb.putPlaylist(saved), dispatch);
       dispatch({ type: 'setMeta', patch: { cloudId } });
       dispatch({
         type: 'playlists',
@@ -648,14 +735,14 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
   }, [requestSignIn, saveToCloud]);
 
   const saveStudy = useCallback(async (study: SetStudy) => {
-    await localDb.putStudy(study);
+    await persist(localDb.putStudy(study), dispatch);
     dispatch({
       type: 'studies',
       studies: [study, ...stateRef.current.studies.filter((s) => s.id !== study.id)],
     });
   }, []);
   const deleteStudy = useCallback(async (id: string) => {
-    await localDb.deleteStudy(id);
+    await persist(localDb.deleteStudy(id), dispatch);
     dispatch({ type: 'studies', studies: stateRef.current.studies.filter((s) => s.id !== id) });
   }, []);
 
