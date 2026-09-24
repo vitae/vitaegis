@@ -14,7 +14,10 @@ import { parseTraktorNml } from './traktor';
 export type LibraryFormat = 'rekordbox' | 'traktor' | 'csv';
 
 export function detectLibraryFormat(text: string): LibraryFormat {
-  const head = text.replace(/^\uFEFF/, '').trimStart().slice(0, 5000);
+  const head = text
+    .replace(/^\uFEFF/, '')
+    .trimStart()
+    .slice(0, 5000);
   if (!head.startsWith('<')) return 'csv';
   return /<NML\b/i.test(head) ? 'traktor' : 'rekordbox';
 }
