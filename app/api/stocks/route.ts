@@ -1,0 +1,16 @@
+import { NextResponse } from 'next/server';
+import { getStockPrices, STOCKS_REVALIDATE_SECONDS } from '@/lib/stocks';
+
+export const runtime = 'nodejs';
+export const revalidate = 3600;
+
+// Same hourly fetch the /stocks page uses, exposed as JSON:
+// { asOf, prices: { [ticker]: close }, source: 'live' | 'snapshot' }.
+export async function GET() {
+  const data = await getStockPrices();
+  return NextResponse.json(data, {
+    headers: {
+      'Cache-Control': `public, s-maxage=${STOCKS_REVALIDATE_SECONDS}, stale-while-revalidate=${STOCKS_REVALIDATE_SECONDS}`,
+    },
+  });
+}
