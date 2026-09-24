@@ -1,0 +1,66 @@
+/* KeyCrate: scoped to .kc-root so nothing leaks into the rest of the site. */
+
+.kc-root {
+  font-family: var(--kc-font), 'Jost', 'Century Gothic', sans-serif;
+  font-weight: 400;
+  --kc-green: #00ff00;
+  --kc-red: #ff0000;
+  --kc-gray: #808880;
+  --kc-yellow: #ffff00;
+  --kc-line: rgba(255, 255, 255, 0.12);
+}
+
+/* The site blocks text selection globally; a tool needs it in fields and the tracklist. */
+.kc-root input,
+.kc-root textarea,
+.kc-root .kc-selectable,
+.kc-root .kc-selectable * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.kc-root .kc-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dense lists: rows are tap targets, so the global 44px min-height on buttons doesn't apply. */
+.kc-root .kc-dense button {
+  min-height: 0;
+}
+.kc-root .kc-dense button:active {
+  transform: none;
+}
+
+/* Visible green focus ring everywhere in the tool. */
+.kc-root :focus-visible {
+  outline: 2px solid var(--kc-green) !important;
+  outline-offset: 2px;
+}
+.kc-row:focus-visible {
+  outline-offset: -2px;
+}
+
+.kc-row {
+  transition: background-color 120ms ease;
+}
+.kc-row:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Range inputs for the journey curve and energy. */
+.kc-root input[type='range'] {
+  accent-color: var(--kc-green);
+  height: 24px;
+}
+
+.kc-sheet {
+  transition: transform 220ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kc-root *,
+  .kc-sheet {
+    transition: none !important;
+    animation: none !important;
+  }
+}

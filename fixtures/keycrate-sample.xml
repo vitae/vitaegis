@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.8.5" Company="AlphaTheta"/>
+  <COLLECTION Entries="24">
+    <TRACK TrackID="1" Name="Glue" Artist="Bicep" Composer="" Album="Isles" Grouping="" Genre="Electronica" Kind="MP3 File" Size="9000000" TotalTime="265" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="124.00" DateAdded="2023-01-04" BitRate="320" SampleRate="44100" Comments="Big room opener" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Bicep%20-%20Glue.mp3" Remixer="" Tonality="Am" Label="Ninja Tune" Mix="">
+      <TEMPO Inizio="0.123" Bpm="124.00" Metro="4/4" Battito="1"/>
+      <POSITION_MARK Name="Intro" Type="0" Start="0.123" Num="0"/>
+      <POSITION_MARK Name="Drop" Type="0" Start="61.5" Num="1"/>
+    </TRACK>
+    <TRACK TrackID="2" Name="So U Kno" Artist="Overmono" Composer="" Album="" Grouping="" Genre="Techno" Kind="MP3 File" Size="9000000" TotalTime="310" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="130.00" DateAdded="2023-02-10" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="255" Location="file://localhost/Users/dj/Music/Overmono%20-%20So%20U%20Kno.aiff" Remixer="" Tonality="Ebm" Label="XL" Mix="">
+      <TEMPO Inizio="0.123" Bpm="130.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="3" Name="Baby" Artist="Four Tet" Composer="" Album="Sixteen Oceans" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="240" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="125.00" DateAdded="2023-02-11" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="153" Location="file://localhost/Users/dj/Music/Four%20Tet%20-%20Baby.mp3" Remixer="" Tonality="8B" Label="Text" Mix="">
+      <TEMPO Inizio="0.123" Bpm="125.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="4" Name="Latch (Extended Mix)" Artist="Disclosure feat. Sam Smith" Composer="" Album="Settle" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="330" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="122.00" DateAdded="2023-03-01" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Disclosure%20-%20Latch.mp3" Remixer="" Tonality="9A" Label="PMR" Mix="">
+      <TEMPO Inizio="0.123" Bpm="122.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="5" Name="Rev8617" Artist="Skee Mask" Composer="" Album="Compro" Grouping="" Genre="Breaks" Kind="MP3 File" Size="9000000" TotalTime="280" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="126.00" DateAdded="2023-03-02" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="102" Location="file://localhost/Users/dj/Music/Skee%20Mask%20-%20Rev8617.mp3" Remixer="" Tonality="9B" Label="Ilian Tape" Mix="">
+      <TEMPO Inizio="0.123" Bpm="126.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="6" Name="It Goes Like (Nanana)" Artist="Peggy Gou" Composer="" Album="" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="224" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="124.00" DateAdded="2023-06-01" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Peggy%20Gou%20-%20Nanana.mp3" Remixer="" Tonality="10A" Label="XL" Mix="">
+      <TEMPO Inizio="0.123" Bpm="124.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="7" Name="Marea (we&apos;ve lost dancing)" Artist="Fred again.." Composer="" Album="Actual Life" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="300" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="128.00" DateAdded="2023-06-02" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="255" Location="file://localhost/Users/dj/Music/Fred%20again%20-%20Marea.mp3" Remixer="" Tonality="7A" Label="Atlantic" Mix="">
+      <TEMPO Inizio="0.123" Bpm="128.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="8" Name="One More Time" Artist="Daft Punk" Composer="" Album="Discovery" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="320" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="123.00" DateAdded="2020-01-01" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="255" Location="file://localhost/Users/dj/Music/Daft%20Punk%20-%20One%20More%20Time.mp3" Remixer="" Tonality="3A" Label="Virgin" Mix="">
+      <TEMPO Inizio="0.123" Bpm="123.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="9" Name="Archangel" Artist="Burial" Composer="" Album="Untrue" Grouping="" Genre="Garage" Kind="MP3 File" Size="9000000" TotalTime="238" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="140.00" DateAdded="2020-01-02" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Burial%20-%20Archangel.mp3" Remixer="" Tonality="11A" Label="Hyperdub" Mix="">
+      <TEMPO Inizio="0.123" Bpm="140.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="10" Name="Inner City Life" Artist="Goldie" Composer="" Album="Timeless" Grouping="" Genre="Drum &amp; Bass" Kind="MP3 File" Size="9000000" TotalTime="360" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="170.00" DateAdded="2020-01-03" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="153" Location="file://localhost/Users/dj/Music/Goldie%20-%20Inner%20City%20Life.mp3" Remixer="" Tonality="8A" Label="FFRR" Mix="">
+      <TEMPO Inizio="0.123" Bpm="170.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="11" Name="Teardrop" Artist="Massive Attack" Composer="" Album="Mezzanine" Grouping="" Genre="Trip Hop" Kind="MP3 File" Size="9000000" TotalTime="330" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="78.00" DateAdded="2020-01-04" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Massive%20Attack%20-%20Teardrop.mp3" Remixer="" Tonality="5A" Label="Virgin" Mix="">
+      <TEMPO Inizio="0.123" Bpm="78.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="12" Name="Open Eye Signal" Artist="Jon Hopkins" Composer="" Album="Immunity" Grouping="" Genre="Techno" Kind="MP3 File" Size="9000000" TotalTime="470" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="128.00" DateAdded="2021-01-01" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="255" Location="file://localhost/Users/dj/Music/Jon%20Hopkins%20-%20Open%20Eye%20Signal.mp3" Remixer="" Tonality="8A" Label="Domino" Mix="">
+      <TEMPO Inizio="0.123" Bpm="128.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="13" Name="Kerala" Artist="Bonobo" Composer="" Album="Migration" Grouping="" Genre="Downtempo" Kind="MP3 File" Size="9000000" TotalTime="230" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="110.00" DateAdded="2021-01-02" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="153" Location="file://localhost/Users/dj/Music/Bonobo%20-%20Kerala.mp3" Remixer="" Tonality="12A" Label="Ninja Tune" Mix="">
+      <TEMPO Inizio="0.123" Bpm="110.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="14" Name="A New Error" Artist="Moderat" Composer="" Album="Moderat" Grouping="" Genre="Electronica" Kind="MP3 File" Size="9000000" TotalTime="370" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="121.00" DateAdded="2021-01-03" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Moderat%20-%20A%20New%20Error.mp3" Remixer="" Tonality="4A" Label="BPitch" Mix="">
+      <TEMPO Inizio="0.123" Bpm="121.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="15" Name="Odessa" Artist="Caribou" Composer="" Album="Swim" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="310" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="120.00" DateAdded="2021-01-04" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="153" Location="file://localhost/Users/dj/Music/Caribou%20-%20Odessa.mp3" Remixer="" Tonality="2A" Label="City Slang" Mix="">
+      <TEMPO Inizio="0.123" Bpm="120.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="16" Name="Gosh" Artist="Jamie xx" Composer="" Album="In Colour" Grouping="" Genre="Electronica" Kind="MP3 File" Size="9000000" TotalTime="290" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="125.00" DateAdded="2021-02-01" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Jamie%20xx%20-%20Gosh.mp3" Remixer="" Tonality="6A" Label="Young" Mix="">
+      <TEMPO Inizio="0.123" Bpm="125.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="17" Name="Silhouettes (I, II &amp; III)" Artist="Floating Points" Composer="" Album="Elaenia" Grouping="" Genre="Electronica" Kind="MP3 File" Size="9000000" TotalTime="420" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="120.00" DateAdded="2021-02-02" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="153" Location="file://localhost/Users/dj/Music/Floating%20Points%20-%20Silhouettes.mp3" Remixer="" Tonality="10B" Label="Pluto" Mix="">
+      <TEMPO Inizio="0.123" Bpm="120.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="18" Name="Blurred" Artist="Kiasmos" Composer="" Album="Kiasmos" Grouping="" Genre="Techno" Kind="MP3 File" Size="9000000" TotalTime="335" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="116.00" DateAdded="2021-02-03" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="204" Location="file://localhost/Users/dj/Music/Kiasmos%20-%20Blurred.mp3" Remixer="" Tonality="7B" Label="Erased Tapes" Mix="">
+      <TEMPO Inizio="0.123" Bpm="116.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="19" Name="Recovery" Artist="Rival Consoles" Composer="" Album="Persona" Grouping="" Genre="Electronica" Kind="MP3 File" Size="9000000" TotalTime="360" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="127.00" DateAdded="2021-02-04" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="153" Location="file://localhost/Users/dj/Music/Rival%20Consoles%20-%20Recovery.mp3" Remixer="" Tonality="1B" Label="Erased Tapes" Mix="">
+      <TEMPO Inizio="0.123" Bpm="127.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="20" Name="Pick Up" Artist="DJ Koze" Composer="" Album="Knock Knock" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="335" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="122.00" DateAdded="2021-03-01" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="255" Location="file://localhost/Users/dj/Music/DJ%20Koze%20-%20Pick%20Up.mp3" Remixer="" Tonality="11B" Label="Pampa" Mix="">
+      <TEMPO Inizio="0.123" Bpm="122.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="21" Name="Flat Spelling" Artist="Flat Artist" Composer="" Album="" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="300" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="126.00" DateAdded="2022-01-01" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="0" Location="file://localhost/Users/dj/Music/flat.mp3" Remixer="" Tonality="D#m" Label="" Mix="">
+      <TEMPO Inizio="0.123" Bpm="126.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="22" Name="Open Key Spelling" Artist="Open Artist" Composer="" Album="" Grouping="" Genre="House" Kind="MP3 File" Size="9000000" TotalTime="300" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="126.00" DateAdded="2022-01-02" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="0" Location="file://localhost/Users/dj/Music/open.mp3" Remixer="" Tonality="1m" Label="" Mix="">
+      <TEMPO Inizio="0.123" Bpm="126.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="23" Name="Untagged Promo" Artist="Unknown" Composer="" Album="" Grouping="" Genre="" Kind="MP3 File" Size="9000000" TotalTime="300" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="126.00" DateAdded="2022-01-03" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="0" Location="file://localhost/Users/dj/Music/promo.mp3" Remixer="" Tonality="" Label="" Mix="">
+      <TEMPO Inizio="0.123" Bpm="126.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="24" Name="Zero Bpm" Artist="Unknown" Composer="" Album="" Grouping="" Genre="" Kind="MP3 File" Size="9000000" TotalTime="300" DiscNumber="0" TrackNumber="0" Year="2020" AverageBpm="0.00" DateAdded="2022-01-04" BitRate="320" SampleRate="44100" Comments="" PlayCount="0" Rating="0" Location="file://localhost/Users/dj/Music/zero.mp3" Remixer="" Tonality="8A" Label="" Mix="">
+      <TEMPO Inizio="0.123" Bpm="0.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Type="0" Name="ROOT" Count="1">
+      <NODE Name="Warm up" Type="1" KeyType="0" Entries="3">
+        <TRACK Key="13"/>
+        <TRACK Key="15"/>
+        <TRACK Key="1"/>
+      </NODE>
+    </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>

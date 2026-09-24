@@ -20,7 +20,7 @@ export default function ClassesPage() {
             <p className="text-3xl md:text-5xl font-bold text-red-500 mb-8">EVERY MONDAY</p>
             <p className="text-2xl md:text-4xl mb-2">Meditation: 4:30 PM</p>
             <p className="text-2xl md:text-4xl mb-6">Yoga: 5:30 PM</p>
-            <p className="text-xl md:text-3xl text-red-500">Lē'ahi Beach Park</p>
+            <p className="text-xl md:text-3xl text-red-500">Lē&apos;ahi Beach Park</p>
             <p className="text-xl md:text-3xl text-red-500 mb-6">Waikīkī, Hawaii</p>
             <p className="text-lg md:text-2xl mb-6">Bring water and a mat.</p>
             <p className="text-xl md:text-3xl text-red-500">FREE</p>

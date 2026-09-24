@@ -350,7 +350,7 @@ export default function MovementPage() {
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-white font-bold text-2xl drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">📍 Le'ahi Beach Park</p>
+                  <p className="text-white font-bold text-2xl drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">📍 Le&apos;ahi Beach Park</p>
                   <p className="text-white text-lg drop-shadow-[0_0_8px_rgba(255,0,0,0.6)]">Waikiki, Honolulu</p>
                 </div>
 
