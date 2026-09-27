@@ -380,7 +380,7 @@ export const pillars: Pillar[] = [
     codename: 'Operation Shadow',
     tagline: 'Move unseen. Encryption, keys, awareness and defense.',
     glyph: '忍',
-    color: '#00ffff',
+    color: '#00ff00',
     doctrine: 'What they cannot see, they cannot target. Be unremarkable, be encrypted, be ready.',
     summary:
       'Cybersecurity, anonymity, encryption, key custody, situational awareness and self-defense. The shinobi code for the digital age.',
@@ -725,7 +725,7 @@ export const pillars: Pillar[] = [
     codename: 'Operation Treasury',
     tagline: 'Compound quietly. Bitcoin, equities, entities and trusts.',
     glyph: '財',
-    color: '#f7931a',
+    color: '#00ff00',
     doctrine: 'Own assets, not liabilities. Compound quietly. Let time do the heavy lifting.',
     summary:
       'Bitcoin, stocks, saving, trusts, LLCs, business building and the legal "glitches" the wealthy use. Build it, protect it, pass it on.',
