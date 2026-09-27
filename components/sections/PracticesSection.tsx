@@ -1,39 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { GiMeditation, GiYinYang, GiLotus, GiLotusFlower } from 'react-icons/gi';
+import Link from 'next/link';
+import { GiLotusFlower, GiNinjaHead, GiTwoCoins } from 'react-icons/gi';
 import GlassContainer from '@/components/GlassContainer';
+import { pillars as pillarData } from '@/lib/pillars';
 
-const practices = [
-  {
-    id: 'zen',
-    name: 'Zen Meditation',
-    subtitle: '禅',
-    description: 'Cultivate awareness through breathing exercises. Find stillness in every breath.',
-    icon: GiMeditation,
-    color: '#00ff00',
-    benefits: ['Clarity', 'Breath', 'Peace'],
-  },
-  {
-    id: 'yoga',
-    name: 'Kundalini Yoga',
-    subtitle: 'कुण्डलिनी',
-    description: 'Awaken dormant energy with movement. Unlock your hidden power.',
-    icon: GiLotus,
-    color: '#ff00ff',
-    benefits: ['Flexibility', 'Strength', 'Love'],
-  },
-  {
-    id: 'taichi',
-    name: 'Yang Tai Chi',
-    subtitle: '太極',
-    description:
-      'Master the Art of Energy. Flow through ancient movements that harmonize body and mind.',
-    icon: GiYinYang,
-    color: '#4ecdc4',
-    benefits: ['Balance', 'Energy', 'Vitality'],
-  },
-];
+const icons = { health: GiLotusFlower, stealth: GiNinjaHead, wealth: GiTwoCoins };
+
+const practices = pillarData.map((p) => ({
+  id: p.slug,
+  name: p.name,
+  subtitle: p.glyph,
+  description: p.tagline,
+  icon: icons[p.slug],
+  color: p.color,
+  benefits: p.tags.slice(0, 2),
+}));
 
 export default function PracticesSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -82,11 +65,12 @@ export default function PracticesSection() {
             The Three Pillars
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold">
-            Ancient <span className="text-vitae-green">Practices</span>
+            Health <span className="text-vitae-green">•</span> Stealth{' '}
+            <span className="text-vitae-green">•</span> Wealth
           </h2>
           <p className="mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
-            Master the foundational disciplines that form the core of Vitaegis. Each practice
-            provides unique rewards and unlocks higher levels of evolution.
+            Three field manuals, need-to-know only. Guard the body, move unseen, compound quietly.
+            Open a pillar to read its file.
           </p>
         </GlassContainer>
 
@@ -97,14 +81,16 @@ export default function PracticesSection() {
             const isHovered = hoveredCard === practice.id;
 
             return (
-              <div
+              <Link
                 key={practice.id}
-                className="practice-card flex justify-center items-center opacity-0 translate-y-8 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0"
+                href={`/${practice.id}`}
+                aria-label={`${practice.name} field manual`}
+                className="practice-card flex flex-col justify-start items-center gap-4 opacity-0 translate-y-8 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0"
                 onMouseEnter={() => setHoveredCard(practice.id ?? null)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <div
-                  className="group relative flex flex-col items-center justify-center w-[90vw] max-w-[320px] aspect-square sm:w-[400px] sm:max-w-[400px] aspect-square rounded-full bg-black/3 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer text-center p-3 sm:p-6"
+                  className="group relative flex flex-col items-center justify-center w-[90vw] max-w-[320px] aspect-square sm:w-full sm:max-w-[400px] aspect-square rounded-full bg-black/3 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-white/20 cursor-pointer text-center p-3 sm:p-6"
                   style={{
                     boxShadow: isHovered
                       ? `0 0 40px ${practice.color}20, inset 0 0 40px ${practice.color}05`
@@ -120,15 +106,15 @@ export default function PracticesSection() {
                   />
 
                   {/* Icon */}
-                  <div className="relative mb-6 flex flex-col items-center justify-center">
+                  <div className="relative mb-3 flex flex-col items-center justify-center">
                     <div
-                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 border-2"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 border-2"
                       style={{
                         background: `linear-gradient(135deg, ${practice.color}20 0%, transparent 100%)`,
                         border: `2px solid ${practice.color}30`,
                       }}
                     >
-                      <Icon size={60} color={practice.color} />
+                      <Icon size={40} color={practice.color} />
                     </div>
 
                     {/* Floating glow */}
@@ -153,12 +139,8 @@ export default function PracticesSection() {
                       </span>
                     </div>
 
-                    <p className="text-white/60 text-sm sm:text-base leading-relaxed mb-6 text-center">
-                      {practice.description}
-                    </p>
-
                     {/* Benefits */}
-                    <div className="flex flex-wrap justify-center gap-2">
+                    <div className="flex flex-wrap justify-center gap-2 lg:hidden">
                       {practice.benefits.map((benefit) => (
                         <span
                           key={benefit}
@@ -198,15 +180,21 @@ export default function PracticesSection() {
                     </svg>
                   </div>
                 </div>
-              </div>
+                <p className="max-w-[260px] text-white/60 text-sm leading-relaxed text-center">
+                  {practice.description}
+                </p>
+              </Link>
             );
           })}
         </div>
 
         {/* Bottom CTA */}
         <div className="mt-16 text-center">
-          <button className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 text-white font-medium hover:bg-black/25 hover:border-vitae-green/30 transition-all duration-300 shadow-[0_0_20px_rgba(0,255,65,0.1)]">
-            <span>Explore All Practices</span>
+          <Link
+            href="/health"
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 text-white font-medium hover:bg-black/25 hover:border-vitae-green/30 transition-all duration-300 shadow-[0_0_20px_rgba(0,255,65,0.1)]"
+          >
+            <span>Begin with Pillar I</span>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -215,7 +203,7 @@ export default function PracticesSection() {
                 d="M17 8l4 4m0 0l-4 4m4-4H3"
               />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
     </section>

@@ -12,7 +12,7 @@ import {
 
 const footerLinks = {
   Products: ['Vitamins', 'Green Tea', 'Books'],
-  Practices: ['Meditation', 'Yoga', 'Tai Chi'],
+  Pillars: ['Health', 'Stealth', 'Wealth'],
   Resources: ['Documentation', 'Videos', 'Tutorials'],
   Company: ['About', 'Mission', 'Contact'],
 };
@@ -72,7 +72,7 @@ export default function Footer() {
                   {links.map((link) => (
                     <li key={link}>
                       <a
-                        href="#"
+                        href={title === 'Pillars' ? `/${link.toLowerCase()}` : '#'}
                         className="text-white/50 hover:text-vitae-green text-sm transition-colors"
                       >
                         {link}
