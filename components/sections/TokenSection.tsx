@@ -41,7 +41,7 @@ export default function TokenSection() {
     >
       <div className="section-container flex flex-col items-center justify-center mx-auto w-full max-w-full min-w-0">
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-8">
-          <span className="text-vitae-green">NFT Store</span>
+          <span className="text-vitae-green">EXPORTS</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
           {products.map((product, idx) => (
