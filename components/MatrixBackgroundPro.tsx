@@ -129,7 +129,16 @@ export default function MatrixBackground() {
     cameraRef.current = camera;
 
     // Setup renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: false });
+    // WebGL can be unavailable (hardware acceleration off, iOS Low Power Mode,
+    // too many live contexts). three.js throws then; fall back to plain black
+    // instead of letting the error take down the whole page.
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: false });
+    } catch (err) {
+      console.warn('Matrix background disabled: WebGL unavailable', err);
+      return;
+    }
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     containerRef.current.appendChild(renderer.domElement);
