@@ -58,23 +58,23 @@ export const pillars: Pillar[] = [
     protocolTitle: 'The daily protocol',
     protocol: [
       {
-        k: '05:30–06:30',
-        v: 'Wake at the same time. 500 ml water with a pinch of sea salt. No phone for 30 minutes.',
+        k: '06:00',
+        v: 'Wake at the same time every day. 500 ml water with a pinch of sea salt. No phone for 30 minutes.',
       },
       {
-        k: 'Sunrise',
+        k: '06:15',
         v: '10 minutes of outdoor light (20–30 if overcast). This sets the master clock and the evening melatonin timer.',
       },
       {
-        k: 'Morning',
-        v: 'Move: run, lift or tai chi. Caffeine 60–90 minutes after waking, and none after noon.',
+        k: '07:00',
+        v: 'Move: run, lift or tai chi. First caffeine at 07:30, and none after noon.',
       },
-      { k: 'Midday', v: 'Largest meal. Walk 10 minutes after eating to blunt the glucose spike.' },
+      { k: '12:00', v: 'Largest meal. Walk 10 minutes after eating to blunt the glucose spike.' },
       {
-        k: 'Afternoon',
+        k: '15:00',
         v: '10–20 minute NSDR or yoga nidra instead of a second coffee. Step outside for afternoon light.',
       },
-      { k: 'Sunset', v: 'Last meal 3 hours before bed. Dim the house. Warm, low lights only.' },
+      { k: '19:00', v: 'Last meal, 3 hours before bed. Dim the house. Warm, low lights only.' },
       {
         k: '21:00',
         v: 'Screens off or night mode. Hot shower or sauna, then a cool, dark bedroom at 65–68°F (18–20°C).',
