@@ -22,10 +22,9 @@ export type Pillar = {
   glyph: string;
   color: string;
   doctrine: string;
-  /** Short line for the homepage card. */
-  tagline: string;
   summary: string;
-  tags: string[];
+  /** Five headline topics shown on the homepage, each linking to a dossier. */
+  topics: { label: string; code: string }[];
   directives: string[];
   protocolTitle: string;
   protocol: Entry[];
@@ -41,13 +40,18 @@ export const pillars: Pillar[] = [
     numeral: 'I',
     name: 'Health',
     codename: 'Operation Vessel',
-    tagline: 'Guard the vessel. Light, sleep, movement, food and herbs.',
     glyph: '體',
     color: '#00ff00',
     doctrine: 'The body is the first asset and the last line of defense. Guard it like one.',
     summary:
       'Light, sleep, movement, food and herbs. The protocols that keep the operator sharp, strong and hard to kill.',
-    tags: ['Circadian', 'REM', 'Zone 2', 'Herbs', 'Strength'],
+    topics: [
+      { label: 'Circadian Rhythm', code: 'H-01' },
+      { label: 'REM Sleep', code: 'H-02' },
+      { label: 'Running', code: 'H-04' },
+      { label: 'Foods & Recipes', code: 'H-06' },
+      { label: 'Herbs & Supplements', code: 'H-08' },
+    ],
     directives: [
       'Sunlight in your eyes within an hour of waking. Every day.',
       'Same wake time seven days a week. Sleep is scheduled, not found.',
@@ -378,13 +382,18 @@ export const pillars: Pillar[] = [
     numeral: 'II',
     name: 'Stealth',
     codename: 'Operation Shadow',
-    tagline: 'Move unseen. Encryption, keys, awareness and defense.',
     glyph: '忍',
     color: '#00ff00',
     doctrine: 'What they cannot see, they cannot target. Be unremarkable, be encrypted, be ready.',
     summary:
       'Cybersecurity, anonymity, encryption, key custody, situational awareness and self-defense. The shinobi code for the digital age.',
-    tags: ['Encryption', 'OPSEC', 'Keys', 'Awareness', 'Defense'],
+    topics: [
+      { label: 'Cybersecurity', code: 'S-01' },
+      { label: 'Encryption', code: 'S-02' },
+      { label: 'Secret Keys', code: 'S-03' },
+      { label: 'Situational Security', code: 'S-07' },
+      { label: 'Self-Defense', code: 'S-08' },
+    ],
     directives: [
       'A password manager and a hardware key. Never reuse a password.',
       'Your seed phrase never touches a screen, a camera or a cloud.',
@@ -723,13 +732,18 @@ export const pillars: Pillar[] = [
     numeral: 'III',
     name: 'Wealth',
     codename: 'Operation Treasury',
-    tagline: 'Compound quietly. Bitcoin, equities, entities and trusts.',
     glyph: '財',
     color: '#00ff00',
     doctrine: 'Own assets, not liabilities. Compound quietly. Let time do the heavy lifting.',
     summary:
       'Bitcoin, stocks, saving, trusts, LLCs, business building and the legal "glitches" the wealthy use. Build it, protect it, pass it on.',
-    tags: ['Bitcoin', 'Index', 'LLC', 'Trusts', 'Brand'],
+    topics: [
+      { label: 'Bitcoin', code: 'W-01' },
+      { label: 'Investing', code: 'W-03' },
+      { label: 'Money Glitches', code: 'W-05' },
+      { label: 'LLCs & Trusts', code: 'W-06' },
+      { label: 'Business & Brand', code: 'W-08' },
+    ],
     directives: [
       'Pay yourself first: automate 20% of income into assets on payday.',
       'Never pass up free money: take the full employer match.',
