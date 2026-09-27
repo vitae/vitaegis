@@ -29,12 +29,7 @@ export default function AboutSection() {
     return () => observer.disconnect();
   }, []);
 
-  const stats = [
-    { value: '3M+', label: 'Active Users' },
-    { value: '$2.5M', label: 'TVL Locked' },
-    { value: '3', label: 'Ancient Practices' },
-    { value: '∞', label: 'Potential' },
-  ];
+  const stack = ['LLM orchestration', 'Agentic tool use', 'Retrieval (RAG)', 'Streaming APIs'];
 
   return (
     <section
@@ -46,8 +41,8 @@ export default function AboutSection() {
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-center w-full max-w-full">
-          {/* Left Column - Text Content in Glassmorphic Container */}
+        <div className="w-full max-w-3xl mx-auto">
+          {/* Text Content in Glassmorphic Container */}
           <GlassContainer
             variant="default"
             glow={true}
@@ -62,28 +57,37 @@ export default function AboutSection() {
 
             {/* Main Heading */}
             <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-              Where Ancient <span className="text-vitae-green">Wisdom</span>
+              Advanced Intelligence
               <br />
-              Meets Cyber{' '}
               <span className="bg-gradient-to-r from-vitae-green to-emerald-400 bg-clip-text text-transparent">
-                Spirituality
+                as a Service
               </span>
             </h2>
 
             {/* Description */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
               <p>
-                Vitaegis is a portmanteau of the words Vitae and Aegis, which means the protection
-                of life. Vitaegis bridges millennia of spiritual wisdom with modern cyber
-                technology. True wellness extends beyond the physical: it encompasses mind, body,
-                spirit, and now; cyber presence. <br />
+                Vitaegis is a portmanteau of <em>Vitae</em> and <em>Aegis</em>: a shield for life
+                force energy.
               </p>
               <p>
-                We will help you to look within and find inner peace through foundational practices
-                and secret knowledge. Join our community united in our shared pursuit of wellness
-                and enhanced life experiences. <br />
+                We run it as an intelligence layer. Frontier language models, orchestrated as
+                tool-using agents over curated knowledge, served through typed, streaming APIs on
+                serverless infrastructure. Signals go in; grounded answers come out, in real time.
               </p>
             </div>
+
+            {/* Stack */}
+            <ul className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 flex flex-wrap justify-center gap-2">
+              {stack.map((item) => (
+                <li
+                  key={item}
+                  className="px-3 py-1 rounded-full border border-vitae-green/30 bg-black/30 text-vitae-green text-xs sm:text-sm font-mono tracking-wide"
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
 
             {/* CTA Link */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8">
@@ -105,33 +109,6 @@ export default function AboutSection() {
               </button>
             </div>
           </GlassContainer>
-
-          {/* Right Column - Stats Grid with enhanced glassmorphic style */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full max-w-full">
-            {stats.map((stat, index) => (
-              <div
-                key={stat.label}
-                className={`reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-2 sm:p-4 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-vitae-green/30 transition-all cursor-default ${
-                  index % 2 === 1 ? 'lg:translate-y-8' : ''
-                }`}
-              >
-                {/* Glow effect on hover */}
-                <div className="absolute inset-0 rounded-3xl bg-vitae-green/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
-
-                <div className="relative">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 group-hover:text-vitae-green transition-colors duration-300">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm sm:text-base text-white/50 tracking-wide">
-                    {stat.label}
-                  </div>
-                </div>
-
-                {/* Corner accent */}
-                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-vitae-green/30 group-hover:bg-vitae-green group-hover:shadow-[0_0_10px_#00ff00] transition-all duration-300" />
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Bottom decorative line */}
