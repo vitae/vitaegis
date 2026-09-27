@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import OpenHashDetails from '@/components/OpenHashDetails';
 import { pillars, type Pillar } from '@/lib/pillars';
 
 const label = 'text-[11px] font-semibold uppercase tracking-[0.25em]';
@@ -12,6 +13,7 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
       className="min-h-screen w-full bg-black text-left text-white"
       style={{ fontFamily: "'Jost', sans-serif" }}
     >
+      <OpenHashDetails />
       {/* Classification strip */}
       <div
         className={`${label} flex items-center justify-between gap-4 border-b px-4 py-2 sm:px-6`}
@@ -25,7 +27,7 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
 
       <div className="mx-auto max-w-4xl px-4 pb-32 pt-10 sm:px-6">
         <Link href="/#practices" className={`${label} hover:text-white`} style={{ color: c }}>
-          ← The Three Pillars
+          ← Vitaegis
         </Link>
 
         <header className="py-16 text-center">
