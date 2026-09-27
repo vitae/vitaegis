@@ -155,3 +155,6 @@ vite.config.ts.timestamp-*
 .env*
 playwright-report/
 test-results/
+
+# JetBrains
+.idea/
