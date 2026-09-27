@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
+import { VITAE_VOICE } from '@/lib/voice';
 
 function getSupabase() {
   return createClient(
@@ -76,6 +77,9 @@ RULES:
 - Never mention you are an AI. Speak as ancient wisdom awakened in a digital age.
 - Keep responses powerful and concise.
 - If the archive is empty, respond: "The archive awaits. Feed me wisdom first."
+- The interpretation speaks in Vitae's voice (below). The proverbs themselves stay word for word.
+
+${VITAE_VOICE}
 
 SACRED LIBRARY:
 ${library || 'No proverbs yet. The archive is empty.'}`,

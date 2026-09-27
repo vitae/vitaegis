@@ -4,6 +4,8 @@
 // models list on 2026-09-20: gemini-2.0-flash and gemini-2.5-flash are both retired.
 // Cheaper video options if Veo cost bites: veo-3.1-fast-generate-preview, veo-3.1-lite-generate-preview.
 
+import { VITAE_VOICE } from '@/lib/voice';
+
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 export const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.5-flash';
@@ -84,7 +86,7 @@ const CAPTION_SCHEMA = {
 };
 
 const BRAND = `You write for VITAEGIS, a wellness brand whose line is "Health, Stealth, Wealth".
-Voice: calm, precise, a little cyberpunk. Ancient practice meets modern technology.
+${VITAE_VOICE}
 Never hype, never emoji spam, never hashtag walls. At most three hashtags, and only where they earn their place.
 Visual identity: black background, white text, neon green #00FF00 as the lead color, with red #FF0000, magenta #FF00FF, yellow #FFFF00, cyan #00FFFF, Bitcoin orange #F7931A and its complement blue #1A7DF7 as accents (one or two per piece, never all at once). Matrix rain, glassmorphic panels, Jost type.`;
 
