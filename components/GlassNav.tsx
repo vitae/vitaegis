@@ -10,7 +10,7 @@ import {
   HiShoppingBag,
   HiUserGroup,
   HiCollection,
-  HiChevronDown,
+  HiChevronUp,
 } from 'react-icons/hi';
 import { projects } from '@/components/projects';
 
@@ -32,8 +32,8 @@ const navItems: NavItem[] = [
 const SECTION_IDS = navItems.map((item) => item.id);
 
 /**
- * Site navigation, rendered once from the root layout. Docked to the bottom of the screen
- * on mobile and the top on desktop; PROJECTS opens a sheet of every project page next to it.
+ * Site navigation, rendered once from the root layout. An Instagram-style tab bar docked to
+ * the bottom of the screen on every device; PROJECTS opens a sheet of every project page above it.
  * On the home page section tabs scroll; anywhere else they route back to the home anchor.
  */
 export default function GlassNav() {
@@ -99,7 +99,7 @@ export default function GlassNav() {
     }
     const element = document.getElementById(id);
     if (!element) return;
-    const offset = window.innerWidth >= 768 ? 104 : 16;
+    const offset = 16;
     const top = id === 'hero' ? 0 : element.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: 'smooth' });
   };
@@ -115,13 +115,13 @@ export default function GlassNav() {
         />
       )}
 
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-50 md:bottom-auto md:top-0">
-        <div className="relative md:mx-auto md:mt-4 md:max-w-3xl">
-          {/* Projects sheet: opens upward from the bar on mobile, downward on desktop */}
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-50">
+        <div className="relative">
+          {/* Projects sheet: opens upward from the bar */}
           {menuOpen && (
             <div
               id="projects-sheet"
-              className="absolute inset-x-2 bottom-full mb-2 md:bottom-auto md:top-full md:mb-0 md:mt-2 max-h-[calc(100dvh-6.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#050805] p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] md:shadow-[0_8px_32px_rgba(0,0,0,0.6)] md:right-auto md:left-1/2 md:w-96 md:-translate-x-1/2"
+              className="absolute inset-x-2 bottom-full mb-2 max-h-[calc(100dvh-6.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#050805] p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] md:right-auto md:left-1/2 md:w-96 md:-translate-x-1/2"
             >
               <p className="px-3 pt-2 pb-1 text-left text-[0.65rem] tracking-[0.3em] text-vitae-green/80">
                 PROJECTS
@@ -173,9 +173,9 @@ export default function GlassNav() {
             </div>
           )}
 
-          {/* Bar: flush to the screen edge on mobile, its background filling the home-indicator area */}
+          {/* Bar: flush to the bottom edge, its background filling the home-indicator area */}
           <div
-            className="relative overflow-hidden border-t border-white/10 bg-black/85 backdrop-blur-xl shadow-[0_-4px_32px_rgba(0,0,0,0.5)] md:rounded-2xl md:border md:shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+            className="relative overflow-hidden border-t border-white/10 bg-black/85 backdrop-blur-xl shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
             style={{
               paddingBottom: 'env(safe-area-inset-bottom, 0px)',
               paddingLeft: 'env(safe-area-inset-left, 0px)',
@@ -184,7 +184,7 @@ export default function GlassNav() {
           >
             <div className="absolute -top-px left-1/2 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
-            <div className="flex items-stretch justify-around">
+            <div className="mx-auto flex max-w-3xl items-stretch justify-around">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isProjects = item.id === 'projects';
@@ -201,18 +201,18 @@ export default function GlassNav() {
                       'aria-expanded': menuOpen,
                       'aria-controls': 'projects-sheet',
                     })}
-                    className={`relative flex min-w-0 flex-1 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 min-h-[56px] px-1 transition-colors duration-200 active:scale-95 ${
+                    className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 min-h-[56px] px-1 transition-colors duration-200 active:scale-95 ${
                       isActive ? 'text-vitae-green' : 'text-white/60 hover:text-white'
                     }`}
                   >
                     {isActive && (
                       <span className="absolute inset-x-1 inset-y-1 rounded-xl bg-vitae-green/10" />
                     )}
-                    <Icon size={22} className="relative z-10 shrink-0 md:w-[18px] md:h-[18px]" />
-                    <span className="relative z-10 flex items-center gap-1 truncate text-[9px] md:text-xs font-medium tracking-wide">
+                    <Icon size={22} className="relative z-10 shrink-0" />
+                    <span className="relative z-10 flex items-center gap-1 truncate text-[9px] md:text-[10px] font-medium tracking-wide">
                       {item.label}
                       {isProjects && (
-                        <HiChevronDown
+                        <HiChevronUp
                           size={12}
                           className={`hidden md:inline transition-transform ${menuOpen ? 'rotate-180' : ''}`}
                         />
