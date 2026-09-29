@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabaseBrowser } from '@/lib/keycrate/cloud';
+import { signInWithGoogle, supabaseBrowser } from '@/lib/keycrate/cloud';
 import { useKeyCrate } from '../_state/store';
 import { Button } from './ui';
 
@@ -61,19 +61,13 @@ export default function AuthPanel() {
     );
   }
 
-  const signInWithGoogle = async () => {
+  const startGoogle = async () => {
     setError(null);
     setRedirecting(true);
-    const { error: err } = await supabaseBrowser()!.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}${window.location.pathname}`,
-        queryParams: { prompt: 'select_account' },
-      },
-    });
+    const err = await signInWithGoogle();
     if (err) {
       setRedirecting(false);
-      setError(err.message);
+      setError(err);
     }
   };
 
@@ -82,7 +76,7 @@ export default function AuthPanel() {
       <Button
         size="md"
         variant="primary"
-        onClick={() => void signInWithGoogle()}
+        onClick={() => void startGoogle()}
         disabled={redirecting}
         data-testid="kc-google-signin"
       >

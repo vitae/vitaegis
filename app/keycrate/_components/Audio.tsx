@@ -1,5 +1,6 @@
 'use client';
 
+import { supabaseBrowser } from '@/lib/keycrate/cloud';
 import type { Track } from '@/lib/keycrate/types';
 import { useAudio } from '../_state/audio';
 import { useKeyCrate } from '../_state/store';
@@ -59,12 +60,17 @@ export function AudioSources() {
   const chip = 'rounded-md border px-2.5 py-1.5 text-xs transition-colors';
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs" aria-label="Audio sources">
-      {state.session ? (
+      {supabaseBrowser() && (
         <button
           type="button"
           onClick={audio.linkDrive}
           disabled={drive.status === 'loading'}
-          title={drive.error ?? 'Re-read the Google Drive folder'}
+          title={
+            drive.error ??
+            (state.session && drive.status !== 'login'
+              ? 'Re-read the Google Drive folder'
+              : 'Sign in with Google to play your Drive USB folder')
+          }
           className={`${chip} ${
             drive.status === 'ready'
               ? 'border-[#00ff00]/50 text-[#00ff00]'
@@ -77,12 +83,14 @@ export function AudioSources() {
           {drive.status === 'loading'
             ? 'Google Drive…'
             : drive.status === 'ready'
-              ? `▶ Drive · ${drive.fileCount.toLocaleString()} files`
+              ? `▶ ${drive.folderName ?? 'Drive'} · ${drive.fileCount.toLocaleString()} files`
               : drive.status === 'error'
                 ? 'Google Drive: retry'
-                : 'Link Google Drive'}
+                : !state.session || drive.status === 'login'
+                  ? 'Sign in to Google Drive'
+                  : 'Link Google Drive'}
         </button>
-      ) : null}
+      )}
       {audio.status === 'ready' ? (
         <span className={`${chip} flex items-center gap-2 border-[#00ff00]/50 text-[#00ff00]`}>
           ▶ {audio.folderName} · {audio.fileCount.toLocaleString()} files
@@ -110,7 +118,7 @@ export function AudioSources() {
               : 'Link USB / music folder'}
         </button>
       )}
-      {drive.status === 'error' && drive.error && (
+      {(drive.status === 'error' || drive.status === 'login') && drive.error && (
         <p role="alert" className="w-full text-[#ff0000]" data-testid="kc-drive-error">
           {drive.error}
         </p>

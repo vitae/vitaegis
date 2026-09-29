@@ -29,7 +29,29 @@ export async function currentSession(): Promise<Session | null> {
 }
 
 export async function signOut(): Promise<void> {
+  // Forget the Drive login too; the cookie is httpOnly, so the server clears it.
+  await fetch('/api/keycrate/drive-login', { method: 'DELETE' }).catch(() => undefined);
   await supabaseBrowser()?.auth.signOut();
+}
+
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.readonly';
+
+/**
+ * Google sign-in with read-only Drive access, back to this page. `offline` + `consent` make
+ * Google send a refresh token, so Drive keeps working after the first hour.
+ */
+export async function signInWithGoogle(): Promise<string | null> {
+  const sb = supabaseBrowser();
+  if (!sb) return 'Sign-in is not configured';
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}${window.location.pathname}`,
+      scopes: DRIVE_SCOPE,
+      queryParams: { access_type: 'offline', prompt: 'consent select_account' },
+    },
+  });
+  return error?.message ?? null;
 }
 
 /* ── Rows ──────────────────────────────────────────────────────────────────── */

@@ -27,10 +27,14 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 - **Audio** (`app/keycrate/_state/audio.tsx`, `lib/keycrate/audio.ts`, `lib/keycrate/drive-audio.ts`): a ▶ next to
   every track in the library, the Playlist table, the set and Set Study, with a player bar for seeking. Tracks are
   matched to files by the file name in the library's Location, then by "Artist - Title" in the file name.
-  - **Google Drive**: WAVs in the folder named by `KEYCRATE_DRIVE_FOLDER_ID`, shared (Viewer) with the site's
-    service account. `/api/keycrate/audio` lists it and `/api/keycrate/audio/[id]` streams one file in 8 MB byte
-    ranges, so seeking works without downloading the whole WAV. Only signed-in users on `KEYCRATE_ALLOWED_EMAILS`
-    can list or stream.
+  - **Google Drive**: **Sign in to Google Drive** (the chip next to the USB button) signs in with Google and
+    asks for read-only Drive access. KeyCrate then plays the folder named `USB` (or `KEYCRATE_DRIVE_FOLDER_NAME`)
+    in *your* Drive; nothing needs sharing. The Google tokens live in an encrypted httpOnly cookie
+    (`lib/keycrate/google-user.ts`) and the server refreshes them. Without that login it falls back to a folder
+    shared (Viewer) with the site's service account. `/api/keycrate/audio` lists the folder, many subfolders per
+    Drive query (`lib/keycrate/drive-walk.ts`), and `/api/keycrate/audio/[id]` streams one file in 8 MB byte
+    ranges, so seeking works without downloading the whole WAV. Only signed-in users on
+    `KEYCRATE_ALLOWED_EMAILS` can list or stream.
   - **USB / local folder**: pick the folder; files play straight from the drive and nothing is uploaded.
     Chrome and Edge remember the folder between visits; other browsers ask each visit. Local files win when both
     have a track, so a gig doesn't depend on the network.
@@ -52,18 +56,23 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 | `KEYCRATE_ALLOWED_EMAILS` | Comma-separated Google account emails allowed to sign in (others are signed straight back out). Unset means anyone can sign in, but Google Drive audio then streams to nobody: streaming needs your email here. |
 | `KEYCRATE_DRIVE_FOLDER_NAME` | Optional. Name of the shared Drive folder with the music; defaults to `USB`. |
 | `KEYCRATE_DRIVE_FOLDER_ID` | Optional. Pins one folder by id (`drive.google.com/drive/folders/<id>`) instead of finding it by name. |
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | The same OAuth client as Supabase's Google provider. Needed for "Sign in to Google Drive": the server refreshes Drive access with it and encrypts the token cookie. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` (or `_EMAIL` + `_KEY`) | Already set for the content pipeline; KeyCrate reuses it read-only. |
 
 ### Google Drive audio
 
-1. Put the music in a Drive folder named **USB** (subfolders are fine, e.g. a copy of the USB `Contents`
-   folder). Another name works with `KEYCRATE_DRIVE_FOLDER_NAME`, or pin one folder with
-   `KEYCRATE_DRIVE_FOLDER_ID`.
-2. Share that folder as **Viewer** with the site's service account,
-   `vitaegis@gen-lang-client-0892329659.iam.gserviceaccount.com` (the `client_email` in
-   `GOOGLE_SERVICE_ACCOUNT_JSON`). Until it's shared, `/keycrate` shows this address in red under the Drive chip.
-3. Make sure `KEYCRATE_ALLOWED_EMAILS` includes your email, then sign in on `/keycrate`: the Drive chip lists the
-   folder (re-checked every 10 minutes, no redeploy needed) and the ▶ buttons light up.
+1. Upload the USB's music to a folder named **USB** in your Google Drive (subfolders are fine, e.g. the whole
+   `Contents` folder). Another name works with `KEYCRATE_DRIVE_FOLDER_NAME`.
+2. Google Cloud (the project with the OAuth client): enable the **Google Drive API**, and on the OAuth consent
+   screen add the `…/auth/drive.readonly` scope. Publish the app ("In production"). In "Testing", Google expires
+   the login every 7 days. It stays unverified, so Google shows an "unverified app" screen: continue past it.
+3. Vercel: set `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, and your email in
+   `KEYCRATE_ALLOWED_EMAILS`.
+4. On `/keycrate`, tap **Sign in to Google Drive** and allow Drive access. The chip lists the folder and the ▶
+   buttons light up.
+
+Fallback without the login: share the folder (Viewer) with the service account,
+`vitaegis@gen-lang-client-0892329659.iam.gserviceaccount.com`, or pin it with `KEYCRATE_DRIVE_FOLDER_ID`.
 
 ## Supabase
 

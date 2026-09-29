@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { buildAudioIndex, findAudio, isAudioFile, type AudioIndex } from '@/lib/keycrate/audio';
+import { signInWithGoogle } from '@/lib/keycrate/cloud';
 import { localDb } from '@/lib/keycrate/db';
 import type { Track } from '@/lib/keycrate/types';
 import { useKeyCrate } from './store';
@@ -26,7 +27,8 @@ import { useKeyCrate } from './store';
 
 type Source = File | FileSystemFileHandle | { driveId: string };
 type Status = 'none' | 'scanning' | 'ready' | 'reconnect';
-type DriveStatus = 'off' | 'loading' | 'ready' | 'error';
+/** `login`: Google Drive isn't connected yet; the chip starts Google sign-in. */
+type DriveStatus = 'off' | 'loading' | 'ready' | 'error' | 'login';
 
 interface DirHandle {
   name: string;
@@ -129,9 +131,16 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         const res = await fetch('/api/keycrate/audio', { cache: 'no-store' });
         const json = (await res.json().catch(() => ({}))) as {
           error?: string;
+          needsLogin?: boolean;
           folderName?: string;
           files?: { id: string; name: string }[];
         };
+        if (json.needsLogin) {
+          setDriveStatus('login');
+          setDriveError(json.error ?? null);
+          if (!quiet) void signInWithGoogle();
+          return;
+        }
         if (!res.ok || !json.files)
           throw Object.assign(new Error(json.error ?? `HTTP ${res.status}`), {
             status: res.status,
@@ -159,15 +168,34 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     [actions],
   );
 
-  // Signed in: link the Drive folder automatically.
+  // Signed in: link the Drive folder automatically. Straight after Google sign-in the session
+  // carries Google's tokens; the server keeps them (encrypted, httpOnly) before the first listing.
   const signedIn = !!state.session;
+  const providerToken = state.session?.provider_token ?? null;
+  const providerRefresh = state.session?.provider_refresh_token ?? null;
+  const sentToken = useRef<string | null>(null);
   useEffect(() => {
-    if (signedIn) void loadDrive(true);
-    else {
+    if (!signedIn) {
       setDriveIndex(null);
       setDriveStatus('off');
+      return;
     }
-  }, [signedIn, loadDrive]);
+    (async () => {
+      if (providerToken && sentToken.current !== providerToken) {
+        sentToken.current = providerToken;
+        const res = await fetch('/api/keycrate/drive-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: providerToken, refreshToken: providerRefresh }),
+        }).catch(() => null);
+        if (res && !res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (j.error) actions.toast(`Google Drive: ${j.error}`);
+        }
+      }
+      await loadDrive(true);
+    })();
+  }, [signedIn, providerToken, providerRefresh, loadDrive, actions]);
 
   const applyFiles = useCallback((files: { name: string; file: Source }[], name: string) => {
     setIndex(buildAudioIndex(files));
@@ -344,7 +372,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         fileCount: driveIndex?.count ?? 0,
         error: driveError,
       },
-      linkDrive: () => void loadDrive(false),
+      linkDrive: () =>
+        void (signedIn && driveStatus !== 'login' ? loadDrive(false) : signInWithGoogle()),
       folderName,
       fileCount: index?.count ?? 0,
       scanned,
@@ -369,6 +398,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       driveIndex,
       driveError,
       loadDrive,
+      signedIn,
       folderName,
       index,
       scanned,

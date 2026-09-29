@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { audioMime, planRange } from '@/lib/keycrate/audio';
-import { audioUser, fetchAudio, inAudioFolder } from '@/lib/keycrate/drive-audio';
+import { audioUser, driveAccess, fetchAudio, inAudioFolder } from '@/lib/keycrate/drive-audio';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * GET /api/keycrate/audio/:id → one audio file from the Drive folder, with byte ranges so the
@@ -17,7 +17,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const auth = await audioUser(req);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const meta = await inAudioFolder(id);
+  const access = await driveAccess(req, auth.email).catch(() => null);
+  if (!access)
+    return NextResponse.json({ error: 'Google Drive is not connected' }, { status: 428 });
+
+  const meta = await inAudioFolder(access, id).catch(() => null);
   if (!meta) return NextResponse.json({ error: 'Not in the audio folder' }, { status: 404 });
 
   const range = planRange(req.headers.get('range'), meta.size);
@@ -28,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
   }
 
-  const upstream = await fetchAudio(id, range);
+  const upstream = await fetchAudio(access, id, range);
   if (!upstream.ok || !upstream.body) {
     return NextResponse.json({ error: `Drive returned ${upstream.status}` }, { status: 502 });
   }
@@ -50,5 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       upstream.headers.get('content-range') ?? `bytes ${range?.start}-${range?.end}/${total}`,
     );
   }
-  return new NextResponse(upstream.body, { status: partial ? 206 : 200, headers });
+  const res = new NextResponse(upstream.body, { status: partial ? 206 : 200, headers });
+  access.user?.persist(res);
+  return res;
 }
