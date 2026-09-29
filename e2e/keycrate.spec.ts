@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 /* Smoke: import the sample XML fixture, build a 5-track set, export rekordbox XML. */
@@ -103,4 +104,57 @@ test('selecting a playlist song suggests what follows it and inserts under it', 
   await page.getByTestId('kc-anchor-clear').click();
   await expect(suggestions).not.toContainText('After Glue');
   await expect(rows.nth(1)).toHaveAttribute('aria-selected', 'false');
+});
+
+/** A short silent 8 kHz mono WAV, so playback runs through to the end quickly. */
+function silentWav(seconds: number): Buffer {
+  const rate = 8000;
+  const data = Math.round(rate * seconds);
+  const b = Buffer.alloc(44 + data);
+  b.write('RIFF', 0);
+  b.writeUInt32LE(36 + data, 4);
+  b.write('WAVEfmt ', 8);
+  b.writeUInt32LE(16, 16);
+  b.writeUInt16LE(1, 20); // PCM
+  b.writeUInt16LE(1, 22); // mono
+  b.writeUInt32LE(rate, 24);
+  b.writeUInt32LE(rate, 28);
+  b.writeUInt16LE(1, 32);
+  b.writeUInt16LE(8, 34);
+  b.write('data', 36);
+  b.writeUInt32LE(data, 40);
+  b.fill(128, 44); // 8-bit silence
+  return b;
+}
+
+test('when a playlist song ends, the next one plays', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Playback is the same on phones; the playlist layout differs');
+  await page.goto('/keycrate');
+  await page
+    .getByTestId('kc-file')
+    .setInputFiles(path.join(process.cwd(), 'fixtures', 'keycrate-sample.xml'));
+  await expect(page.getByTestId('kc-toast')).toContainText('Imported 24 tracks');
+
+  const search = page.getByLabel('Search library');
+  for (const title of ['Glue', 'Baby']) {
+    await search.fill(title);
+    await page.getByTestId('kc-track').first().click();
+  }
+  await search.fill('');
+
+  // The folder input only takes a directory, so write the two songs into one first.
+  const dir = test.info().outputPath('music');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, 'Bicep - Glue.wav'), silentWav(1));
+  writeFileSync(path.join(dir, 'Four Tet - Baby.wav'), silentWav(1));
+  await page.getByTestId('kc-audio-files').setInputFiles(dir);
+  await expect(page.getByTestId('kc-toast')).toContainText('Linked 2 audio files');
+
+  const rows = page.getByTestId('kc-playlist-row');
+  await rows.nth(0).getByRole('button', { name: 'Play Glue' }).click();
+  const bar = page.getByTestId('kc-now-playing');
+  await expect(bar).toContainText('Glue');
+  // Glue is one second long; Baby follows without a click.
+  await expect(bar).toContainText('Baby', { timeout: 10_000 });
+  await expect(rows.nth(1).getByRole('button', { name: 'Pause Baby' })).toBeVisible();
 });

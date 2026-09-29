@@ -89,7 +89,7 @@ async function scanDirectory(
 }
 
 export function AudioProvider({ children }: { children: ReactNode }) {
-  const { state, actions } = useKeyCrate();
+  const { state, derived, actions } = useKeyCrate();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -308,6 +308,21 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     [actions, currentId, driveStatus, linkFolder, reconnect, sources, status],
   );
 
+  // When a playlist song finishes, the next playable song in the playlist starts.
+  const playNext = useCallback(() => {
+    const items = state.set.history.present;
+    const at = items.findIndex((it) => it.trackId === currentId);
+    if (at === -1) return false;
+    for (const it of items.slice(at + 1)) {
+      const t = derived.trackMap.get(it.trackId);
+      if (t && sources.has(t.id)) {
+        void toggle(t);
+        return true;
+      }
+    }
+    return false;
+  }, [state.set.history.present, currentId, derived.trackMap, sources, toggle]);
+
   const seek = useCallback((s: number) => {
     const a = audioRef.current;
     if (a && Number.isFinite(s)) a.currentTime = s;
@@ -380,7 +395,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         preload="none"
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
+        onEnded={() => {
+          if (!playNext()) setPlaying(false);
+        }}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onError={() => {
