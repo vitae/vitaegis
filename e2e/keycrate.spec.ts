@@ -61,3 +61,46 @@ test('import a rekordbox XML, build a five-track set, export it', async ({ page,
   expect(xml.match(/<TRACK Key="\d+"\/>/g)?.length).toBe(5);
   expect(xml).toContain('TrackID="1"');
 });
+
+test('selecting a playlist song suggests what follows it and inserts under it', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'The Next track list sits beside the playlist on desktop');
+  await page.goto('/keycrate');
+  await page
+    .getByTestId('kc-file')
+    .setInputFiles(path.join(process.cwd(), 'fixtures', 'keycrate-sample.xml'));
+  await expect(page.getByTestId('kc-toast')).toContainText('Imported 24 tracks');
+
+  const search = page.getByLabel('Search library');
+  for (const title of ['Glue', 'Baby', 'Latch']) {
+    await search.fill(title);
+    await page.getByTestId('kc-track').first().click();
+  }
+  await search.fill('');
+
+  const rows = page.getByTestId('kc-playlist-row');
+  await expect(rows).toHaveCount(3);
+
+  // Pick the first song: suggestions now follow Glue.
+  await rows.nth(0).getByRole('button', { name: 'Build after Glue' }).click();
+  await expect(rows.nth(0)).toHaveAttribute('aria-selected', 'true');
+  const suggestions = page.getByTestId('kc-suggestions');
+  await expect(suggestions).toContainText('After Glue');
+
+  // A pick lands right under Glue and becomes the new selection, so picks chain.
+  const pick = suggestions.getByTestId('kc-suggestion').first();
+  const label = (await pick.getAttribute('aria-label')) ?? '';
+  const title = label.replace(/^Add .+? – /, '').replace(/:.*$/, '');
+  await pick.click();
+  await expect(rows).toHaveCount(4);
+  await expect(rows.nth(1)).toContainText(title);
+  await expect(rows.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await expect(rows.nth(3)).toContainText('Latch');
+
+  // Back to end: suggestions follow the last track again.
+  await page.getByTestId('kc-anchor-clear').click();
+  await expect(suggestions).not.toContainText('After Glue');
+  await expect(rows.nth(1)).toHaveAttribute('aria-selected', 'false');
+});

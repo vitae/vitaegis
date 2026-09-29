@@ -86,6 +86,8 @@ export interface State {
   busy: string | null;
   /** Something asked for the cloud while signed out. */
   signInPrompt: boolean;
+  /** The playlist row picked as "play after this": suggestions follow it and additions go under it. */
+  anchor: number | null;
   /** Set when on-device storage (IndexedDB) can't be used: the library then lives in memory. */
   storageError: string | null;
 }
@@ -112,7 +114,8 @@ type Action =
   | { type: 'track'; track: Track }
   | { type: 'playlists'; playlists: Playlist[] }
   | { type: 'studies'; studies: SetStudy[] }
-  | { type: 'items'; items: PlaylistItem[] }
+  | { type: 'items'; items: PlaylistItem[]; anchor?: number | null }
+  | { type: 'anchor'; anchor: number | null }
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'set'; set: CurrentSet }
@@ -150,13 +153,19 @@ function reducer(s: State, a: Action): State {
     case 'studies':
       return { ...s, studies: a.studies };
     case 'items':
-      return { ...s, set: { ...s.set, history: push(s.set.history, a.items) } };
+      return {
+        ...s,
+        set: { ...s.set, history: push(s.set.history, a.items) },
+        anchor: a.anchor === undefined ? s.anchor : a.anchor,
+      };
+    case 'anchor':
+      return { ...s, anchor: a.anchor };
     case 'undo':
-      return { ...s, set: { ...s.set, history: undo(s.set.history) } };
+      return { ...s, set: { ...s.set, history: undo(s.set.history) }, anchor: null };
     case 'redo':
-      return { ...s, set: { ...s.set, history: redo(s.set.history) } };
+      return { ...s, set: { ...s.set, history: redo(s.set.history) }, anchor: null };
     case 'set':
-      return { ...s, set: a.set };
+      return { ...s, set: a.set, anchor: null };
     case 'setMeta':
       return { ...s, set: { ...s.set, ...a.patch } };
     case 'filters':
@@ -192,6 +201,7 @@ const initial: State = {
   busy: null,
   signInPrompt: false,
   storageError: null,
+  anchor: null,
 };
 
 /** Rejects if `p` hasn't settled in `ms`: IndexedDB can hang when another tab blocks it. */
@@ -251,6 +261,8 @@ export interface Derived {
   setTracks: Track[];
   transitions: Transition[];
   suggestions: Suggestion[];
+  /** The track suggestions follow: the selected playlist row, or the last track. */
+  anchorTrack: Track | null;
   usedIds: Set<string>;
   genres: string[];
   canUndo: boolean;
@@ -263,6 +275,8 @@ export interface Actions {
   clearLibrary: () => Promise<void>;
   updateTrack: (id: string, patch: Partial<Pick<Track, 'energy' | 'tags'>>) => Promise<void>;
   addTrack: (id: string) => void;
+  /** Select a playlist row to build from (null goes back to the end of the set). */
+  selectAnchor: (index: number | null) => void;
   removeAt: (index: number) => void;
   moveItem: (from: number, to: number) => void;
   setNote: (index: number, note: string) => void;
@@ -370,12 +384,30 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     () => setTransitions(setTracks, state.set.settings),
     [setTracks, state.set.settings],
   );
+  // With a row selected, suggest what follows that song, judged on the set up to it.
+  const anchor = state.anchor !== null && state.anchor < items.length ? state.anchor : null;
+  const leadIn = useMemo(
+    () =>
+      anchor === null
+        ? setTracks
+        : items
+            .slice(0, anchor + 1)
+            .map((it) => trackMap.get(it.trackId))
+            .filter((t): t is Track => !!t),
+    [anchor, items, setTracks, trackMap],
+  );
+  const anchorTrack =
+    anchor === null
+      ? (setTracks[setTracks.length - 1] ?? null)
+      : (trackMap.get(items[anchor].trackId) ?? null);
   const suggestions = useMemo(
     () =>
-      suggestNext(setTracks, state.tracks, state.set.settings, {
-        exclude: new Set(items.map((i) => i.trackId)),
-      }),
-    [setTracks, state.tracks, state.set.settings, items],
+      anchorTrack && leadIn[leadIn.length - 1]?.id === anchorTrack.id
+        ? suggestNext(leadIn, state.tracks, state.set.settings, {
+            exclude: new Set(items.map((i) => i.trackId)),
+          })
+        : [],
+    [anchorTrack, leadIn, state.tracks, state.set.settings, items],
   );
   const genres = useMemo(
     () =>
@@ -390,12 +422,23 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       setTracks,
       transitions,
       suggestions,
+      anchorTrack,
       usedIds,
       genres,
       canUndo: canUndo(state.set.history),
       canRedo: canRedo(state.set.history),
     }),
-    [trackMap, filtered, setTracks, transitions, suggestions, usedIds, genres, state.set.history],
+    [
+      trackMap,
+      filtered,
+      setTracks,
+      transitions,
+      suggestions,
+      anchorTrack,
+      usedIds,
+      genres,
+      state.set.history,
+    ],
   );
 
   /* ── Actions ─────────────────────────────────────────────────────────── */
@@ -507,15 +550,35 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
   );
 
   const setItems = useCallback(
-    (next: PlaylistItem[]) => dispatch({ type: 'items', items: next }),
+    (next: PlaylistItem[], anchor?: number | null) =>
+      dispatch({ type: 'items', items: next, anchor }),
     [],
   );
   const addTrack = useCallback(
-    (id: string) => setItems([...stateRef.current.set.history.present, { trackId: id }]),
+    (id: string) => {
+      const cur = stateRef.current.set.history.present;
+      const a = stateRef.current.anchor;
+      // A selected row: insert right after it and move the selection on, so picks chain.
+      if (a !== null && a < cur.length - 1) {
+        setItems([...cur.slice(0, a + 1), { trackId: id }, ...cur.slice(a + 1)], a + 1);
+      } else {
+        setItems([...cur, { trackId: id }], a === null ? null : cur.length);
+      }
+    },
     [setItems],
   );
+  const selectAnchor = useCallback(
+    (index: number | null) => dispatch({ type: 'anchor', anchor: index }),
+    [],
+  );
   const removeAt = useCallback(
-    (i: number) => setItems(stateRef.current.set.history.present.filter((_, j) => j !== i)),
+    (i: number) => {
+      const a = stateRef.current.anchor;
+      setItems(
+        stateRef.current.set.history.present.filter((_, j) => j !== i),
+        a === null || a === i ? null : a > i ? a - 1 : a,
+      );
+    },
     [setItems],
   );
   const moveItem = useCallback(
@@ -525,7 +588,9 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       const next = [...cur];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
-      setItems(next);
+      // The selection follows its song.
+      const a = stateRef.current.anchor;
+      setItems(next, a === from ? to : a === to ? from : a);
     },
     [setItems],
   );
@@ -753,6 +818,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       clearLibrary,
       updateTrack,
       addTrack,
+      selectAnchor,
       removeAt,
       moveItem,
       setNote,
@@ -783,6 +849,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       clearLibrary,
       updateTrack,
       addTrack,
+      selectAnchor,
       removeAt,
       moveItem,
       setNote,

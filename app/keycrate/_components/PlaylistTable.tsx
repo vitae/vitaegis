@@ -250,22 +250,38 @@ export default function PlaylistTable() {
             {rows.map((t, i) => {
               const into = t ? transitionInto.get(t.id) : undefined;
               const name = t?.title ?? 'Missing track';
+              const selected = state.anchor === i;
               return (
                 <tr
                   key={`${items[i].trackId}-${i}`}
-                  className="kc-row border-b border-white/[0.08] last:border-b-0"
+                  className={`kc-row cursor-pointer border-b border-white/[0.08] last:border-b-0 ${
+                    selected
+                      ? 'bg-[#00ff00]/10 outline outline-1 -outline-offset-1 outline-[#00ff00]/60'
+                      : ''
+                  }`}
+                  onClick={() => t && actions.selectAnchor(selected ? null : i)}
+                  aria-selected={selected}
+                  data-testid="kc-playlist-row"
                 >
                   <td className="px-1 py-1.5">
                     <PlayButton track={t} />
                   </td>
                   <td className="kc-mono px-1 py-1.5 text-xs text-[#808880]">{i + 1}</td>
                   <td className="px-2 py-1.5">
-                    <span
-                      className="block truncate text-white"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (t) actions.selectAnchor(selected ? null : i);
+                      }}
+                      disabled={!t}
+                      aria-pressed={selected}
+                      aria-label={`${selected ? 'Stop building after' : 'Build after'} ${name}`}
+                      className={`block w-full truncate text-left ${selected ? 'text-[#00ff00]' : 'text-white'}`}
                       title={t ? `${t.artist} – ${t.title}` : undefined}
                     >
                       {name}
-                    </span>
+                    </button>
                     <span className="block truncate text-[11px] text-[#808880]">
                       {t?.artist ?? 'not in this library'}
                       {into && (
@@ -282,7 +298,7 @@ export default function PlaylistTable() {
                   <td className="kc-mono px-1 py-1.5 text-right text-xs text-white">
                     {formatBpm(t?.bpm)}
                   </td>
-                  <td className="px-1 py-1.5">
+                  <td className="px-1 py-1.5" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-0.5">
                       <button
                         type="button"

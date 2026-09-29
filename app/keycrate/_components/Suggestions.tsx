@@ -6,13 +6,13 @@ import { formatBpm } from '../_lib/download';
 import { useKeyCrate } from '../_state/store';
 import { KeyBadge, SectionTitle, TRANSITION_COLOR } from './ui';
 
-/* Top 10 for the last track in the set, grouped by transition type. */
+/* Top 10 for the selected playlist song (or the last track), grouped by transition type. */
 
 export default function Suggestions() {
   const { derived, actions, state } = useKeyCrate();
-  const { suggestions, setTracks } = derived;
-  const last = setTracks[setTracks.length - 1];
+  const { suggestions, anchorTrack: last } = derived;
   if (!last) return null;
+  const selected = state.anchor !== null;
   const groups = groupSuggestions(suggestions);
   return (
     <div className="kc-dense mt-4" data-testid="kc-suggestions">
@@ -25,6 +25,21 @@ export default function Suggestions() {
       >
         Next track
       </SectionTitle>
+      {selected && (
+        <p className="-mt-1 mb-2 flex items-center gap-2 text-xs text-[#808880]">
+          <span className="min-w-0 flex-1 truncate">
+            After <span className="text-[#00ff00]">{last.title}</span>. Picks go right under it.
+          </span>
+          <button
+            type="button"
+            onClick={() => actions.selectAnchor(null)}
+            className="shrink-0 text-[#808880] underline hover:text-white"
+            data-testid="kc-anchor-clear"
+          >
+            Back to end
+          </button>
+        </p>
+      )}
       {suggestions.length === 0 ? (
         <p className="text-sm text-[#808880]">
           Nothing fits within ±{state.set.settings.bpmTolerance}% in {state.set.settings.mode} mode.
