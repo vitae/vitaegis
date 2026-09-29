@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Allowlist check before the browser asks Supabase for a magic link. KEYCRATE_ALLOWED_EMAILS
- * (comma-separated) limits who can sign in; when it is unset anyone can. The response is the
- * same shape either way so addresses can't be probed.
+ * Allowlist check after Google sign-in: the browser signs back out when `allowed` is false.
+ * KEYCRATE_ALLOWED_EMAILS (comma-separated) limits who can sign in; when it is unset anyone can.
  */
 export async function POST(req: NextRequest) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {

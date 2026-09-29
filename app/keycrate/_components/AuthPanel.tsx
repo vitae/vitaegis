@@ -1,19 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/keycrate/cloud';
 import { useKeyCrate } from '../_state/store';
-import { Button, inputClass } from './ui';
+import { Button } from './ui';
 
-/* Signed out: everything stays local. Signed in: sync the library and save sets to the cloud. */
+/* Signed out: everything stays local. Signed in with Google: sync the library, save sets to the
+   cloud, and stream the Google Drive music folder. */
 
 export default function AuthPanel() {
   const { state, actions } = useKeyCrate();
   const { session, busy, signInPrompt } = state;
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
   const configured = !!supabaseBrowser();
+  const email = session?.user.email;
+
+  // Google sign-in can't be checked before it happens, so an account that isn't on
+  // KEYCRATE_ALLOWED_EMAILS is signed straight back out when it returns.
+  useEffect(() => {
+    if (!email) return;
+    let cancelled = false;
+    (async () => {
+      const res = await fetch('/api/keycrate/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      }).catch(() => null);
+      const json = (await res?.json().catch(() => ({}))) as { allowed?: boolean } | undefined;
+      if (!cancelled && res?.ok && json?.allowed === false) {
+        await actions.signOut();
+        setError(`${email} isn't allowed to use KeyCrate cloud sync`);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [email, actions]);
 
   if (!configured) return null;
 
@@ -38,55 +61,35 @@ export default function AuthPanel() {
     );
   }
 
-  const form = (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setError(null);
-        const res = await fetch('/api/keycrate/signin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        const json = (await res.json().catch(() => ({}))) as { error?: string; allowed?: boolean };
-        if (!res.ok) {
-          setError(json.error ?? 'Could not send the link');
-          return;
-        }
-        if (json.allowed) {
-          const sb = supabaseBrowser();
-          const { error: err } = await sb!.auth.signInWithOtp({
-            email,
-            options: { emailRedirectTo: `${window.location.origin}/keycrate` },
-          });
-          if (err) {
-            setError(err.message);
-            return;
-          }
-        }
-        setSent(true);
-      }}
-      className="flex flex-wrap items-center gap-2"
-    >
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-        aria-label="Email for magic link"
-        className={`${inputClass} w-56`}
-      />
-      <Button type="submit" size="md" variant="primary">
-        Email me a sign-in link
+  const signInWithGoogle = async () => {
+    setError(null);
+    setRedirecting(true);
+    const { error: err } = await supabaseBrowser()!.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}${window.location.pathname}`,
+        queryParams: { prompt: 'select_account' },
+      },
+    });
+    if (err) {
+      setRedirecting(false);
+      setError(err.message);
+    }
+  };
+
+  const google = (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        size="md"
+        variant="primary"
+        onClick={() => void signInWithGoogle()}
+        disabled={redirecting}
+        data-testid="kc-google-signin"
+      >
+        {redirecting ? 'Opening Google…' : 'Sign in with Google'}
       </Button>
-      {sent && (
-        <span className="text-xs text-[#00ff00]">
-          If that address is allowed, a link is on its way.
-        </span>
-      )}
       {error && <span className="text-xs text-[#ff0000]">{error}</span>}
-    </form>
+    </div>
   );
 
   if (signInPrompt) {
@@ -98,11 +101,13 @@ export default function AuthPanel() {
         className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 sm:items-center"
       >
         <div className="w-full max-w-md rounded-lg border border-white/15 bg-black p-4">
-          <p className="text-sm text-white">Sign in to save this set to the cloud and share it.</p>
+          <p className="text-sm text-white">
+            Sign in with Google to save sets to the cloud and play your Google Drive music.
+          </p>
           <p className="mb-3 text-xs text-[#808880]">
             Everything you have built stays on this device either way.
           </p>
-          {form}
+          {google}
           <div className="mt-3 flex justify-end">
             <Button variant="quiet" onClick={() => actions.requestSignIn(false)}>
               Not now
@@ -114,8 +119,11 @@ export default function AuthPanel() {
   }
 
   return (
-    <Button size="sm" variant="quiet" onClick={() => actions.requestSignIn(true)}>
-      Sign in for cloud sync
-    </Button>
+    <div className="flex flex-wrap items-center gap-2">
+      <Button size="sm" variant="quiet" onClick={() => actions.requestSignIn(true)}>
+        Sign in with Google
+      </Button>
+      {error && <span className="text-xs text-[#ff0000]">{error}</span>}
+    </div>
   );
 }

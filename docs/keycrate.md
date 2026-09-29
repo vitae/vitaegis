@@ -38,7 +38,7 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   TrackIDs and file paths and writes keys the way rekordbox reads them (`Am`, `F#m`, `C`). In rekordbox:
   Preferences → Advanced → rekordbox xml → Imported Library → pick the file, then drag the playlist from the
   rekordbox xml tree into your playlists.
-- **Storage**: IndexedDB on the device for everything. Signing in (magic link) adds a cloud copy in
+- **Storage**: IndexedDB on the device for everything. Signing in with Google adds a cloud copy in
   Supabase, uploaded in chunks of 500. If IndexedDB is blocked or hangs (private browsing, in-app browsers,
   another tab holding an old version), the page carries on in memory and shows a red notice instead of
   sitting on "Opening your crate…".
@@ -49,7 +49,7 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Already set. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | New. The browser and the share page query as the user / anon so RLS applies. Without it KeyCrate is local-only and hides sign-in. |
-| `KEYCRATE_ALLOWED_EMAILS` | Comma-separated emails allowed to sign in. Unset means anyone can sign in, but Google Drive audio then streams to nobody: streaming needs your email here. |
+| `KEYCRATE_ALLOWED_EMAILS` | Comma-separated Google account emails allowed to sign in (others are signed straight back out). Unset means anyone can sign in, but Google Drive audio then streams to nobody: streaming needs your email here. |
 | `KEYCRATE_DRIVE_FOLDER_NAME` | Optional. Name of the shared Drive folder with the music; defaults to `USB`. |
 | `KEYCRATE_DRIVE_FOLDER_ID` | Optional. Pins one folder by id (`drive.google.com/drive/folders/<id>`) instead of finding it by name. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` (or `_EMAIL` + `_KEY`) | Already set for the content pipeline; KeyCrate reuses it read-only. |
@@ -67,9 +67,12 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 
 ## Supabase
 
-1. Authentication → Providers → Email: enabled (magic link).
-2. Authentication → URL Configuration → Redirect URLs: add `https://vitaegis.com/keycrate` and the preview
-   pattern `https://*-vitae.vercel.app/keycrate`.
+1. Authentication → Providers → Google: enabled, with the OAuth client ID and secret from Google Cloud
+   (APIs & Services → Credentials → OAuth client ID → Web application). That client's **Authorized redirect
+   URI** is `https://fsrxacvcqftelbjdqlnm.supabase.co/auth/v1/callback`.
+2. Authentication → URL Configuration → Redirect URLs: add `https://www.vitaegis.com/keycrate`,
+   `https://vitaegis.com/keycrate`, `https://www.vitaegis.com/keycrate/study` and the preview pattern
+   `https://*-vitae.vercel.app/keycrate/**`.
 3. Run `supabase/migrations/20260924120000_keycrate.sql` in the SQL editor. It creates `kc_tracks`,
    `kc_playlists`, `kc_playlist_items` and `kc_set_studies` with RLS scoped to `auth.uid()`, plus anon
    read policies for playlists marked public.
