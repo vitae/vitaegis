@@ -14,9 +14,10 @@ export const metadata: Metadata = {
 
 const stack: { name: string; dose: string; role: string }[] = [
   { name: 'Pycnogenol', dose: '50 mg twice daily', role: 'Blood flow: raises nitric oxide production' },
-  { name: 'L-citrulline', dose: '3 g', role: 'Blood flow: longer-lasting supply of arginine' },
-  { name: 'L-arginine', dose: '1.5 g', role: 'Blood flow: the form used in the Pycnogenol trials' },
-  { name: 'Wisconsin ginseng', dose: 'Per label', role: 'Energy and blood flow. Take in the morning' },
+  { name: 'L-citrulline', dose: '2 g', role: 'Blood flow: longer-lasting supply of arginine' },
+  { name: 'L-arginine', dose: '2 g', role: 'Blood flow: the form used in the Pycnogenol trials' },
+  { name: 'Korean red ginseng', dose: '1–3 g', role: 'Erections and energy. Morning. 4–8 weeks on, 1–2 off' },
+  { name: 'Wisconsin ginseng', dose: 'Tea, as desired', role: 'Gentler energy. Off days from Korean red ginseng' },
   { name: 'Beets', dose: '1 cup juice or 2 beets', role: 'Food: nitrate the body turns into nitric oxide' },
   { name: 'Watermelon', dose: 'About 2 cups', role: 'Food: a little natural citrulline' },
   { name: 'Maca root', dose: '1.5–3 g', role: 'Libido' },
@@ -25,8 +26,8 @@ const stack: { name: string; dose: string; role: string }[] = [
 ];
 
 const schedule: { slot: string; items: string }[] = [
-  { slot: 'Morning', items: 'Pycnogenol 50 mg, Wisconsin ginseng, maca, tongkat ali. With breakfast.' },
-  { slot: 'Before activity', items: 'Citrulline 3 g and arginine 1.5 g, 60 minutes before sex or training. Mornings on other days.' },
+  { slot: 'Morning', items: 'Pycnogenol 50 mg, Korean red ginseng, maca, tongkat ali. With breakfast.' },
+  { slot: 'Before activity', items: 'Citrulline 2 g and arginine 2 g, 60 minutes before sex or training. Mornings on other days.' },
   { slot: 'Evening', items: 'Pycnogenol 50 mg with dinner. Ashwagandha KSM-66 600 mg.' },
 ];
 
@@ -102,7 +103,7 @@ export default function EdPage() {
               Caution
             </span>
             Pycnogenol, citrulline, arginine, beets, and ginseng all lower blood pressure. Never
-            combine with nitrates, and talk to a doctor first if you take blood pressure medication,
+            combine with nitrates. Arginine and citrulline can trigger cold sores. Talk to a doctor first if you take blood pressure medication,
             ED drugs, blood thinners, diabetes medication, or thyroid medication.
           </p>
         </section>
@@ -117,8 +118,9 @@ export default function EdPage() {
         </section>
 
         <p className="mt-6 border-l-2 border-vitae-green pl-5 font-light leading-relaxed text-white/70">
-          Wisconsin ginseng is American ginseng. The ED trials used Korean red ginseng, a different
-          species, so swap it in if erections are the main goal.
+          The ED trials used Korean red ginseng, so it leads the stack. Wisconsin ginseng is American
+          ginseng, a gentler, cooling species. Drink it as tea on off days rather than stacking both
+          daily.
         </p>
 
         <section className="mt-10">
