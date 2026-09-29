@@ -229,3 +229,53 @@ test('songs in a linked folder that the library lacks are added to it', async ({
   await expect(library.getByTestId('kc-track').first()).toContainText('5B');
   await expect(library.getByTestId('kc-track').first()).toContainText('122');
 });
+
+/** 40 s mono WAV: a 126 BPM kick over a sustained A minor chord, with no tags. */
+function songWav(): Buffer {
+  const rate = 22050;
+  const n = rate * 40;
+  const data = Buffer.alloc(n * 2);
+  const period = (60 / 126) * rate;
+  const notes = [110, 220, 261.63, 329.63];
+  for (let i = 0; i < n; i++) {
+    const t = i / rate;
+    let s = 0;
+    for (const f of notes) s += Math.sin(2 * Math.PI * f * t) / notes.length;
+    const since = (i % period) / rate;
+    s = 0.4 * s + 0.6 * Math.sin(2 * Math.PI * 60 * since) * Math.exp(-since * 40);
+    data.writeInt16LE(Math.round(Math.max(-1, Math.min(1, s)) * 32767), i * 2);
+  }
+  const head = Buffer.alloc(44);
+  head.write('RIFF', 0);
+  head.writeUInt32LE(36 + data.length, 4);
+  head.write('WAVEfmt ', 8);
+  head.writeUInt32LE(16, 16);
+  head.writeUInt16LE(1, 20);
+  head.writeUInt16LE(1, 22);
+  head.writeUInt32LE(rate, 24);
+  head.writeUInt32LE(rate * 2, 28);
+  head.writeUInt16LE(2, 32);
+  head.writeUInt16LE(16, 34);
+  head.write('data', 36);
+  head.writeUInt32LE(data.length, 40);
+  return Buffer.concat([head, data]);
+}
+
+test('key and BPM are detected for an untagged WAV', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Same flow on phones');
+  await page.goto('/keycrate');
+  const dir = test.info().outputPath('usb');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, 'Studio - Late Session.wav'), songWav());
+  await page.getByTestId('kc-audio-files').setInputFiles(dir);
+  await expect(page.getByTestId('kc-toast')).toContainText(
+    'Detected key and BPM for 1 of 1 songs',
+    {
+      timeout: 30_000,
+    },
+  );
+  const row = page.getByTestId('kc-library').getByTestId('kc-track').first();
+  await expect(row).toContainText('Late Session');
+  await expect(row).toContainText('8A');
+  await expect(row).toContainText('126');
+});

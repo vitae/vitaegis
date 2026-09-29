@@ -42,7 +42,11 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   adds a library track for every audio file no track plays yet: artist and title from `Artist - Title.wav`, key
   and BPM from a Mixed In Key style name (`8A - 124 - Artist - Title`), then from the file's ID3 tag (MP3, or the
   `id3 ` chunk of a WAV / AIFF), read in the background with a few small byte ranges per file. FLAC and M4A tags
-  aren't read yet. Importing a rekordbox XML later replaces these rows with the real ones for the same files and
+  aren't read yet. Tracks still missing a key or BPM that play from an uncompressed WAV are then analysed
+  (`lib/keycrate/analysis.ts`, in `app/keycrate/_lib/analyze.worker.ts`): ~30 s from 35% into the song, spectral
+  flux + autocorrelation for BPM, a chromagram against Krumhansl key profiles for the key. Detected tracks get
+  `keyRaw: 'detected'`; files that can't be analysed get `kc:undetected` and aren't retried. On Drive each song
+  costs one ~5–8 MB range. Importing a rekordbox XML later replaces these rows with the real ones for the same files and
   moves playlists over.
 - **Playlist → rekordbox**: the Playlist table under the wheel has Save and **rekordbox XML**. The export keeps
   TrackIDs and file paths and writes keys the way rekordbox reads them (`Am`, `F#m`, `C`). In rekordbox:

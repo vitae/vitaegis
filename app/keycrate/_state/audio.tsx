@@ -12,7 +12,16 @@ import {
 } from 'react';
 import { buildAudioIndex, findAudio, isAudioFile, type AudioIndex } from '@/lib/keycrate/audio';
 import { signInWithGoogle } from '@/lib/keycrate/cloud';
+import {
+  analysisWindow,
+  analyzeWavBytes,
+  readWavInfo,
+  type Detected,
+  type WavInfo,
+} from '@/lib/keycrate/analysis';
+import { needsAnalysis } from '@/lib/keycrate/merge';
 import { readTags, type ReadRange } from '@/lib/keycrate/tags';
+import type { AnalyzeMessage, AnalyzeRequest } from '../_lib/analyze.worker';
 import { localDb } from '@/lib/keycrate/db';
 import type { Track } from '@/lib/keycrate/types';
 import { useKeyCrate } from './store';
@@ -111,6 +120,37 @@ async function openSource(src: Source): Promise<{ read: ReadRange; size: number 
   };
 }
 
+/** Marks a track whose file couldn't be analysed, so it isn't retried on every visit. */
+export const DETECT_FAILED = 'kc:undetected';
+
+let analyzer: Worker | null | undefined;
+let nextJob = 0;
+
+/** Key and BPM in a worker; on the page itself if workers can't run here. */
+function analyzeInWorker(bytes: Uint8Array, info: WavInfo): Promise<Detected> {
+  if (analyzer === undefined) {
+    try {
+      analyzer = new Worker(new URL('../_lib/analyze.worker.ts', import.meta.url));
+    } catch {
+      analyzer = null;
+    }
+  }
+  const w = analyzer;
+  if (!w) return Promise.resolve(analyzeWavBytes(bytes, info));
+  const id = ++nextJob;
+  return new Promise((resolve, reject) => {
+    const onMessage = (e: MessageEvent<AnalyzeMessage>) => {
+      if (e.data.id !== id) return;
+      w.removeEventListener('message', onMessage);
+      if (e.data.type === 'done') resolve(e.data.result);
+      else reject(new Error(e.data.message));
+    };
+    w.addEventListener('message', onMessage);
+    const copy = bytes.slice().buffer;
+    w.postMessage({ id, bytes: copy, info } satisfies AnalyzeRequest, [copy]);
+  });
+}
+
 export function AudioProvider({ children }: { children: ReactNode }) {
   const { state, derived, actions } = useKeyCrate();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -143,15 +183,13 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     return m;
   }, [index, driveIndex, state.tracks]);
 
-  /**
-   * Linked files no library track plays become library tracks, then their tags (key, BPM,
-   * artist, title) are read in the background, a few small byte ranges per file.
-   */
-  const addToLibrary = useCallback(
-    async (files: { name: string; file: Source }[], from: string) => {
-      const audio = files.filter((f) => isAudioFile(f.name));
-      const added = await actions.addFileTracks(audio, from);
-      if (!added.length) return;
+  // The newest library, for background work that outlives the render that started it.
+  const tracksRef = useRef(state.tracks);
+  tracksRef.current = state.tracks;
+
+  /** Reads key, BPM, artist and title tags of newly added file tracks, a few byte ranges each. */
+  const readNewTags = useCallback(
+    async (audio: { name: string; file: Source }[], added: Track[]) => {
       const byName = new Map(audio.map((f) => [f.name.toLowerCase(), f.file]));
       const queue = [...added];
       let patches = new Map<string, Partial<Track>>();
@@ -184,6 +222,75 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       await flush();
     },
     [actions],
+  );
+
+  /**
+   * Detects key and BPM for tracks that still lack them and play from an uncompressed WAV:
+   * ~30 s from the middle of the song, analysed in a worker, one song at a time.
+   */
+  const detecting = useRef(false);
+  const detectMissing = useCallback(
+    async (idx: AudioIndex<Source>) => {
+      if (detecting.current) return;
+      const todo = tracksRef.current
+        .filter((t) => needsAnalysis(t) && t.keyRaw !== DETECT_FAILED)
+        .map((t) => ({ t, src: findAudio(t, idx) }))
+        .filter((j): j is { t: Track; src: Source } => !!j.src);
+      if (!todo.length) return;
+      detecting.current = true;
+      actions.toast(`Detecting key and BPM for ${todo.length.toLocaleString()} songs…`);
+      let found = 0;
+      let patches = new Map<string, Partial<Track>>();
+      const flush = async () => {
+        const batch = patches;
+        patches = new Map();
+        await actions.patchTracks(batch);
+      };
+      try {
+        for (const { t, src } of todo) {
+          let patch: Partial<Track> = { keyRaw: DETECT_FAILED };
+          try {
+            const { read, size } = await openSource(src);
+            const info = await readWavInfo(read, size);
+            if (info) {
+              const w = analysisWindow(info);
+              const got = await analyzeInWorker(await read(w.start, w.end), info);
+              if (got.camelot || got.bpm) {
+                patch = { keyRaw: 'detected' };
+                if (!t.camelot && got.camelot) patch.camelot = got.camelot;
+                if (!t.bpm && got.bpm) patch.bpm = got.bpm;
+                found++;
+              }
+            }
+          } catch {
+            /* unreadable or not a PCM WAV: marked so it isn't retried */
+          }
+          patches.set(t.id, patch);
+          if (patches.size >= 5) await flush();
+        }
+        await flush();
+        actions.toast(
+          `Detected key and BPM for ${found.toLocaleString()} of ${todo.length.toLocaleString()} songs`,
+        );
+      } finally {
+        detecting.current = false;
+      }
+    },
+    [actions],
+  );
+
+  /**
+   * Linked files no library track plays become library tracks; their tags are read, then
+   * anything still missing a key or BPM is detected from the audio.
+   */
+  const addToLibrary = useCallback(
+    async (files: { name: string; file: Source }[], from: string) => {
+      const audio = files.filter((f) => isAudioFile(f.name));
+      const added = await actions.addFileTracks(audio, from);
+      if (added.length) await readNewTags(audio, added);
+      await detectMissing(buildAudioIndex(audio));
+    },
+    [actions, readNewTags, detectMissing],
   );
 
   /** Lists the Drive folder. Quiet on the automatic run; toasts when the DJ asked for it. */
