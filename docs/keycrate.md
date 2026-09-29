@@ -38,6 +38,12 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   - **USB / local folder**: pick the folder; files play straight from the drive and nothing is uploaded.
     Chrome and Edge remember the folder between visits; other browsers ask each visit. Local files win when both
     have a track, so a gig doesn't depend on the network.
+- **Songs from a linked folder** (`lib/keycrate/file-tracks.ts`, `lib/keycrate/tags.ts`): linking USB or Drive
+  adds a library track for every audio file no track plays yet: artist and title from `Artist - Title.wav`, key
+  and BPM from a Mixed In Key style name (`8A - 124 - Artist - Title`), then from the file's ID3 tag (MP3, or the
+  `id3 ` chunk of a WAV / AIFF), read in the background with a few small byte ranges per file. FLAC and M4A tags
+  aren't read yet. Importing a rekordbox XML later replaces these rows with the real ones for the same files and
+  moves playlists over.
 - **Playlist → rekordbox**: the Playlist table under the wheel has Save and **rekordbox XML**. The export keeps
   TrackIDs and file paths and writes keys the way rekordbox reads them (`Am`, `F#m`, `C`). In rekordbox:
   Preferences → Advanced → rekordbox xml → Imported Library → pick the file, then drag the playlist from the

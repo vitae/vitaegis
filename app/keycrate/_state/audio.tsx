@@ -12,6 +12,7 @@ import {
 } from 'react';
 import { buildAudioIndex, findAudio, isAudioFile, type AudioIndex } from '@/lib/keycrate/audio';
 import { signInWithGoogle } from '@/lib/keycrate/cloud';
+import { readTags, type ReadRange } from '@/lib/keycrate/tags';
 import { localDb } from '@/lib/keycrate/db';
 import type { Track } from '@/lib/keycrate/types';
 import { useKeyCrate } from './store';
@@ -25,7 +26,7 @@ import { useKeyCrate } from './store';
      when both have a track (no network needed at a gig).
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-type Source = File | FileSystemFileHandle | { driveId: string };
+type Source = File | FileSystemFileHandle | { driveId: string; size: number | null };
 type Status = 'none' | 'scanning' | 'ready' | 'reconnect';
 /** `login`: Google Drive isn't connected yet; the chip starts Google sign-in. */
 type DriveStatus = 'off' | 'loading' | 'ready' | 'error' | 'login';
@@ -90,6 +91,26 @@ async function scanDirectory(
   return out;
 }
 
+/** Byte-range reads and the size of a linked file, wherever it lives. */
+async function openSource(src: Source): Promise<{ read: ReadRange; size: number | null }> {
+  if ('driveId' in src) {
+    const url = `/api/keycrate/audio/${encodeURIComponent(src.driveId)}`;
+    return {
+      size: src.size,
+      read: async (start, end) => {
+        const res = await fetch(url, { headers: { Range: `bytes=${start}-${end - 1}` } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return new Uint8Array(await res.arrayBuffer()).subarray(0, end - start);
+      },
+    };
+  }
+  const file = src instanceof File ? src : await src.getFile();
+  return {
+    size: file.size,
+    read: async (start, end) => new Uint8Array(await file.slice(start, end).arrayBuffer()),
+  };
+}
+
 export function AudioProvider({ children }: { children: ReactNode }) {
   const { state, derived, actions } = useKeyCrate();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -122,6 +143,49 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     return m;
   }, [index, driveIndex, state.tracks]);
 
+  /**
+   * Linked files no library track plays become library tracks, then their tags (key, BPM,
+   * artist, title) are read in the background, a few small byte ranges per file.
+   */
+  const addToLibrary = useCallback(
+    async (files: { name: string; file: Source }[], from: string) => {
+      const audio = files.filter((f) => isAudioFile(f.name));
+      const added = await actions.addFileTracks(audio, from);
+      if (!added.length) return;
+      const byName = new Map(audio.map((f) => [f.name.toLowerCase(), f.file]));
+      const queue = [...added];
+      let patches = new Map<string, Partial<Track>>();
+      const flush = async () => {
+        const batch = patches;
+        patches = new Map();
+        await actions.patchTracks(batch);
+      };
+      const worker = async () => {
+        while (queue.length) {
+          const t = queue.shift()!;
+          const src = byName.get((t.location ?? '').toLowerCase());
+          if (!src) continue;
+          try {
+            const { read, size } = await openSource(src);
+            const tags = await readTags(read, size);
+            const patch: Partial<Track> = {};
+            if (tags.camelot) patch.camelot = tags.camelot;
+            if (tags.bpm) patch.bpm = tags.bpm;
+            if (tags.artist) patch.artist = tags.artist;
+            if (tags.title) patch.title = tags.title;
+            if (Object.keys(patch).length) patches.set(t.id, patch);
+          } catch {
+            /* unreadable file: keep what the file name gave */
+          }
+          if (patches.size >= 20) await flush();
+        }
+      };
+      await Promise.all(Array.from({ length: 4 }, worker));
+      await flush();
+    },
+    [actions],
+  );
+
   /** Lists the Drive folder. Quiet on the automatic run; toasts when the DJ asked for it. */
   const loadDrive = useCallback(
     async (quiet: boolean) => {
@@ -133,7 +197,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           error?: string;
           needsLogin?: boolean;
           folderName?: string;
-          files?: { id: string; name: string }[];
+          files?: { id: string; name: string; size?: number | null }[];
         };
         if (json.needsLogin) {
           setDriveStatus('login');
@@ -147,10 +211,20 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           });
         setDriveIndex(
           buildAudioIndex(
-            json.files.map((f) => ({ name: f.name, file: { driveId: f.id } as Source })),
+            json.files.map((f) => ({
+              name: f.name,
+              file: { driveId: f.id, size: f.size ?? null } as Source,
+            })),
           ),
         );
         setDriveName(json.folderName ?? 'Google Drive');
+        void addToLibrary(
+          json.files.map((f) => ({
+            name: f.name,
+            file: { driveId: f.id, size: f.size ?? null } as Source,
+          })),
+          json.folderName ?? 'Google Drive',
+        );
         setDriveStatus('ready');
         if (!quiet)
           actions.toast(
@@ -165,7 +239,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         if (!quiet) actions.toast(`Google Drive: ${msg}`);
       }
     },
-    [actions],
+    [actions, addToLibrary],
   );
 
   // Signed in: link the Drive folder automatically. Straight after Google sign-in the session
@@ -197,11 +271,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     })();
   }, [signedIn, providerToken, providerRefresh, loadDrive, actions]);
 
-  const applyFiles = useCallback((files: { name: string; file: Source }[], name: string) => {
-    setIndex(buildAudioIndex(files));
-    setFolderName(name);
-    setStatus('ready');
-  }, []);
+  const applyFiles = useCallback(
+    (files: { name: string; file: Source }[], name: string) => {
+      setIndex(buildAudioIndex(files));
+      void addToLibrary(files, name);
+      setFolderName(name);
+      setStatus('ready');
+    },
+    [addToLibrary],
+  );
 
   const scanHandle = useCallback(
     async (dir: DirHandle) => {

@@ -158,3 +158,74 @@ test('when a playlist song ends, the next one plays', async ({ page, isMobile })
   await expect(bar).toContainText('Baby', { timeout: 10_000 });
   await expect(rows.nth(1).getByRole('button', { name: 'Pause Baby' })).toBeVisible();
 });
+
+/** An ID3v2.4 tag with key and BPM, as rekordbox or Mixed In Key write it. */
+function id3Tag(key: string, bpm: string): Buffer {
+  const frame = (id: string, text: string) => {
+    const body = Buffer.concat([Buffer.from([3]), Buffer.from(text, 'utf8')]);
+    const head = Buffer.alloc(10);
+    head.write(id, 0, 'ascii');
+    head.writeUInt32BE(body.length, 4);
+    return Buffer.concat([head, body]);
+  };
+  const frames = Buffer.concat([frame('TKEY', key), frame('TBPM', bpm)]);
+  const n = frames.length;
+  const head = Buffer.from([
+    0x49,
+    0x44,
+    0x33,
+    4,
+    0,
+    0,
+    (n >> 21) & 0x7f,
+    (n >> 14) & 0x7f,
+    (n >> 7) & 0x7f,
+    n & 0x7f,
+  ]);
+  return Buffer.concat([head, frames]);
+}
+
+/** silentWav with an "id3 " chunk after the audio. */
+function taggedWav(key: string, bpm: string): Buffer {
+  const wav = silentWav(0.1);
+  const tag = id3Tag(key, bpm);
+  const chunk = Buffer.alloc(8);
+  chunk.write('id3 ', 0, 'ascii');
+  chunk.writeUInt32LE(tag.length, 4);
+  const pad = tag.length & 1 ? Buffer.from([0]) : Buffer.alloc(0);
+  const out = Buffer.concat([wav, chunk, tag, pad]);
+  out.writeUInt32LE(out.length - 8, 4);
+  return out;
+}
+
+test('songs in a linked folder that the library lacks are added to it', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Same flow on phones');
+  await page.goto('/keycrate');
+  await page
+    .getByTestId('kc-file')
+    .setInputFiles(path.join(process.cwd(), 'fixtures', 'keycrate-sample.xml'));
+  await expect(page.getByTestId('kc-toast')).toContainText('Imported 24 tracks');
+
+  const dir = test.info().outputPath('usb');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, 'Bicep - Glue.wav'), silentWav(0.1)); // already in the library
+  writeFileSync(path.join(dir, 'Nobody - Fresh Cut.wav'), taggedWav('Am', '126'));
+  writeFileSync(path.join(dir, '5B - 122 - Somebody - Night Drive.wav'), silentWav(0.1));
+  await page.getByTestId('kc-audio-files').setInputFiles(dir);
+  await expect(page.getByTestId('kc-toast')).toContainText('Added 2 songs from usb to the library');
+
+  const library = page.getByTestId('kc-library');
+  const search = page.getByLabel('Search library');
+  await search.fill('Fresh Cut');
+  // Key and BPM come from the file's ID3 tag.
+  await expect(library.getByTestId('kc-track')).toHaveCount(1);
+  await expect(library.getByTestId('kc-track').first()).toContainText('8A');
+  await expect(library.getByTestId('kc-track').first()).toContainText('126');
+  await search.fill('Night Drive');
+  // Key and BPM come from the file name.
+  await expect(library.getByTestId('kc-track').first()).toContainText('5B');
+  await expect(library.getByTestId('kc-track').first()).toContainText('122');
+});

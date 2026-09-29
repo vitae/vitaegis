@@ -48,6 +48,7 @@ import {
   undo,
   type History,
 } from '@/lib/keycrate/history';
+import { newFileTracks, supersededFileTracks } from '@/lib/keycrate/file-tracks';
 import { mergeTracks } from '@/lib/keycrate/merge';
 import { suggestNext, type Suggestion } from '@/lib/keycrate/suggest';
 import {
@@ -275,6 +276,10 @@ export interface Actions {
   clearLibrary: () => Promise<void>;
   updateTrack: (id: string, patch: Partial<Pick<Track, 'energy' | 'tags'>>) => Promise<void>;
   addTrack: (id: string) => void;
+  /** Adds a library track for each linked audio file no track plays yet; returns the new ones. */
+  addFileTracks: (files: { name: string }[], from: string) => Promise<Track[]>;
+  /** Fills in fields read from files (tags); `null` values are ignored. */
+  patchTracks: (patches: Map<string, Partial<Track>>) => Promise<void>;
   /** Select a playlist row to build from (null goes back to the end of the set). */
   selectAnchor: (index: number | null) => void;
   removeAt: (index: number) => void;
@@ -464,8 +469,26 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
           parsed = parseLibraryText(text).tracks;
         }
 
-        const { tracks, added, updated, remapped } = mergeTracks(stateRef.current.tracks, parsed);
+        const merged = mergeTracks(stateRef.current.tracks, parsed);
+        const { added, updated } = merged;
+        // Rows made from audio files give way to the imported rows for the same files.
+        const superseded = supersededFileTracks(merged.tracks);
+        const tracks = superseded.size
+          ? merged.tracks.filter((t) => !superseded.has(t.id))
+          : merged.tracks;
+        const remapped = new Map([...merged.remapped, ...superseded]);
         dispatch({ type: 'tracks', tracks });
+        if (superseded.size) {
+          const items = stateRef.current.set.history.present;
+          if (items.some((it) => superseded.has(it.trackId)))
+            dispatch({
+              type: 'items',
+              items: items.map((it) => ({
+                ...it,
+                trackId: superseded.get(it.trackId) ?? it.trackId,
+              })),
+            });
+        }
         // Playlists that pointed at a CSV hash now point at the merged row.
         let fixed: Playlist[] | null = null;
         if (remapped.size) {
@@ -531,6 +554,37 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     await persist(localDb.clearTracks(), dispatch);
     dispatch({ type: 'tracks', tracks: [] });
     dispatch({ type: 'cloudIds', cloudIds: new Map() });
+  }, []);
+
+  const addFileTracks = useCallback(
+    async (files: { name: string }[], from: string) => {
+      const added = newFileTracks(files, stateRef.current.tracks);
+      if (!added.length) return added;
+      const tracks = [...stateRef.current.tracks, ...added];
+      dispatch({ type: 'tracks', tracks });
+      await persist(localDb.putTracks(added), dispatch);
+      // After the save, so it follows (and replaces) the "Linked N audio files" message.
+      toast(`Added ${added.length.toLocaleString()} songs from ${from} to the library`);
+      return added;
+    },
+    [toast],
+  );
+
+  const patchTracks = useCallback(async (patches: Map<string, Partial<Track>>) => {
+    if (!patches.size) return;
+    const changed: Track[] = [];
+    const tracks = stateRef.current.tracks.map((t) => {
+      const p = patches.get(t.id);
+      if (!p) return t;
+      const next = { ...t };
+      for (const [k, v] of Object.entries(p))
+        if (v !== null && v !== undefined && v !== '') (next as Record<string, unknown>)[k] = v;
+      changed.push(next);
+      return next;
+    });
+    if (!changed.length) return;
+    dispatch({ type: 'tracks', tracks });
+    await persist(localDb.putTracks(changed), dispatch);
   }, []);
 
   const updateTrack = useCallback(
@@ -818,6 +872,8 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       clearLibrary,
       updateTrack,
       addTrack,
+      addFileTracks,
+      patchTracks,
       selectAnchor,
       removeAt,
       moveItem,
@@ -849,6 +905,8 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       clearLibrary,
       updateTrack,
       addTrack,
+      addFileTracks,
+      patchTracks,
       selectAnchor,
       removeAt,
       moveItem,
