@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DURATION, TRACKS, TRANSITIONS, type SetTrack, type SetTransition } from './data';
+import FilterMap from './FilterMap';
+import SyncPlan from './SyncPlan';
 
 const title = 'Tipper · Sunrise at the Gorge | VITAEGIS';
 const description =
@@ -326,6 +328,10 @@ export default function TipperSunriseGorgePage() {
             </div>
           </div>
         </section>
+
+        <SyncPlan />
+
+        <FilterMap />
 
         <section className="mt-16">
           <h2 className="text-3xl font-bold">Every transition</h2>
