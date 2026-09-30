@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
    KeyCrate · access (pure)
-   24 hours free from the first Google sign-in, then $4.99/month through Stripe.
+   24 hours free from the first Google sign-in, then $3.33/month through Stripe.
    The decision lives here so the API route and the tests share one rule.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 export const TRIAL_MS = 24 * 60 * 60 * 1000;
-export const PRICE_LABEL = '$4.99/month';
+export const PRICE_LABEL = '$3.33/month';
 
 export type AccessState = 'anonymous' | 'trial' | 'active' | 'expired';
 

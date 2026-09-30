@@ -57,7 +57,7 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   another tab holding an old version), the page carries on in memory and shows a red notice instead of
   sitting on "Opening your crate…".
 
-## Paywall (24 hours free, then $4.99/month)
+## Paywall (24 hours free, then $3.33/month)
 
 Off until it is configured: without `KEYCRATE_STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY`,
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` all set,
@@ -89,7 +89,7 @@ Off until it is configured: without `KEYCRATE_STRIPE_PRICE_ID`, `STRIPE_SECRET_K
 ### Turning it on
 
 1. Supabase SQL editor: run `supabase/migrations/20260930120000_keycrate_access.sql`.
-2. Stripe: create a product "KeyCrate" with a recurring price of $4.99/month; copy the price id (`price_…`).
+2. Stripe: create a product "KeyCrate" with a recurring price of $3.33/month; copy the price id (`price_…`).
 3. Stripe → Developers → Webhooks: on the endpoint `https://www.vitaegis.com/api/stripe-webhook`, add
    `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` and
    `customer.subscription.deleted`.
@@ -111,7 +111,7 @@ Off until it is configured: without `KEYCRATE_STRIPE_PRICE_ID`, `STRIPE_SECRET_K
 | `KEYCRATE_DRIVE_FOLDER_NAME` | Optional. Name of the shared Drive folder with the music; defaults to `USB`. |
 | `KEYCRATE_DRIVE_FOLDER_ID` | Optional. Pins one folder by id (`drive.google.com/drive/folders/<id>`) instead of finding it by name. |
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | The same OAuth client as Supabase's Google provider. Needed for "Sign in to Google Drive": the server refreshes Drive access with it and encrypts the token cookie. |
-| `KEYCRATE_STRIPE_PRICE_ID` | The $4.99/month Stripe price (`price_…`). Unset = paywall off. |
+| `KEYCRATE_STRIPE_PRICE_ID` | The $3.33/month Stripe price (`price_…`). Unset = paywall off. |
 | `KEYCRATE_FREE_EMAILS` | Comma-separated emails that are always active (owner, comps). |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Already set for the site's Stripe webhook; the paywall reuses them. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only. Writes `kc_access` (trial start, subscription). Paywall stays off without it. |

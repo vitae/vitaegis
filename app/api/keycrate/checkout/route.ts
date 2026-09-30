@@ -3,7 +3,7 @@ import { accessFor, stripe } from '@/lib/keycrate/access-server';
 
 export const dynamic = 'force-dynamic';
 
-/** POST → { url } of a Stripe Checkout Session for the $4.99/month KeyCrate subscription. */
+/** POST → { url } of a Stripe Checkout Session for the $3.33/month KeyCrate subscription. */
 export async function POST(req: NextRequest) {
   try {
     const access = await accessFor(req);

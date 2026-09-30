@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { paywallEnabled } from '@/lib/keycrate/access-server';
 
 /**
  * Allowlist check after Google sign-in: the browser signs back out when `allowed` is false.
- * KEYCRATE_ALLOWED_EMAILS (comma-separated) limits who can sign in; when it is unset anyone can.
+ * With the paywall on, anyone may sign in (that starts their free day); KEYCRATE_ALLOWED_EMAILS
+ * then only decides who can stream Google Drive audio. Without the paywall the list still limits
+ * who can sign in, and when it is unset anyone can.
  */
 export async function POST(req: NextRequest) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -13,6 +16,7 @@ export async function POST(req: NextRequest) {
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return NextResponse.json({ error: 'Enter a valid email' }, { status: 400 });
   }
+  if (paywallEnabled()) return NextResponse.json({ ok: true, allowed: true });
   const allowed = (process.env.KEYCRATE_ALLOWED_EMAILS ?? '')
     .split(',')
     .map((e) => e.trim().toLowerCase())

@@ -293,7 +293,7 @@ test('paywall: an ended free day shows the subscribe wall, a running one a banne
   await page.goto('/keycrate');
   await expect(page.getByTestId('kc-wall')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Your free day is over' })).toBeVisible();
-  await expect(page.getByTestId('kc-subscribe')).toContainText('$4.99/month');
+  await expect(page.getByTestId('kc-subscribe')).toContainText('$3.33/month');
   await expect(page.getByRole('heading', { name: 'KeyCrate', exact: true })).toHaveCount(0);
 
   answer = {
