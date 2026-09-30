@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { handleKeyCrateEvent } from '@/lib/keycrate/billing-webhook';
 
 // Stripe secret key and webhook secret from env
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -29,6 +30,17 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
+
+  // KeyCrate subscriptions: checkout.session.completed and customer.subscription.* → kc_access.
+  try {
+    if (await handleKeyCrateEvent(stripe, event)) {
+      return NextResponse.json({ received: true });
+    }
+  } catch (err: any) {
+    // A 500 makes Stripe retry, so a brief Supabase outage doesn't lose a subscription.
+    console.error('[keycrate] webhook failed', event.type, event.id, err?.message);
+    return NextResponse.json({ error: 'KeyCrate update failed' }, { status: 500 });
   }
 
   // Handle the event

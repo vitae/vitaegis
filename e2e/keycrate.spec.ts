@@ -279,3 +279,33 @@ test('key and BPM are detected for an untagged WAV', async ({ page, isMobile }) 
   await expect(row).toContainText('8A');
   await expect(row).toContainText('126');
 });
+
+/* Paywall: off in tests (no KEYCRATE_STRIPE_PRICE_ID), so the access answer is mocked here. */
+
+test('paywall: an ended free day shows the subscribe wall, a running one a banner', async ({
+  page,
+}) => {
+  let answer = { enabled: true, state: 'expired', trialEndsAt: null as string | null };
+  await page.route('**/api/keycrate/access', (route) =>
+    route.fulfill({ json: { canManage: false, ...answer } }),
+  );
+
+  await page.goto('/keycrate');
+  await expect(page.getByTestId('kc-wall')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your free day is over' })).toBeVisible();
+  await expect(page.getByTestId('kc-subscribe')).toContainText('$4.99/month');
+  await expect(page.getByRole('heading', { name: 'KeyCrate', exact: true })).toHaveCount(0);
+
+  answer = {
+    enabled: true,
+    state: 'trial',
+    trialEndsAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+  };
+  await page.reload();
+  await expect(page.getByTestId('kc-trial-banner')).toContainText(/[45]h \d+m left/);
+  await expect(page.getByRole('heading', { name: 'KeyCrate', exact: true })).toBeVisible();
+
+  answer = { enabled: true, state: 'anonymous', trialEndsAt: null };
+  await page.reload();
+  await expect(page.getByTestId('kc-wall')).toContainText('24 hours free');
+});

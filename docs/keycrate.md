@@ -57,6 +57,50 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   another tab holding an old version), the page carries on in memory and shows a red notice instead of
   sitting on "Opening your crate…".
 
+## Paywall (24 hours free, then $4.99/month)
+
+Off until it is configured: without `KEYCRATE_STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY`,
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` all set,
+`/api/keycrate/access` answers `enabled: false` and the app works exactly as it did before.
+
+- **Rule** (`lib/keycrate/access.ts`, unit-tested): not signed in → `anonymous`; email on
+  `KEYCRATE_FREE_EMAILS` → `active`; Stripe status `active` / `trialing` / `past_due` → `active`;
+  otherwise `trial` for 24 hours from `trial_started_at`, then `expired`.
+- **Server** (`lib/keycrate/access-server.ts`): `GET /api/keycrate/access` verifies the Supabase user
+  (`Authorization: Bearer <access token>`, or the Supabase session cookie) and returns
+  `{ enabled, state, trialEndsAt, canManage }`. The first call for a user inserts their `kc_access` row;
+  that insert is the start of the free day. No card is asked for.
+- **Client** (`app/keycrate/_components/AccessGate.tsx`, wraps `/keycrate` and `/keycrate/study`; the public
+  share page `/keycrate/set/[id]` stays open): sign-in wall for `anonymous`, a banner with time left and
+  Subscribe during the `trial`, a full-screen paywall when `expired` (the library stays in IndexedDB on
+  the device), and a "Manage subscription" link (Stripe Customer Portal) when `active`. If the access check
+  can't be reached (offline at a gig), the last answer this device saw is used; with none, the app stays open.
+- **Stripe**: `POST /api/keycrate/checkout` creates a Checkout Session (`mode: subscription`, price
+  `KEYCRATE_STRIPE_PRICE_ID`, the saved customer or the Google email, `client_reference_id` = Supabase user
+  id, metadata `app: keycrate`) and returns to `/keycrate?subscribed=1`, where the page polls until the
+  webhook lands. `POST /api/keycrate/portal` opens the Customer Portal.
+- **Webhook**: the existing `/api/stripe-webhook` (`STRIPE_WEBHOOK_SECRET`) also handles
+  `checkout.session.completed` and `customer.subscription.created` / `updated` / `deleted` for
+  subscriptions tagged `app: keycrate` (`lib/keycrate/billing-webhook.ts`). It re-reads the subscription from
+  Stripe and upserts `kc_access` with the service role; a failure returns 500 so Stripe retries.
+- **Table**: `supabase/migrations/20260930120000_keycrate_access.sql` creates `kc_access` with RLS on. Users
+  can only read their own row; only the service role writes.
+
+### Turning it on
+
+1. Supabase SQL editor: run `supabase/migrations/20260930120000_keycrate_access.sql`.
+2. Stripe: create a product "KeyCrate" with a recurring price of $4.99/month; copy the price id (`price_…`).
+3. Stripe → Developers → Webhooks: on the endpoint `https://www.vitaegis.com/api/stripe-webhook`, add
+   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` and
+   `customer.subscription.deleted`.
+4. Stripe → Settings → Billing → Customer portal: turn it on (allow cancel and card updates).
+5. Vercel: set `SUPABASE_SERVICE_ROLE_KEY` (if not already), `KEYCRATE_FREE_EMAILS`, and last
+   `KEYCRATE_STRIPE_PRICE_ID`, then redeploy. Setting the price id is the switch.
+6. `KEYCRATE_ALLOWED_EMAILS` signs out anyone not on it, which would lock strangers out of the trial.
+   Unset it for a public paywall. Drive streaming then works for no one, because it also reads that list;
+   to keep your own streaming, change `app/api/keycrate/signin/route.ts` to stop signing people out and
+   leave the list only for `lib/keycrate/drive-audio.ts`.
+
 ## Env vars (Vercel)
 
 | Name | Notes |
@@ -67,6 +111,10 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
 | `KEYCRATE_DRIVE_FOLDER_NAME` | Optional. Name of the shared Drive folder with the music; defaults to `USB`. |
 | `KEYCRATE_DRIVE_FOLDER_ID` | Optional. Pins one folder by id (`drive.google.com/drive/folders/<id>`) instead of finding it by name. |
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | The same OAuth client as Supabase's Google provider. Needed for "Sign in to Google Drive": the server refreshes Drive access with it and encrypts the token cookie. |
+| `KEYCRATE_STRIPE_PRICE_ID` | The $4.99/month Stripe price (`price_…`). Unset = paywall off. |
+| `KEYCRATE_FREE_EMAILS` | Comma-separated emails that are always active (owner, comps). |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Already set for the site's Stripe webhook; the paywall reuses them. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server only. Writes `kc_access` (trial start, subscription). Paywall stays off without it. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` (or `_EMAIL` + `_KEY`) | Already set for the content pipeline; KeyCrate reuses it read-only. |
 
 ### Google Drive audio
@@ -92,7 +140,8 @@ Fallback without the login: share the folder (Viewer) with the service account,
 2. Authentication → URL Configuration → Redirect URLs: add `https://www.vitaegis.com/keycrate`,
    `https://vitaegis.com/keycrate`, `https://www.vitaegis.com/keycrate/study` and the preview pattern
    `https://*-vitae.vercel.app/keycrate/**`.
-3. Run `supabase/migrations/20260924120000_keycrate.sql` in the SQL editor. It creates `kc_tracks`,
+3. Run `supabase/migrations/20260924120000_keycrate.sql` in the SQL editor (and
+   `20260930120000_keycrate_access.sql` for the paywall). It creates `kc_tracks`,
    `kc_playlists`, `kc_playlist_items` and `kc_set_studies` with RLS scoped to `auth.uid()`, plus anon
    read policies for playlists marked public.
 
@@ -101,7 +150,7 @@ Fallback without the login: share the folder (Viewer) with the service account,
 ```sh
 npm run typecheck
 npm run lint
-npm test            # Vitest: 24-key table, transitions, pitch math, BPM half/double, tracklists, imports, exports
+npm test            # Vitest: access rule, 24-key table, transitions, pitch math, BPM half/double, tracklists, imports, exports
 npm run test:e2e    # Playwright: import fixtures/keycrate-sample.xml, build a 5-track set, export XML
 ```
 
