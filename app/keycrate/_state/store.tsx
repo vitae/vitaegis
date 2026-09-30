@@ -48,6 +48,7 @@ import {
   undo,
   type History,
 } from '@/lib/keycrate/history';
+import { dedupeTracks, remapItems } from '@/lib/keycrate/dedupe';
 import { newFileTracks, supersededFileTracks } from '@/lib/keycrate/file-tracks';
 import { mergeTracks } from '@/lib/keycrate/merge';
 import { suggestNext, type Suggestion } from '@/lib/keycrate/suggest';
@@ -217,6 +218,16 @@ const STORAGE_HELP =
   "Your library won't be kept on this device after you close the page. Private browsing and in-app browsers often block storage; open vitaegis.com/keycrate in Safari or Chrome directly, or close other KeyCrate tabs.";
 
 /** On-device writes never block an action: on failure the crate carries on in memory. */
+/** Folds id remaps applied one after another (a → b, then b → c) into one map (a → c). */
+function chainRemaps(...maps: Map<string, string>[]): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const m of maps) {
+    for (const [from, to] of out) if (m.has(to)) out.set(from, m.get(to)!);
+    for (const [from, to] of m) if (!out.has(from)) out.set(from, to);
+  }
+  return out;
+}
+
 async function persist(write: Promise<unknown>, dispatch: (a: Action) => void): Promise<void> {
   try {
     await write;
@@ -331,8 +342,35 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
           'Opening on-device storage',
         );
         if (cancelled) return;
-        const set = saved ? { ...saved, history: createHistory(saved.items) } : null;
-        dispatch({ type: 'hydrate', tracks, playlists, studies, set, session });
+        // Libraries saved before duplicates were merged: collapse them once, here.
+        const deduped = dedupeTracks(tracks);
+        const cleanPlaylists = deduped.remap.size
+          ? playlists.map((p) =>
+              p.items.some((it) => deduped.remap.has(it.trackId))
+                ? { ...p, items: remapItems(p.items, deduped.remap) }
+                : p,
+            )
+          : playlists;
+        const items = saved ? remapItems(saved.items, deduped.remap) : [];
+        const set = saved ? { ...saved, items, history: createHistory(items) } : null;
+        dispatch({
+          type: 'hydrate',
+          tracks: deduped.tracks,
+          playlists: cleanPlaylists,
+          studies,
+          set,
+          session,
+        });
+        if (deduped.remap.size) {
+          void persist(localDb.putTracks(deduped.tracks, true), dispatch);
+          cleanPlaylists.forEach((p, i) => {
+            if (p !== playlists[i]) void persist(localDb.putPlaylist(p), dispatch);
+          });
+          dispatch({
+            type: 'toast',
+            toast: `Merged ${deduped.remap.size.toLocaleString()} duplicate songs in your library`,
+          });
+        }
       } catch (err) {
         // Never leave the page on "Opening your crate…": carry on with an in-memory crate.
         if (cancelled) return;
@@ -473,35 +511,29 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
         const { added, updated } = merged;
         // Rows made from audio files give way to the imported rows for the same files.
         const superseded = supersededFileTracks(merged.tracks);
-        const tracks = superseded.size
-          ? merged.tracks.filter((t) => !superseded.has(t.id))
-          : merged.tracks;
-        const remapped = new Map([...merged.remapped, ...superseded]);
+        // The same song imported twice (a Bandcamp and a USB copy, a cut-short title) becomes one row.
+        const deduped = dedupeTracks(
+          superseded.size ? merged.tracks.filter((t) => !superseded.has(t.id)) : merged.tracks,
+        );
+        const tracks = deduped.tracks;
+        const remapped = chainRemaps(merged.remapped, superseded, deduped.remap);
         dispatch({ type: 'tracks', tracks });
-        if (superseded.size) {
-          const items = stateRef.current.set.history.present;
-          if (items.some((it) => superseded.has(it.trackId)))
-            dispatch({
-              type: 'items',
-              items: items.map((it) => ({
-                ...it,
-                trackId: superseded.get(it.trackId) ?? it.trackId,
-              })),
-            });
-        }
-        // Playlists that pointed at a CSV hash now point at the merged row.
+        const items = stateRef.current.set.history.present;
+        if (items.some((it) => remapped.has(it.trackId)))
+          dispatch({ type: 'items', items: remapItems(items, remapped) });
+        // Playlists that pointed at a CSV hash or a duplicate now point at the kept row.
         let fixed: Playlist[] | null = null;
         if (remapped.size) {
           fixed = stateRef.current.playlists.map((p) => ({
             ...p,
-            items: p.items.map((it) => ({
-              ...it,
-              trackId: remapped.get(it.trackId) ?? it.trackId,
-            })),
+            items: remapItems(p.items, remapped),
           }));
           dispatch({ type: 'playlists', playlists: fixed });
         }
-        const summary = `Imported ${parsed.length.toLocaleString()} tracks: ${added.toLocaleString()} new, ${updated.toLocaleString()} updated`;
+        const dupes = deduped.remap.size
+          ? `, ${deduped.remap.size.toLocaleString()} duplicates merged`
+          : '';
+        const summary = `Imported ${parsed.length.toLocaleString()} tracks: ${added.toLocaleString()} new, ${updated.toLocaleString()} updated${dupes}`;
         try {
           await withTimeout(localDb.putTracks(tracks, true), 20000, 'Saving the library');
           if (fixed) for (const p of fixed) await localDb.putPlaylist(p);
@@ -556,18 +588,42 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'cloudIds', cloudIds: new Map() });
   }, []);
 
+  /** Points the current set and saved playlists at the rows that duplicates merged into. */
+  const applyRemap = useCallback((remap: Map<string, string>) => {
+    const items = stateRef.current.set.history.present;
+    if (items.some((it) => remap.has(it.trackId)))
+      dispatch({ type: 'items', items: remapItems(items, remap) });
+    const touched = stateRef.current.playlists.filter((p) =>
+      p.items.some((it) => remap.has(it.trackId)),
+    );
+    if (!touched.length) return;
+    const fixed = new Map(touched.map((p) => [p.id, { ...p, items: remapItems(p.items, remap) }]));
+    dispatch({
+      type: 'playlists',
+      playlists: stateRef.current.playlists.map((p) => fixed.get(p.id) ?? p),
+    });
+    for (const p of fixed.values()) void persist(localDb.putPlaylist(p), dispatch);
+  }, []);
+
   const addFileTracks = useCallback(
     async (files: { name: string }[], from: string) => {
-      const added = newFileTracks(files, stateRef.current.tracks);
-      if (!added.length) return added;
-      const tracks = [...stateRef.current.tracks, ...added];
+      const fresh = newFileTracks(files, stateRef.current.tracks);
+      if (!fresh.length) return fresh;
+      // A file whose song the library already has (under another name) doesn't become a second row.
+      const { tracks, remap } = dedupeTracks([...stateRef.current.tracks, ...fresh]);
+      const added = fresh.filter((t) => !remap.has(t.id));
+      if (remap.size) applyRemap(remap);
       dispatch({ type: 'tracks', tracks });
-      await persist(localDb.putTracks(added), dispatch);
+      await persist(
+        remap.size ? localDb.putTracks(tracks, true) : localDb.putTracks(added),
+        dispatch,
+      );
+      if (!added.length) return added;
       // After the save, so it follows (and replaces) the "Linked N audio files" message.
       toast(`Added ${added.length.toLocaleString()} songs from ${from} to the library`);
       return added;
     },
-    [toast],
+    [toast, applyRemap],
   );
 
   const patchTracks = useCallback(async (patches: Map<string, Partial<Track>>) => {
@@ -766,10 +822,12 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
       const pulled = await pullTracks(sb);
       if (pulled.tracks.length) {
         const merged = mergeTracks(stateRef.current.tracks, pulled.tracks);
-        // Keep local energy/tags, but add tracks that only exist in the cloud.
+        // Keep local energy/tags, but add tracks that only exist in the cloud (minus duplicates).
         if (merged.added) {
-          await persist(localDb.putTracks(merged.tracks, true), dispatch);
-          dispatch({ type: 'tracks', tracks: merged.tracks });
+          const deduped = dedupeTracks(merged.tracks);
+          if (deduped.remap.size) applyRemap(deduped.remap);
+          await persist(localDb.putTracks(deduped.tracks, true), dispatch);
+          dispatch({ type: 'tracks', tracks: deduped.tracks });
         }
         for (const [local, cloud] of pulled.cloudIds)
           cloudIds.set(merged.remapped.get(local) ?? local, cloud);
@@ -796,7 +854,7 @@ export function KeyCrateProvider({ children }: { children: ReactNode }) {
     } finally {
       dispatch({ type: 'busy', busy: null });
     }
-  }, [requestSignIn, toast]);
+  }, [requestSignIn, toast, applyRemap]);
 
   const saveToCloud = useCallback(async () => {
     const sb = supabaseBrowser();
