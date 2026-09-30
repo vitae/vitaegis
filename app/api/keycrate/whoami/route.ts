@@ -18,5 +18,5 @@ export async function GET(req: NextRequest) {
     )
       forwarded[k] = v;
   }
-  return NextResponse.json({ origin: publicOrigin(req), forwarded });
+  return NextResponse.json({ origin: await publicOrigin(req), forwarded });
 }

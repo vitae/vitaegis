@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
     const portal = await stripe().billingPortal.sessions.create({
       customer,
-      return_url: `${publicOrigin(req)}/keycrate`,
+      return_url: `${await publicOrigin(req)}/keycrate`,
     });
     return NextResponse.json({ url: portal.url });
   } catch (err) {

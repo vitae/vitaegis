@@ -67,7 +67,13 @@ async function fetchAccess(session: Session | null): Promise<Access | null> {
 /** POSTs to checkout or portal and follows the Stripe URL. Returns an error message on failure. */
 async function goToStripe(path: string, session: Session | null): Promise<string | null> {
   try {
-    const res = await fetch(path, { method: 'POST', headers: authHeaders(session) });
+    // KeyCrate is proxied at glowwitdaflow.com; the server can't see that host, so the page
+    // says where Stripe should send people back to.
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { ...authHeaders(session), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origin: window.location.origin }),
+    });
     const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
     if (!res.ok || !json.url) return json.error ?? 'Something went wrong. Try again.';
     window.location.assign(json.url);
