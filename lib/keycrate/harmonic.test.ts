@@ -109,6 +109,13 @@ describe('matchBpm', () => {
     expect(matchBpm(140, 70, 6)).toMatchObject({ kind: 'half', effectiveBpm: 140, percent: 0 });
     expect(matchBpm(140, 72, 6)!.kind).toBe('half');
   });
+  it('at wide tolerances takes the closest reading, not the first that fits', () => {
+    // 90 → 136 is +51% direct but only −24% as half-time (136 over 180).
+    expect(matchBpm(136, 90, 40)).toMatchObject({ kind: 'half', effectiveBpm: 180 });
+    // 100 → 130: +30% direct beats −35% half-time.
+    expect(matchBpm(100, 130, 40)).toMatchObject({ kind: 'direct' });
+    expect(matchBpm(100, 145, 40)).toMatchObject({ kind: 'direct' });
+  });
   it('double-time: 170 sits over 85', () => {
     expect(matchBpm(85, 170, 6)).toMatchObject({ kind: 'double', effectiveBpm: 85 });
   });

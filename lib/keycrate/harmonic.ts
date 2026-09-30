@@ -160,11 +160,14 @@ export function matchBpm(
     ['half', candidate * 2],
     ['double', candidate / 2],
   ];
+  // With wide tolerances (up to 40%) more than one reading can fit: take the smallest pitch change.
+  let best: BpmMatch | null = null;
   for (const [kind, effectiveBpm] of tries) {
     const percent = pitchPercent(effectiveBpm, current);
-    if (Math.abs(percent) <= tolerancePct) return { kind, percent, effectiveBpm };
+    if (Math.abs(percent) <= tolerancePct && (!best || Math.abs(percent) < Math.abs(best.percent)))
+      best = { kind, percent, effectiveBpm };
   }
-  return null;
+  return best;
 }
 
 /* ── Whole transition ──────────────────────────────────────────────────────── */

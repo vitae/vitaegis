@@ -54,7 +54,7 @@ export default function Settings() {
           <input
             type="range"
             min={1}
-            max={16}
+            max={40}
             value={s.bpmTolerance}
             onChange={(e) => update({ bpmTolerance: Number(e.target.value) })}
           />
