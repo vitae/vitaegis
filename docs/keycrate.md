@@ -193,7 +193,7 @@ Fallback without the login: share the folder (Viewer) with the service account,
 1. Authentication → Providers → Google: enabled, with the OAuth client ID and secret from Google Cloud
    (APIs & Services → Credentials → OAuth client ID → Web application). That client's **Authorized redirect
    URI** is `https://fsrxacvcqftelbjdqlnm.supabase.co/auth/v1/callback`.
-2. Authentication → URL Configuration → Redirect URLs: add `https://www.vitaegis.com/keycrate`,
+2. Authentication → URL Configuration → Redirect URLs: add `https://www.glowwitdaflow.com/keycrate`, `https://www.glowwitdaflow.com/keycrate/study`, `https://www.vitaegis.com/keycrate`,
    `https://vitaegis.com/keycrate`, `https://www.vitaegis.com/keycrate/study` and the preview pattern
    `https://*-vitae.vercel.app/keycrate/**`.
 3. Run `supabase/migrations/20260924120000_keycrate.sql` in the SQL editor (and
