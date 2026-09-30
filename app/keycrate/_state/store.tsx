@@ -215,7 +215,7 @@ function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
 }
 
 const STORAGE_HELP =
-  "Your library won't be kept on this device after you close the page. Private browsing and in-app browsers often block storage; open vitaegis.com/keycrate in Safari or Chrome directly, or close other KeyCrate tabs.";
+  "Your library won't be kept on this device after you close the page. Private browsing and in-app browsers often block storage; open glowwitdaflow.com/keycrate in Safari or Chrome directly, or close other KeyCrate tabs.";
 
 /** On-device writes never block an action: on failure the crate carries on in memory. */
 /** Folds id remaps applied one after another (a → b, then b → c) into one map (a → c). */
