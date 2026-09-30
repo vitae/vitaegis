@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { accessFor, stripe } from '@/lib/keycrate/access-server';
+import { publicOrigin } from '@/lib/keycrate/public-origin';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
     const portal = await stripe().billingPortal.sessions.create({
       customer,
-      return_url: `${req.nextUrl.origin}/keycrate`,
+      return_url: `${publicOrigin(req)}/keycrate`,
     });
     return NextResponse.json({ url: portal.url });
   } catch (err) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { accessFor, stripe } from '@/lib/keycrate/access-server';
+import { publicOrigin } from '@/lib/keycrate/public-origin';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Your account is already active' }, { status: 409 });
     }
     const row = access.row;
-    const origin = req.nextUrl.origin;
+    const origin = publicOrigin(req);
     // Tags both the session and the subscription so the webhook only touches KeyCrate's own.
     const metadata = { app: 'keycrate', user_id: row.user_id };
     const session = await stripe().checkout.sessions.create({

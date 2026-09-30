@@ -89,9 +89,12 @@ export default function KeyCrateApp() {
       )}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link href="/" className="text-xs text-[#808880] hover:text-white">
-            ← Vitaegis
-          </Link>
+          <a
+            href="https://www.glowwitdaflow.com"
+            className="text-xs text-[#808880] hover:text-white"
+          >
+            ← Glow Wit Da Flow
+          </a>
           <h1 className="text-2xl font-medium text-white">KeyCrate</h1>
           <p className="text-xs text-[#808880]">Harmonic set builder for your rekordbox library.</p>
         </div>

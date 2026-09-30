@@ -14,10 +14,10 @@ const description =
   'Harmonic playlist builder for a rekordbox library: browse by Camelot key and BPM, tap tracks into a set, and get in-key suggestions for the next one.';
 
 export const metadata: Metadata = {
-  title: 'KeyCrate | VITAEGIS',
+  title: 'KeyCrate | GWDF',
   description,
-  openGraph: { title: 'KeyCrate | VITAEGIS', description, type: 'website' },
-  twitter: { card: 'summary_large_image', title: 'KeyCrate | VITAEGIS', description },
+  openGraph: { title: 'KeyCrate | GWDF', description, type: 'website' },
+  twitter: { card: 'summary_large_image', title: 'KeyCrate | GWDF', description },
 };
 
 export default function KeyCrateLayout({ children }: { children: ReactNode }) {
