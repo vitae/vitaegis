@@ -158,3 +158,6 @@ test-results/
 
 # JetBrains
 .idea/
+
+# Google Drive for desktop temp uploads
+.tmp.driveupload/

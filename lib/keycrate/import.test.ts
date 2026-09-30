@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fallbackSourceId, parseCsv, parseCsvTracks, parseDuration } from './csv';
 import { mergeTracks, needsAnalysis } from './merge';
-import { decodeEntities, locationToPath, parseRekordboxXml } from './rekordbox';
+import { decodeEntities, locationToPath, parseRekordboxXml, splitPackedName } from './rekordbox';
 import { pathToLocation, rekordboxTonality, toCsv, toM3u8, toRekordboxXml } from './export';
 import { DEFAULT_SETTINGS } from './types';
 
@@ -18,6 +18,44 @@ describe('rekordbox XML', () => {
       'C:/Users/dj/Music/Bicep - Glue.mp3',
     );
     expect(locationToPath('file://localhost/Users/dj/Music/a.aiff')).toBe('/Users/dj/Music/a.aiff');
+  });
+
+  it('splits artist, album and title out of a packed title when Artist is empty', () => {
+    expect(splitPackedName('', 'Tipper - Flunked - 01 Flunked')).toEqual({
+      artist: 'Tipper',
+      album: 'Flunked',
+      title: 'Flunked',
+    });
+    expect(
+      splitPackedName(
+        '',
+        'Tipper - 2012 EP Trilogy (Bubble Control-Puzzle Dust-Shatter Box) - 04 Ton Of Brix (VIP Mix)',
+      ),
+    ).toEqual({
+      artist: 'Tipper',
+      album: '2012 EP Trilogy (Bubble Control-Puzzle Dust-Shatter Box)',
+      title: 'Ton Of Brix (VIP Mix)',
+    });
+    expect(splitPackedName('', 'Bicep - Glue')).toEqual({ artist: 'Bicep', title: 'Glue' });
+    expect(
+      splitPackedName('', "smith. - Snoop Dogg - Drop it Like it's Hot (smith. remix)"),
+    ).toEqual({
+      artist: 'smith.',
+      title: "Snoop Dogg - Drop it Like it's Hot (smith. remix)",
+    });
+    expect(splitPackedName('Bicep', 'Glue - Extended')).toEqual({
+      artist: 'Bicep',
+      title: 'Glue - Extended',
+    });
+    expect(splitPackedName('', 'Glue')).toEqual({ artist: '', title: 'Glue' });
+
+    const xml = `<DJ_PLAYLISTS><COLLECTION Entries="1"><TRACK TrackID="7" Name="Tipper - Cloaked - 04 Scaffolder" Artist="" Album="" Tonality="C" AverageBpm="78.00"/></COLLECTION></DJ_PLAYLISTS>`;
+    expect(parseRekordboxXml(xml).tracks[0]).toMatchObject({
+      artist: 'Tipper',
+      title: 'Scaffolder',
+      album: 'Cloaked',
+      camelot: '8B',
+    });
   });
 
   it('parses the sample fixture with tempo and cue children', () => {

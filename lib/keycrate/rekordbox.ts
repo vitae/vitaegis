@@ -50,6 +50,26 @@ const num = (v: string | undefined): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+/**
+ * Files tagged with no Artist often carry everything in the title instead: "Artist - Title", or
+ * "Artist - Album - 01 Title" from album rips. Splits those so search and tracklist matching see
+ * the real artist and title. Titles with an Artist set are left alone.
+ */
+export function splitPackedName(
+  artist: string,
+  name: string,
+): { artist: string; title: string; album?: string } {
+  if (artist.trim()) return { artist, title: name };
+  const parts = name.split(/\s+[-–—]\s+/).map((p) => p.trim());
+  if (parts.length < 2 || parts.some((p) => !p)) return { artist, title: name };
+  const last = parts[parts.length - 1];
+  const numbered = last.match(/^\d{1,3}\.?\s+(.+)$/);
+  if (parts.length >= 3 && numbered) {
+    return { artist: parts[0], album: parts.slice(1, -1).join(' - '), title: numbered[1] };
+  }
+  return { artist: parts[0], title: parts.slice(1).join(' - ') };
+}
+
 export function trackFromAttrs(
   a: Record<string, string>,
   tempo: TempoMark[],
@@ -59,12 +79,13 @@ export function trackFromAttrs(
   if (!trackId) return null;
   const bpm = num(a.AverageBpm);
   const rating = num(a.Rating);
+  const names = splitPackedName(a.Artist ?? '', a.Name ?? '');
   return {
     id: `rb:${trackId}`,
     sourceId: trackId,
-    artist: a.Artist ?? '',
-    title: a.Name ?? '',
-    album: a.Album || undefined,
+    artist: names.artist,
+    title: names.title,
+    album: a.Album || names.album || undefined,
     camelot: normalizeKey(a.Tonality),
     keyRaw: a.Tonality || undefined,
     bpm: bpm && bpm > 0 ? Math.round(bpm * 100) / 100 : null,
