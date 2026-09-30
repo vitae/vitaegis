@@ -9,6 +9,7 @@ import {
   HiHeart,
   HiMusicNote,
   HiTrendingUp,
+  HiTruck,
 } from 'react-icons/hi';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -63,6 +64,14 @@ export const projects: Project[] = [
     title: 'Wealth Board',
     description: 'Twelve tickers versus their Dec 31, 2025 close, refreshed hourly.',
     icon: HiTrendingUp,
+  },
+  {
+    href: '/ubereats',
+    label: 'UBER EATS',
+    title: 'Uber Eats on a Onewheel',
+    description:
+      'The GLITCH playbook: acceptance rules, Pro tiers, Quests and Boost for Waikiki delivery on a board.',
+    icon: HiTruck,
   },
   {
     href: '/vitamins',
