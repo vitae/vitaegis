@@ -4,9 +4,10 @@ import { groupSuggestions } from '@/lib/keycrate/suggest';
 import { TRANSITION_FEEL, TRANSITION_LABEL, TRANSITION_ORDER } from '@/lib/keycrate/harmonic';
 import { formatBpm } from '../_lib/download';
 import { useKeyCrate } from '../_state/store';
-import { KeyBadge, SectionTitle, TRANSITION_COLOR } from './ui';
+import { KeyBadge, MoodLine, SectionTitle, TRANSITION_COLOR } from './ui';
 
-/* Top 10 for the selected playlist song (or the last track), grouped by transition type. */
+/* Top 10 for the selected playlist song (or the last track), grouped by transition type.
+   Each pick shows the named harmonic move, its mood shift and the maths behind it. */
 
 export default function Suggestions() {
   const { derived, actions, state } = useKeyCrate();
@@ -54,28 +55,70 @@ export default function Suggestions() {
                 <span className="text-[#808880]">· {TRANSITION_FEEL[type]}</span>
               </p>
               <ul className="mt-1 flex flex-col">
-                {groups.get(type)!.map((s) => (
-                  <li key={s.track.id}>
-                    <button
-                      type="button"
-                      onClick={() => actions.addTrack(s.track.id)}
-                      className="kc-row flex w-full items-center gap-2 rounded px-2 py-1.5 text-left"
-                      aria-label={`Add ${s.track.artist} – ${s.track.title}: ${s.reason}`}
-                      data-testid="kc-suggestion"
-                    >
-                      <KeyBadge camelot={s.track.camelot} muted />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm text-white">
-                          {s.track.title} <span className="text-[#808880]">· {s.track.artist}</span>
+                {groups.get(type)!.map((s) => {
+                  const m = s.transition.move;
+                  const bpm = s.transition.bpm;
+                  return (
+                    <li key={s.track.id}>
+                      <button
+                        type="button"
+                        onClick={() => actions.addTrack(s.track.id)}
+                        className="kc-row flex w-full items-center gap-2 rounded px-2 py-1.5 text-left"
+                        aria-label={`Add ${s.track.artist} – ${s.track.title}: ${m ? `${m.name}, ${m.mood.label}, ` : ''}${s.reason}`}
+                        title={s.reason}
+                        data-testid="kc-suggestion"
+                      >
+                        <KeyBadge camelot={s.track.camelot} muted />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-white">
+                            {s.track.title}{' '}
+                            <span className="text-[#808880]">· {s.track.artist}</span>
+                          </span>
+                          {m ? (
+                            <>
+                              <span className="flex min-w-0 items-baseline gap-1.5 text-xs">
+                                <span
+                                  className="shrink-0"
+                                  style={{ color: TRANSITION_COLOR[s.transition.type] }}
+                                  data-testid="kc-move"
+                                >
+                                  {m.name}
+                                </span>
+                                <MoodLine move={m} className="min-w-0" />
+                              </span>
+                              <span
+                                className="kc-mono block truncate text-[11px] text-[#808880]"
+                                data-testid="kc-maths"
+                              >
+                                {m.maths}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="block truncate text-xs text-[#808880]">
+                              {s.reason}
+                            </span>
+                          )}
                         </span>
-                        <span className="block truncate text-xs text-[#808880]">{s.reason}</span>
-                      </span>
-                      <span className="kc-mono shrink-0 text-xs text-white">
-                        {formatBpm(s.track.bpm)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                        <span className="kc-mono shrink-0 text-right text-xs text-white">
+                          {formatBpm(s.track.bpm)}
+                          {bpm && (
+                            <span className="block text-[11px] text-[#808880]">
+                              {bpm.kind !== 'direct' ? `${bpm.kind} ` : ''}
+                              {bpm.percent >= 0 ? '+' : ''}
+                              {bpm.percent.toFixed(1)}%
+                            </span>
+                          )}
+                          {s.transition.semitoneShift !== 0 && (
+                            <span className="block text-[11px] text-[#ffff00]">
+                              {s.transition.semitoneShift > 0 ? '+' : ''}
+                              {s.transition.semitoneShift} st
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

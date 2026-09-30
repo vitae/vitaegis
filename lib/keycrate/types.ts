@@ -47,7 +47,7 @@ export interface Track {
   cues?: HotCue[];
 }
 
-export type BuildMode = 'smooth' | 'dramatic' | 'journey';
+export type BuildMode = 'smooth' | 'dramatic' | 'journey' | 'downtempo' | 'uptempo' | 'ambient';
 
 export interface JourneyCurve {
   /** Energy 1–10 per control point, spread evenly across the planned set. */

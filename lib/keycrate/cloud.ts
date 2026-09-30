@@ -179,6 +179,11 @@ export async function updateTrackFields(
 
 /* ── Playlists ─────────────────────────────────────────────────────────────── */
 
+const LEGACY_MODES: string[] = ['smooth', 'dramatic', 'journey'];
+
+const isCheckViolation = (e: { code?: string; message?: string }) =>
+  e.code === '23514' || /check constraint/i.test(e.message ?? '');
+
 /** Saves a playlist and its items; `cloudIds` maps local track ids to kc_tracks uuids. */
 export async function savePlaylist(
   sb: SupabaseClient,
@@ -196,8 +201,18 @@ export async function savePlaylist(
     is_public: playlist.isPublic ?? false,
     updated_at: new Date().toISOString(),
   };
-  const { data, error } = await sb.from('kc_playlists').upsert(row).select('id').single();
-  if (error) throw new Error(error.message);
+  let { data, error } = await sb.from('kc_playlists').upsert(row).select('id').single();
+  // Until the widened mode constraint (20260930130000_keycrate_modes.sql) is applied, the
+  // database only accepts the original three modes. The real mode still travels in
+  // target_curve, so store 'journey' in the column and retry.
+  if (error && !LEGACY_MODES.includes(row.mode) && isCheckViolation(error)) {
+    ({ data, error } = await sb
+      .from('kc_playlists')
+      .upsert({ ...row, mode: 'journey' })
+      .select('id')
+      .single());
+  }
+  if (error || !data) throw new Error(error?.message ?? 'Playlist save failed');
   const id = data.id as string;
   const del = await sb.from('kc_playlist_items').delete().eq('playlist_id', id);
   if (del.error) throw new Error(del.error.message);
@@ -240,6 +255,7 @@ export async function loadPlaylists(
       id: `cloud:${p.id}`,
       cloudId: p.id as string,
       name: p.name as string,
+      // target_curve carries the real mode even when the column fell back to 'journey'.
       settings: (p.target_curve as PlaylistSettings) ?? {
         mode: p.mode,
         dramaticEvery: 4,

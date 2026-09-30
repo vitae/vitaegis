@@ -14,12 +14,14 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   DJ library (an iTunes XML, say) get an error that says what to export instead.
 - **Keys**: every spelling (`Am`, `A min`, `A minor`, `8A`, Open Key `1m`, `D#m` = `Ebm` = `2A`) is
   normalised to Camelot in `lib/keycrate/camelot.ts`.
-- **Engine** (`lib/keycrate/harmonic.ts`): classifies each move as same / perfect 5th / relative / diagonal /
-  energy boost / semitone lift / third / clash. Tempo matches beyond ±3% shift the key by whole
+- **Engine** (`lib/keycrate/harmonic.ts`, maths in `lib/keycrate/theory.ts`): classifies each move as same /
+  perfect 5th / relative / parallel / diagonal / energy boost / semitone lift / third / chromatic / clash, and
+  names it with its maths and mood (see *Harmonic moves and mood* below). Tempo matches beyond ±3% shift the key by whole
   semitones (+7 on the wheel per semitone) unless key lock is on. BPM matches allow ±6% (adjustable) plus
   half- and double-time.
-- **Modes** (`lib/keycrate/suggest.ts`): Smooth, Dramatic (one dramatic move per N tracks) and Journey
-  (rank by fit to an energy and BPM curve).
+- **Modes** (`lib/keycrate/suggest.ts`, `lib/keycrate/modes.ts`): Smooth (rank by consonance), Dramatic (one
+  dramatic move per N tracks, rank by controlled contrast), Journey (fit to an energy and BPM curve, brightness
+  steered with the curve), and three set-type profiles, Downtempo, Uptempo and Ambient (see *Set-type modes*).
 - **Set Study** (`/keycrate/study`, `lib/keycrate/tracklist.ts`): paste any tracklist, fuzzy-match it to the
   library, read the transitions, and "Build similar from my crate".
 - **Exports** (`lib/keycrate/export.ts`): rekordbox playlist XML (TrackIDs, so cues survive re-import),
@@ -56,6 +58,60 @@ Harmonic playlist builder at `/keycrate`. Code lives in `app/keycrate/` (UI, wor
   Supabase, uploaded in chunks of 500. If IndexedDB is blocked or hangs (private browsing, in-app browsers,
   another tab holding an old version), the page carries on in memory and shows a red notice instead of
   sitting on "Opening your crate…".
+
+## Harmonic moves and mood
+
+Every key is a tonic pitch class (C = 0 … B = 11) plus major or minor (`keyOf` reads it from Camelot: `8B` is
+C, each step clockwise is +7 semitones, `nA` is three semitones below `nB`). The move into the next track is
+read from the *effective* key, after any tempo-match pitch shift when key lock is off.
+
+- **Δ** = (tonic₂ − tonic₁) mod 12, the tonic interval. **Fifths** = 7·Δ mod 12 (7 is its own inverse mod 12).
+- **Signature shift D**: key signatures on the circle of fifths, minor keys via their relative major; + is
+  clockwise (sharpward).
+- **Common tones**: pitch classes the two diatonic scales share (7 − |D| up to 5 fifths, 2 at the tritone) and
+  the two tonic triads share (0–3).
+- **Neo-Riemannian word**: the shortest P/L/R path between the tonic triads, by breadth-first search
+  (P = parallel, R = relative, L = leading-tone exchange; each keeps two chord tones). Applied left to right.
+- **Tension** 0–10 = 5.5·(7 − scale)/5 + 3·(3 − triad)/3 + 1.5·(tonic-interval roughness). Only the tritone
+  reaches 10.
+- **Brightness** = D (the tritone, ±6, counts as 0) + 1 for minor → major, −1 for major → minor.
+- **Mood** label: from the move family, then brightness (brighter = lift, darker = release/settle); intensity
+  from max(|brightness|/6, tension/10).
+
+| Move (from C / Am) | Maths | Mood |
+| --- | --- | --- |
+| Same key | 3/3 chord, 7/7 scale | Steady |
+| Relative (R) C↔Am | 2/3, 7/7, D 0 | ±1: brighter to major, darker to minor |
+| Leading-tone exchange (L) C→Em, Am→F | 2/3, 6/7 | Level · colour shift |
+| Dominant / subdominant (LR / RL) | ±1 fifth, 1/3, 6/7 | Brighter · open / darker · settle |
+| Parallel (P) Am→A, C→Cm | same tonic, 2/3, 4/7, D ±3 | Brighter · Picardy lift (+4) / darker (−4) |
+| Diagonal ii / ♭VII (C→Dm, Am→G) | ±1 fifth + mode swap, 0/3, 6/7 | ±2 |
+| Whole-tone lift / drop (energy boost) | ±2 fifths, 5/7 | Brighter · lift / darker · release |
+| Chromatic mediants ↑↓ m3 / M3 (PR, RP, LP, PL) | same mode, 1/3, 3–4/7 | Cinematic shift, ±3 or ±4 |
+| Slide (S = LPR), Nebenverwandt (N = RLP) | mode swap, 1/3 shared | Cinematic shift |
+| Hexatonic pole (H = PLP) C→Abm | 0/3, 2/7 | Cinematic shift, extreme |
+| Semitone lift / drop | 0/3, 2/7, D ∓5 | Energy lift · gear change / energy drop |
+| Tritone | 0/3, 2/7, D 6 | Tension · maximum distance |
+
+Parallel is a Smooth move (same root); Slide, N and the hexatonic pole are Dramatic (`chromatic`). The
+Suggestions panel shows, per pick, the move name, the mood with ☀/☾ brightness and T tension, and the maths
+line (`L · tonic +4 st · +1 fifth · chord 2/3 · scale 6/7`: chord tones and scale notes shared); the set and Playlist table show the
+move and mood on each transition.
+
+## Set-type modes
+
+Profiles in `lib/keycrate/modes.ts`, tuned on a study of 36 Tipper live sets (tempo pockets, energy by set
+type, mood-shift rates, time between track changes). Energy is the track's 1–10 tag, else a tempo proxy
+(60 BPM ≈ 0, 170 ≈ 1). Tempo pockets fold half- and double-time.
+
+| Mode | Tempo pocket | Energy | Mood shift | Favoured moves | Other |
+| --- | --- | --- | --- | --- | --- |
+| Downtempo | 70–100 | 0.3–0.5 | 1 per 15 tracks (thirds, chromatic, boosts, semitones) | relative, same, ±1, mediants for colour | small tempo steps; ~3.4 min per track |
+| Uptempo | 128–150 | 0.7–0.9 | 1 per 30 (thirds, chromatic) | ±1, semitone lift, energy boost | +bonus for a 1–8% upward tempo creep; ~86 s per track |
+| Ambient | 60–100, barely weighted | 0.1–0.35 | 1 per 36 (thirds, boosts) | same, relative, parallel, ±1 | tolerance at least ±40%, beatless (no BPM) tracks allowed, brightness beyond ±1 penalised |
+
+`kc_playlists.mode` needs `supabase/migrations/20260930130000_keycrate_modes.sql` for the new modes. Until it
+is applied, a save with a new mode stores `journey` in that column and the real mode stays in `target_curve`.
 
 ## Paywall (24 hours free, then $3.33/month)
 
@@ -141,7 +197,8 @@ Fallback without the login: share the folder (Viewer) with the service account,
    `https://vitaegis.com/keycrate`, `https://www.vitaegis.com/keycrate/study` and the preview pattern
    `https://*-vitae.vercel.app/keycrate/**`.
 3. Run `supabase/migrations/20260924120000_keycrate.sql` in the SQL editor (and
-   `20260930120000_keycrate_access.sql` for the paywall). It creates `kc_tracks`,
+   `20260930120000_keycrate_access.sql` for the paywall, `20260930130000_keycrate_modes.sql` for the
+   Downtempo / Uptempo / Ambient modes). It creates `kc_tracks`,
    `kc_playlists`, `kc_playlist_items` and `kc_set_studies` with RLS scoped to `auth.uid()`, plus anon
    read policies for playlists marked public.
 

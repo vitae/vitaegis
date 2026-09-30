@@ -8,7 +8,7 @@ import type { Track } from '@/lib/keycrate/types';
 import { downloadText, formatBpm } from '../_lib/download';
 import { useKeyCrate } from '../_state/store';
 import { PlayButton } from './Audio';
-import { KeyBadge, TRANSITION_COLOR } from './ui';
+import { brightnessText, KeyBadge, TRANSITION_COLOR } from './ui';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    Playlist table under the Camelot wheel: song, key and BPM in a fixed grid, with
@@ -47,7 +47,12 @@ export default function PlaylistTable() {
       // Nothing typed: the harmonic next-track suggestions, or the library start when the set is empty.
       const sugg = derived.suggestions
         .filter((s) => !inSet.has(s.track.id))
-        .map((s) => ({ track: s.track, note: TRANSITION_LABEL[s.transition.type] }));
+        .map((s) => ({
+          track: s.track,
+          note: s.transition.move
+            ? `${s.transition.move.name} · ${s.transition.move.mood.label}`
+            : TRANSITION_LABEL[s.transition.type],
+        }));
       if (sugg.length) return sugg.slice(0, MAX_RESULTS);
       return state.tracks
         .filter((t) => !inSet.has(t.id))
@@ -285,9 +290,20 @@ export default function PlaylistTable() {
                     <span className="block truncate text-[11px] text-[#808880]">
                       {t?.artist ?? 'not in this library'}
                       {into && (
-                        <span style={{ color: TRANSITION_COLOR[into.type] }}>
+                        <span
+                          style={{ color: TRANSITION_COLOR[into.type] }}
+                          title={
+                            into.move ? `${into.move.maths} · ${into.move.mood.label}` : undefined
+                          }
+                        >
                           {' '}
-                          · {TRANSITION_LABEL[into.type]}
+                          · {into.move ? into.move.name : TRANSITION_LABEL[into.type]}
+                          {into.move && (
+                            <span className="text-[#808880]">
+                              {' '}
+                              · {into.move.mood.label} {brightnessText(into.move)}
+                            </span>
+                          )}
                         </span>
                       )}
                     </span>

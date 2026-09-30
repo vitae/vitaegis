@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildFromCurve,
   dramaticAllowed,
+  harmonicScore,
   journeyTarget,
   sampleCurve,
   suggestNext,
@@ -97,6 +98,45 @@ describe('suggestNext', () => {
     const s = suggestNext([track('8A', 122, 2)], [soft, hard], settings);
     expect(s[0].track.id).toBe(hard.id);
     expect(s[0].reason).toContain('target 128 BPM');
+  });
+
+  it('smooth mode offers the parallel key and ranks by consonance', () => {
+    const settings = { ...DEFAULT_SETTINGS, keyLock: true };
+    const from = track('8A', 124);
+    const rel = track('8B', 124); // 7/7 notes, 2 chord tones
+    const fifth = track('9A', 124); // 6/7, 1
+    const par = track('11B', 124); // A major: 4/7, 2
+    const s = suggestNext([from], [par, fifth, rel], settings);
+    expect(s.map((x) => x.transition.type)).toEqual(['relative', 'fifth', 'parallel']);
+    expect(s[2].transition.move?.mood.label).toContain('Picardy');
+  });
+
+  it('dramatic mode adds Neo-Riemannian chromatic moves and ranks by controlled contrast', () => {
+    const settings = { ...DEFAULT_SETTINGS, mode: 'dramatic' as const, keyLock: true };
+    const from = track('8B', 124); // C major
+    const slide = track('12A', 124); // C# minor, S
+    const same = track('8B', 124);
+    const mediant = track('5B', 124); // Eb, PR, tension 5.8
+    const s = suggestNext([from], [same, slide, mediant], settings);
+    expect(s.map((x) => x.transition.type)).toContain('chromatic');
+    // Contrast target 5: the mediant beats both the same key and the harsher slide.
+    expect(s[0].track.id).toBe(mediant.id);
+    expect(harmonicScore(s[0].transition, settings, false)).toBeLessThan(
+      harmonicScore(s[0].transition, settings, true),
+    );
+  });
+
+  it('journey mode steers brightness toward the energy curve', () => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      mode: 'journey' as const,
+      keyLock: true,
+      journey: { energy: [3, 9], bpm: [124, 124], length: 2 },
+    };
+    const up = track('9A', 124, 6); // dominant, brighter
+    const down = track('7A', 124, 6); // subdominant, darker
+    const s = suggestNext([track('8A', 124, 3)], [down, up], settings);
+    expect(s[0].track.id).toBe(up.id);
   });
 
   it('excludes tracks already in the set and honours the limit', () => {

@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TRANSITION_LABEL, type Transition } from '@/lib/keycrate/harmonic';
+import { MODE_LABEL } from '@/lib/keycrate/modes';
 import { safeFilename, toCsv, toM3u8, toRekordboxXml } from '@/lib/keycrate/export';
 import type { Track } from '@/lib/keycrate/types';
 import { downloadText, formatBpm } from '../_lib/download';
@@ -26,7 +27,7 @@ import Settings from './Settings';
 import Suggestions from './Suggestions';
 import Timeline from './Timeline';
 import { PlayButton } from './Audio';
-import { Button, inputClass, KeyBadge, SectionTitle, TRANSITION_COLOR } from './ui';
+import { Button, inputClass, KeyBadge, MoodLine, SectionTitle, TRANSITION_COLOR } from './ui';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    The set being built: drag to reorder, swipe (or the × button) to remove, undo/redo,
@@ -135,12 +136,8 @@ export default function SetPanel() {
           onClick={() => setMenu(menu === 'settings' ? 'none' : 'settings')}
           aria-expanded={menu === 'settings'}
         >
-          {set.settings.mode === 'smooth'
-            ? 'Smooth'
-            : set.settings.mode === 'dramatic'
-              ? 'Dramatic'
-              : 'Journey'}{' '}
-          · {set.settings.keyLock ? 'key lock on' : 'key lock off'}
+          {MODE_LABEL[set.settings.mode] ?? 'Smooth'} ·{' '}
+          {set.settings.keyLock ? 'key lock on' : 'key lock off'}
         </Button>
         <Button
           size="sm"
@@ -252,13 +249,15 @@ function TransitionRow({ t }: { t: Transition }) {
   const color = TRANSITION_COLOR[t.type];
   return (
     <div
-      className="flex items-center gap-2 py-1 pl-3 text-xs"
+      className="flex flex-wrap items-center gap-x-2 py-1 pl-3 text-xs"
       style={{ color }}
       data-testid="kc-transition"
+      title={t.move?.maths}
     >
       <span aria-hidden>↓</span>
       <span>
         {TRANSITION_LABEL[t.type]}
+        {t.move && t.move.id !== 'identity' ? ` · ${t.move.name}` : ''}
         {t.semitoneShift
           ? ` (${t.effectiveToKey} after ${t.semitoneShift > 0 ? '+' : ''}${t.semitoneShift} st)`
           : ''}
@@ -271,6 +270,7 @@ function TransitionRow({ t }: { t: Transition }) {
         {!t.bpm && t.bpmChangePct !== null ? ' out of range' : ''}
       </span>
       {t.clash && <span className="text-[#ff0000]">· warning: clash</span>}
+      {t.move && <MoodLine move={t.move} className="min-w-0" />}
     </div>
   );
 }

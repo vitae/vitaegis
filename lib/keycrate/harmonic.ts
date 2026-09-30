@@ -5,31 +5,38 @@
    Pure functions, unit-tested in harmonic.test.ts.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-import { camelotLetter, camelotNumber, makeCamelot, wheelDistance } from './camelot';
+import { camelotLetter, camelotNumber, makeCamelot } from './camelot';
+import { analyzeMove, type HarmonicMove, type MoveId } from './theory';
 import type { Camelot, PlaylistSettings, Track } from './types';
+
+export type { HarmonicMove } from './theory';
 
 export type TransitionType =
   | 'same'
   | 'fifth'
   | 'relative'
+  | 'parallel'
   | 'diagonal'
   | 'boost'
   | 'semitone'
   | 'third'
+  | 'chromatic'
   | 'clash'
   | 'unknown';
 
-export const SMOOTH_TYPES: TransitionType[] = ['same', 'fifth', 'relative', 'diagonal'];
-export const DRAMATIC_TYPES: TransitionType[] = ['boost', 'semitone', 'third'];
+export const SMOOTH_TYPES: TransitionType[] = ['same', 'fifth', 'relative', 'parallel', 'diagonal'];
+export const DRAMATIC_TYPES: TransitionType[] = ['boost', 'semitone', 'third', 'chromatic'];
 
 export const TRANSITION_LABEL: Record<TransitionType, string> = {
   same: 'Same key',
   fifth: 'Perfect 5th',
   relative: 'Relative',
+  parallel: 'Parallel',
   diagonal: 'Diagonal',
   boost: 'Energy boost',
   semitone: 'Semitone lift',
   third: 'Third',
+  chromatic: 'Chromatic',
   clash: 'Clash',
   unknown: 'No key',
 };
@@ -38,10 +45,12 @@ export const TRANSITION_FEEL: Record<TransitionType, string> = {
   same: 'seamless',
   fifth: 'smooth, in tune',
   relative: 'mood flip',
+  parallel: 'same root, mode flip',
   diagonal: 'gentle lift or drop',
   boost: 'noticeable lift',
   semitone: 'gear shift',
   third: 'dramatic but consonant',
+  chromatic: 'cinematic, one shared tone',
   clash: 'out of key',
   unknown: 'untagged key',
 };
@@ -51,10 +60,12 @@ export const TRANSITION_ORDER: TransitionType[] = [
   'same',
   'fifth',
   'relative',
+  'parallel',
   'diagonal',
   'boost',
   'semitone',
   'third',
+  'chromatic',
   'clash',
   'unknown',
 ];
@@ -62,26 +73,35 @@ export const TRANSITION_ORDER: TransitionType[] = [
 export const isSmooth = (t: TransitionType) => SMOOTH_TYPES.includes(t);
 export const isDramatic = (t: TransitionType) => DRAMATIC_TYPES.includes(t);
 
-/** Classifies the move from one Camelot key to the next. */
-export function classifyKeys(from: Camelot | null, to: Camelot | null): TransitionType {
-  if (!from || !to) return 'unknown';
-  const a = camelotNumber(from);
-  const b = camelotNumber(to);
-  const sameLetter = camelotLetter(from) === camelotLetter(to);
-  const d = wheelDistance(a, b);
-  const raw = (((b - a) % 12) + 12) % 12;
+/** Which transition family each named move belongs to; anything not listed clashes. */
+const MOVE_TYPE: Partial<Record<MoveId, TransitionType>> = {
+  identity: 'same',
+  dominant: 'fifth',
+  subdominant: 'fifth',
+  relative: 'relative',
+  parallel: 'parallel',
+  'leading-tone': 'diagonal',
+  diagonal: 'diagonal',
+  'whole-tone-up': 'boost',
+  'semitone-up': 'semitone',
+  'mediant-up-major-third': 'third',
+  'mediant-down-major-third': 'third',
+  'mediant-up-minor-third': 'third',
+  'mediant-down-minor-third': 'third',
+  slide: 'chromatic',
+  nebenverwandt: 'chromatic',
+  'hexatonic-pole': 'chromatic',
+};
 
-  if (sameLetter) {
-    if (d === 0) return 'same';
-    if (Math.abs(d) === 1) return 'fifth';
-    if (d === 2) return 'boost';
-    if (raw === 7) return 'semitone';
-    if (Math.abs(d) === 3 || Math.abs(d) === 4) return 'third';
-    return 'clash';
-  }
-  if (d === 0) return 'relative';
-  if (Math.abs(d) === 1) return 'diagonal';
-  return 'clash';
+export const typeOfMove = (m: HarmonicMove | null): TransitionType =>
+  m ? (MOVE_TYPE[m.id] ?? 'clash') : 'unknown';
+
+/**
+ * Classifies the move from one Camelot key to the next, from pitch-class arithmetic
+ * (see theory.ts) rather than wheel lookups.
+ */
+export function classifyKeys(from: Camelot | null, to: Camelot | null): TransitionType {
+  return typeOfMove(analyzeMove(from, to));
 }
 
 /* ── Pitch ─────────────────────────────────────────────────────────────────── */
@@ -174,6 +194,8 @@ export function matchBpm(
 
 export interface Transition {
   type: TransitionType;
+  /** The named harmonic move with its maths and mood, on the pitched (effective) key. */
+  move: HarmonicMove | null;
   fromKey: Camelot | null;
   toKey: Camelot | null;
   /** Key the incoming track sounds in after tempo matching. */
@@ -195,7 +217,8 @@ export function classifyTransition(from: Track, to: Track, settings: PlaylistSet
   const bpmChangePct = from.bpm && to.bpm ? pitchPercent(from.bpm, to.bpm) : null;
   // Tempo-match against the halved/doubled BPM when that is how the track will be played.
   const pitch = pitchedKey(to.camelot, bpm ? bpm.effectiveBpm : to.bpm, from.bpm, settings.keyLock);
-  const type = classifyKeys(from.camelot, pitch.effectiveKey);
+  const move = analyzeMove(from.camelot, pitch.effectiveKey);
+  const type = typeOfMove(move);
 
   const parts: string[] = [TRANSITION_LABEL[type]];
   if (pitch.semitones !== 0)
@@ -214,6 +237,7 @@ export function classifyTransition(from: Track, to: Track, settings: PlaylistSet
 
   return {
     type,
+    move,
     fromKey: from.camelot,
     toKey: to.camelot,
     effectiveToKey: pitch.effectiveKey,

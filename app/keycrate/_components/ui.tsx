@@ -1,15 +1,17 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import type { TransitionType } from '@/lib/keycrate/harmonic';
+import type { HarmonicMove, TransitionType } from '@/lib/keycrate/harmonic';
 
 /** Transition colours: green for harmonic moves, yellow for deliberate drama, red for clashes. */
 export const TRANSITION_COLOR: Record<TransitionType, string> = {
   same: '#00ff00',
   fifth: '#00ff00',
   relative: '#00ff00',
+  parallel: '#00ff00',
   diagonal: '#00ff00',
   boost: '#ffff00',
   semitone: '#ffff00',
   third: '#ffff00',
+  chromatic: '#ffff00',
   clash: '#ff0000',
   unknown: '#808880',
 };
@@ -84,5 +86,39 @@ export function SectionTitle({ children, right }: { children: ReactNode; right?:
       <h2 className="text-base font-medium text-white">{children}</h2>
       {right}
     </div>
+  );
+}
+
+/** Signed brightness change: ☀ for sharpward (brighter), ☾ for flatward (darker). */
+export function brightnessText(m: HarmonicMove): string {
+  if (m.brightness === 0) return '☀0';
+  return m.brightness > 0 ? `☀+${m.brightness}` : `☾${m.brightness}`;
+}
+
+const MOOD_COLOR = {
+  brighter: '#ffd966',
+  darker: '#8fb3ff',
+  level: '#c8d0c8',
+  ambiguous: '#ff6b6b',
+};
+
+/**
+ * Compact mood readout for a harmonic move: label, signed brightness and tension (0–10).
+ * One line; truncates on narrow screens.
+ */
+export function MoodLine({ move, className = '' }: { move: HarmonicMove; className?: string }) {
+  const b = `${move.brightness > 0 ? '+' : ''}${move.brightness}`;
+  return (
+    <span
+      className={`truncate ${className}`}
+      style={{ color: MOOD_COLOR[move.mood.direction] }}
+      title={`${move.mood.label}: brightness ${b}, tension ${move.tension.toFixed(1)}/10 (${move.mood.intensity})`}
+      data-testid="kc-mood"
+    >
+      {move.mood.label}{' '}
+      <span className="kc-mono text-[#808880]">
+        {brightnessText(move)} T{move.tension.toFixed(1)}
+      </span>
+    </span>
   );
 }

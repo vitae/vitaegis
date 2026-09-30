@@ -1,10 +1,11 @@
 'use client';
 
+import { isProfileMode, MODE_PROFILES } from '@/lib/keycrate/modes';
 import type { BuildMode, JourneyCurve, PlaylistSettings } from '@/lib/keycrate/types';
 import { useKeyCrate } from '../_state/store';
 import { inputClass } from './ui';
 
-/* Build mode, dramatic budget, BPM tolerance, key lock and the journey curves. */
+/* Build mode (six), dramatic budget, BPM tolerance, key lock and the journey curves. */
 
 const PRESET_JOURNEY: JourneyCurve = {
   energy: [3, 6, 9, 5, 9, 4],
@@ -13,9 +14,28 @@ const PRESET_JOURNEY: JourneyCurve = {
 };
 
 const MODES: Array<{ id: BuildMode; label: string; hint: string }> = [
-  { id: 'smooth', label: 'Smooth', hint: 'same key, fifths, relative, diagonal' },
-  { id: 'dramatic', label: 'Dramatic', hint: 'adds boosts, semitone lifts and thirds, rationed' },
+  { id: 'smooth', label: 'Smooth', hint: 'same key, fifths, relative, parallel, diagonal' },
+  {
+    id: 'dramatic',
+    label: 'Dramatic',
+    hint: 'adds boosts, semitone lifts, mediants and slides, rationed',
+  },
   { id: 'journey', label: 'Journey', hint: 'follow an energy and BPM curve' },
+  {
+    id: 'downtempo',
+    label: 'Downtempo',
+    hint: '70–100 BPM, low energy, long blends, colour shift every ~15',
+  },
+  {
+    id: 'uptempo',
+    label: 'Uptempo',
+    hint: '128–150 BPM, tempo creeps up, fifths and semitone lifts',
+  },
+  {
+    id: 'ambient',
+    label: 'Ambient',
+    hint: 'tempo barely matters, closest keys, slow colour drift',
+  },
 ];
 
 export default function Settings() {
@@ -33,7 +53,11 @@ export default function Settings() {
       <fieldset className="flex flex-col gap-1">
         <legend className="mb-1 text-[#808880]">Mode</legend>
         {MODES.map((m) => (
-          <label key={m.id} className="flex items-center gap-2 text-white">
+          <label
+            key={m.id}
+            className="flex items-start gap-2 text-white"
+            data-testid={`kc-mode-${m.id}`}
+          >
             <input
               type="radio"
               name="kc-mode"
@@ -41,9 +65,11 @@ export default function Settings() {
               onChange={() =>
                 update({ mode: m.id, journey: m.id === 'journey' ? journey : s.journey })
               }
-              className="h-4 w-4 accent-[#00ff00]"
+              className="mt-px h-4 w-4 shrink-0 accent-[#00ff00]"
             />
-            {m.label} <span className="text-[#808880]">· {m.hint}</span>
+            <span className="min-w-0">
+              {m.label} <span className="text-[#808880]">· {m.hint}</span>
+            </span>
           </label>
         ))}
       </fieldset>
@@ -59,17 +85,26 @@ export default function Settings() {
             onChange={(e) => update({ bpmTolerance: Number(e.target.value) })}
           />
         </label>
-        <label className="flex flex-col gap-1 text-[#808880]">
-          One dramatic move per {s.dramaticEvery} tracks
-          <input
-            type="range"
-            min={2}
-            max={10}
-            value={s.dramaticEvery}
-            onChange={(e) => update({ dramaticEvery: Number(e.target.value) })}
-            disabled={s.mode === 'smooth'}
-          />
-        </label>
+        {isProfileMode(s.mode) ? (
+          <p className="flex flex-col gap-1 text-[#808880]">
+            <span>
+              Mood shift about once per {MODE_PROFILES[s.mode].shiftEvery} tracks · next track every
+              ~{Math.round((MODE_PROFILES[s.mode].changeEverySeconds / 60) * 10) / 10} min
+            </span>
+          </p>
+        ) : (
+          <label className="flex flex-col gap-1 text-[#808880]">
+            One dramatic move per {s.dramaticEvery} tracks
+            <input
+              type="range"
+              min={2}
+              max={10}
+              value={s.dramaticEvery}
+              onChange={(e) => update({ dramaticEvery: Number(e.target.value) })}
+              disabled={s.mode === 'smooth'}
+            />
+          </label>
+        )}
       </div>
 
       <label className="flex items-center gap-2 text-white">
