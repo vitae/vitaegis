@@ -139,7 +139,18 @@ function analyzeInWorker(bytes: Uint8Array, info: WavInfo): Promise<Detected> {
   if (!w) return Promise.resolve(analyzeWavBytes(bytes, info));
   const id = ++nextJob;
   return new Promise((resolve, reject) => {
+    // A worker that can't load (e.g. its script is on another origin when KeyCrate is proxied)
+    // never answers: analyse on the page instead and stop trying the worker.
+    const onError = (e: ErrorEvent) => {
+      e.preventDefault();
+      w.removeEventListener('message', onMessage);
+      w.removeEventListener('error', onError);
+      analyzer = null;
+      resolve(analyzeWavBytes(bytes, info));
+    };
+    w.addEventListener('error', onError);
     const onMessage = (e: MessageEvent<AnalyzeMessage>) => {
+      w.removeEventListener('error', onError);
       if (e.data.id !== id) return;
       w.removeEventListener('message', onMessage);
       if (e.data.type === 'done') resolve(e.data.result);

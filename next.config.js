@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // KeyCrate is proxied from glowwitdaflow.com; its scripts and styles must still load from
+  // this host, so production builds reference them by absolute URL.
+  assetPrefix: process.env.VERCEL_ENV === 'production' ? 'https://www.vitaegis.com' : undefined,
   transpilePackages: ['three'],
   images: {
     domains: [],
