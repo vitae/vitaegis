@@ -71,6 +71,7 @@ export default function Checklist() {
     qty: '1',
   });
   const [showAllVisits, setShowAllVisits] = useState(false);
+  const [view, setView] = useState<'rank' | 'aisle'>('rank');
 
   const [session, setSession] = useState<Session | null>(null);
   const [sync, setSync] = useState<{
@@ -170,9 +171,20 @@ export default function Checklist() {
   const visits = useMemo(() => visitLog(state), [state]);
   const visible = filter === 'all' ? state.items : state.items.filter((i) => i.status === filter);
   const byAisle = AISLES.map((aisle) => ({
-    aisle,
+    aisle: aisle as string,
     items: visible.filter((i) => i.aisle === aisle),
   })).filter((g) => g.items.length > 0);
+  const ranked = [...visible].sort(
+    (a, b) =>
+      (b.timesBought ?? 0) - (a.timesBought ?? 0) ||
+      Date.parse(b.lastBoughtAt ?? '') - Date.parse(a.lastBoughtAt ?? ''),
+  );
+  const groups =
+    view === 'rank'
+      ? ranked.length
+        ? [{ aisle: 'Ranked by how often we buy it', items: ranked }]
+        : []
+      : byAisle;
 
   const copyList = async () => {
     try {
@@ -448,19 +460,42 @@ export default function Checklist() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2 px-1">
           <h2 className={label}>Inventory · what we always get</h2>
-          <span className="text-[11px] text-white/45">
-            <span className="text-vitae-red">✕</span> = we are out · tap again when restocked
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-[11px] text-white/45">
+              <span className="text-vitae-red">✕</span> = we are out · tap again when restocked
+            </span>
+            <div className="flex gap-1">
+              {(['rank', 'aisle'] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.2em] ${
+                    view === v
+                      ? 'border-vitae-green bg-vitae-green/10 text-vitae-green'
+                      : 'border-white/15 text-white/60 hover:border-white/40'
+                  }`}
+                >
+                  {v === 'rank' ? 'By popularity' : 'By aisle'}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        {byAisle.length === 0 && (
+        {groups.length === 0 && (
           <p className="text-center font-light text-white/50">Nothing here. Change the filter.</p>
         )}
-        {byAisle.map(({ aisle, items }) => (
+        {groups.map(({ aisle, items }) => (
           <div key={aisle} className={`${glass} p-5 sm:p-7`}>
             <h3 className={label}>{aisle}</h3>
             <ul className="mt-3 divide-y divide-white/10">
-              {items.map((item) => (
+              {items.map((item, idx) => (
                 <li key={item.id} className="flex items-center gap-3 py-2.5">
+                  {view === 'rank' && (
+                    <span className="w-6 shrink-0 text-right text-xs tabular-nums text-white/35">
+                      {idx + 1}
+                    </span>
+                  )}
                   <OutButton item={item} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline gap-x-3">
