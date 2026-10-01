@@ -68,7 +68,12 @@ export type Trip = {
   note?: string;
 };
 
-export type ListState = { items: Item[]; trips: Trip[] };
+export type ListState = {
+  items: Item[];
+  trips: Trip[];
+  /** ISO time of the last change on any device; drives last-write-wins when syncing. */
+  updatedAt?: string;
+};
 
 export const STORAGE_KEY = 'vitaegis.wholefoods.v2';
 
@@ -139,11 +144,12 @@ export function mergeStaples(state: ListState): ListState {
 export function loadState(raw: string | null): ListState {
   if (!raw) return defaultState();
   try {
-    const parsed = JSON.parse(raw) as { items?: unknown; trips?: unknown };
+    const parsed = JSON.parse(raw) as { items?: unknown; trips?: unknown; updatedAt?: unknown };
     if (!Array.isArray(parsed.items)) return defaultState();
     const items = parsed.items.filter(isItem);
     const trips = Array.isArray(parsed.trips) ? parsed.trips.filter(isTrip) : [];
-    return mergeStaples({ items, trips });
+    const updatedAt = typeof parsed.updatedAt === 'string' ? parsed.updatedAt : undefined;
+    return mergeStaples({ items, trips, ...(updatedAt ? { updatedAt } : {}) });
   } catch {
     return defaultState();
   }
@@ -234,6 +240,28 @@ export function restockAll(state: ListState): ListState {
     ...state,
     items: state.items.map((i) => (i.status === 'stocked' ? { ...i, status: 'need' } : i)),
   };
+}
+
+/** Stamp a change so the other device knows which copy is newer. */
+export function touch(state: ListState, now: string = new Date().toISOString()): ListState {
+  return { ...state, updatedAt: now };
+}
+
+/**
+ * Reconcile the local copy with the cloud copy. Items come from whichever copy changed
+ * last; trips are the union of both (a visit logged on either device is never lost).
+ */
+export function mergeStates(local: ListState, cloud: ListState | null): ListState {
+  if (!cloud) return local;
+  const lt = Date.parse(local.updatedAt ?? '') || 0;
+  const ct = Date.parse(cloud.updatedAt ?? '') || 0;
+  const newer = ct > lt ? cloud : local;
+  const seen = new Set<string>();
+  const trips = [...local.trips, ...cloud.trips]
+    .filter((t) => (seen.has(t.id) ? false : (seen.add(t.id), true)))
+    .sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))
+    .slice(0, 200);
+  return mergeStaples({ items: newer.items, trips, updatedAt: newer.updatedAt });
 }
 
 export function summarize(state: ListState): Record<Status | 'total', number> {

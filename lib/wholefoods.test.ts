@@ -6,10 +6,12 @@ import {
   formatStamp,
   loadState,
   mergeStaples,
+  mergeStates,
   setItemStatus,
   suggestions,
   summarize,
   toggleOut,
+  touch,
   visitLog,
   type ListState,
 } from './wholefoods';
@@ -130,6 +132,41 @@ describe('visitLog', () => {
     for (let i = 1; i < log.length; i++) {
       expect(Date.parse(log[i - 1].at)).toBeGreaterThanOrEqual(Date.parse(log[i].at));
     }
+  });
+});
+
+describe('mergeStates', () => {
+  const t1 = '2026-10-01T10:00:00.000Z';
+  const t2 = '2026-10-01T11:00:00.000Z';
+
+  it('keeps local when there is no cloud copy', () => {
+    const local = touch(defaultState(), t1);
+    expect(mergeStates(local, null)).toBe(local);
+  });
+
+  it('takes items from whichever copy changed last', () => {
+    const local = touch(toggleOut(defaultState(), 'limes', t1), t1);
+    const cloud = touch(toggleOut(defaultState(), 'pb-cups', t2), t2);
+    const merged = mergeStates(local, cloud);
+    expect(merged.items.find((i) => i.id === 'pb-cups')?.status).toBe('need');
+    expect(merged.items.find((i) => i.id === 'limes')?.status).toBe('stocked');
+    expect(merged.updatedAt).toBe(t2);
+
+    const other = mergeStates(cloud, local);
+    expect(other.items.find((i) => i.id === 'pb-cups')?.status).toBe('need');
+  });
+
+  it('unions trips logged on both devices, newest first, without duplicates', () => {
+    const a = completeTrip(setItemStatus(defaultState(), 'limes', 'cart', t1), t1);
+    const b = completeTrip(setItemStatus(defaultState(), 'eggs', 'cart', t2), t2);
+    const merged = mergeStates(touch(a, t1), touch(b, t2));
+    expect(merged.trips.map((t) => t.startedAt)).toEqual([t2, t1]);
+    expect(mergeStates(merged, merged).trips).toHaveLength(2);
+  });
+
+  it('loadState keeps updatedAt', () => {
+    const s = loadState(JSON.stringify(touch(defaultState(), t1)));
+    expect(s.updatedAt).toBe(t1);
   });
 });
 

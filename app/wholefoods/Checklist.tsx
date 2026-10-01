@@ -1,6 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import {
+  currentSession,
+  loadCloud,
+  onAuthChange,
+  saveCloud,
+  signInWithGoogle,
+  signOut,
+  subscribeCloud,
+  syncConfigured,
+} from '@/lib/wholefoods-cloud';
 import {
   addItem,
   AISLES,
@@ -13,6 +24,7 @@ import {
   formatStamp,
   listAsText,
   loadState,
+  mergeStates,
   removeItem,
   restockAll,
   setItemStatus,
@@ -20,6 +32,7 @@ import {
   suggestions,
   summarize,
   toggleOut,
+  touch,
   visitLog,
   WFM_STOREFRONT,
   type Aisle,
@@ -59,6 +72,22 @@ export default function Checklist() {
   });
   const [showAllVisits, setShowAllVisits] = useState(false);
 
+  const [session, setSession] = useState<Session | null>(null);
+  const [sync, setSync] = useState<{
+    status: 'off' | 'idle' | 'saving' | 'synced' | 'error';
+    at?: string;
+    msg?: string;
+  }>({ status: 'off' });
+  // updatedAt of the last state we pushed to, or received from, the cloud (skips echo saves).
+  const cloudStamp = useRef<string | undefined>(undefined);
+
+  /** Every local change goes through here so it gets a fresh updatedAt for sync. */
+  const change = (fn: (s: ListState) => ListState) =>
+    setState((s) => {
+      const next = fn(s);
+      return next === s ? s : touch(next);
+    });
+
   // Load once on the client; the server render shows the default inventory.
   useEffect(() => {
     try {
@@ -77,6 +106,64 @@ export default function Checklist() {
       /* ignore */
     }
   }, [state, ready]);
+
+  // Who is signed in (Supabase). Null when sync isn't configured or nobody is signed in.
+  useEffect(() => {
+    if (!syncConfigured()) return;
+    setSync({ status: 'idle' });
+    void currentSession().then(setSession);
+    return onAuthChange(setSession);
+  }, []);
+
+  // On sign-in: merge the cloud copy with this device, push the result, then follow live changes.
+  useEffect(() => {
+    if (!ready || !session) return;
+    const userId = session.user.id;
+    let alive = true;
+    (async () => {
+      try {
+        const cloud = await loadCloud(userId);
+        if (!alive) return;
+        setState((local) => {
+          const merged = mergeStates(local, cloud);
+          cloudStamp.current = cloud?.updatedAt;
+          return merged;
+        });
+        setSync({ status: 'synced', at: new Date().toISOString() });
+      } catch (e) {
+        if (alive)
+          setSync({ status: 'error', msg: e instanceof Error ? e.message : 'sync failed' });
+      }
+    })();
+    const unsubscribe = subscribeCloud(userId, (remote) => {
+      if (remote.updatedAt && remote.updatedAt === cloudStamp.current) return;
+      cloudStamp.current = remote.updatedAt;
+      setState((local) => mergeStates(local, remote));
+      setSync({ status: 'synced', at: new Date().toISOString() });
+    });
+    return () => {
+      alive = false;
+      unsubscribe();
+    };
+  }, [ready, session]);
+
+  // Push local changes, debounced, whenever the state is newer than what the cloud has.
+  useEffect(() => {
+    if (!ready || !session || !state.updatedAt || state.updatedAt === cloudStamp.current) return;
+    const userId = session.user.id;
+    const stamp = state.updatedAt;
+    const t = window.setTimeout(async () => {
+      setSync({ status: 'saving' });
+      try {
+        await saveCloud(userId, state);
+        cloudStamp.current = stamp;
+        setSync({ status: 'synced', at: new Date().toISOString() });
+      } catch (e) {
+        setSync({ status: 'error', msg: e instanceof Error ? e.message : 'save failed' });
+      }
+    }, 800);
+    return () => window.clearTimeout(t);
+  }, [state, ready, session]);
 
   const counts = useMemo(() => summarize(state), [state]);
   const buyAgain = useMemo(() => suggestions(state, 12), [state]);
@@ -100,7 +187,7 @@ export default function Checklist() {
   const submitTrip = (e: React.FormEvent) => {
     e.preventDefault();
     const total = parseFloat(trip.total);
-    setState((s) =>
+    change((s) =>
       completeTrip(s, new Date().toISOString(), {
         kind: trip.kind,
         total: Number.isFinite(total) ? total : undefined,
@@ -113,14 +200,14 @@ export default function Checklist() {
 
   const submitDraft = (e: React.FormEvent) => {
     e.preventDefault();
-    setState((s) => addItem(s, draft));
+    change((s) => addItem(s, draft));
     setDraft((d) => ({ ...d, name: '', qty: '1' }));
   };
 
   const OutButton = ({ item }: { item: Item }) => (
     <button
       type="button"
-      onClick={() => setState((s) => toggleOut(s, item.id))}
+      onClick={() => change((s) => toggleOut(s, item.id))}
       aria-label={`${item.name}: ${STATUS_LABEL[item.status]}. Tap to mark ${
         item.status === 'need' ? 'stocked' : 'out'
       }.`}
@@ -148,6 +235,53 @@ export default function Checklist() {
               Whole Foods delivery and pickup run through Amazon. These open your own signed-in
               session.
             </p>
+            {sync.status !== 'off' && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                {session ? (
+                  <>
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        sync.status === 'error'
+                          ? 'bg-vitae-red'
+                          : sync.status === 'saving'
+                            ? 'bg-vitae-yellow animate-pulse'
+                            : 'bg-vitae-green shadow-[0_0_8px_#00ff00]'
+                      }`}
+                    />
+                    <span className="text-white/70">
+                      Synced as {session.user.email}
+                      {sync.status === 'saving' && ' · saving'}
+                      {sync.status === 'synced' && sync.at && ` · ${formatStamp(sync.at)}`}
+                      {sync.status === 'error' && (
+                        <span className="text-vitae-red"> · {sync.msg}</span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void signOut()}
+                      className="text-white/40 underline-offset-2 hover:text-white hover:underline"
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void signInWithGoogle().then(
+                        (err) => err && setSync({ status: 'error', msg: err }),
+                      )
+                    }
+                    className={`${pill} border-vitae-green/60 text-vitae-green hover:bg-vitae-green/10`}
+                  >
+                    Sign in with Google · sync phone ↔ laptop
+                  </button>
+                )}
+                {!session && sync.status === 'error' && (
+                  <span className="text-vitae-red">{sync.msg}</span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <a
@@ -223,7 +357,7 @@ export default function Checklist() {
           </button>
           <button
             type="button"
-            onClick={() => setState((s) => restockAll(s))}
+            onClick={() => change((s) => restockAll(s))}
             disabled={counts.stocked === 0}
             className={`${pill} border-white/20 text-white/60 hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40`}
           >
@@ -295,7 +429,7 @@ export default function Checklist() {
             <button
               key={i.id}
               type="button"
-              onClick={() => setState((s) => setItemStatus(s, i.id, 'need'))}
+              onClick={() => change((s) => setItemStatus(s, i.id, 'need'))}
               className="group rounded-xl border border-white/15 px-3 py-2 text-left transition-colors hover:border-vitae-red/60"
             >
               <span className="text-sm font-medium text-white group-hover:text-vitae-red">
@@ -358,7 +492,7 @@ export default function Checklist() {
                   {item.status === 'need' && (
                     <button
                       type="button"
-                      onClick={() => setState((s) => setItemStatus(s, item.id, 'cart'))}
+                      onClick={() => change((s) => setItemStatus(s, item.id, 'cart'))}
                       className="shrink-0 rounded-full border border-vitae-green/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-vitae-green hover:bg-vitae-green/10"
                     >
                       In cart
@@ -367,7 +501,7 @@ export default function Checklist() {
                   {item.status === 'cart' && (
                     <button
                       type="button"
-                      onClick={() => setState((s) => setItemStatus(s, item.id, 'stocked'))}
+                      onClick={() => change((s) => setItemStatus(s, item.id, 'stocked'))}
                       className="shrink-0 rounded-full border border-white/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70 hover:border-white/50"
                     >
                       Got it
@@ -385,7 +519,7 @@ export default function Checklist() {
                   {!item.staple && (
                     <button
                       type="button"
-                      onClick={() => setState((s) => removeItem(s, item.id))}
+                      onClick={() => change((s) => removeItem(s, item.id))}
                       aria-label={`Remove ${item.name}`}
                       className="shrink-0 px-1 text-white/30 transition-colors hover:text-vitae-red"
                     >
