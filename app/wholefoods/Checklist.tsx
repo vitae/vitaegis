@@ -13,6 +13,7 @@ import {
   syncConfigured,
 } from '@/lib/wholefoods-cloud';
 import {
+  activeItems,
   addItem,
   AISLES,
   AMAZON_CART,
@@ -28,8 +29,10 @@ import {
   listAsText,
   loadState,
   mergeStates,
-  removeItem,
   restockAll,
+  restoreItem,
+  retiredItems,
+  retireItem,
   setItemStatus,
   STORAGE_KEY,
   suggestions,
@@ -172,7 +175,9 @@ export default function Checklist() {
   const counts = useMemo(() => summarize(state), [state]);
   const buyAgain = useMemo(() => suggestions(state, 12), [state]);
   const visits = useMemo(() => visitLog(state), [state]);
-  const visible = filter === 'all' ? state.items : state.items.filter((i) => i.status === filter);
+  const active = activeItems(state);
+  const retired = retiredItems(state);
+  const visible = filter === 'all' ? active : active.filter((i) => i.status === filter);
   const byAisle = AISLES.map((aisle) => ({
     aisle: aisle as string,
     items: visible.filter((i) => i.aisle === aisle),
@@ -226,16 +231,20 @@ export default function Checklist() {
       aria-label={`${item.name}: ${STATUS_LABEL[item.status]}. Tap to mark ${
         item.status === 'need' ? 'stocked' : 'out'
       }.`}
-      title={item.status === 'need' ? 'We are out. Tap when restocked.' : 'Tap if we are out.'}
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-lg font-bold transition-all ${
+      title={
         item.status === 'need'
-          ? 'border-vitae-red bg-vitae-red/15 text-vitae-red shadow-[0_0_14px_rgba(255,0,0,0.45)]'
+          ? 'We are out. Tap when restocked.'
+          : 'We have it. Tap if we are out.'
+      }
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-base font-bold transition-all ${
+        item.status === 'need'
+          ? 'border-vitae-yellow bg-vitae-yellow/15 text-vitae-yellow shadow-[0_0_14px_rgba(255,255,0,0.35)]'
           : item.status === 'cart'
             ? 'border-vitae-green text-vitae-green'
-            : 'border-white/20 text-white/25 hover:border-vitae-red/60 hover:text-vitae-red/70'
+            : 'border-vitae-green/60 bg-vitae-green/15 text-vitae-green hover:border-vitae-yellow hover:bg-vitae-yellow/10 hover:text-vitae-yellow'
       }`}
     >
-      {item.status === 'need' ? '✕' : item.status === 'cart' ? '●' : '✕'}
+      {item.status === 'need' ? '○' : item.status === 'cart' ? '●' : '✓'}
     </button>
   );
 
@@ -492,10 +501,13 @@ export default function Checklist() {
       {/* Inventory */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2 px-1">
-          <h2 className={label}>Inventory · what we always get</h2>
+          <h2 className={label}>Standard list · what we always get</h2>
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-[11px] text-white/45">
-              <span className="text-vitae-red">✕</span> = we are out · tap again when restocked
+              <span className="text-vitae-green">✓</span> have it ·{' '}
+              <span className="text-vitae-yellow">○</span> out ·{' '}
+              <span className="text-vitae-green">+</span> to cart ·{' '}
+              <span className="text-vitae-red">✕</span> don&apos;t get it anymore
             </span>
             <div className="flex gap-1">
               {(['rank', 'aisle'] as const).map((v) => (
@@ -599,21 +611,41 @@ export default function Checklist() {
                   >
                     Amazon
                   </a>
-                  {!item.staple && (
-                    <button
-                      type="button"
-                      onClick={() => change((s) => removeItem(s, item.id))}
-                      aria-label={`Remove ${item.name}`}
-                      className="shrink-0 px-1 text-white/30 transition-colors hover:text-vitae-red"
-                    >
-                      ×
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => change((s) => retireItem(s, item.id))}
+                    aria-label={`Remove ${item.name} from the standard list`}
+                    title="We don't get this anymore. Remove it from the standard list."
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-transparent text-lg font-bold text-white/25 transition-all hover:border-vitae-red hover:bg-vitae-red/15 hover:text-vitae-red hover:shadow-[0_0_14px_rgba(255,0,0,0.45)]"
+                  >
+                    ✕
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
         ))}
+        {retired.length > 0 && (
+          <div className={`${glass} p-5 sm:p-7`}>
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-vitae-red">
+              Not anymore · removed from the standard list
+            </h3>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {retired.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => change((s) => restoreItem(s, item.id))}
+                    title="Put it back on the standard list"
+                    className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/60 line-through transition-colors hover:border-vitae-green hover:text-vitae-green hover:no-underline"
+                  >
+                    {item.name} <span className="no-underline">↺</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
 
       {/* Add item */}

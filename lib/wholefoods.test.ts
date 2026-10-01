@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  activeItems,
+  addItem,
   amazonAddToCartUrl,
   amazonAddUrl,
   amazonSearchUrl,
@@ -7,10 +9,14 @@ import {
   completeTrip,
   defaultState,
   formatStamp,
+  listAsText,
   loadState,
   mergeStaples,
   mergeStates,
   qtyNumber,
+  retiredItems,
+  retireItem,
+  restoreItem,
   setItemStatus,
   suggestions,
   summarize,
@@ -75,6 +81,39 @@ describe('add to cart links', () => {
       trips: [],
     });
     expect(loadState(saved).items.find((i) => i.id === 'limes')?.asin).toBe('B07811WM8Z');
+  });
+});
+
+describe('retire and restore (the red ✕)', () => {
+  it('takes a staple off the standard list but keeps it for restoring', () => {
+    const s = retireItem(toggleOut(defaultState(), 'pb-cups', NOW), 'pb-cups');
+    const pb = s.items.find((i) => i.id === 'pb-cups')!;
+    expect(pb.retired).toBe(true);
+    expect(pb.status).toBe('stocked');
+    expect(activeItems(s).some((i) => i.id === 'pb-cups')).toBe(false);
+    expect(retiredItems(s).map((i) => i.id)).toEqual(['pb-cups']);
+    expect(suggestions(s, 50).some((i) => i.id === 'pb-cups')).toBe(false);
+    expect(cartable(s)).toEqual([]);
+    expect(summarize(s).total).toBe(STAPLES.length - 1);
+    expect(listAsText(s)).toBe('');
+  });
+
+  it('restore puts it back', () => {
+    const s = restoreItem(retireItem(defaultState(), 'limes'), 'limes');
+    expect(s.items.find((i) => i.id === 'limes')?.retired).toBeUndefined();
+    expect(activeItems(s).length).toBe(STAPLES.length);
+  });
+
+  it('deletes non-staples outright', () => {
+    const s = addItem(defaultState(), { name: 'Poke', aisle: 'Prepared', qty: '1' }, NOW);
+    const id = s.items[s.items.length - 1].id;
+    expect(retireItem(s, id).items.some((i) => i.id === id)).toBe(false);
+  });
+
+  it('survives a save and load', () => {
+    const s = loadState(JSON.stringify(retireItem(defaultState(), 'eggs')));
+    expect(s.items.find((i) => i.id === 'eggs')?.retired).toBe(true);
+    expect(s.items.length).toBe(STAPLES.length);
   });
 });
 

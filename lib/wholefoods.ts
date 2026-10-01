@@ -48,6 +48,8 @@ export type Item = {
   search?: string;
   /** Amazon ASIN of the Whole Foods listing, when known; enables one-tap add to cart. */
   asin?: string;
+  /** Removed from the standard list ("we don't get this anymore"); kept so it can be restored. */
+  retired?: boolean;
   /** Trips in the order history that included this item. */
   timesBought?: number;
   avgPrice?: number | null;
@@ -120,7 +122,42 @@ export function amazonAddUrl(item: Pick<Item, 'asin' | 'qty' | 'search' | 'name'
 
 /** Everything marked out that has a known ASIN, ready for one add-all link. */
 export function cartable(state: ListState): Item[] {
-  return state.items.filter((i) => i.status === 'need' && i.asin);
+  return state.items.filter((i) => !i.retired && i.status === 'need' && i.asin);
+}
+
+/** The standard list: everything not retired. */
+export function activeItems(state: ListState): Item[] {
+  return state.items.filter((i) => !i.retired);
+}
+
+/** What was taken off the standard list, so it can be put back. */
+export function retiredItems(state: ListState): Item[] {
+  return state.items.filter((i) => i.retired);
+}
+
+/** The red ✕: we don't get this anymore. Staples are kept (hidden) so they can be restored. */
+export function retireItem(state: ListState, id: string): ListState {
+  const item = state.items.find((i) => i.id === id);
+  if (!item) return state;
+  if (!item.staple) return removeItem(state, id);
+  return {
+    ...state,
+    items: state.items.map((i) =>
+      i.id === id ? { ...withoutCheckedAt(i), status: 'stocked' as Status, retired: true } : i,
+    ),
+  };
+}
+
+export function restoreItem(state: ListState, id: string): ListState {
+  return {
+    ...state,
+    items: state.items.map((i) => {
+      if (i.id !== id || !i.retired) return i;
+      const copy = { ...i };
+      delete copy.retired;
+      return copy;
+    }),
+  };
 }
 
 export function stapleItem(id: string): Item | undefined {
@@ -302,8 +339,9 @@ export function mergeStates(local: ListState, cloud: ListState | null): ListStat
 }
 
 export function summarize(state: ListState): Record<Status | 'total', number> {
-  const out = { need: 0, cart: 0, stocked: 0, total: state.items.length };
-  for (const i of state.items) out[i.status] += 1;
+  const active = activeItems(state);
+  const out = { need: 0, cart: 0, stocked: 0, total: active.length };
+  for (const i of active) out[i.status] += 1;
   return out;
 }
 
@@ -313,7 +351,7 @@ export function summarize(state: ListState): Record<Status | 'total', number> {
  */
 export function suggestions(state: ListState, limit = 12): Item[] {
   return state.items
-    .filter((i) => i.staple && i.status === 'stocked')
+    .filter((i) => i.staple && !i.retired && i.status === 'stocked')
     .sort((a, b) => (b.timesBought ?? 0) - (a.timesBought ?? 0))
     .slice(0, limit);
 }
@@ -382,7 +420,7 @@ export function formatDate(iso: string, timeZone?: string): string {
 /** Plain-text copy of what still needs buying, for pasting into the Alexa shopping list. */
 export function listAsText(state: ListState): string {
   return state.items
-    .filter((i) => i.status !== 'stocked')
+    .filter((i) => !i.retired && i.status !== 'stocked')
     .map((i) => `${i.name} × ${i.qty}`)
     .join('\n');
 }
