@@ -438,6 +438,55 @@ export const STAPLES: Staple[] = [
   s('eggs', 'Eggs', 'Dairy & Eggs', 'Vital Farms eggs', '1', 3, '2025-09-28T16:17:00-10:00', 7.66),
 ];
 
+/**
+ * Amazon ASINs for the Whole Foods storefront listing that matches what we buy, found by
+ * searching the storefront on 2026-10-01. Items missing here fall back to a storefront search.
+ */
+export const ASINS: Record<string, string> = {
+  'pb-cups': 'B005M4AMYI',
+  'reeds-ginger-brew': 'B001O8NQUS',
+  'virgils-root-beer': 'B079TGZ2NB',
+  'guru-energy': 'B01AVZ93HY',
+  guacamole: 'B09WZ97NPK',
+  'brown-butter-cookies': 'B08CW68DPS',
+  cheese: 'B07ZDTBNRG',
+  'curry-chicken-salad': 'B08RKXVP9X',
+  'orange-juice': 'B07KY8PHDB',
+  bread: 'B0CP61QJS4',
+  'key-lime-tart': 'B09G2XMLCD',
+  'yerba-mate': 'B003OBQT7U',
+  blackberries: 'B00E3JM7UU',
+  onion: 'B0787XFL9P',
+  'brioche-buns': 'B0DMTD955F',
+  cornbread: 'B0DLP4KSXG',
+  'beef-chili': 'B089PMTQ67',
+  'watermelon-water': 'B00KI2BAPY',
+  cherries: 'B074H5BV2Y',
+  blueberries: 'B077N7TR5G',
+  'green-bell-pepper': 'B001PLESVU',
+  'big-island-beef': 'B07YX58ZZW',
+  limes: 'B07811WM8Z',
+  kombucha: 'B08TGWS7ZS',
+  strawberries: 'B002B8Z98W',
+  apples: 'B000RGZMTQ',
+  'arugula-spinach': 'B074VD6R4R',
+  raspberries: 'B079YXD4H2',
+  bacon: 'B07F133T7B',
+  'chicken-breast': 'B09X148GS9',
+  bananas: 'B07FYYKKQK',
+  cucumbers: 'B001PLETDC',
+  'yogurt-milk': 'B0D7J7595Z',
+  jalapeno: 'B07FZHQ5L8',
+  grapes: 'B000RGYJI6',
+  cilantro: 'B07819RK9C',
+  'corn-dogs': 'B078BDCZT5',
+  salsa: 'B0DG35TBCP',
+  garlic: 'B0788FLWK1',
+  'corn-tortillas': 'B09K8HXWZ9',
+  avocado: 'B000NOGKN4',
+  eggs: 'B074H5SRLB',
+};
+
 const v = (at: string, kind: 'store' | 'delivery', total: number, items: number): PastVisit => ({
   id: 'amz-' + at.slice(0, 16).replace(/[-T:]/g, ''),
   at,

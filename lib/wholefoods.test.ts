@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  amazonAddToCartUrl,
+  amazonAddUrl,
   amazonSearchUrl,
+  cartable,
   completeTrip,
   defaultState,
   formatStamp,
   loadState,
   mergeStaples,
   mergeStates,
+  qtyNumber,
   setItemStatus,
   suggestions,
   summarize,
@@ -26,6 +30,51 @@ describe('amazonSearchUrl', () => {
     expect(url).toContain('k=Wild+salmon+fillet');
     expect(url).toContain('i=wholefoods');
     expect(url).toContain('almBrandId=VUZHIFdob2xlIEZvb2Rz');
+  });
+});
+
+describe('add to cart links', () => {
+  it('builds a multi-item Amazon add-to-cart link with quantities', () => {
+    const url = amazonAddToCartUrl([
+      { asin: 'B005M4AMYI', qty: '2' },
+      { asin: 'B001O8NQUS', qty: '1 bunch' },
+    ]);
+    expect(url.startsWith('https://www.amazon.com/gp/aws/cart/add.html?')).toBe(true);
+    expect(url).toContain('ASIN.1=B005M4AMYI&Quantity.1=2');
+    expect(url).toContain('ASIN.2=B001O8NQUS&Quantity.2=1');
+  });
+
+  it('qtyNumber reads a leading count and defaults to 1', () => {
+    expect(qtyNumber('2')).toBe(2);
+    expect(qtyNumber('12 pack')).toBe(12);
+    expect(qtyNumber('a few')).toBe(1);
+    expect(qtyNumber('0')).toBe(1);
+  });
+
+  it('amazonAddUrl goes to the cart when the ASIN is known, else to a storefront search', () => {
+    const s = defaultState();
+    const pb = s.items.find((i) => i.id === 'pb-cups')!;
+    expect(pb.asin).toBe('B005M4AMYI');
+    expect(amazonAddUrl(pb)).toContain('cart/add.html');
+    const hot = s.items.find((i) => i.id === 'hot-bar')!;
+    expect(hot.asin).toBeUndefined();
+    expect(amazonAddUrl(hot)).toContain('/s?k=hot+bar');
+  });
+
+  it('cartable lists out items that have an ASIN', () => {
+    let s = toggleOut(defaultState(), 'pb-cups', NOW);
+    s = toggleOut(s, 'hot-bar', NOW);
+    expect(cartable(s).map((i) => i.id)).toEqual(['pb-cups']);
+  });
+
+  it('mergeStaples backfills ASINs on lists saved before they existed', () => {
+    const saved = JSON.stringify({
+      items: [
+        { id: 'limes', name: 'Limes', aisle: 'Produce', qty: '2', status: 'need', staple: true },
+      ],
+      trips: [],
+    });
+    expect(loadState(saved).items.find((i) => i.id === 'limes')?.asin).toBe('B07811WM8Z');
   });
 });
 

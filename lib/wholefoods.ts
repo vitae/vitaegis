@@ -6,7 +6,7 @@
    the household's own Whole Foods order history (lib/wholefoods-staples.ts).
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-import { PAST_VISITS, STAPLES, type PastVisit } from './wholefoods-staples';
+import { ASINS, PAST_VISITS, STAPLES, type PastVisit } from './wholefoods-staples';
 
 /** stocked = we have it · need = we're out (the red ✕) · cart = picked up this trip */
 export type Status = 'need' | 'cart' | 'stocked';
@@ -46,6 +46,8 @@ export type Item = {
   staple?: boolean;
   /** What to search for on Amazon; defaults to the name. */
   search?: string;
+  /** Amazon ASIN of the Whole Foods listing, when known; enables one-tap add to cart. */
+  asin?: string;
   /** Trips in the order history that included this item. */
   timesBought?: number;
   avgPrice?: number | null;
@@ -90,6 +92,37 @@ export function amazonSearchUrl(name: string): string {
   return `https://www.amazon.com/s?${q.toString()}`;
 }
 
+/** "2", "2 bottles", "1 bunch" → 2, 2, 1. Anything else → 1. */
+export function qtyNumber(qty: string): number {
+  const n = parseInt(qty, 10);
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 99) : 1;
+}
+
+/**
+ * Amazon's add-to-cart link: opening it in the shopper's own signed-in browser puts the
+ * listed ASINs in their cart. Several items go in one link.
+ */
+export function amazonAddToCartUrl(items: { asin: string; qty?: string }[]): string {
+  const q = new URLSearchParams();
+  items.forEach((it, i) => {
+    q.set(`ASIN.${i + 1}`, it.asin);
+    q.set(`Quantity.${i + 1}`, String(qtyNumber(it.qty ?? '1')));
+  });
+  return `https://www.amazon.com/gp/aws/cart/add.html?${q.toString()}`;
+}
+
+/** Where the + button should send the shopper: straight into the cart when the ASIN is known. */
+export function amazonAddUrl(item: Pick<Item, 'asin' | 'qty' | 'search' | 'name'>): string {
+  return item.asin
+    ? amazonAddToCartUrl([{ asin: item.asin, qty: item.qty }])
+    : amazonSearchUrl(item.search ?? item.name);
+}
+
+/** Everything marked out that has a known ASIN, ready for one add-all link. */
+export function cartable(state: ListState): Item[] {
+  return state.items.filter((i) => i.status === 'need' && i.asin);
+}
+
 export function stapleItem(id: string): Item | undefined {
   const s = STAPLES.find((x) => x.id === id);
   if (!s) return undefined;
@@ -101,6 +134,7 @@ export function stapleItem(id: string): Item | undefined {
     status: 'stocked',
     staple: true,
     search: s.search,
+    ...(ASINS[s.id] ? { asin: ASINS[s.id] } : {}),
     timesBought: s.timesBought,
     avgPrice: s.avgPrice,
     lastBoughtAt: s.lastBoughtAt,
@@ -136,8 +170,11 @@ function isTrip(v: unknown): v is Trip {
 export function mergeStaples(state: ListState): ListState {
   const have = new Set(state.items.map((i) => i.id));
   const missing = STAPLES.filter((s) => !have.has(s.id)).map((s) => stapleItem(s.id)!);
-  if (missing.length === 0) return state;
-  return { ...state, items: [...state.items, ...missing] };
+  // Saved lists from before ASINs existed pick them up here.
+  const needsAsin = state.items.some((i) => !i.asin && ASINS[i.id]);
+  if (missing.length === 0 && !needsAsin) return state;
+  const items = state.items.map((i) => (!i.asin && ASINS[i.id] ? { ...i, asin: ASINS[i.id] } : i));
+  return { ...state, items: [...items, ...missing] };
 }
 
 /** Parses saved JSON; anything malformed falls back to the default list. */

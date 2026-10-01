@@ -17,7 +17,10 @@ import {
   AISLES,
   AMAZON_CART,
   AMAZON_ORDERS,
+  amazonAddToCartUrl,
+  amazonAddUrl,
   amazonSearchUrl,
+  cartable,
   completeTrip,
   defaultState,
   formatDate,
@@ -352,6 +355,20 @@ export default function Checklist() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
+          {cartable(state).length > 0 && (
+            <a
+              href={amazonAddToCartUrl(cartable(state).map((i) => ({ asin: i.asin!, qty: i.qty })))}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                change((s) => cartable(s).reduce((acc, i) => setItemStatus(acc, i.id, 'cart'), s))
+              }
+              className={`${pill} border-vitae-green bg-vitae-green/15 text-vitae-green hover:bg-vitae-green hover:text-black`}
+            >
+              + Add all {cartable(state).length} out item{cartable(state).length === 1 ? '' : 's'}{' '}
+              to Amazon cart
+            </a>
+          )}
           <button
             type="button"
             onClick={() => setFinishing((v) => !v)}
@@ -438,20 +455,36 @@ export default function Checklist() {
             </span>
           )}
           {buyAgain.map((i) => (
-            <button
+            <div
               key={i.id}
-              type="button"
-              onClick={() => change((s) => setItemStatus(s, i.id, 'need'))}
-              className="group rounded-xl border border-white/15 px-3 py-2 text-left transition-colors hover:border-vitae-red/60"
+              className="flex items-stretch overflow-hidden rounded-xl border border-white/15 transition-colors hover:border-white/40"
             >
-              <span className="text-sm font-medium text-white group-hover:text-vitae-red">
-                ✕ {i.name}
-              </span>
-              <span className="ml-2 text-[11px] text-white/45">
-                {i.timesBought}× · last{' '}
-                {formatDate(i.lastBoughtAt ?? '', HST).replace(/, \d{4}$/, '')}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => change((s) => setItemStatus(s, i.id, 'need'))}
+                title="Mark out"
+                className="group px-3 py-2 text-left"
+              >
+                <span className="text-sm font-medium text-white group-hover:text-vitae-red">
+                  ✕ {i.name}
+                </span>
+                <span className="ml-2 text-[11px] text-white/45">
+                  {i.timesBought}× · last{' '}
+                  {formatDate(i.lastBoughtAt ?? '', HST).replace(/, \d{4}$/, '')}
+                </span>
+              </button>
+              <a
+                href={amazonAddUrl(i)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => change((s) => setItemStatus(s, i.id, 'cart'))}
+                aria-label={`Add ${i.name} to your Amazon cart`}
+                title="Add to your Amazon cart"
+                className="flex items-center border-l border-vitae-green/40 bg-vitae-green/10 px-3 text-lg font-bold text-vitae-green hover:bg-vitae-green hover:text-black"
+              >
+                +
+              </a>
+            </div>
           ))}
         </div>
       </section>
@@ -497,6 +530,21 @@ export default function Checklist() {
                     </span>
                   )}
                   <OutButton item={item} />
+                  <a
+                    href={amazonAddUrl(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => change((s) => setItemStatus(s, item.id, 'cart'))}
+                    aria-label={`Add ${item.name} to your Amazon cart`}
+                    title={
+                      item.asin
+                        ? 'Add to your Amazon cart (Whole Foods)'
+                        : 'Find it in the Whole Foods storefront on Amazon'
+                    }
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vitae-green/60 bg-vitae-green/10 text-xl font-bold leading-none text-vitae-green transition-all hover:bg-vitae-green hover:text-black hover:shadow-[0_0_14px_rgba(0,255,0,0.5)]"
+                  >
+                    +
+                  </a>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline gap-x-3">
                       <span
