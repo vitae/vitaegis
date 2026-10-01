@@ -2,25 +2,35 @@
    Whole Foods grocery checklist · pure logic
    The page at /wholefoods keeps its state in the browser (localStorage) and links
    every item into the Whole Foods Market storefront on Amazon, where the visitor's
-   own Amazon session handles cart and checkout.
+   own Amazon session handles cart and checkout. The inventory of staples comes from
+   the household's own Whole Foods order history (lib/wholefoods-staples.ts).
    ═══════════════════════════════════════════════════════════════════════════════ */
 
+import { PAST_VISITS, STAPLES, type PastVisit } from './wholefoods-staples';
+
+/** stocked = we have it · need = we're out (the red ✕) · cart = picked up this trip */
 export type Status = 'need' | 'cart' | 'stocked';
 
 export type Aisle =
   | 'Produce'
-  | 'Protein'
+  | 'Meat'
   | 'Dairy & Eggs'
+  | 'Bakery'
+  | 'Prepared'
   | 'Pantry'
+  | 'Snacks'
   | 'Frozen'
   | 'Drinks'
   | 'Household';
 
 export const AISLES: Aisle[] = [
   'Produce',
-  'Protein',
+  'Meat',
   'Dairy & Eggs',
+  'Bakery',
+  'Prepared',
   'Pantry',
+  'Snacks',
   'Frozen',
   'Drinks',
   'Household',
@@ -32,6 +42,13 @@ export type Item = {
   aisle: Aisle;
   qty: string;
   status: Status;
+  /** True for the "we always get this" inventory, seeded from order history. */
+  staple?: boolean;
+  /** What to search for on Amazon; defaults to the name. */
+  search?: string;
+  /** Trips in the order history that included this item. */
+  timesBought?: number;
+  avgPrice?: number | null;
   /** ISO time the item was last marked "in cart". Cleared when it becomes stocked. */
   checkedAt?: string;
   /** ISO time the item was last marked "stocked" (bought). */
@@ -44,11 +61,16 @@ export type Trip = {
   completedAt?: string;
   /** How many items were bought on this trip. */
   items: number;
+  /** Names of what was bought, for the visit log. */
+  names?: string[];
+  kind?: 'store' | 'delivery';
+  total?: number;
+  note?: string;
 };
 
 export type ListState = { items: Item[]; trips: Trip[] };
 
-export const STORAGE_KEY = 'vitaegis.wholefoods.v1';
+export const STORAGE_KEY = 'vitaegis.wholefoods.v2';
 
 /** Whole Foods Market's storefront id on Amazon. */
 export const WFM_BRAND_ID = 'VUZHIFdob2xlIEZvb2Rz';
@@ -63,44 +85,26 @@ export function amazonSearchUrl(name: string): string {
   return `https://www.amazon.com/s?${q.toString()}`;
 }
 
-type Seed = Omit<Item, 'status'>;
+export function stapleItem(id: string): Item | undefined {
+  const s = STAPLES.find((x) => x.id === id);
+  if (!s) return undefined;
+  return {
+    id: s.id,
+    name: s.name,
+    aisle: s.aisle,
+    qty: s.qty,
+    status: 'stocked',
+    staple: true,
+    search: s.search,
+    timesBought: s.timesBought,
+    avgPrice: s.avgPrice,
+    lastBoughtAt: s.lastBoughtAt,
+  };
+}
 
-export const DEFAULT_ITEMS: Seed[] = [
-  { id: 'bananas', name: 'Bananas', aisle: 'Produce', qty: '1 bunch' },
-  { id: 'blueberries', name: 'Organic blueberries', aisle: 'Produce', qty: '1 pint' },
-  { id: 'avocados', name: 'Avocados', aisle: 'Produce', qty: '4' },
-  { id: 'spinach', name: 'Baby spinach', aisle: 'Produce', qty: '1 bag' },
-  { id: 'kale', name: 'Lacinato kale', aisle: 'Produce', qty: '1 bunch' },
-  { id: 'sweet-potatoes', name: 'Sweet potatoes', aisle: 'Produce', qty: '3' },
-  { id: 'garlic', name: 'Garlic', aisle: 'Produce', qty: '2 heads' },
-  { id: 'ginger', name: 'Ginger root', aisle: 'Produce', qty: '1 piece' },
-  { id: 'lemons', name: 'Lemons', aisle: 'Produce', qty: '4' },
-  { id: 'salmon', name: 'Wild salmon fillet', aisle: 'Protein', qty: '1 lb' },
-  { id: 'chicken-thighs', name: 'Organic chicken thighs', aisle: 'Protein', qty: '2 lb' },
-  { id: 'sardines', name: 'Wild Planet sardines', aisle: 'Protein', qty: '3 tins' },
-  { id: 'eggs', name: 'Pasture-raised eggs', aisle: 'Dairy & Eggs', qty: '1 dozen' },
-  { id: 'greek-yogurt', name: 'Plain Greek yogurt', aisle: 'Dairy & Eggs', qty: '32 oz' },
-  { id: 'kefir', name: 'Kefir', aisle: 'Dairy & Eggs', qty: '32 oz' },
-  { id: 'butter', name: 'Grass-fed butter', aisle: 'Dairy & Eggs', qty: '1' },
-  { id: 'oats', name: 'Rolled oats', aisle: 'Pantry', qty: '1 bag' },
-  { id: 'brown-rice', name: 'Brown rice', aisle: 'Pantry', qty: '2 lb' },
-  { id: 'lentils', name: 'Lentils', aisle: 'Pantry', qty: '1 lb' },
-  { id: 'black-beans', name: '365 black beans', aisle: 'Pantry', qty: '4 cans' },
-  { id: 'olive-oil', name: 'Extra virgin olive oil', aisle: 'Pantry', qty: '1 bottle' },
-  { id: 'almond-butter', name: 'Almond butter', aisle: 'Pantry', qty: '1 jar' },
-  { id: 'sauerkraut', name: 'Raw sauerkraut', aisle: 'Pantry', qty: '1 jar' },
-  { id: 'dark-chocolate', name: 'Dark chocolate 85%', aisle: 'Pantry', qty: '2 bars' },
-  { id: 'frozen-berries', name: 'Frozen mixed berries', aisle: 'Frozen', qty: '1 bag' },
-  { id: 'frozen-broccoli', name: 'Frozen broccoli', aisle: 'Frozen', qty: '1 bag' },
-  { id: 'green-tea', name: 'Green tea', aisle: 'Drinks', qty: '1 box' },
-  { id: 'kombucha', name: 'Kombucha', aisle: 'Drinks', qty: '2 bottles' },
-  { id: 'sparkling-water', name: 'Sparkling water', aisle: 'Drinks', qty: '12 pack' },
-  { id: 'paper-towels', name: '365 paper towels', aisle: 'Household', qty: '1 pack' },
-  { id: 'dish-soap', name: 'Dish soap', aisle: 'Household', qty: '1' },
-];
-
+/** Every staple starts out stocked; mark the red ✕ on whatever is actually out. */
 export function defaultState(): ListState {
-  return { items: DEFAULT_ITEMS.map((i) => ({ ...i, status: 'need' as Status })), trips: [] };
+  return { items: STAPLES.map((s) => stapleItem(s.id)!), trips: [] };
 }
 
 const STATUSES: Status[] = ['need', 'cart', 'stocked'];
@@ -123,6 +127,14 @@ function isTrip(v: unknown): v is Trip {
   return typeof o.id === 'string' && typeof o.startedAt === 'string' && typeof o.items === 'number';
 }
 
+/** Any staple missing from a saved list is added (stocked), so new staples show up. */
+export function mergeStaples(state: ListState): ListState {
+  const have = new Set(state.items.map((i) => i.id));
+  const missing = STAPLES.filter((s) => !have.has(s.id)).map((s) => stapleItem(s.id)!);
+  if (missing.length === 0) return state;
+  return { ...state, items: [...state.items, ...missing] };
+}
+
 /** Parses saved JSON; anything malformed falls back to the default list. */
 export function loadState(raw: string | null): ListState {
   if (!raw) return defaultState();
@@ -131,7 +143,7 @@ export function loadState(raw: string | null): ListState {
     if (!Array.isArray(parsed.items)) return defaultState();
     const items = parsed.items.filter(isItem);
     const trips = Array.isArray(parsed.trips) ? parsed.trips.filter(isTrip) : [];
-    return { items, trips };
+    return mergeStaples({ items, trips });
   } catch {
     return defaultState();
   }
@@ -160,6 +172,13 @@ export function setItemStatus(
   };
 }
 
+/** The red ✕: flip a staple between stocked and out (need). Cart items go back to out. */
+export function toggleOut(state: ListState, id: string, now?: string): ListState {
+  const item = state.items.find((i) => i.id === id);
+  if (!item) return state;
+  return setItemStatus(state, id, item.status === 'need' ? 'stocked' : 'need', now);
+}
+
 export function addItem(
   state: ListState,
   input: { name: string; aisle: Aisle; qty: string },
@@ -182,8 +201,12 @@ export function removeItem(state: ListState, id: string): ListState {
   return { ...state, items: state.items.filter((i) => i.id !== id) };
 }
 
-/** Everything in the cart becomes stocked and the trip is logged with its date and time. */
-export function completeTrip(state: ListState, now: string = new Date().toISOString()): ListState {
+/** Everything in the cart becomes stocked and the visit is logged with its date, time and note. */
+export function completeTrip(
+  state: ListState,
+  now: string = new Date().toISOString(),
+  extra: { kind?: 'store' | 'delivery'; total?: number; note?: string } = {},
+): ListState {
   const bought = state.items.filter((i) => i.status === 'cart');
   if (bought.length === 0) return state;
   const items = state.items.map((i) =>
@@ -197,8 +220,12 @@ export function completeTrip(state: ListState, now: string = new Date().toISOStr
     startedAt,
     completedAt: now,
     items: bought.length,
+    names: bought.map((i) => i.name),
+    kind: extra.kind ?? 'store',
+    ...(extra.total !== undefined && Number.isFinite(extra.total) ? { total: extra.total } : {}),
+    ...(extra.note?.trim() ? { note: extra.note.trim() } : {}),
   };
-  return { items, trips: [trip, ...state.trips].slice(0, 50) };
+  return { items, trips: [trip, ...state.trips].slice(0, 200) };
 }
 
 /** Stocked items go back on the list. Use it when the fridge is empty again. */
@@ -215,6 +242,53 @@ export function summarize(state: ListState): Record<Status | 'total', number> {
   return out;
 }
 
+/**
+ * Buy-again suggestions: staples ranked by how often they were bought, most popular
+ * first. Items already out or in the cart are left out, since they are on the list.
+ */
+export function suggestions(state: ListState, limit = 12): Item[] {
+  return state.items
+    .filter((i) => i.staple && i.status === 'stocked')
+    .sort((a, b) => (b.timesBought ?? 0) - (a.timesBought ?? 0))
+    .slice(0, limit);
+}
+
+export type VisitEntry = {
+  id: string;
+  at: string;
+  endedAt?: string;
+  kind: 'store' | 'delivery';
+  total?: number;
+  items: number;
+  names?: string[];
+  note?: string;
+  source: 'logged' | 'amazon';
+};
+
+/** Trips logged on this device merged with the Amazon order history, newest first. */
+export function visitLog(state: ListState, history: PastVisit[] = PAST_VISITS): VisitEntry[] {
+  const logged: VisitEntry[] = state.trips.map((t) => ({
+    id: t.id,
+    at: t.startedAt,
+    endedAt: t.completedAt,
+    kind: t.kind ?? 'store',
+    total: t.total,
+    items: t.items,
+    names: t.names,
+    note: t.note,
+    source: 'logged',
+  }));
+  const past: VisitEntry[] = history.map((v) => ({
+    id: v.id,
+    at: v.at,
+    kind: v.kind,
+    total: v.total,
+    items: v.items,
+    source: 'amazon',
+  }));
+  return [...logged, ...past].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
 /** Short date and time, e.g. "Oct 1, 5:45 PM". */
 export function formatStamp(iso: string, timeZone?: string): string {
   const d = new Date(iso);
@@ -224,6 +298,18 @@ export function formatStamp(iso: string, timeZone?: string): string {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone,
+  });
+}
+
+/** Date with year, e.g. "Sep 26, 2026". */
+export function formatDate(iso: string, timeZone?: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
     timeZone,
   });
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BusTracker from './BusTracker';
 import Checklist from './Checklist';
 
 export const metadata: Metadata = {
@@ -38,13 +39,17 @@ export default function WholeFoodsPage() {
             Run
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            Checklist and inventory in one. Tap an item into the cart, finish the trip, and every
-            pickup is stamped with its date and time. Each item opens in the Whole Foods storefront
-            on Amazon, signed in as you.
+            The inventory of what we always get, built from every Whole Foods order on the account.
+            Put a red ✕ on whatever we are out of, tick it into the cart, finish the visit, and the
+            log keeps the date and time. Each item opens in the Whole Foods storefront on Amazon,
+            signed in as you.
           </p>
         </header>
 
-        <Checklist />
+        <div className="space-y-8">
+          <BusTracker />
+          <Checklist />
+        </div>
 
         <p className="mt-16 text-center text-xs font-light text-white/40">
           Saved in this browser only. Checkout and payment happen in your Amazon account, never

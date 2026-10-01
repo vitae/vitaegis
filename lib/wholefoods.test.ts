@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   amazonSearchUrl,
-  DEFAULT_ITEMS,
+  completeTrip,
+  defaultState,
   formatStamp,
   loadState,
+  mergeStaples,
   setItemStatus,
+  suggestions,
   summarize,
+  toggleOut,
+  visitLog,
   type ListState,
 } from './wholefoods';
+import { PAST_VISITS, STAPLES } from './wholefoods-staples';
 
 const NOW = '2026-10-01T17:45:00.000Z';
 
@@ -21,9 +27,20 @@ describe('amazonSearchUrl', () => {
   });
 });
 
+describe('defaultState', () => {
+  it('seeds the inventory with every staple, all stocked', () => {
+    const s = defaultState();
+    expect(s.items.length).toBe(STAPLES.length);
+    expect(s.items.every((i) => i.staple && i.status === 'stocked')).toBe(true);
+    expect(s.items[0].timesBought).toBeGreaterThan(s.items[s.items.length - 1].timesBought ?? 0);
+  });
+});
+
 describe('setItemStatus', () => {
   const base: ListState = {
-    items: DEFAULT_ITEMS.slice(0, 2).map((i) => ({ ...i, status: 'need' })),
+    items: defaultState()
+      .items.slice(0, 2)
+      .map((i) => ({ ...i, status: 'need' })),
     trips: [],
   };
 
@@ -46,6 +63,73 @@ describe('setItemStatus', () => {
   it('does not mutate the previous state', () => {
     setItemStatus(base, base.items[0].id, 'cart', NOW);
     expect(base.items[0].status).toBe('need');
+  });
+});
+
+describe('toggleOut (the red ✕)', () => {
+  it('flips a stocked staple to out and back', () => {
+    const s = defaultState();
+    const id = s.items[0].id;
+    const out = toggleOut(s, id, NOW);
+    expect(out.items[0].status).toBe('need');
+    const back = toggleOut(out, id, NOW);
+    expect(back.items[0].status).toBe('stocked');
+  });
+
+  it('sends a cart item back to out', () => {
+    const s = setItemStatus(defaultState(), 'pb-cups', 'cart', NOW);
+    expect(toggleOut(s, 'pb-cups').items.find((i) => i.id === 'pb-cups')?.status).toBe('need');
+  });
+});
+
+describe('completeTrip', () => {
+  it('logs the visit with kind, total, note and item names', () => {
+    let s = setItemStatus(defaultState(), 'pb-cups', 'cart', '2026-10-01T17:30:00.000Z');
+    s = setItemStatus(s, 'limes', 'cart', NOW);
+    const done = completeTrip(s, '2026-10-01T18:00:00.000Z', {
+      kind: 'store',
+      total: 12.34,
+      note: 'quick run',
+    });
+    expect(done.trips).toHaveLength(1);
+    expect(done.trips[0]).toMatchObject({
+      startedAt: '2026-10-01T17:30:00.000Z',
+      completedAt: '2026-10-01T18:00:00.000Z',
+      items: 2,
+      names: ["Justin's PB cups", 'Limes'],
+      kind: 'store',
+      total: 12.34,
+      note: 'quick run',
+    });
+    expect(done.items.find((i) => i.id === 'limes')?.status).toBe('stocked');
+  });
+
+  it('is a no-op with an empty cart', () => {
+    const s = defaultState();
+    expect(completeTrip(s, NOW)).toBe(s);
+  });
+});
+
+describe('suggestions', () => {
+  it('ranks stocked staples by how often they were bought and skips items already listed', () => {
+    const s = toggleOut(defaultState(), 'pb-cups', NOW);
+    const top = suggestions(s, 3);
+    expect(top.map((i) => i.id)).not.toContain('pb-cups');
+    expect(top[0].id).toBe('reeds-ginger-brew');
+    expect(top).toHaveLength(3);
+  });
+});
+
+describe('visitLog', () => {
+  it('merges logged trips with the Amazon history, newest first', () => {
+    const s = completeTrip(setItemStatus(defaultState(), 'limes', 'cart', NOW), NOW);
+    const log = visitLog(s);
+    expect(log[0].source).toBe('logged');
+    expect(log[1].source).toBe('amazon');
+    expect(log.length).toBe(PAST_VISITS.length + 1);
+    for (let i = 1; i < log.length; i++) {
+      expect(Date.parse(log[i - 1].at)).toBeGreaterThanOrEqual(Date.parse(log[i].at));
+    }
   });
 });
 
@@ -73,25 +157,32 @@ describe('formatStamp', () => {
 });
 
 describe('loadState', () => {
-  it('falls back to the default list when nothing is saved', () => {
+  it('falls back to the staples when nothing is saved', () => {
     const s = loadState(null);
-    expect(s.items.length).toBe(DEFAULT_ITEMS.length);
-    expect(s.items.every((i) => i.status === 'need')).toBe(true);
+    expect(s.items.length).toBe(STAPLES.length);
     expect(s.trips).toEqual([]);
   });
 
   it('ignores corrupt saved data', () => {
-    expect(loadState('{not json').items.length).toBe(DEFAULT_ITEMS.length);
-    expect(loadState('{"items": "nope"}').items.length).toBe(DEFAULT_ITEMS.length);
+    expect(loadState('{not json').items.length).toBe(STAPLES.length);
+    expect(loadState('{"items": "nope"}').items.length).toBe(STAPLES.length);
   });
 
-  it('restores saved items and trips', () => {
+  it('restores saved items and trips and fills in any missing staples', () => {
     const saved = JSON.stringify({
-      items: [{ id: 'x', name: 'Kefir', aisle: 'Dairy', qty: '1', status: 'cart', checkedAt: NOW }],
+      items: [
+        { id: 'x', name: 'Kefir', aisle: 'Dairy & Eggs', qty: '1', status: 'cart', checkedAt: NOW },
+      ],
       trips: [{ id: 't1', startedAt: NOW, items: 3 }],
     });
     const s = loadState(saved);
     expect(s.items[0].name).toBe('Kefir');
+    expect(s.items.length).toBe(STAPLES.length + 1);
     expect(s.trips[0].items).toBe(3);
+  });
+
+  it('mergeStaples keeps a complete list untouched', () => {
+    const s = defaultState();
+    expect(mergeStaples(s)).toBe(s);
   });
 });
