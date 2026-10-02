@@ -18,8 +18,6 @@ const CONFIG = {
   depthLayers: 5,
   depthRange: 15,
 };
-let currentSpeed = CONFIG.speed;
-let speedRestoreTimeout: number | null = null;
 
 // Texture cache for character textures
 const textureCache = new Map<string, THREE.CanvasTexture>();
@@ -72,35 +70,6 @@ interface Stream {
 }
 
 export default function MatrixBackground() {
-  // Slow down matrix rain on touch/press
-  useEffect(() => {
-    const slowDown = () => {
-      currentSpeed = 0.7;
-      if (speedRestoreTimeout) {
-        clearTimeout(speedRestoreTimeout);
-      }
-      speedRestoreTimeout = window.setTimeout(() => {
-        currentSpeed = CONFIG.speed;
-      }, 1200);
-    };
-    const restoreSpeed = () => {
-      currentSpeed = CONFIG.speed;
-      if (speedRestoreTimeout) {
-        clearTimeout(speedRestoreTimeout);
-        speedRestoreTimeout = null;
-      }
-    };
-    window.addEventListener('touchstart', slowDown, { passive: true });
-    window.addEventListener('mousedown', slowDown);
-    window.addEventListener('touchend', restoreSpeed);
-    window.addEventListener('mouseup', restoreSpeed);
-    return () => {
-      window.removeEventListener('touchstart', slowDown);
-      window.removeEventListener('mousedown', slowDown);
-      window.removeEventListener('touchend', restoreSpeed);
-      window.removeEventListener('mouseup', restoreSpeed);
-    };
-  }, []);
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -207,7 +176,7 @@ export default function MatrixBackground() {
           stream.glyphs.push({
             mesh,
             char,
-            speed: (0.5 + Math.random() * 0.5) * currentSpeed * 0.02,
+            speed: (0.5 + Math.random() * 0.5) * CONFIG.speed * 0.02,
             brightness: 1,
             age: 0,
             mutationTimer: Math.random() * 30,

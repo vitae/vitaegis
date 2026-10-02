@@ -135,9 +135,8 @@ export default function MatrixRainGPU() {
       const atlas = new THREE.CanvasTexture(buildAtlas());
       atlas.colorSpace = THREE.SRGBColorSpace;
 
-      // ── uniforms the CPU still owns: the clock and the speed multiplier ──────
+      // ── uniforms the CPU still owns: the clock ───────────────────────────────
       const uTime = uniform(0);
-      const uSpeed = uniform(1);
       const uView = uniform(new THREE.Vector2(20, 12)); // visible width/height at z=0
 
       const material = new THREE.MeshBasicNodeMaterial();
@@ -157,7 +156,7 @@ export default function MatrixRainGPU() {
       const depth = layer.mul(-3.5); // layers sit further back
       const rowH = float(0.62);
       const trailLen = float(TRAIL).sub(seed2.mul(10)); // 14–24 glyphs long
-      const speed = seed.mul(3).add(1.8).mul(uSpeed); // units per second
+      const speed = seed.mul(3).add(1.8); // units per second
       // The cycle is three screens tall, so each stream spends most of its time off
       // screen and only about a third of the columns are lit at any moment.
       const span = uView.y.mul(3).add(trailLen.mul(rowH)).add(2);
@@ -228,20 +227,6 @@ export default function MatrixRainGPU() {
       fit();
       window.addEventListener('resize', fit);
 
-      // Press to slow the rain, like the old background did.
-      let restore = 0;
-      const slow = () => {
-        uSpeed.value = 0.25;
-        window.clearTimeout(restore);
-        restore = window.setTimeout(() => (uSpeed.value = 1), 1200);
-      };
-      const fast = () => {
-        uSpeed.value = 1;
-        window.clearTimeout(restore);
-      };
-      window.addEventListener('pointerdown', slow, { passive: true });
-      window.addEventListener('pointerup', fast, { passive: true });
-
       // Pause off-screen tabs so phones do not burn battery on a hidden page.
       let running = true;
       const onVisibility = () => {
@@ -263,8 +248,6 @@ export default function MatrixRainGPU() {
       cleanup = () => {
         renderer.setAnimationLoop(null);
         window.removeEventListener('resize', fit);
-        window.removeEventListener('pointerdown', slow);
-        window.removeEventListener('pointerup', fast);
         document.removeEventListener('visibilitychange', onVisibility);
         geometry.dispose();
         quad.dispose();

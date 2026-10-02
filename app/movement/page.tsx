@@ -219,7 +219,6 @@ export default function MovementPage() {
       ctx.font = `bold ${fontSize}px Jost, sans-serif`;
     };
 
-    let isPaused = false;
     let animationId: number;
 
     const draw = () => {
@@ -227,81 +226,59 @@ export default function MovementPage() {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, width, height);
 
-      if (!isPaused) {
-        for (let i = 0; i < drops.length; i++) {
-          const d = drops[i];
-          const word = words[d.wordIndex];
-          const prevY = Math.floor(d.y - speed);
-          const currY = Math.floor(d.y);
+      for (let i = 0; i < drops.length; i++) {
+        const d = drops[i];
+        const word = words[d.wordIndex];
+        const prevY = Math.floor(d.y - speed);
+        const currY = Math.floor(d.y);
 
-          // Add new character when crossing to a new grid row
-          if (currY !== prevY && d.y > 0) {
-            const char = word[d.letterIndex];
-            trails[i].unshift({ char, y: currY * fontSize, age: 0 });
+        // Add new character when crossing to a new grid row
+        if (currY !== prevY && d.y > 0) {
+          const char = word[d.letterIndex];
+          trails[i].unshift({ char, y: currY * fontSize, age: 0 });
 
-            // Limit trail length
-            if (trails[i].length > trailLength) {
-              trails[i].pop();
-            }
-
-            d.letterIndex = (d.letterIndex + 1) % word.length;
+          // Limit trail length
+          if (trails[i].length > trailLength) {
+            trails[i].pop();
           }
 
-          // Draw trail with fading opacity
-          for (let j = 0; j < trails[i].length; j++) {
-            const t = trails[i][j];
-            const opacity = 1 - t.age / trailLength;
-            if (opacity > 0) {
-              ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
-              ctx.fillText(t.char, i * columnWidth, t.y);
-            }
-            t.age += 0.15; // Fade speed
-          }
-
-          // Remove fully faded characters
-          trails[i] = trails[i].filter((t) => t.age < trailLength);
-
-          // Move drop down smoothly
-          d.y += speed;
-
-          // Reset to top when off screen
-          if (d.y * fontSize > height) {
-            d.y = -5;
-            d.wordIndex = (d.wordIndex + 1) % words.length;
-            d.letterIndex = 0;
-          }
+          d.letterIndex = (d.letterIndex + 1) % word.length;
         }
-      } else {
-        // When paused, fill the canvas with black only
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, width, height);
+
+        // Draw trail with fading opacity
+        for (let j = 0; j < trails[i].length; j++) {
+          const t = trails[i][j];
+          const opacity = 1 - t.age / trailLength;
+          if (opacity > 0) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
+            ctx.fillText(t.char, i * columnWidth, t.y);
+          }
+          t.age += 0.15; // Fade speed
+        }
+
+        // Remove fully faded characters
+        trails[i] = trails[i].filter((t) => t.age < trailLength);
+
+        // Move drop down smoothly
+        d.y += speed;
+
+        // Reset to top when off screen
+        if (d.y * fontSize > height) {
+          d.y = -5;
+          d.wordIndex = (d.wordIndex + 1) % words.length;
+          d.letterIndex = 0;
+        }
       }
 
       animationId = requestAnimationFrame(draw);
     };
 
-    // Touch handlers for pausing on iPhone
-    const handleTouchStart = () => {
-      isPaused = true;
-    };
-    const handleTouchEnd = () => {
-      isPaused = false;
-    };
-
     resize();
     window.addEventListener('resize', resize);
-    canvas.addEventListener('touchstart', handleTouchStart);
-    canvas.addEventListener('touchend', handleTouchEnd);
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchend', handleTouchEnd);
     animationId = requestAnimationFrame(draw);
 
     return () => {
       window.removeEventListener('resize', resize);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
       cancelAnimationFrame(animationId);
     };
   }, []);
