@@ -154,32 +154,6 @@ export default function HeroSection() {
         </GlassContainer>
       </div>
 
-      {/* Scroll indicator - positioned above bottom nav on mobile */}
-      <div
-        className={`
-          absolute bottom-24 md:bottom-8 left-1/2 -translate-x-1/2
-          flex flex-col items-center gap-1
-          transition-all duration-500
-          ${hasBeenVisible ? 'opacity-100' : 'opacity-0'}
-        `}
-        style={{ transitionDelay: '600ms' }}
-      >
-        <span className="text-xs text-white/50 tracking-widest uppercase">Scroll</span>
-        <svg
-          className="w-5 h-5 text-white/50 animate-bounce"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 14l-7 7m0 0l-7-7m7 7V3"
-          />
-        </svg>
-      </div>
-
       {/* Ambient glow effect, clipped to the hero so it never widens the page */}
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
