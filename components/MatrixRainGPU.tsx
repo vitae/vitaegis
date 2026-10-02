@@ -124,13 +124,13 @@ export default function MatrixRainGPU() {
       geometry.setAttribute('uv', quad.getAttribute('uv'));
       geometry.instanceCount = count;
       // Column (0..COLUMNS-1), layer (0..LAYERS-1) and slot in the trail (0..TRAIL-1).
-      const meta = new Float32Array(count * 3);
+      const slotData = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
-        meta[i * 3] = Math.floor(i / (LAYERS * TRAIL));
-        meta[i * 3 + 1] = Math.floor(i / TRAIL) % LAYERS;
-        meta[i * 3 + 2] = i % TRAIL;
+        slotData[i * 3] = Math.floor(i / (LAYERS * TRAIL));
+        slotData[i * 3 + 1] = Math.floor(i / TRAIL) % LAYERS;
+        slotData[i * 3 + 2] = i % TRAIL;
       }
-      geometry.setAttribute('meta', new THREE.InstancedBufferAttribute(meta, 3));
+      geometry.setAttribute('glyphSlot', new THREE.InstancedBufferAttribute(slotData, 3));
 
       const atlas = new THREE.CanvasTexture(buildAtlas());
       atlas.colorSpace = THREE.SRGBColorSpace;
@@ -146,7 +146,8 @@ export default function MatrixRainGPU() {
       material.blending = THREE.AdditiveBlending;
 
       // Everything below runs on the GPU, once per instance per frame.
-      const m = attribute('meta', 'vec3');
+      // Not "meta": that is a reserved word in WGSL.
+      const m = attribute('glyphSlot', 'vec3');
       const col = m.x;
       const layer = m.y;
       const slot = m.z;
