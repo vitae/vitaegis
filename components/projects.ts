@@ -10,6 +10,7 @@ import {
   HiMusicNote,
   HiTrendingUp,
   HiTruck,
+  HiCurrencyDollar,
 } from 'react-icons/hi';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -64,6 +65,14 @@ export const projects: Project[] = [
     title: 'Wealth Board',
     description: 'Twelve tickers versus their Dec 31, 2025 close, refreshed hourly.',
     icon: HiTrendingUp,
+  },
+  {
+    href: '/crypto',
+    label: 'CRYPTO',
+    title: 'Bitcoin Board',
+    description:
+      'Live Bitcoin from Chainlink, daily to yearly returns, a bull-or-bear trend read and the top gainers.',
+    icon: HiCurrencyDollar,
   },
   {
     href: '/ubereats',

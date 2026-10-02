@@ -1,0 +1,38 @@
+/* Styles Tailwind does not express cleanly for /crypto. */
+
+.numeric {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.row {
+  transition: background-color 150ms ease;
+}
+
+.price {
+  transition: color 600ms ease;
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.7);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .price {
+    transition: none;
+  }
+  .pulse {
+    animation: none;
+  }
+}
