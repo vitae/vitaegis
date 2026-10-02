@@ -73,7 +73,7 @@ export default function CommunitySection() {
               <a
                 key={social.name}
                 href={social.href}
-                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group relative p-3 sm:p-6 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 hover:bg-black/25 hover:border-white/20 text-center"
+                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group glass-panel glass-panel--hover relative p-3 sm:p-6 rounded-2xl text-center"
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
                 {/* Icon */}
@@ -105,7 +105,7 @@ export default function CommunitySection() {
 
         {/* Newsletter Section */}
         <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 w-full">
-          <div className="relative p-4 sm:p-12 rounded-3xl bg-black/20 backdrop-blur-xl border border-vitae-green/20 overflow-hidden shadow-[0_0_40px_rgba(0,255,65,0.1)] w-full">
+          <div className="glass-panel glass-panel--prominent relative p-4 sm:p-12 rounded-3xl overflow-hidden w-full">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div
@@ -140,7 +140,7 @@ export default function CommunitySection() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter"
-                      className="w-full px-6 py-4 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50 transition-colors"
+                      className="glass-panel glass-panel--subtle w-full px-6 py-4 rounded-2xl text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50"
                     />
                   </div>
                   <GlassButton variant="primary" size="lg">

@@ -56,7 +56,7 @@ export default function ProjectsSection() {
 
         <Link
           href="/projects"
-          className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8 inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-white/10 border border-white/20 text-sm font-medium text-white hover:bg-white/15 min-h-[44px]"
+          className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 glass-panel glass-panel--hover mt-8 inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white min-h-[44px]"
         >
           View all projects
           <HiArrowRight size={16} />

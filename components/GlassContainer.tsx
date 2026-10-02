@@ -33,27 +33,20 @@ export default function GlassContainer({
   };
 
   const variantClasses = {
-    default: 'bg-black/20 border-white/[0.15]',
-    subtle: 'bg-black/10 border-white/[0.08]',
-    prominent: 'bg-black/30 border-vitae-green/20',
+    default: 'glass-panel',
+    subtle: 'glass-panel glass-panel--subtle',
+    prominent: 'glass-panel glass-panel--prominent',
   };
 
   return (
     <div
       className={`
         relative rounded-xl overflow-hidden
-        backdrop-blur-xl
-        border
-        transition-all duration-300 ease-out
         ${variantClasses[variant]}
         ${paddingClasses[padding]}
         ${className}
       `}
-      style={{
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        ...style,
-      }}
+      style={style}
     >
       {/* Top edge glow effect */}
       {glow && (
