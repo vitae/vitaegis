@@ -67,7 +67,8 @@ export default function ProjectsSection() {
           </p>
         </GlassContainer>
 
-        <ProjectGrid className="w-full max-w-5xl" />
+        {/* Three on the front page; the rest live in the Projects menu and on /projects. */}
+        <ProjectGrid className="w-full max-w-5xl" only={['/stocks', '/crypto', '/travel']} />
 
         <Link
           href="/projects"
