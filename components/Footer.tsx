@@ -41,7 +41,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function Footer() {
   return (
-    <footer className="relative px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+    <footer className="relative pb-10 pt-2">
       <div className="section-container mx-auto w-full">
         <GlassContainer variant="default" glow className="w-full p-6 sm:p-10">
           <div className="grid gap-10 text-center md:grid-cols-[1.4fr_repeat(3,1fr)] md:text-left">
