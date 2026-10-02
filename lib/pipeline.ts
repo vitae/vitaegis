@@ -16,6 +16,7 @@ import { driveConfigured, driveName, uploadToDrive } from './drive';
 import { briefNote, buildBrief, extractSource } from './research';
 import { askJev, choice, jevConfigured } from './jev';
 import { autopilotConfig, maybeAutoPublish } from './autopilot';
+import { stitch, type MontageScene } from './montage';
 
 const BUCKET = 'content';
 /** Long enough for the publisher to fetch the media and for you to preview it. */
@@ -27,6 +28,8 @@ type JobKind =
   | 'slides'
   | 'video'
   | 'video_poll'
+  | 'montage'
+  | 'montage_poll'
   | 'publish'
   | 'research_extract'
   | 'research_brief'
@@ -392,6 +395,112 @@ async function runVideoPoll(job: Job) {
   await maybeAutoPublish(job.post_id!);
 }
 
+// ── montage: a longer video from several Veo scenes ───────────────────────────────
+
+/** Scenes renders are retried this many times before the montage gives up. */
+const SCENE_TRIES = 6;
+
+interface SceneState extends MontageScene {
+  op?: string | null;
+  path?: string | null;
+  tries?: number;
+  error?: string | null;
+}
+
+/**
+ * Stage 2d: start a Veo render for every scene. Payload: { scenes: [{ prompt, lines }],
+ * seconds } where `seconds` is how long each scene runs in the cut (Veo renders 8).
+ * A scene that fails to start (rate limit, usually) is retried by the poll stage.
+ */
+async function runMontage(job: Job) {
+  const scenes = ((job.payload.scenes as SceneState[] | undefined) ?? []).map((s) => ({ ...s }));
+  if (scenes.length < 2) throw new Error('A montage needs at least two scenes');
+  for (const s of scenes) {
+    s.tries = 1;
+    try {
+      s.op = await startVideo(s.prompt, { aspectRatio: '9:16' });
+    } catch (err) {
+      s.op = null;
+      s.error = err instanceof Error ? err.message.slice(0, 300) : String(err);
+    }
+  }
+  await queueJob({
+    kind: 'montage_poll',
+    postId: job.post_id!,
+    payload: { ...job.payload, scenes },
+    delaySeconds: 60,
+  });
+}
+
+/** Stage 2e: collect finished scenes; once all are in, cut them into one video. */
+async function runMontagePoll(job: Job) {
+  const post = job.post_id!;
+  const seconds = Number(job.payload.seconds ?? 7.5);
+  const scenes = ((job.payload.scenes as SceneState[] | undefined) ?? []).map((s) => ({ ...s }));
+
+  for (const [i, s] of scenes.entries()) {
+    if (s.path) continue;
+    if (!s.op) {
+      if ((s.tries ?? 0) >= SCENE_TRIES)
+        throw new Error(`Scene ${i + 1} failed ${s.tries} times: ${s.error ?? 'unknown'}`);
+      s.tries = (s.tries ?? 0) + 1;
+      try {
+        s.op = await startVideo(s.prompt, { aspectRatio: '9:16' });
+      } catch (err) {
+        s.error = err instanceof Error ? err.message.slice(0, 300) : String(err);
+      }
+      continue;
+    }
+    const r = await pollVideo(s.op);
+    if (!r.done) continue;
+    if (r.error || !r.uri) {
+      // Rejected or empty render: start that scene again on the next pass.
+      s.op = null;
+      s.error = r.error ?? 'Veo returned no video';
+      continue;
+    }
+    s.path = await store(
+      `generated/${post}-scene${i + 1}.mp4`,
+      await downloadVideo(r.uri),
+      'video/mp4',
+    );
+    s.op = null;
+  }
+
+  if (scenes.some((s) => !s.path)) {
+    // Not an attempt: progress is carried in the payload of a fresh poll.
+    await queueJob({
+      kind: 'montage_poll',
+      postId: post,
+      payload: { ...job.payload, scenes },
+      delaySeconds: 30,
+    });
+    return;
+  }
+
+  const clips: Buffer[] = [];
+  for (const s of scenes) {
+    const { data, error } = await db().storage.from(BUCKET).download(s.path!);
+    if (error || !data) throw new Error(`Could not read ${s.path}`);
+    clips.push(Buffer.from(await data.arrayBuffer()));
+  }
+  const video = await stitch(clips, scenes, seconds);
+  const path = await store(`generated/${post}.mp4`, video, 'video/mp4');
+  await archiveToDrive(post, 'montage', [{ bytes: video, mimeType: 'video/mp4' }]);
+  await db()
+    .from('content_posts')
+    .update({
+      media_kind: 'video',
+      media_path: path,
+      media_paths: [path],
+      media_url: await signedUrl(path),
+      status: 'ready',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', post);
+  await maybeAutoPublish(post);
+}
+
 /** Stage 4: fan out to the networks. Only ever queued by an explicit approval. */
 async function runPublish(job: Job) {
   const { data: post, error } = await db()
@@ -537,6 +646,8 @@ const STAGES: Record<JobKind, (job: Job) => Promise<void>> = {
   slides: runSlides,
   video: runVideo,
   video_poll: runVideoPoll,
+  montage: runMontage,
+  montage_poll: runMontagePoll,
   publish: runPublish,
   research_extract: runResearchExtract,
   research_brief: runResearchBrief,

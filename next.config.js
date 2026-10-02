@@ -6,6 +6,16 @@ const nextConfig = {
   // by absolute URL. KeyCrate also keeps working at vitaegis.com/keycrate.
   assetPrefix: process.env.VERCEL_ENV === 'production' ? 'https://www.vitaegis.com' : undefined,
   transpilePackages: ['three'],
+  // The content worker shells out to ffmpeg and renders captions with resvg: keep both
+  // packages (and their native binaries) out of the bundle, and ship the caption font.
+  serverExternalPackages: ['ffmpeg-static', '@resvg/resvg-js'],
+  outputFileTracingIncludes: {
+    '/api/content/worker': [
+      './lib/fonts/**',
+      './node_modules/ffmpeg-static/ffmpeg',
+      './node_modules/@resvg/**',
+    ],
+  },
   images: {
     domains: [],
   },
