@@ -8,17 +8,20 @@ import type { PostResult } from './types';
 const UPLOAD = 'https://www.googleapis.com/upload/youtube/v3/videos';
 
 /** YouTube wants a title and a description; the caption carries both, split on the first blank line. */
-function splitCaption(caption: string) {
+export function splitCaption(caption: string) {
   const [first, ...rest] = caption.split(/\n\s*\n/);
   const title = (first ?? 'Vitaegis').trim().slice(0, 100);
-  const description = rest.join('\n\n').trim() || title;
-  return { title, description };
+  let description = rest.join('\n\n').trim() || title;
+  // A vertical clip under three minutes is a Short either way; the tag helps it surface.
+  if (!/#shorts\b/i.test(`${title} ${description}`)) description = `${description}\n\n#Shorts`;
+  return { title, description: description.slice(0, 5000) };
 }
 
 export async function postToYouTube(
   caption: string,
   mediaUrl: string,
   kind: string,
+  aiGenerated = true,
 ): Promise<PostResult> {
   if (kind !== 'video' || !mediaUrl) throw new Error('YouTube needs a video');
   const account = await accessToken('youtube');
@@ -38,10 +41,12 @@ export async function postToYouTube(
       'X-Upload-Content-Length': String(bytes.length),
     },
     body: JSON.stringify({
-      snippet: { title, description, categoryId: '22' },
+      snippet: { title, description, categoryId: process.env.YOUTUBE_CATEGORY_ID || '22' },
       status: {
         privacyStatus: process.env.YOUTUBE_PRIVACY || 'public',
         selfDeclaredMadeForKids: false,
+        // YouTube's own altered-or-synthetic label; required for realistic AI footage.
+        containsSyntheticMedia: aiGenerated,
       },
     }),
     cache: 'no-store',

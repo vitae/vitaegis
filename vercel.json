@@ -1,4 +1,7 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
-  "crons": [{ "path": "/api/content/worker", "schedule": "*/2 * * * *" }]
+  "crons": [
+    { "path": "/api/content/worker", "schedule": "*/2 * * * *" },
+    { "path": "/api/content/autopilot", "schedule": "7 * * * *" }
+  ]
 }

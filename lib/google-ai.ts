@@ -124,6 +124,50 @@ Also write prompts for the media models:
   return JSON.parse(text) as CaptionSet;
 }
 
+/**
+ * Last check before the autopilot publishes with nobody watching. Fails closed: any
+ * doubt, or an error reaching the model, holds the post for a human.
+ */
+export async function screenPost(
+  captions: Record<string, string>,
+): Promise<{ publish: boolean; reason: string }> {
+  const json = await call(`/models/${TEXT_MODEL}:generateContent`, {
+    contents: [
+      {
+        parts: [
+          {
+            text: `You are the compliance check for an automated wellness channel (VITAEGIS) that posts to YouTube, Instagram, Facebook, TikTok and X with no human review.
+
+Approve only if ALL of these hold for every caption below:
+- No claim that a food, herb, supplement, practice or product treats, cures, prevents or reverses a disease or medical condition.
+- No advice to stop, replace or change medication or medical care.
+- No guaranteed returns, specific buy/sell calls on a stock or coin, or get-rich promises.
+- No named real people, brands or trademarks presented as endorsing anything.
+- Nothing sexual, hateful, violent, or aimed at children.
+- Nothing factually wrong in a way that could hurt someone who follows it.
+General wellness habits (sleep, light, movement, breathing, cooking) are fine.
+
+Captions (JSON):
+${JSON.stringify(captions).slice(0, 8000)}`,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'OBJECT',
+        properties: { publish: { type: 'BOOLEAN' }, reason: { type: 'STRING' } },
+        required: ['publish', 'reason'],
+      },
+      temperature: 0,
+    },
+  });
+  const text = json?.candidates?.[0]?.content?.parts?.map((p: Part) => p.text ?? '').join('') ?? '';
+  const out = JSON.parse(text) as { publish?: boolean; reason?: string };
+  return { publish: out.publish === true, reason: String(out.reason ?? '') };
+}
+
 // ── image: Nano Banana Pro ──────────────────────────────────────────────────
 
 /** Generate or edit an image. Returns raw bytes plus the mime type the model used. */
@@ -155,8 +199,15 @@ export async function generateImage(
  * Veo is long-running: this kicks it off and returns the operation name. The worker
  * polls with pollVideo on later cron ticks rather than blocking a request.
  */
-export async function startVideo(prompt: string): Promise<string> {
-  const json = await call(`/models/${VIDEO_MODEL}:predictLongRunning`, { instances: [{ prompt }] });
+export async function startVideo(
+  prompt: string,
+  opts: { aspectRatio?: '9:16' | '16:9' } = {},
+): Promise<string> {
+  const json = await call(`/models/${VIDEO_MODEL}:predictLongRunning`, {
+    instances: [{ prompt }],
+    // Veo renders 16:9 unless told otherwise; Shorts and Reels need 9:16.
+    ...(opts.aspectRatio ? { parameters: { aspectRatio: opts.aspectRatio } } : {}),
+  });
   const name = json?.name;
   if (!name)
     throw new Error(`Veo did not return an operation name: ${JSON.stringify(json).slice(0, 300)}`);

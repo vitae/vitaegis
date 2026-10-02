@@ -15,6 +15,7 @@ import { publish, type Platform } from './social';
 import { driveConfigured, driveName, uploadToDrive } from './drive';
 import { briefNote, buildBrief, extractSource } from './research';
 import { askJev, choice, jevConfigured } from './jev';
+import { autopilotConfig, maybeAutoPublish } from './autopilot';
 
 const BUCKET = 'content';
 /** Long enough for the publisher to fetch the media and for you to preview it. */
@@ -163,7 +164,10 @@ async function runCaption(job: Job) {
   // disclosure, and is better content than a synthetic clip. Generation is opt-in.
   const note = ingest.note ?? '';
   const hasFile = Boolean(ingest.storage_path);
-  const mediaKind = await pickMediaKind(note, hasFile, ingest.kind);
+  const autopilot = ingest.origin === 'autopilot';
+  const mediaKind: MediaKind = autopilot
+    ? 'video'
+    : await pickMediaKind(note, hasFile, ingest.kind);
 
   const { data: post, error: pErr } = await db()
     .from('content_posts')
@@ -172,10 +176,11 @@ async function runCaption(job: Job) {
       status: 'draft',
       media_kind: mediaKind,
       // A deck or a still belongs on the feeds that show images; clips go everywhere.
-      platforms:
-        mediaKind === 'slides' ||
-        mediaKind === 'image' ||
-        (mediaKind === 'original' && ingest.kind !== 'video')
+      platforms: autopilot
+        ? autopilotConfig().platforms
+        : mediaKind === 'slides' ||
+            mediaKind === 'image' ||
+            (mediaKind === 'original' && ingest.kind !== 'video')
           ? ['instagram', 'facebook', 'twitter']
           : ['instagram', 'facebook', 'youtube', 'tiktok', 'twitter'],
       // Nothing synthetic in a passthrough post, so no AI label is owed.
@@ -208,6 +213,7 @@ async function runCaption(job: Job) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', post.id);
+    await maybeAutoPublish(post.id);
     return;
   }
 
@@ -294,6 +300,7 @@ async function runImage(job: Job) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', job.post_id!);
+  await maybeAutoPublish(job.post_id!);
 }
 
 /** Stage 2c: a Nano Banana Pro deck for an Instagram carousel, up to ten slides. */
@@ -346,11 +353,13 @@ Square 1:1 composition.`,
       updated_at: new Date().toISOString(),
     })
     .eq('id', job.post_id!);
+  await maybeAutoPublish(job.post_id!);
 }
 
 /** Stage 2b: kick Veo off. The render is polled on later ticks. */
 async function runVideo(job: Job) {
-  const operationName = await startVideo(String(job.payload.prompt ?? ''));
+  // Vertical by default: the clip is cut for Shorts, Reels and TikTok first.
+  const operationName = await startVideo(String(job.payload.prompt ?? ''), { aspectRatio: '9:16' });
   await queueJob({ kind: 'video_poll', postId: job.post_id!, operationName, delaySeconds: 30 });
 }
 
@@ -380,6 +389,7 @@ async function runVideoPoll(job: Job) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', job.post_id!);
+  await maybeAutoPublish(job.post_id!);
 }
 
 /** Stage 4: fan out to the networks. Only ever queued by an explicit approval. */
