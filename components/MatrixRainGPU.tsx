@@ -19,8 +19,8 @@ const ATLAS_ROWS = Math.ceil(CHARS.length / ATLAS_COLS);
 const CELL = 64;
 
 /** Columns across, depth layers, glyphs per stream: the instance count is their product. */
-const COLUMNS = 48;
-const LAYERS = 4;
+const COLUMNS = 40;
+const LAYERS = 3;
 const TRAIL = 24;
 
 /** Every character once, white on transparent, for the shader to pick from by index. */
@@ -192,11 +192,11 @@ export default function MatrixRainGPU() {
       const dim = vec3(0.0, 0.55, 0.05);
       const body = mix(dim, green, smoothstep(0.0, 0.5, fade));
       const colorNode = mix(body, pale, isHead);
-      const depthFade = float(1).sub(layer.div(LAYERS).mul(0.6));
+      const depthFade = float(1).sub(layer.div(LAYERS).mul(0.75));
       const alpha = sampled.a
         .mul(fade)
         .mul(depthFade)
-        .mul(mix(0.8, 1.35, isHead));
+        .mul(mix(0.5, 1.1, isHead));
       material.colorNode = vec4(colorNode.mul(alpha), alpha);
 
       const mesh = new THREE.Mesh(geometry, material);
@@ -206,7 +206,7 @@ export default function MatrixRainGPU() {
       // ── post: a soft bloom, the glow that bleeds onto black ──────────────────
       const post = new THREE.RenderPipeline(renderer);
       const scenePass = pass(scene, camera);
-      const glow = bloom(scenePass, 0.7, 0.5, 0.4);
+      const glow = bloom(scenePass, 0.55, 0.5, 0.5);
       post.outputNode = scenePass.add(glow);
 
       const fit = () => {
