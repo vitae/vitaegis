@@ -46,25 +46,6 @@ export default function HeroSection() {
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ paddingTop: '1rem', width: '100%' }}
       >
-        {/* Badge - Instagram style pill */}
-        <div
-          className={`
-            flex items-center gap-2
-            px-3 sm:px-4 py-1.5 sm:py-2
-            rounded-full
-            bg-[#00ff00]/10
-            border border-[#00ff00]/30
-            mb-4 sm:mb-6
-            transition-all duration-500
-            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-          `}
-          style={{ transitionDelay: '100ms' }}
-        >
-          {/* Pulsing dot indicator */}
-          <div className="w-3 h-3 sm:w-3 sm:h-3 rounded-full bg-[#00ff00] animate-pulse" />
-          <span className="text-xs font-large text-[#00ff00] tracking-wider">VITALITY</span>
-        </div>
-
         {/* The mark: lit green glass with lightning running through it */}
         <h1
           className={`
