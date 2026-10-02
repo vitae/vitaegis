@@ -38,7 +38,7 @@ export default function TokenSection() {
   return (
     <section
       id="token"
-      className="relative flex min-h-screen flex-col items-center pt-24 pb-16 text-center"
+      className="relative flex min-h-screen flex-col items-center pt-8 pb-16 text-center sm:pt-10"
     >
       <div className="section-container flex flex-col items-center justify-center mx-auto w-full max-w-full min-w-0">
         <SectionTitle>Store</SectionTitle>

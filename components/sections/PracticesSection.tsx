@@ -37,7 +37,7 @@ export default function PracticesSection() {
     <section
       id="practices"
       ref={sectionRef}
-      className="relative flex min-h-screen flex-col items-center pt-24 pb-16 text-center"
+      className="relative flex min-h-screen flex-col items-center pt-8 pb-16 text-center sm:pt-10"
     >
       <div className="section-container mx-auto w-full">
         <SectionTitle>Live</SectionTitle>
