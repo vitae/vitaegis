@@ -30,9 +30,10 @@ const CX = W / 2;
 const BASE_Y = 240; // text baseline
 const FLOOR_Y = 352;
 
-const ACID = '#B4FF1A';
-const LIME = '#8FDC00';
-const DEEP = '#2E7A00';
+// Brand green and its tints: the base glows almost white-green, the top sits in shadow.
+const ACID = '#66FF66';
+const LIME = '#00FF00';
+const DEEP = '#00A300';
 
 export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
   const id = useId().replace(/:/g, '');
@@ -66,7 +67,7 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
           <stop offset="0" stopColor={ACID} />
           <stop offset="0.3" stopColor={LIME} />
           <stop offset="0.75" stopColor={DEEP} />
-          <stop offset="1" stopColor="#1C4D00" />
+          <stop offset="1" stopColor="#006B00" />
         </linearGradient>
         {/* The fill rising through the glass during the entrance. */}
         <linearGradient id={`${id}-rise`} x1="0" y1="1" x2="0" y2="0">
@@ -172,7 +173,7 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
       <g className="logo-glow__mark">
         {/* Phase 1: the bevel edges catching light. */}
         <g className="logo-glow__edge">
-          {mark('none', { stroke: '#D6FF8A', strokeWidth: 1.5, strokeLinejoin: 'round' })}
+          {mark('none', { stroke: '#9DFF9D', strokeWidth: 1.5, strokeLinejoin: 'round' })}
         </g>
 
         {/* Phase 2 and 3: the glass filling from the bottom, then its bevels. */}
