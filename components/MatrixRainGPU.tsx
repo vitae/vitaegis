@@ -19,7 +19,7 @@ const ATLAS_ROWS = Math.ceil(CHARS.length / ATLAS_COLS);
 const CELL = 64;
 
 /** Columns across, depth layers, glyphs per stream: the instance count is their product. */
-const COLUMNS = 40;
+const COLUMNS = 34;
 const LAYERS = 3;
 const TRAIL = 24;
 
@@ -157,8 +157,10 @@ export default function MatrixRainGPU() {
       const depth = layer.mul(-3.5); // layers sit further back
       const rowH = float(0.62);
       const trailLen = float(TRAIL).sub(seed2.mul(10)); // 14–24 glyphs long
-      const speed = seed.mul(5).add(3).mul(uSpeed); // units per second
-      const span = uView.y.add(trailLen.mul(rowH)).add(2);
+      const speed = seed.mul(3).add(1.8).mul(uSpeed); // units per second
+      // The cycle is three screens tall, so each stream spends most of its time off
+      // screen and only about a third of the columns are lit at any moment.
+      const span = uView.y.mul(3).add(trailLen.mul(rowH)).add(2);
       const head = fract(seed2.add(uTime.mul(speed).div(span))).mul(span); // 0..span
       const headY = uView.y.mul(0.5).add(1).sub(head);
       const x = col.div(COLUMNS).sub(0.5).mul(uView.x.mul(1.15)).add(layer.mul(0.37));
@@ -192,11 +194,16 @@ export default function MatrixRainGPU() {
       const dim = vec3(0.0, 0.55, 0.05);
       const body = mix(dim, green, smoothstep(0.0, 0.5, fade));
       const colorNode = mix(body, pale, isHead);
-      const depthFade = float(1).sub(layer.div(LAYERS).mul(0.75));
+      const depthFade = float(1).sub(layer.div(LAYERS).mul(0.8));
+      // Streams differ in brightness, so a few bright ones stand out of a dim field.
+      const streamGain = hash(col.mul(13).add(layer.mul(401)).add(3))
+        .mul(0.6)
+        .add(0.4);
       const alpha = sampled.a
         .mul(fade)
         .mul(depthFade)
-        .mul(mix(0.5, 1.1, isHead));
+        .mul(streamGain)
+        .mul(mix(0.3, 0.95, isHead));
       material.colorNode = vec4(colorNode.mul(alpha), alpha);
 
       const mesh = new THREE.Mesh(geometry, material);
@@ -206,7 +213,7 @@ export default function MatrixRainGPU() {
       // ── post: a soft bloom, the glow that bleeds onto black ──────────────────
       const post = new THREE.RenderPipeline(renderer);
       const scenePass = pass(scene, camera);
-      const glow = bloom(scenePass, 0.55, 0.5, 0.5);
+      const glow = bloom(scenePass, 0.35, 0.45, 0.6);
       post.outputNode = scenePass.add(glow);
 
       const fit = () => {
@@ -282,7 +289,7 @@ export default function MatrixRainGPU() {
         className="pointer-events-none fixed inset-0 z-[1]"
         style={{
           background:
-            'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)',
+            'repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px)',
         }}
         aria-hidden
       />
