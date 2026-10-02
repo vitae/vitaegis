@@ -153,16 +153,6 @@ export default function HeroSection() {
           </div>
         </GlassContainer>
       </div>
-
-      {/* Ambient glow effect, clipped to the hero so it never widens the page */}
-      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px]"
-          style={{
-            background: 'radial-gradient(circle, rgba(0, 255, 0, 0.5) 0%, transparent 50%)',
-          }}
-        />
-      </div>
     </section>
   );
 }
