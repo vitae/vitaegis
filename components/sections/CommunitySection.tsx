@@ -10,18 +10,22 @@ import {
   FaTwitch,
   FaInstagram,
   FaFacebook,
+  FaTiktok,
 } from 'react-icons/fa';
 import GlassButton from '@/components/GlassButton';
 import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
 
+// Every channel is @vitaegis; each tile opens that page in a new tab.
 const socials = [
-  { name: 'Facebook', icon: FaFacebook, href: '#', members: '1M', color: '#00ff00' },
-  { name: 'Instagram', icon: FaInstagram, href: '#', members: '5M', color: '#00ff00' },
-  { name: 'YouTube', icon: FaYoutube, href: '#', members: '3M', color: '#FF0000' },
-  { name: 'Twitter', icon: FaTwitter, href: '#', members: '2.5M', color: '#00ff00' },
-  { name: 'Twitch', icon: FaTwitch, href: '#', members: '5.8K', color: '#ff00ff' },
-  { name: 'Discord', icon: FaDiscord, href: '#', members: '20K', color: '#7289DA' },
+  { name: 'Facebook', icon: FaFacebook, href: 'https://facebook.com/vitaegis', members: '1M', color: '#00ff00' },
+  { name: 'Instagram', icon: FaInstagram, href: 'https://instagram.com/vitaegis', members: '5M', color: '#00ff00' },
+  { name: 'YouTube', icon: FaYoutube, href: 'https://youtube.com/@vitaegis', members: '3M', color: '#FF0000' },
+  { name: 'TikTok', icon: FaTiktok, href: 'https://tiktok.com/@vitaegis', members: '2M', color: '#00ff00' },
+  { name: 'X', icon: FaTwitter, href: 'https://x.com/vitaegis', members: '2.5M', color: '#00ff00' },
+  { name: 'Twitch', icon: FaTwitch, href: 'https://twitch.tv/vitaegis', members: '5.8K', color: '#ff00ff' },
+  { name: 'Discord', icon: FaDiscord, href: 'https://discord.gg/vitaegis', members: '20K', color: '#7289DA' },
+  { name: 'GitHub', icon: FaGithub, href: 'https://github.com/vitae', members: '1K', color: '#ffffff' },
 ];
 
 export default function CommunitySection() {
@@ -66,13 +70,16 @@ export default function CommunitySection() {
         </SectionTitle>
 
         {/* Social Links Grid */}
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-12 w-full max-w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12 w-full max-w-full">
           {socials.map((social, index) => {
             const Icon = social.icon;
             return (
               <a
                 key={social.name}
                 href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`VITAEGIS on ${social.name}`}
                 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group glass-panel glass-panel--hover relative p-3 sm:p-6 rounded-2xl text-center"
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
