@@ -13,8 +13,10 @@ import { useId } from 'react';
                 acid green at the base shading to deep green at the top.
      2.6 s →    Settle: thick beveled glass with a white highlight along the upper
                 edges, an inner dark edge, the floor glow breathing, a slow sweep.
-   SVG filters and CSS keyframes only, no per-frame JavaScript; reduced-motion shows
-   the settled state.
+   Kept cheap on purpose: one blurred layer for the glow, the floor light is a plain
+   gradient, the bevels are two masks, and only opacity and transform animate, so
+   phones composite it without re-rastering filters. No per-frame JavaScript;
+   reduced-motion shows the settled state.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 interface Props {
@@ -31,7 +33,6 @@ const FLOOR_Y = 352;
 const ACID = '#B4FF1A';
 const LIME = '#8FDC00';
 const DEEP = '#2E7A00';
-const DARK = '#0E2B00';
 
 export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
   const id = useId().replace(/:/g, '');
@@ -75,8 +76,9 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
         </linearGradient>
         {/* Floor light: a wide band pooling under the mark, and the point beneath it. */}
         <radialGradient id={`${id}-floor`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor={LIME} stopOpacity="0.85" />
-          <stop offset="0.45" stopColor={DEEP} stopOpacity="0.45" />
+          <stop offset="0" stopColor={LIME} stopOpacity="0.7" />
+          <stop offset="0.3" stopColor={DEEP} stopOpacity="0.4" />
+          <stop offset="0.7" stopColor={DEEP} stopOpacity="0.1" />
           <stop offset="1" stopColor={DEEP} stopOpacity="0" />
         </radialGradient>
         <radialGradient id={`${id}-point`} cx="0.5" cy="0.5" r="0.5">
@@ -116,15 +118,14 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
             begin="3s"
           />
         </linearGradient>
-        <clipPath id={`${id}-letters`}>{mark('#fff')}</clipPath>
         {/* Bevel bands: the letters minus a copy shifted down (upper edges) or up (lower edges). */}
         <mask id={`${id}-top`}>
           {mark('#fff')}
-          {mark('#000', { transform: 'translate(0 5)' })}
+          {mark('#000', { transform: 'translate(0 3)' })}
         </mask>
         <mask id={`${id}-bottom`}>
           {mark('#fff')}
-          {mark('#000', { transform: 'translate(0 -6)' })}
+          {mark('#000', { transform: 'translate(0 -4)' })}
         </mask>
         <mask id={`${id}-risemask`}>
           <rect
@@ -136,14 +137,8 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
             fill={`url(#${id}-rise)`}
           />
         </mask>
-        <filter id={`${id}-soft`} x="-20%" y="-50%" width="140%" height="200%">
-          <feGaussianBlur stdDeviation="2.5" />
-        </filter>
         <filter id={`${id}-glow`} x="-30%" y="-80%" width="160%" height="260%">
-          <feGaussianBlur stdDeviation="14" />
-        </filter>
-        <filter id={`${id}-wide`} x="-50%" y="-200%" width="200%" height="500%">
-          <feGaussianBlur stdDeviation="22" />
+          <feGaussianBlur stdDeviation="10" />
         </filter>
       </defs>
 
@@ -159,10 +154,9 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
       <ellipse
         cx={CX}
         cy={FLOOR_Y}
-        rx={420}
-        ry={34}
+        rx={470}
+        ry={46}
         fill={`url(#${id}-floor)`}
-        filter={`url(#${id}-wide)`}
         className="logo-glow__floor"
       />
       <ellipse
@@ -178,30 +172,16 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
       <g className="logo-glow__mark">
         {/* Phase 1: the bevel edges catching light. */}
         <g className="logo-glow__edge">
-          {mark('none', {
-            stroke: ACID,
-            strokeWidth: 2.5,
-            strokeLinejoin: 'round',
-            filter: `url(#${id}-soft)`,
-            opacity: 0.9,
-          })}
-          {mark('none', { stroke: '#E8FFB0', strokeWidth: 1 })}
+          {mark('none', { stroke: '#D6FF8A', strokeWidth: 1.5, strokeLinejoin: 'round' })}
         </g>
 
         {/* Phase 2 and 3: the glass filling from the bottom, then its bevels. */}
         <g className="logo-glow__glass" mask={`url(#${id}-risemask)`}>
-          <g filter={`url(#${id}-glow)`} opacity="0.5">
+          <g filter={`url(#${id}-glow)`} opacity="0.45">
             {mark(LIME)}
           </g>
           {mark(`url(#${id}-glass)`)}
-          {/* Inner dark edge, then the white bevel on the upper edges and acid on the lower. */}
-          {mark('none', {
-            stroke: DARK,
-            strokeWidth: 3,
-            strokeLinejoin: 'round',
-            clipPath: `url(#${id}-letters)`,
-            opacity: 0.55,
-          })}
+          {/* Bevels: a white sliver on the upper edges, acid on the lower. */}
           <rect
             x="0"
             y="0"
@@ -209,7 +189,7 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
             height={H}
             fill="#FFFFFF"
             mask={`url(#${id}-top)`}
-            opacity="0.9"
+            opacity="0.8"
           />
           <rect
             x="0"
@@ -218,14 +198,14 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
             height={H}
             fill={ACID}
             mask={`url(#${id}-bottom)`}
-            opacity="0.95"
+            opacity="0.85"
           />
           {mark(`url(#${id}-sweep)`, { style: { mixBlendMode: 'screen' } })}
         </g>
       </g>
 
       <style>{`
-        .logo-glow { filter: drop-shadow(0 10px 24px rgba(143,220,0,0.18)); }
+        .logo-glow__mark, .logo-glow__glass, .logo-glow__edge, .logo-glow__floor, .logo-glow__point { will-change: opacity, transform; }
         .logo-glow__mark { transform-box: fill-box; transform-origin: 50% 60%; animation: lg-scale 1.7s cubic-bezier(0.2,0.6,0.2,1) both; }
         .logo-glow__edge { animation: lg-edge 2.8s ease-out both; }
         .logo-glow__glass { animation: lg-glass 1.3s ease-out 1.5s both; }
