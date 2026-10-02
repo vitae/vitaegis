@@ -29,8 +29,6 @@ export default function AboutSection() {
     return () => observer.disconnect();
   }, []);
 
-  const stack = ['LLM orchestration', 'Agentic tool use', 'Retrieval (RAG)', 'Streaming APIs'];
-
   return (
     <section
       id="about"
@@ -70,28 +68,16 @@ export default function AboutSection() {
                 Vitaegis is a portmanteau of <em>Vitae</em> and <em>Aegis</em>: life energy.
               </p>
               <p>
-                We run it as an intelligence layer. Frontier language models, orchestrated as
-                tool-using agents over curated knowledge, served through typed, streaming APIs on
-                serverless infrastructure. Signals go in; grounded answers come out, in real time.
+                We run it as an intelligence layer. Intelligence orchestrated agentically over
+                curated knowledge, served through streaming APIs on serverless infrastructure.
+                Turning ideas into reality, in real time.
               </p>
             </div>
 
-            {/* Stack */}
-            <ul className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 flex flex-wrap justify-center gap-2">
-              {stack.map((item) => (
-                <li
-                  key={item}
-                  className="px-3 py-1 rounded-full border border-vitae-green/30 bg-black/30 text-vitae-green text-xs sm:text-sm font-mono tracking-wide"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-
             {/* CTA Link */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8">
-              <button className="group inline-flex items-center gap-2 text-vitae-green font-medium hover:gap-4 transition-all duration-300">
-                Learn our secrets
+              <button className="group inline-flex items-center gap-2 text-vitae-green font-medium tracking-[0.2em] hover:gap-4 transition-all duration-300">
+                LEARN OUR SECRETS
                 <svg
                   className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
                   fill="none"
