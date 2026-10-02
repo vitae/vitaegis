@@ -13,9 +13,8 @@ import { useId } from 'react';
                 acid green at the base shading to deep green at the top.
      2.6 s →    Settle: thick beveled glass with a white highlight along the upper
                 edges, an inner dark edge, the floor glow breathing, a slow sweep.
-   Behind the letters sits a dark glass sphere lit from below, so the mark reads as
-   pieces in front of an orb the way the Xbox segments do. SVG filters and CSS
-   keyframes only, no per-frame JavaScript; reduced-motion shows the settled state.
+   SVG filters and CSS keyframes only, no per-frame JavaScript; reduced-motion shows
+   the settled state.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 interface Props {
@@ -24,11 +23,9 @@ interface Props {
 }
 
 const W = 1000;
-const H = 420;
+const H = 400;
 const CX = W / 2;
 const BASE_Y = 240; // text baseline
-const ORB_Y = 190;
-const ORB_R = 170;
 const FLOOR_Y = 352;
 
 const ACID = '#B4FF1A';
@@ -76,18 +73,6 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
           <stop offset="0.6" stopColor="#fff" />
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
-        {/* The orb behind: dark glass, a little light from the floor at its base. */}
-        <radialGradient id={`${id}-orb`} cx="0.5" cy="0.95" r="0.9">
-          <stop offset="0" stopColor={DEEP} stopOpacity="0.9" />
-          <stop offset="0.35" stopColor="#163D00" stopOpacity="0.8" />
-          <stop offset="0.8" stopColor="#061200" stopOpacity="0.85" />
-          <stop offset="1" stopColor="#030A00" stopOpacity="0.9" />
-        </radialGradient>
-        <radialGradient id={`${id}-orbrim`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0.9" stopColor={LIME} stopOpacity="0" />
-          <stop offset="0.975" stopColor={LIME} stopOpacity="0.35" />
-          <stop offset="1" stopColor={ACID} stopOpacity="0.7" />
-        </radialGradient>
         {/* Floor light: a wide band pooling under the mark, and the point beneath it. */}
         <radialGradient id={`${id}-floor`} cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor={LIME} stopOpacity="0.85" />
@@ -188,12 +173,6 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
         fill={`url(#${id}-point)`}
         className="logo-glow__point"
       />
-
-      {/* The orb behind the mark. */}
-      <g className="logo-glow__late">
-        <circle cx={CX} cy={ORB_Y} r={ORB_R} fill={`url(#${id}-orb)`} />
-        <circle cx={CX} cy={ORB_Y} r={ORB_R} fill={`url(#${id}-orbrim)`} />
-      </g>
 
       {/* Everything that scales in with the entrance. */}
       <g className="logo-glow__mark">
