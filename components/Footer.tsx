@@ -1,125 +1,117 @@
 'use client';
 
-import {
-  FaDiscord,
-  FaTwitter,
-  FaTelegram,
-  FaGithub,
-  FaFacebook,
-  FaInstagram,
-  FaYoutube,
-} from 'react-icons/fa';
+import Link from 'next/link';
+import GlassContainer from '@/components/GlassContainer';
+import { socials } from '@/components/socials';
 
-const footerLinks = {
-  Products: ['Vitamins', 'Green Tea', 'Books'],
-  Pillars: ['Health', 'Stealth', 'Wealth'],
-  Resources: ['Documentation', 'Videos', 'Tutorials'],
-  Company: ['About', 'Mission', 'Contact'],
-};
+/* ═══════════════════════════════════════════════════════════════════════════════
+   VITAEGIS - Footer
+   Styled to match the Connect section above it: the same glass pane, the same
+   @vitaegis channels, and the same words the About section uses for the brand.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+const columns: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: 'Pillars',
+    links: [
+      { label: 'Health', href: '/health' },
+      { label: 'Stealth', href: '/stealth' },
+      { label: 'Wealth', href: '/wealth' },
+    ],
+  },
+  {
+    title: 'Projects',
+    links: [
+      { label: 'Stocks', href: '/stocks' },
+      { label: 'Crypto', href: '/crypto' },
+      { label: 'Travel', href: '/travel' },
+      { label: 'All projects', href: '/projects' },
+    ],
+  },
+  {
+    title: 'Vitaegis',
+    links: [
+      { label: 'About', href: '/#about' },
+      { label: 'Live', href: '/#practices' },
+      { label: 'Store', href: '/#token' },
+      { label: 'Connect', href: '/#community' },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10 flex flex-col items-center justify-center">
-      <div className="max-w-5xl mx-auto flex flex-col items-center justify-center px-4">
-        {/* Main Footer Content */}
-        <div className="w-full flex flex-col items-center justify-center">
-          {/* Brand Column - perfectly aligned and unified */}
-          <div className="flex flex-col md:items-start md:justify-start col-span-1 mb-8 md:mb-12">
-            <div className="flex flex-col items-center md:flex-row md:items-center md:gap-3 mb-4 md:mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vitae-green/20 to-transparent border border-vitae-green/50 flex items-center justify-center mb-2 md:mb-0 md:mr-2">
-                <span className="text-vitae-green font-bold text-lg font-[Jost]">V</span>
-              </div>
-              <span className="text-xl font-semibold tracking-wider font-[Jost] md:ml-1">
-                VITAEGIS
-              </span>
-            </div>
-            <p className="text-white/50 text-sm leading-relaxed mb-4 md:mb-6 max-w-xs text-center md:text-left">
-              Ancient wisdom meets Cyberspirituality. Evolve your energy with Meditation, Yoga, and
-              Tai Chi.
-            </p>
-            {/* Social Links */}
-            <div className="flex gap-3 justify-center md:justify-start w-full">
-              {[
-                { icon: FaFacebook, href: 'https://facebook.com/vitaegis' },
-                { icon: FaInstagram, href: 'https://instagram.com/vitaegis' },
-                { icon: FaYoutube, href: 'https://youtube.com/vitaegis' },
-                { icon: FaTwitter, href: 'https://x.com/vitaegis' },
-                { icon: FaDiscord, href: '#' },
-              ].map((social, i) => {
-                const Icon = social.icon;
-                return (
-                  <a
-                    key={i}
-                    href={social.href}
-                    className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-vitae-green hover:border-vitae-green/30 transition-all aspect-square"
-                  >
-                    <Icon size={18} />
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Link Columns - below brand box */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12 w-full items-start pb-8 md:pb-12">
-            {Object.entries(footerLinks).map(([title, links], idx, arr) => (
-              <div
-                key={title}
-                className={`flex flex-col items-center md:items-start${idx === arr.length - 1 ? ' mb-8 md:mb-0' : ''}`}
+    <footer className="relative px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+      <div className="section-container mx-auto w-full">
+        <GlassContainer variant="default" glow className="w-full p-6 sm:p-10">
+          <div className="grid gap-10 text-center md:grid-cols-[1.4fr_repeat(3,1fr)] md:text-left">
+            {/* Brand */}
+            <div className="flex flex-col items-center md:items-start">
+              <span
+                className="font-[Jost] text-2xl font-bold uppercase tracking-[0.18em] text-white"
+                style={{ textShadow: '0 0 28px rgba(0,255,0,0.25)' }}
               >
-                <h4 className="text-white font-semibold mb-4">{title}</h4>
-                <ul className="space-y-3">
-                  {links.map((link) => (
-                    <li key={link}>
-                      <a
-                        href={title === 'Pillars' ? `/${link.toLowerCase()}` : '#'}
-                        className="text-white/50 hover:text-vitae-green text-sm transition-colors"
+                Vitaegis
+              </span>
+              <p className="mt-1 text-xs uppercase tracking-[0.3em] text-[#00ff00]/80">
+                Health • Stealth • Wealth
+              </p>
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
+                Advanced Intelligence as a Service. <em>Vitae</em> and <em>Aegis</em>: Life Energy,
+                run as an intelligence layer. Turning ideas into reality, in real time.
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2 md:justify-start">
+                {socials.map((social) => {
+                  const Icon = social.icon;
+                  return (
+                    <a
+                      key={social.name}
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`VITAEGIS on ${social.name}`}
+                      className="glass-panel glass-panel--subtle glass-panel--hover flex h-10 w-10 items-center justify-center rounded-xl text-white/70 transition hover:text-white"
+                    >
+                      <Icon size={17} style={{ color: social.color }} />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+
+            {columns.map((col) => (
+              <div key={col.title} className="flex flex-col items-center md:items-start">
+                <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#00ff00]">
+                  {col.title}
+                </h4>
+                <ul className="mt-4 space-y-2">
+                  {col.links.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        className="text-sm text-white/60 transition-colors hover:text-[#00ff00]"
                       >
-                        {link}
-                      </a>
+                        {link.label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-white/10 w-full flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:justify-center pb-2">
-          <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6 text-sm sm:leading-none">
-            <span className="text-white/40 text-sm leading-none flex items-center">
-              © 2026 VITAEGIS. All rights reserved.
-            </span>
-            {/* Add gap only on mobile, none on desktop */}
-            <div className="h-4 sm:hidden" />
-            <a
-              href="#"
-              className="text-white/40 hover:text-white transition-colors leading-none flex items-center"
-            >
-              Privacy Policy
-            </a>
-            <a
-              href="#"
-              className="text-white/40 hover:text-white transition-colors leading-none flex items-center"
-            >
-              Terms of Service
-            </a>
-            <a
-              href="#"
-              className="text-white/40 hover:text-white transition-colors leading-none flex items-center"
-            >
-              Cookies
-            </a>
+          <div className="mt-10 flex flex-col items-center gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:justify-between">
+            <span>© 2026 VITAEGIS. All rights reserved.</span>
+            <div className="flex gap-5">
+              <Link href="/privacy" className="transition-colors hover:text-white">
+                Privacy
+              </Link>
+              <Link href="/terms" className="transition-colors hover:text-white">
+                Terms
+              </Link>
+            </div>
           </div>
-        </div>
-
-        {/* Decorative element */}
-        <div className="mt-4 flex justify-center">
-          <div className="text-[#00ff00]/80 text-[0.6rem] sm:text-xs tracking-[0.3em] uppercase whitespace-nowrap">
-            Health • Stealth • Wealth
-          </div>
-        </div>
+        </GlassContainer>
       </div>
     </footer>
   );
