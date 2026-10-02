@@ -96,6 +96,85 @@ export default function AboutSection() {
           </GlassContainer>
         </div>
 
+        {/* Vitality */}
+        <div className="w-full max-w-3xl mx-auto mt-10">
+          <GlassContainer
+            variant="default"
+            glow={true}
+            className="p-3 sm:p-6 lg:p-10 w-full max-w-full"
+          >
+            {/* Header: both words stretched to the same width so they stack as one block. */}
+            <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mx-auto w-full max-w-md">
+              <svg
+                viewBox="0 0 600 230"
+                className="block h-auto w-full"
+                role="img"
+                aria-label="Vitaegis Vitality"
+              >
+                <text
+                  x="0"
+                  y="96"
+                  textLength="600"
+                  lengthAdjust="spacingAndGlyphs"
+                  fontFamily="Jost, 'Century Gothic', sans-serif"
+                  fontWeight={700}
+                  fontSize="112"
+                  fill="#FFFFFF"
+                >
+                  VITAEGIS
+                </text>
+                <text
+                  x="0"
+                  y="212"
+                  textLength="600"
+                  lengthAdjust="spacingAndGlyphs"
+                  fontFamily="Jost, 'Century Gothic', sans-serif"
+                  fontWeight={700}
+                  fontSize="112"
+                  fill="#00FF00"
+                >
+                  VITALITY
+                </text>
+              </svg>
+            </h2>
+
+            {/* Definition */}
+            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8 text-left mx-auto max-w-xl">
+              <p className="text-white text-xl sm:text-2xl font-medium">
+                vi·tal·i·ty <span className="text-white/50 text-base font-normal">/vīˈtalədē/</span>{' '}
+                <span className="text-white/50 text-base font-normal italic">noun</span>
+              </p>
+              <ol className="mt-3 space-y-2 text-white/70 text-base sm:text-lg leading-relaxed list-decimal list-inside">
+                <li>The state of being strong and active. Energy.</li>
+                <li>The power giving continuance of life, present in all living things.</li>
+              </ol>
+              <p className="mt-3 text-white/50 text-sm">
+                From the Latin <em>vitalis</em>, of life. The same root as <em>Vitae</em>.
+              </p>
+            </div>
+
+            {/* How */}
+            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
+              <p>
+                Vitality is the one asset every other one depends on, and the one that cannot be
+                bought back. So we point the most advanced technology we have at it.
+              </p>
+              <p>
+                Intelligence agents read the research, the oracles and the markets around the clock,
+                and turn what they learn into protocols you can act on: what to eat, when to sleep,
+                how to move, where to put your energy and your money. Streaming AI answers in real
+                time, grounded in curated knowledge rather than guesswork. Live data from the chain,
+                the markets and your own practice, so the picture is always current. Content,
+                products and tools that carry the same discipline into your day.
+              </p>
+              <p className="text-vitae-green">
+                Ancient practice for the body. Cyber technology for the mind. Vitality is what they
+                build together.
+              </p>
+            </div>
+          </GlassContainer>
+        </div>
+
         {/* Bottom decorative line */}
         <div className="reveal opacity-0 transition-all duration-1000 [&.revealed]:opacity-100 mt-20 flex items-center justify-center">
           <div className="h-px w-full max-w-md bg-gradient-to-r from-transparent via-white/20 to-transparent" />
