@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import GlassContainer from '@/components/GlassContainer';
+import LogoGlow from '@/components/LogoGlow';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - HeroSection Component
@@ -64,22 +65,16 @@ export default function HeroSection() {
           <span className="text-xs font-large text-[#00ff00] tracking-wider">VITALITY</span>
         </div>
 
-        {/* Main title with text gradient */}
+        {/* The mark: lit green glass with lightning running through it */}
         <h1
           className={`
-            text-6xl sm:text-6xl md:text-7xl lg:text-8xl
-            font-bold tracking-tight font-[Jost]
-            bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent
-            mb-3 sm:mb-4
-            transition-all duration-500
-            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+            w-[min(92vw,720px)] mb-3 sm:mb-4
+            transition-all duration-700
+            ${hasBeenVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}
           `}
-          style={{
-            transitionDelay: '200ms',
-            textShadow: '0 0 60px rgba(255, 255, 255, 0.1)',
-          }}
+          style={{ transitionDelay: '200ms' }}
         >
-          VITAEGIS
+          <LogoGlow />
         </h1>
 
         {/* Animated underline */}

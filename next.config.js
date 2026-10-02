@@ -6,6 +6,9 @@ const nextConfig = {
   // by absolute URL. KeyCrate also keeps working at vitaegis.com/keycrate.
   assetPrefix: process.env.VERCEL_ENV === 'production' ? 'https://www.vitaegis.com' : undefined,
   transpilePackages: ['three'],
+  // /crypto's first build-time render walks Chainlink history when the Supabase cache is
+  // cold, which can pass Next's default 60-second limit on a slow RPC.
+  staticPageGenerationTimeout: 300,
   // The content worker shells out to ffmpeg and renders captions with resvg: keep both
   // packages (and their native binaries) out of the bundle, and ship the caption font.
   serverExternalPackages: ['ffmpeg-static', '@resvg/resvg-js'],

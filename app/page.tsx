@@ -36,7 +36,7 @@ function SkeletonSection({ className = '' }: { className?: string }) {
 }
 
 // Dynamic imports with skeleton loading states
-const MatrixBackground = dynamic(() => import('@/components/MatrixBackgroundPro'), {
+const MatrixBackground = dynamic(() => import('@/components/MatrixRainGPU'), {
   ssr: false,
   loading: () => <div className="fixed inset-0 bg-black" />,
 });
