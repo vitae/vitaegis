@@ -398,8 +398,15 @@ async function runVideoPoll(job: Job) {
 
 // ── montage: a longer video from several Veo scenes ───────────────────────────────
 
-/** Scenes renders are retried this many times before the montage gives up. */
+/** Scene renders are retried this many times before the montage gives up. */
 const SCENE_TRIES = 6;
+/**
+ * Veo starts allowed per worker pass. The Gemini API caps Veo requests per minute, and
+ * firing eight at once answers most of them with 429, so scenes are started a couple at
+ * a time and the poll keeps going until they are all in.
+ */
+const STARTS_PER_PASS = 2;
+const isRateLimit = (err: unknown) => err instanceof Error && /\b429\b/.test(err.message);
 
 interface SceneState extends MontageScene {
   op?: string | null;
@@ -416,20 +423,26 @@ interface SceneState extends MontageScene {
 async function runMontage(job: Job) {
   const scenes = ((job.payload.scenes as SceneState[] | undefined) ?? []).map((s) => ({ ...s }));
   if (scenes.length < 2) throw new Error('A montage needs at least two scenes');
+  let started = 0;
   for (const s of scenes) {
-    s.tries = 1;
+    if (started >= STARTS_PER_PASS) break;
     try {
       s.op = await startVideo(s.prompt, { aspectRatio: '9:16' });
+      s.tries = 1;
+      started++;
     } catch (err) {
       s.op = null;
-      s.error = err instanceof Error ? err.message.slice(0, 300) : String(err);
+      // A rate limit is not an attempt against the scene.
+      if (!isRateLimit(err)) s.tries = 1;
+      s.error = err instanceof Error ? err.message.slice(0, 600) : String(err);
+      if (isRateLimit(err)) break;
     }
   }
   await queueJob({
     kind: 'montage_poll',
     postId: job.post_id!,
     payload: { ...job.payload, scenes },
-    delaySeconds: 60,
+    delaySeconds: 45,
   });
 }
 
@@ -439,16 +452,23 @@ async function runMontagePoll(job: Job) {
   const seconds = Number(job.payload.seconds ?? 7.5);
   const scenes = ((job.payload.scenes as SceneState[] | undefined) ?? []).map((s) => ({ ...s }));
 
+  let started = 0;
+  let limited = false;
   for (const [i, s] of scenes.entries()) {
     if (s.path) continue;
     if (!s.op) {
       if ((s.tries ?? 0) >= SCENE_TRIES)
         throw new Error(`Scene ${i + 1} failed ${s.tries} times: ${s.error ?? 'unknown'}`);
-      s.tries = (s.tries ?? 0) + 1;
+      if (limited || started >= STARTS_PER_PASS) continue;
       try {
         s.op = await startVideo(s.prompt, { aspectRatio: '9:16' });
+        s.tries = (s.tries ?? 0) + 1;
+        s.error = null;
+        started++;
       } catch (err) {
-        s.error = err instanceof Error ? err.message.slice(0, 300) : String(err);
+        if (isRateLimit(err)) limited = true;
+        else s.tries = (s.tries ?? 0) + 1;
+        s.error = err instanceof Error ? err.message.slice(0, 600) : String(err);
       }
       continue;
     }
