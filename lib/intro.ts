@@ -105,7 +105,7 @@ function convergence(t: number) {
   return { defs: defs.join(''), body: parts.join('') };
 }
 
-const ACID = '#B4FF1A';
+const ACID = '#66FF66'; // a tint of the brand green, not the Xbox lime
 const ORB_R = 250;
 const ORB_Y = MARK_Y - 10;
 

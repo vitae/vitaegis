@@ -145,7 +145,7 @@ export default function HeroSection() {
                 "
               style={{
                 transform: primaryPressed ? 'scale(0.97)' : 'scale(1)',
-                boxShadow: primaryPressed ? 'none' : '0 0 20px rgba(0, 255, 65, 0.5)',
+                boxShadow: primaryPressed ? 'none' : '0 0 20px rgba(0, 255, 0, 0.5)',
               }}
             >
               ENTER VITAEGIS
