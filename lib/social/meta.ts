@@ -69,7 +69,7 @@ export async function postToFacebook(
 // ── Instagram ───────────────────────────────────────────────────────────────
 
 /** Video and carousel containers are processed asynchronously; publishing before FINISHED fails. */
-async function waitForContainer(containerId: string, token: string, tries = 20) {
+async function waitForContainer(containerId: string, token: string, tries = 36) {
   for (let i = 0; i < tries; i++) {
     const json = await graph(
       `/${containerId}`,

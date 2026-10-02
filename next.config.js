@@ -12,6 +12,7 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/content/worker': [
       './lib/fonts/**',
+      './lib/assets/intros/**',
       './node_modules/ffmpeg-static/ffmpeg',
       './node_modules/@resvg/**',
     ],

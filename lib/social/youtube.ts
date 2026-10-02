@@ -6,6 +6,7 @@ import { accessToken } from './tokens';
 import type { PostResult } from './types';
 
 const UPLOAD = 'https://www.googleapis.com/upload/youtube/v3/videos';
+const THUMBS = 'https://www.googleapis.com/upload/youtube/v3/thumbnails/set';
 
 /** YouTube wants a title and a description; the caption carries both, split on the first blank line. */
 export function splitCaption(caption: string) {
@@ -22,6 +23,7 @@ export async function postToYouTube(
   mediaUrl: string,
   kind: string,
   aiGenerated = true,
+  thumbnail?: Buffer,
 ): Promise<PostResult> {
   if (kind !== 'video' || !mediaUrl) throw new Error('YouTube needs a video');
   const account = await accessToken('youtube');
@@ -69,10 +71,23 @@ export async function postToYouTube(
   if (!put.ok)
     throw new Error(`YouTube upload failed: ${put.status} ${JSON.stringify(json).slice(0, 300)}`);
 
+  // Custom thumbnails need a verified channel, and Shorts often show a frame instead;
+  // a refusal here is recorded, never a failed post.
+  let thumb: string | undefined;
+  if (thumbnail && json.id) {
+    const t = await fetch(`${THUMBS}?videoId=${json.id}&uploadType=media`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${account.access_token}`, 'Content-Type': 'image/png' },
+      body: new Uint8Array(thumbnail),
+      cache: 'no-store',
+    }).catch((err: unknown) => ({ ok: false, status: 0, text: async () => String(err) }));
+    thumb = t.ok ? 'set' : `not set: ${t.status} ${(await t.text()).slice(0, 200)}`;
+  }
+
   return {
     platform: 'youtube',
     id: json.id,
     url: json.id ? `https://www.youtube.com/watch?v=${json.id}` : undefined,
-    raw: json,
+    raw: thumb ? { ...json, thumbnail: thumb } : json,
   };
 }

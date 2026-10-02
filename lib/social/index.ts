@@ -18,6 +18,8 @@ export interface PublishInput {
   mediaKind?: string;
   platforms: Platform[];
   aiDisclosure?: boolean;
+  /** Optional cover image (PNG). Only YouTube takes one through the API. */
+  thumbnail?: Buffer;
   /** Platforms already posted to on an earlier attempt; skipped so a retry cannot double-post. */
   alreadyDone?: string[];
 }
@@ -71,7 +73,7 @@ export async function publish(input: PublishInput): Promise<PublishOutcome> {
       else if (platform === 'instagram')
         results[platform] = await postToInstagram(caption, urls, kind!);
       else if (platform === 'youtube')
-        results[platform] = await postToYouTube(caption, urls[0], kind!, ai);
+        results[platform] = await postToYouTube(caption, urls[0], kind!, ai, input.thumbnail);
       else if (platform === 'tiktok')
         results[platform] = await postToTikTok(caption, urls[0], kind!, ai);
       else if (platform === 'twitter') results[platform] = await postToX(caption, urls, kind, ai);

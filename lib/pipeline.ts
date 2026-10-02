@@ -17,6 +17,7 @@ import { briefNote, buildBrief, extractSource } from './research';
 import { askJev, choice, jevConfigured } from './jev';
 import { autopilotConfig, maybeAutoPublish } from './autopilot';
 import { stitch, type MontageScene } from './montage';
+import { introFor, thumbnailPng } from './intro';
 
 const BUCKET = 'content';
 /** Long enough for the publisher to fetch the media and for you to preview it. */
@@ -484,13 +485,20 @@ async function runMontagePoll(job: Job) {
     if (error || !data) throw new Error(`Could not read ${s.path}`);
     clips.push(Buffer.from(await data.arrayBuffer()));
   }
-  const video = await stitch(clips, scenes, seconds);
+  // Optional series intro ({ title }) up front, and a matching thumbnail.
+  const intro = job.payload.intro as { title?: string } | undefined;
+  const introClip = intro?.title ? await introFor(intro.title) : undefined;
+  const video = await stitch(clips, scenes, seconds, introClip);
   const path = await store(`generated/${post}.mp4`, video, 'video/mp4');
+  const thumb = intro?.title
+    ? await store(`generated/${post}-thumb.png`, thumbnailPng(intro.title), 'image/png')
+    : null;
   await archiveToDrive(post, 'montage', [{ bytes: video, mimeType: 'video/mp4' }]);
   await db()
     .from('content_posts')
     .update({
       media_kind: 'video',
+      ...(thumb ? { thumb_path: thumb } : {}),
       media_path: path,
       media_paths: [path],
       media_url: await signedUrl(path),
@@ -528,7 +536,13 @@ async function runPublish(job: Job) {
     : [];
 
   const priorResults = (post.results ?? {}) as Record<string, unknown>;
+  let thumbnail: Buffer | undefined;
+  if (post.thumb_path) {
+    const { data } = await db().storage.from(BUCKET).download(post.thumb_path);
+    if (data) thumbnail = Buffer.from(await data.arrayBuffer());
+  }
   const { results, failures, skipped } = await publish({
+    thumbnail,
     captions: post.captions ?? {},
     mediaUrls,
     mediaKind: post.media_kind ?? 'none',

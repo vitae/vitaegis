@@ -66,33 +66,47 @@ export function captionPng(lines: string[], font = FONT_FILE): Buffer {
   return Buffer.from(r.render().asPng());
 }
 
+export interface Segment {
+  seconds: number;
+  hasAudio: boolean;
+  /** Whether a caption PNG is laid over this segment (the intro has none). */
+  caption: boolean;
+}
+
 /**
- * The -filter_complex graph. Inputs 0..n-1 are the clips and n..2n-1 their caption PNGs
- * (looped stills). Each clip is cut to `seconds`, scaled and cropped to 9:16, its caption
- * faded in on top, and given a stereo track (its own audio, or silence when Veo returned
- * none); then everything is concatenated in order. Pure, so the graph can be tested.
+ * The -filter_complex graph. Inputs 0..n-1 are the clips in order; after them come the
+ * caption PNGs (looped stills), one per captioned segment, in the same order. Each clip
+ * is cut to its length, scaled and cropped to 9:16, its caption faded in on top, and given
+ * a stereo track (its own audio, or silence when there is none); then everything is
+ * concatenated. Pure, so the graph can be tested.
  */
-export function montageFilter(scenes: { hasAudio: boolean }[], seconds: number): string {
-  const n = scenes.length;
+export function montageFilter(segments: Segment[]): string {
+  const n = segments.length;
   const parts: string[] = [];
-  scenes.forEach((s, i) => {
-    parts.push(
-      `[${i}:v]trim=0:${seconds},setpts=PTS-STARTPTS,` +
-        `scale=${MONTAGE_W}:${MONTAGE_H}:force_original_aspect_ratio=increase,` +
-        `crop=${MONTAGE_W}:${MONTAGE_H},fps=24,setsar=1[b${i}]`,
-    );
-    parts.push(
-      `[${n + i}:v]format=rgba,trim=0:${seconds},setpts=PTS-STARTPTS,fade=t=in:st=0.3:d=0.5:alpha=1[t${i}]`,
-    );
-    parts.push(`[b${i}][t${i}]overlay=0:0:format=auto,format=yuv420p[v${i}]`);
+  let caption = n;
+  segments.forEach((s, i) => {
+    const d = s.seconds;
+    const base =
+      `[${i}:v]trim=0:${d},setpts=PTS-STARTPTS,` +
+      `scale=${MONTAGE_W}:${MONTAGE_H}:force_original_aspect_ratio=increase,` +
+      `crop=${MONTAGE_W}:${MONTAGE_H},fps=24,setsar=1`;
+    if (s.caption) {
+      parts.push(`${base}[b${i}]`);
+      parts.push(
+        `[${caption++}:v]format=rgba,trim=0:${d},setpts=PTS-STARTPTS,fade=t=in:st=0.3:d=0.5:alpha=1[t${i}]`,
+      );
+      parts.push(`[b${i}][t${i}]overlay=0:0:format=auto,format=yuv420p[v${i}]`);
+    } else {
+      parts.push(`${base},format=yuv420p[v${i}]`);
+    }
     parts.push(
       s.hasAudio
-        ? `[${i}:a]atrim=0:${seconds},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo[a${i}]`
-        : `anullsrc=r=48000:cl=stereo,atrim=0:${seconds}[a${i}]`,
+        ? `[${i}:a]atrim=0:${d},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo[a${i}]`
+        : `anullsrc=r=48000:cl=stereo,atrim=0:${d}[a${i}]`,
     );
   });
-  const total = n * seconds;
-  parts.push(`${scenes.map((_, i) => `[v${i}][a${i}]`).join('')}concat=n=${n}:v=1:a=1[vc][ac]`);
+  const total = segments.reduce((sum, s) => sum + s.seconds, 0);
+  parts.push(`${segments.map((_, i) => `[v${i}][a${i}]`).join('')}concat=n=${n}:v=1:a=1[vc][ac]`);
   parts.push(`[vc]fade=t=out:st=${(total - 0.6).toFixed(2)}:d=0.6[v]`);
   parts.push(`[ac]afade=t=out:st=${(total - 0.6).toFixed(2)}:d=0.6[a]`);
   return parts.join(';');
@@ -114,29 +128,40 @@ async function hasAudio(file: string) {
   }
 }
 
-/** Stitch the clips (MP4 bytes, in order) and return the finished MP4. */
+/**
+ * Stitch the clips (MP4 bytes, in order) and return the finished MP4. An intro, when
+ * given, plays first at its own length with no caption.
+ */
 export async function stitch(
   clips: Buffer[],
   scenes: MontageScene[],
   seconds: number,
+  intro?: { bytes: Buffer; seconds: number },
 ): Promise<Buffer> {
   const dir = await mkdtemp(path.join(tmpdir(), 'montage-'));
   try {
     const files: string[] = [];
+    const segments: Omit<Segment, 'hasAudio'>[] = [];
+    if (intro) {
+      const f = path.join(dir, 'intro.mp4');
+      await writeFile(f, intro.bytes);
+      files.push(f);
+      segments.push({ seconds: intro.seconds, caption: false });
+    }
     const captions: string[] = [];
     for (const [i, bytes] of clips.entries()) {
       const f = path.join(dir, `scene${i}.mp4`);
       await writeFile(f, bytes);
       files.push(f);
-      const c = path.join(dir, `caption${i}.png`);
-      await writeFile(c, captionPng(scenes[i].lines));
-      captions.push(c);
+      segments.push({ seconds, caption: scenes[i].lines.length > 0 });
+      if (scenes[i].lines.length) {
+        const c = path.join(dir, `caption${i}.png`);
+        await writeFile(c, captionPng(scenes[i].lines));
+        captions.push(c);
+      }
     }
     const audio = await Promise.all(files.map(hasAudio));
-    const graph = montageFilter(
-      audio.map((hasAudio) => ({ hasAudio })),
-      seconds,
-    );
+    const graph = montageFilter(segments.map((s, i) => ({ ...s, hasAudio: audio[i] })));
     const out = path.join(dir, 'montage.mp4');
     await run(
       binary(),

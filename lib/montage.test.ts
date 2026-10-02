@@ -17,12 +17,26 @@ describe('captionSvg', () => {
 });
 
 describe('montageFilter', () => {
-  const g = montageFilter([{ hasAudio: true }, { hasAudio: false }, { hasAudio: true }], 7.5);
+  const seg = (hasAudio: boolean) => ({ seconds: 7.5, hasAudio, caption: true });
+  const g = montageFilter([seg(true), seg(false), seg(true)]);
 
   it('overlays each caption (inputs n..2n-1) on its clip', () => {
     expect(g).toContain('[3:v]format=rgba');
     expect(g).toContain('[5:v]format=rgba');
     expect(g).toContain('[b0][t0]overlay');
+  });
+
+  it('plays an uncaptioned intro at its own length and shifts the caption inputs', () => {
+    const withIntro = montageFilter([
+      { seconds: 4.5, hasAudio: true, caption: false },
+      seg(true),
+      seg(true),
+    ]);
+    expect(withIntro).toContain('[0:v]trim=0:4.5');
+    expect(withIntro).not.toContain('[t0]');
+    expect(withIntro).toContain('[3:v]format=rgba');
+    expect(withIntro).toContain('[4:v]format=rgba');
+    expect(withIntro).toContain('fade=t=out:st=18.90');
   });
 
   it('fills a silent clip with generated silence', () => {
