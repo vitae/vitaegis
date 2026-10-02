@@ -3,8 +3,8 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { HiArrowRight } from 'react-icons/hi';
-import GlassContainer from '@/components/GlassContainer';
 import ProjectGrid from '@/components/ProjectGrid';
+import SectionTitle from '@/components/SectionTitle';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - ProjectsSection
@@ -41,31 +41,15 @@ export default function ProjectsSection() {
     <section
       id="projects"
       ref={sectionRef}
-      className="relative min-h-screen flex flex-col items-center justify-center text-center py-16"
+      className="relative flex min-h-screen flex-col items-center pt-24 pb-16 text-center"
     >
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
-        <GlassContainer
-          variant="default"
-          glow={true}
-          className="text-center mb-8 sm:mb-12 p-4 sm:p-8 w-full max-w-3xl mx-auto"
-        >
-          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-            <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
-              Explore
-            </span>
-          </div>
-
-          <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold">
-            Our <span className="text-vitae-green">Projects</span>
-          </h2>
-
-          <p className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
-            Guides, tools and experiments from the Center for Inner Peace.
-          </p>
-        </GlassContainer>
+        <SectionTitle tagline="Guides, tools and experiments from the Center for Inner Peace.">
+          Projects
+        </SectionTitle>
 
         {/* Three on the front page; the rest live in the Projects menu and on /projects. */}
         <ProjectGrid className="w-full max-w-5xl" only={['/stocks', '/crypto', '/travel']} />

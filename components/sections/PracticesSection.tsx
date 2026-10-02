@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import { pillars } from '@/lib/pillars';
+import SectionTitle from '@/components/SectionTitle';
+import LiveStream from '@/components/LiveStream';
 
 export default function PracticesSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -35,10 +37,16 @@ export default function PracticesSection() {
     <section
       id="practices"
       ref={sectionRef}
-      className="relative flex flex-col items-center justify-center py-24 text-center"
+      className="relative flex min-h-screen flex-col items-center pt-24 pb-16 text-center"
     >
       <div className="section-container mx-auto w-full">
-        <GlassContainer variant="default" glow={true} className="mx-auto max-w-4xl p-4 sm:p-8">
+        <SectionTitle>Live</SectionTitle>
+        <LiveStream />
+        <GlassContainer
+          variant="default"
+          glow={true}
+          className="mx-auto mt-10 max-w-4xl p-4 sm:p-8"
+        >
           <div className="grid grid-cols-3 divide-x divide-vitae-green/20">
             {pillars.map((pillar) => (
               <div

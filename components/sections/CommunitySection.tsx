@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa';
 import GlassButton from '@/components/GlassButton';
 import GlassContainer from '@/components/GlassContainer';
+import SectionTitle from '@/components/SectionTitle';
 
 const socials = [
   { name: 'Facebook', icon: FaFacebook, href: '#', members: '1M', color: '#00ff00' },
@@ -54,33 +55,15 @@ export default function CommunitySection() {
     <section
       id="community"
       ref={sectionRef}
-      className="relative min-h-screen flex flex-col items-center justify-center text-center"
+      className="relative flex min-h-screen flex-col items-center pt-24 pb-16 text-center"
     >
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
-        {/* Section Header in Glassmorphic Container */}
-        <GlassContainer
-          variant="default"
-          glow={true}
-          className="text-center mb-12 sm:mb-20 p-4 sm:p-8 w-full max-w-3xl mx-auto"
-        >
-          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-            <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
-              Join the Movement
-            </span>
-          </div>
-
-          <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold">
-            Our <span className="text-vitae-green">Community</span>
-          </h2>
-
-          <p className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-white/70 max-w-2xl mx-auto text-base sm:text-lg">
-            Connect with practitioners worldwide. Share your journey, learn from masters, and grow
-            together.
-          </p>
-        </GlassContainer>
+        <SectionTitle tagline="Connect with practitioners worldwide. Share your journey, learn from masters, and grow together.">
+          Connect
+        </SectionTitle>
 
         {/* Social Links Grid */}
         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-12 w-full max-w-full">

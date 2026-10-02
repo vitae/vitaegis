@@ -2,6 +2,7 @@
 
 import GlassContainer from '@/components/GlassContainer';
 import BuyButton from '@/components/BuyButton';
+import SectionTitle from '@/components/SectionTitle';
 
 export default function TokenSection() {
   // Example digital products
@@ -37,12 +38,10 @@ export default function TokenSection() {
   return (
     <section
       id="token"
-      className="relative min-h-screen flex flex-col items-center justify-center text-center"
+      className="relative flex min-h-screen flex-col items-center pt-24 pb-16 text-center"
     >
       <div className="section-container flex flex-col items-center justify-center mx-auto w-full max-w-full min-w-0">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-8">
-          <span className="text-vitae-green">EXPORTS</span>
-        </h2>
+        <SectionTitle>Store</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
           {products.map((product, idx) => (
             <GlassContainer

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import GlassContainer from '@/components/GlassContainer';
+import SectionTitle from '@/components/SectionTitle';
 
 export default function AboutSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -33,12 +34,13 @@ export default function AboutSection() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative min-h-screen flex flex-col items-center justify-center text-center"
+      className="relative flex min-h-screen flex-col items-center pt-24 pb-16 text-center"
     >
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
+        <SectionTitle>About Vitaegis</SectionTitle>
         <div className="w-full max-w-3xl mx-auto">
           {/* Text Content in Glassmorphic Container */}
           <GlassContainer
@@ -46,21 +48,14 @@ export default function AboutSection() {
             glow={true}
             className="p-3 sm:p-6 lg:p-10 w-full max-w-full"
           >
-            {/* Section Label */}
-            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0">
-              <span className="text-vitae-green text-sm font-medium tracking-[0.3em] uppercase">
-                About Vitaegis
-              </span>
-            </div>
-
             {/* Main Heading */}
-            <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+            <h3 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
               Advanced Intelligence
               <br />
               <span className="bg-gradient-to-r from-vitae-green to-emerald-400 bg-clip-text text-transparent">
                 as a Service
               </span>
-            </h2>
+            </h3>
 
             {/* Description */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
