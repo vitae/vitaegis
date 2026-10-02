@@ -246,9 +246,9 @@ export default async function CryptoPage() {
           which writes a new answer on every 0.5% move or at least hourly; daily closes are the
           feed&apos;s price at 00:00 UTC, and the June low is the lowest answer the feed wrote that
           month. Watch-area prices for ETH, AVAX, AAVE and LINK come from their Chainlink feeds; XRP
-          and QNT have no live Chainlink feed on Ethereum, so their prices, every coin&apos;s
-          returns and the daily history behind the support and resistance levels come from
-          CoinGecko. Support and resistance are where a price has turned before, not where it must.
+          and QNT have no live Chainlink feed on Ethereum, so their prices, and every coin&apos;s
+          returns and the daily history behind its support and resistance levels, come from
+          Coinbase. Support and resistance are where a price has turned before, not where it must.
           Gainers come from CoinGecko, refreshed every 15 minutes.
         </p>
       </div>

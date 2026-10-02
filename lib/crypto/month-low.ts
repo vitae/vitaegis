@@ -21,8 +21,12 @@ async function readMonthLow(year: number, month: number): Promise<MonthLow | nul
   const [open, close] = await btcPricesAt([start, end - 1]);
   if (!open || !close || open.phase !== close.phase) return null;
   // `open` is the round in force at 00:00 on the 1st; its price held into the month.
+  const expected = close.round - open.round + 1;
   const points = await btcRounds(close.phase, open.round, close.round);
-  if (!points.length) return null;
+  // A gap could hide the real low, and the answer is cached: refuse a partial read so the
+  // next render tries again instead of keeping a wrong number.
+  if (points.length !== expected)
+    throw new Error(`June low: read ${points.length} of ${expected} rounds`);
   let low = points[0];
   for (const p of points) if (p.answer < low.answer) low = p;
   return {
@@ -34,6 +38,6 @@ async function readMonthLow(year: number, month: number): Promise<MonthLow | nul
 }
 
 /** Cached forever once the month is over; a month still running is re-read daily. */
-export const monthLow = unstable_cache(readMonthLow, ['btc-month-low-v1'], {
+export const monthLow = unstable_cache(readMonthLow, ['btc-month-low-v2'], {
   revalidate: 86_400,
 });

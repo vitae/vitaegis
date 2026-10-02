@@ -211,7 +211,7 @@ export default function WatchList({ rows }: { rows: WatchRow[] }) {
                   <p className="mt-2 text-[11px] text-vitae-gray">
                     Trend{' '}
                     {r.zones.trend === 'up' ? 'up' : r.zones.trend === 'down' ? 'down' : 'mixed'} ·{' '}
-                    {r.source === 'chainlink' ? 'price from Chainlink' : 'price from CoinGecko'}
+                    {r.source === 'chainlink' ? 'price from Chainlink' : 'price from Coinbase'}
                   </p>
                 </>
               ) : (

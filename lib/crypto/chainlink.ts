@@ -57,13 +57,18 @@ async function post(url: string, body: unknown): Promise<RpcReply[]> {
   }
 }
 
+/** A revert means "no such round" and is an answer; anything else is worth retrying. */
+const isRevert = (e: unknown) => /revert/i.test(JSON.stringify(e ?? ''));
+
+/** Run the calls on one endpoint; returns the indexes that still need an answer. */
 async function callOn(
   rpc: { url: string; batch: number },
   to: (k: number) => string,
   datas: string[],
   idx: number[],
   out: (string | null)[],
-) {
+): Promise<number[]> {
+  const pending: number[] = [];
   for (let i = 0; i < idx.length; i += rpc.batch) {
     const part = idx.slice(i, i + rpc.batch);
     const replies = await post(
@@ -75,10 +80,16 @@ async function callOn(
         params: [{ to: to(k), data: datas[k] }, 'latest'],
       })),
     );
+    const seen = new Set<number>();
     for (const r of replies) {
+      seen.add(r.id);
       if (typeof r.result === 'string' && r.result.length > 2) out[r.id] = r.result;
+      else if (r.error && !isRevert(r.error)) pending.push(r.id); // rate limit inside a batch
     }
+    // Free endpoints sometimes drop items from a batch reply without saying why.
+    for (const k of part) if (!seen.has(k)) pending.push(k);
   }
+  return pending;
 }
 
 let calls = 0;
@@ -87,7 +98,7 @@ export const rpcCallCount = () => calls;
 
 /**
  * eth_call each calldata against a feed (one address for all, or one per call). A reverted
- * call (no such round) returns null.
+ * call (no such round) returns null; a call no endpoint would answer also ends up null.
  */
 async function ethCalls(
   datas: string[],
@@ -102,16 +113,25 @@ async function ethCalls(
     chunks.push(Array.from({ length: Math.min(size, datas.length - i) }, (_, k) => i + k));
 
   const runChunk = async (idx: number[]) => {
+    let pending = idx;
     let lastErr: unknown;
+    let answered = false;
     for (const rpc of RPCS) {
-      try {
-        await callOn(rpc, to, datas, idx, out);
-        return;
-      } catch (err) {
-        lastErr = err;
+      // Each endpoint gets two passes at whatever is still unanswered.
+      for (let pass = 0; pass < 2 && pending.length; pass++) {
+        try {
+          pending = await callOn(rpc, to, datas, pending, out);
+          answered = true;
+          if (pending.length) await sleep(400 * (pass + 1));
+        } catch (err) {
+          lastErr = err;
+          break;
+        }
       }
+      if (!pending.length) return;
     }
-    throw lastErr instanceof Error ? lastErr : new Error('Every Ethereum RPC failed');
+    if (!answered)
+      throw lastErr instanceof Error ? lastErr : new Error('Every Ethereum RPC failed');
   };
 
   for (let i = 0; i < chunks.length; i += CONCURRENCY) {
