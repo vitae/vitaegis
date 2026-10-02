@@ -7,9 +7,10 @@ import { useEffect, useId, useMemo, useState } from 'react';
    The mark as lit glass, the way the 2026 console boot logos are built: a deep
    glow bleeding onto black, a body shaded pale at the top to deep green at the base,
    a specular highlight that sweeps across the surface, and a bright core. On top of
-   that, lightning: a bolt is traced through the letters every few seconds (clipped to
-   the glyphs so it reads as current running inside the glass), with a flash of the
-   whole mark as it strikes.
+   that, the lightning: every few seconds a price chart is traced through the letters,
+   left to right, climbing in jagged candles like a stock on a run (clipped to the
+   glyphs so it reads as current running inside the glass), with a flash of the whole
+   mark as it breaks out at the top right.
    Everything is SVG filters and CSS animation: no canvas, no per-frame JavaScript,
    and it stops under prefers-reduced-motion.
    ═══════════════════════════════════════════════════════════════════════════════ */
@@ -30,54 +31,60 @@ const hash = (a: number, b: number) => {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 };
 
-/** A jagged path from (x0,y0) to (x1,y1) with a few short forks. */
-function bolt(seed: number, x0: number, y0: number, x1: number, y1: number) {
-  const segments = 14;
-  const pts: [number, number][] = [[x0, y0]];
-  for (let i = 1; i < segments; i++) {
-    const f = i / segments;
-    const jitter = (hash(seed, i) - 0.5) * 70;
-    pts.push([x0 + (x1 - x0) * f + (hash(seed, i + 100) - 0.5) * 30, y0 + (y1 - y0) * f + jitter]);
+/**
+ * A rising price line from the bottom left to the top right of the mark: a run of
+ * candles that mostly close higher, with a few red-day dips so it reads as a market
+ * and not a ramp. Returns the line plus short "volume" ticks under some of the moves.
+ */
+function chart(seed: number) {
+  const steps = 22;
+  const pts: [number, number][] = [];
+  let y = H - 40;
+  const top = 36;
+  const bottom = H - 30;
+  for (let i = 0; i <= steps; i++) {
+    const x = (i / steps) * W;
+    if (i > 0) {
+      // Up about three moves in four, and the trend line itself climbs.
+      const up = hash(seed, i) < 0.74;
+      const size = 8 + hash(seed, i + 50) * 34;
+      y += up ? -size : size * 0.7;
+      y = Math.min(bottom, Math.max(top, y - (i / steps) * 3));
+    }
+    pts.push([x, y]);
   }
-  pts.push([x1, y1]);
+  // Force a breakout: the last two candles close near the top.
+  pts[steps - 1][1] = Math.min(pts[steps - 1][1], top + 40);
+  pts[steps][1] = top + 8;
   const main = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('');
-  const forks: string[] = [];
-  for (let k = 0; k < 3; k++) {
-    const at = 3 + Math.floor(hash(seed, 200 + k) * (segments - 6));
-    const [fx, fy] = pts[at];
-    const dir = hash(seed, 300 + k) > 0.5 ? 1 : -1;
-    forks.push(
-      `M${fx.toFixed(1)} ${fy.toFixed(1)}` +
-        `L${(fx + 30 * dir).toFixed(1)} ${(fy + (hash(seed, 400 + k) - 0.5) * 60).toFixed(1)}` +
-        `L${(fx + 55 * dir).toFixed(1)} ${(fy + (hash(seed, 500 + k) - 0.5) * 90).toFixed(1)}`,
+  const ticks: string[] = [];
+  for (let i = 1; i < steps; i += 2) {
+    const [x, py] = pts[i];
+    const h = 10 + hash(seed, 900 + i) * 18;
+    ticks.push(
+      `M${x.toFixed(1)} ${(py + 6).toFixed(1)}L${x.toFixed(1)} ${(py + 6 + h).toFixed(1)}`,
     );
   }
-  return { main, forks };
+  return { main, ticks, end: pts[steps] };
 }
 
 export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
   const id = useId().replace(/:/g, '');
   const [strike, setStrike] = useState(0);
 
-  // A new bolt every 2.4–4 s; the seed picks its shape and where it enters and leaves.
+  // A new run every 2.8–4.4 s; the seed picks the shape of the chart.
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     let timer = 0;
     const next = () => {
       setStrike((s) => s + 1);
-      timer = window.setTimeout(next, 2400 + Math.random() * 1600);
+      timer = window.setTimeout(next, 2800 + Math.random() * 1600);
     };
     timer = window.setTimeout(next, 900);
     return () => window.clearTimeout(timer);
   }, []);
 
-  const bolts = useMemo(() => {
-    const seed = strike * 7919 + 13;
-    const leftToRight = hash(seed, 1) > 0.5;
-    const yIn = 40 + hash(seed, 2) * 140;
-    const yOut = 40 + hash(seed, 3) * 140;
-    return bolt(seed, leftToRight ? 0 : W, yIn, leftToRight ? W : 0, yOut);
-  }, [strike]);
+  const run = useMemo(() => chart(strike * 7919 + 13), [strike]);
 
   const mark = (fill: string, extra: React.SVGProps<SVGTextElement> = {}) => (
     <text
@@ -179,48 +186,51 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
       {mark(`url(#${id}-glass)`)}
       {mark(`url(#${id}-spec)`, { style: { mixBlendMode: 'screen' } })}
 
-      {/* Lightning inside the glass, and a faint flash across the whole mark with it. */}
+      {/* The chart running up through the glass, and a flash of the mark when it breaks out. */}
       <g key={strike} className="logo-glow__strike">
         {mark('#FFFFFF', { className: 'logo-glow__flash' })}
-        <g clipPath={`url(#${id}-clip)`} filter={`url(#${id}-bolt)`} className="logo-glow__bolt">
+        <g clipPath={`url(#${id}-clip)`} filter={`url(#${id}-bolt)`}>
           <path
-            d={bolts.main}
+            d={run.main}
             fill="none"
             stroke="#FFFFFF"
-            strokeWidth="5"
+            strokeWidth="6"
             strokeLinejoin="round"
             strokeLinecap="round"
+            className="logo-glow__bolt"
           />
           <path
-            d={bolts.main}
+            d={run.main}
             fill="none"
             stroke="#CCFFCC"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinejoin="round"
             strokeLinecap="round"
+            className="logo-glow__bolt"
           />
-          {bolts.forks.map((d, i) => (
-            <path
-              key={i}
-              d={d}
-              fill="none"
-              stroke="#FFFFFF"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          ))}
-        </g>
-        <g filter={`url(#${id}-bolt)`} opacity="0.35" className="logo-glow__bolt">
           <path
-            d={bolts.main}
+            d={run.ticks.join('')}
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="3"
+            strokeLinecap="round"
+            opacity="0.6"
+            className="logo-glow__ticks"
+          />
+        </g>
+        {/* The same line, faint, outside the letters so the run reads across the gaps. */}
+        <g filter={`url(#${id}-bolt)`} opacity="0.3">
+          <path
+            d={run.main}
             fill="none"
             stroke="#00FF00"
             strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
+            className="logo-glow__bolt"
           />
         </g>
+        <circle cx={run.end[0]} cy={run.end[1]} r="7" fill="#FFFFFF" className="logo-glow__spark" />
       </g>
 
       <style>{`
@@ -230,25 +240,37 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
           stroke-dasharray: 2600;
           stroke-dashoffset: 2600;
           opacity: 0;
-          animation: logo-bolt 1.1s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+          animation: logo-bolt 1.4s cubic-bezier(0.3, 0.6, 0.4, 1) forwards;
         }
-        .logo-glow__flash { opacity: 0; animation: logo-flash 1.1s ease-out forwards; mix-blend-mode: screen; }
+        .logo-glow__ticks { opacity: 0; animation: logo-ticks 1.4s ease-out forwards; }
+        .logo-glow__spark { opacity: 0; transform-box: fill-box; transform-origin: center; animation: logo-spark 1.4s ease-out forwards; }
+        .logo-glow__flash { opacity: 0; animation: logo-flash 1.4s ease-out forwards; mix-blend-mode: screen; }
         @keyframes logo-breathe { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
         @keyframes logo-bolt {
           0% { stroke-dashoffset: 2600; opacity: 1; }
-          45% { stroke-dashoffset: 0; opacity: 1; }
-          60% { opacity: 0.9; }
+          55% { stroke-dashoffset: 0; opacity: 1; }
+          70% { opacity: 0.9; }
           100% { stroke-dashoffset: 0; opacity: 0; }
         }
+        @keyframes logo-ticks {
+          0%, 20% { opacity: 0; }
+          55% { opacity: 0.6; }
+          100% { opacity: 0; }
+        }
+        @keyframes logo-spark {
+          0%, 52% { opacity: 0; transform: scale(0.4); }
+          58% { opacity: 1; transform: scale(1.6); }
+          75% { opacity: 0.8; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.6); }
+        }
         @keyframes logo-flash {
-          0% { opacity: 0; }
-          40% { opacity: 0; }
-          48% { opacity: 0.55; }
+          0%, 50% { opacity: 0; }
+          58% { opacity: 0.5; }
           100% { opacity: 0; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .logo-glow__breathe, .logo-glow__bolt, .logo-glow__flash { animation: none; }
-          .logo-glow__bolt, .logo-glow__flash { opacity: 0; }
+          .logo-glow__breathe, .logo-glow__bolt, .logo-glow__flash, .logo-glow__ticks, .logo-glow__spark { animation: none; }
+          .logo-glow__bolt, .logo-glow__flash, .logo-glow__ticks, .logo-glow__spark { opacity: 0; }
         }
       `}</style>
     </svg>
