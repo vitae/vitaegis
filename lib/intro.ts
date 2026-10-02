@@ -22,8 +22,8 @@ export const INTRO_SECONDS = 4.5;
 export const INTRO_FPS = 24;
 
 const CX = W / 2;
-const MARK_Y = 610;
-const TITLE_Y = 712;
+const MARK_Y = 560;
+const TITLE_Y = 790; // the series title sits clear under the orb
 
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 /** 0 → 1 as t runs from a to b. */
@@ -105,19 +105,30 @@ function convergence(t: number) {
   return { defs: defs.join(''), body: parts.join('') };
 }
 
+const ACID = '#B4FF1A';
+const ORB_R = 250;
+const ORB_Y = MARK_Y - 10;
+
 /** One frame of the intro as SVG. Pure, so the timeline can be tested. */
 export function introFrameSvg(t: number, title: string, brand = 'VITAEGIS'): string {
   const m = span(t, 1.3, 2.3);
   const spacing = 34 - 22 * easeOut(m); // letters gather in as the mark resolves
   const scale = 1.18 - 0.18 * easeOut(m);
   const markA = easeOut(span(t, 1.3, 1.7));
-  // Specular highlight crossing the mark, left to right.
-  const sweep = span(t, 2.0, 3.0);
+  // The orb swells out of the bloom just before the letters land on it.
+  const orbP = easeOut(span(t, 1.15, 2.0));
+  const orbR = ORB_R * (0.2 + 0.8 * orbP);
+  // Specular sweep crossing orb and letters together, then again near the end.
+  const sweep = Math.max(span(t, 2.0, 3.0), span(t, 3.6, 4.4) * 0.6);
   const sx = -200 + (W + 400) * easeOut(sweep);
+  // The caustic pool drifts around the lower half of the orb.
+  const cx = 0.5 + 0.1 * Math.sin(t * 0.9);
+  const cy = 0.76 - 0.06 * Math.cos(t * 0.7);
   const titleP = easeOut(span(t, 2.6, 3.3));
   const tagA = easeOut(span(t, 3.1, 3.7));
   const out = 1 - span(t, INTRO_SECONDS - 0.35, INTRO_SECONDS);
   const streaks = convergence(t);
+  const breathe = 0.8 + 0.2 * Math.sin(t * 1.4);
 
   const mark = (fill: string, extra = '') =>
     `<text x="${CX}" y="${MARK_Y}" text-anchor="middle" dominant-baseline="middle" font-family="Jost" ` +
@@ -129,38 +140,60 @@ export function introFrameSvg(t: number, title: string, brand = 'VITAEGIS'): str
     streaks.defs +
     `<radialGradient id="bloom"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.25" stop-color="#9BFF9B"/>` +
     `<stop offset="1" stop-color="#00FF00" stop-opacity="0"/></radialGradient>` +
-    `<radialGradient id="halo" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#00FF00" stop-opacity="0.35"/>` +
-    `<stop offset="1" stop-color="#00FF00" stop-opacity="0"/></radialGradient>` +
-    // Glass: pale top, pure green body, deeper green at the base.
-    `<linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D8FFD0"/>` +
-    `<stop offset="0.42" stop-color="#00FF00"/><stop offset="1" stop-color="#00A800"/></linearGradient>` +
-    `<linearGradient id="spec" gradientUnits="userSpaceOnUse" x1="${(sx - 90).toFixed(1)}" y1="${MARK_Y - 60}" ` +
-    `x2="${(sx + 90).toFixed(1)}" y2="${MARK_Y + 60}"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>` +
-    `<stop offset="0.5" stop-color="#FFFFFF" stop-opacity="${(0.9 * (sweep > 0 && sweep < 1 ? 1 : 0)).toFixed(2)}"/>` +
+    // Orb body lit from the upper left, dark glass through the middle, bright far rim.
+    `<radialGradient id="body" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#2BFF2B"/>` +
+    `<stop offset="0.25" stop-color="#0FB80F"/><stop offset="0.6" stop-color="#064D06"/>` +
+    `<stop offset="0.92" stop-color="#031F03"/><stop offset="1" stop-color="#0A8A0A"/></radialGradient>` +
+    `<radialGradient id="caustic" cx="${cx.toFixed(3)}" cy="${cy.toFixed(3)}" r="0.42"><stop offset="0" stop-color="${ACID}" stop-opacity="0.55"/>` +
+    `<stop offset="0.5" stop-color="#00FF00" stop-opacity="0.18"/><stop offset="1" stop-color="#00FF00" stop-opacity="0"/></radialGradient>` +
+    `<radialGradient id="rim" cx="0.5" cy="0.5" r="0.5"><stop offset="0.86" stop-color="${ACID}" stop-opacity="0"/>` +
+    `<stop offset="0.96" stop-color="${ACID}" stop-opacity="0.55"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.9"/></radialGradient>` +
+    `<radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>` +
+    `<stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>` +
+    `<radialGradient id="bleed" cx="0.5" cy="0.5" r="0.5"><stop offset="0.3" stop-color="${ACID}" stop-opacity="${(0.5 * breathe).toFixed(3)}"/>` +
+    `<stop offset="0.6" stop-color="#00FF00" stop-opacity="0.14"/><stop offset="1" stop-color="#00FF00" stop-opacity="0"/></radialGradient>` +
+    // White glass letters.
+    `<linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/>` +
+    `<stop offset="0.55" stop-color="#F4FFF2"/><stop offset="0.85" stop-color="#C9FFC9"/><stop offset="1" stop-color="#7DFF7D"/></linearGradient>` +
+    `<linearGradient id="spec" gradientUnits="userSpaceOnUse" x1="${(sx - 120).toFixed(1)}" y1="${ORB_Y - ORB_R}" ` +
+    `x2="${(sx + 120).toFixed(1)}" y2="${ORB_Y + ORB_R}"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>` +
+    `<stop offset="0.5" stop-color="#FFFFFF" stop-opacity="${(0.8 * (sweep > 0 && sweep < 1 ? 1 : 0)).toFixed(2)}"/>` +
     `<stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>` +
+    `<clipPath id="orb"><circle cx="${CX}" cy="${ORB_Y}" r="${orbR.toFixed(1)}"/></clipPath>` +
     `<filter id="glowG" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="16"/></filter>` +
     `<filter id="glowS" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>` +
+    `<filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>` +
     `<filter id="glowW" x="-50%" y="-150%" width="200%" height="400%"><feGaussianBlur stdDeviation="9"/></filter>` +
     `</defs>` +
     `<rect width="${W}" height="${H}" fill="#000"/>` +
     `<g opacity="${out.toFixed(3)}">` +
     rain(t) +
-    // A dark pool behind the mark so the rain never fights the lettering.
-    `<ellipse cx="${CX}" cy="${MARK_Y + 40}" rx="420" ry="230" fill="#000" opacity="${(0.85 * span(t, 1.0, 1.6)).toFixed(3)}" filter="url(#glowG)"/>` +
-    `<ellipse cx="${CX}" cy="${MARK_Y}" rx="380" ry="170" fill="url(#halo)" opacity="${markA.toFixed(3)}"/>` +
+    // A dark pool so the rain never fights the orb and the lettering.
+    `<ellipse cx="${CX}" cy="${ORB_Y}" rx="${(orbR * 1.6).toFixed(1)}" ry="${(orbR * 1.3).toFixed(1)}" fill="#000" opacity="${(0.85 * orbP).toFixed(3)}" filter="url(#glowG)"/>` +
     streaks.body +
+    // The orb: acid bleed, body, caustic, rim, hot-spot, sweep.
+    `<g opacity="${orbP.toFixed(3)}">` +
+    `<circle cx="${CX}" cy="${ORB_Y}" r="${(orbR * 1.9).toFixed(1)}" fill="url(#bleed)"/>` +
+    `<circle cx="${CX}" cy="${ORB_Y}" r="${orbR.toFixed(1)}" fill="url(#body)"/>` +
+    `<circle cx="${CX}" cy="${ORB_Y}" r="${orbR.toFixed(1)}" fill="url(#caustic)"/>` +
+    `<circle cx="${CX}" cy="${ORB_Y}" r="${orbR.toFixed(1)}" fill="url(#rim)"/>` +
+    `<ellipse cx="${(CX - orbR * 0.35).toFixed(1)}" cy="${(ORB_Y - orbR * 0.56).toFixed(1)}" rx="${(orbR * 0.42).toFixed(1)}" ry="${(orbR * 0.2).toFixed(1)}" ` +
+    `fill="url(#hot)" filter="url(#soft)" transform="rotate(-18 ${(CX - orbR * 0.35).toFixed(1)} ${(ORB_Y - orbR * 0.56).toFixed(1)})"/>` +
+    `<circle cx="${CX}" cy="${ORB_Y}" r="${orbR.toFixed(1)}" fill="url(#spec)" clip-path="url(#orb)" opacity="0.55"/>` +
+    `</g>` +
+    // The letters: soft green glow, white glass, the sweep over them.
     `<g opacity="${markA.toFixed(3)}" transform="translate(${CX} ${MARK_Y}) scale(${scale.toFixed(4)}) translate(${-CX} ${-MARK_Y})">` +
-    mark('#00FF00', 'filter="url(#glowG)" opacity="0.9"') +
+    mark('#00FF00', 'filter="url(#glowW)" opacity="0.55"') +
     mark('url(#glass)') +
     mark('url(#spec)') +
     `</g>` +
     `<g opacity="${titleP.toFixed(3)}" transform="translate(0 ${(24 * (1 - titleP)).toFixed(2)})">` +
-    `<text x="${CX}" y="${TITLE_Y}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="58" ` +
+    `<text x="${CX}" y="${TITLE_Y + 40}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="58" ` +
     `letter-spacing="6" fill="#FFFFFF" filter="url(#glowW)" opacity="0.9">${xml(title.toUpperCase())}</text>` +
-    `<text x="${CX}" y="${TITLE_Y}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="58" ` +
+    `<text x="${CX}" y="${TITLE_Y + 40}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="58" ` +
     `letter-spacing="6" fill="#FFFFFF">${xml(title.toUpperCase())}</text>` +
     `</g>` +
-    `<text x="${CX}" y="${TITLE_Y + 64}" text-anchor="middle" font-family="Jost" font-size="26" letter-spacing="8" ` +
+    `<text x="${CX}" y="${TITLE_Y + 104}" text-anchor="middle" font-family="Jost" font-size="26" letter-spacing="8" ` +
     `fill="#00FF00" opacity="${(0.75 * tagA).toFixed(3)}">HEALTH · STEALTH · WEALTH</text>` +
     `</g></svg>`
   );
