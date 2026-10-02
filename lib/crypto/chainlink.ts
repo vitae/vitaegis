@@ -1,4 +1,5 @@
-// Server-only. Reads the Chainlink BTC/USD price feed on Ethereum mainnet over JSON-RPC.
+// Server-only. Reads Chainlink USD price feeds on Ethereum mainnet over JSON-RPC: full
+// history for BTC/USD, latest answers for the altcoin watchlist.
 // Docs: docs.chain.link/data-feeds/historical-data and /data-feeds/price-feeds/addresses.
 //
 // The proxy's round id is (phaseId << 64) | aggregatorRound. Each phase is one aggregator
@@ -58,6 +59,7 @@ async function post(url: string, body: unknown): Promise<RpcReply[]> {
 
 async function callOn(
   rpc: { url: string; batch: number },
+  to: (k: number) => string,
   datas: string[],
   idx: number[],
   out: (string | null)[],
@@ -70,7 +72,7 @@ async function callOn(
         jsonrpc: '2.0',
         id: k,
         method: 'eth_call',
-        params: [{ to: BTC_USD_FEED, data: datas[k] }, 'latest'],
+        params: [{ to: to(k), data: datas[k] }, 'latest'],
       })),
     );
     for (const r of replies) {
@@ -83,8 +85,15 @@ let calls = 0;
 /** eth_calls made by this process, for logging the cost of a refresh. */
 export const rpcCallCount = () => calls;
 
-/** eth_call each calldata against the feed. A reverted call (no such round) returns null. */
-async function ethCalls(datas: string[]): Promise<(string | null)[]> {
+/**
+ * eth_call each calldata against a feed (one address for all, or one per call). A reverted
+ * call (no such round) returns null.
+ */
+async function ethCalls(
+  datas: string[],
+  address: string | string[] = BTC_USD_FEED,
+): Promise<(string | null)[]> {
+  const to = (k: number) => (Array.isArray(address) ? address[k] : address);
   calls += datas.length;
   const out: (string | null)[] = new Array(datas.length).fill(null);
   const size = RPCS[0].batch;
@@ -96,7 +105,7 @@ async function ethCalls(datas: string[]): Promise<(string | null)[]> {
     let lastErr: unknown;
     for (const rpc of RPCS) {
       try {
-        await callOn(rpc, datas, idx, out);
+        await callOn(rpc, to, datas, idx, out);
         return;
       } catch (err) {
         lastErr = err;
@@ -146,6 +155,21 @@ export interface Latest extends RoundPoint {
   phase: number;
 }
 
+/**
+ * Latest answer of several feeds in one batch. Null for a feed that does not answer
+ * (retired, or a wrong address). Every USD feed used here has 8 decimals.
+ */
+export async function latestFeeds(addresses: string[]): Promise<(Latest | null)[]> {
+  const hex = await ethCalls(
+    addresses.map(() => SEL_LATEST),
+    addresses,
+  );
+  return hex.map((h) => {
+    const d = decode(h);
+    return d ? { ...d.point, phase: d.phase } : null;
+  });
+}
+
 export async function latestBtc(): Promise<Latest> {
   const [hex] = await ethCalls([SEL_LATEST]);
   const d = decode(hex);
@@ -177,15 +201,15 @@ async function lastRoundOf(phase: number): Promise<RoundPoint | null> {
   return lo;
 }
 
-/**
- * The price the feed showed at each unix time, newest phase first and older phases only
- * when a target reaches back before the current one. Null where the feed has no history.
- */
 /** A price plus the feed phase and round it came from. */
 export interface PricePoint extends RoundPoint {
   phase: number;
 }
 
+/**
+ * The price the feed showed at each unix time, newest phase first and older phases only
+ * when a target reaches back before the current one. Null where the feed has no history.
+ */
 export async function btcPricesAt(
   times: number[],
   latest?: Latest,
@@ -223,6 +247,13 @@ export async function btcPricesAt(
     });
   }
   return out;
+}
+
+/** Every BTC round from `from` to `to` inside one phase, oldest first. */
+export async function btcRounds(phase: number, from: number, to: number): Promise<RoundPoint[]> {
+  const rounds = Array.from({ length: Math.max(0, to - from + 1) }, (_, k) => from + k);
+  const points = await readRounds(phase, rounds);
+  return points.filter((p): p is RoundPoint => Boolean(p));
 }
 
 /** The most recent `count` rounds of the current phase, oldest first: intraday detail. */

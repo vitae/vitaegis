@@ -2,6 +2,7 @@
 import { unstable_cache } from 'next/cache';
 import { btcPricesAt, latestBtc, recentRounds } from './chainlink';
 import { dailyCloses } from './history';
+import { monthLow, type MonthLow } from './month-low';
 import type { RoundPoint } from './search';
 import { monthlyReturns, pct, regime, sma, type DailyClose, type Regime } from './signals';
 
@@ -29,6 +30,8 @@ export interface BtcDashboard {
   months: { month: string; close: number; pct: number | null }[];
   years: { year: number; open: number | null; close: number | null; pct: number | null }[];
   regime: Regime | null;
+  /** The lowest Chainlink price of June 2026, for the "what if" window. */
+  juneLow: MonthLow | null;
 }
 
 const RETURN_LABELS: Record<ReturnKey, string> = {
@@ -84,6 +87,7 @@ export async function getBtcDashboard(): Promise<BtcDashboard> {
     months: [],
     years: [],
     regime: null,
+    juneLow: null,
   };
   try {
     const latest = await latestBtc();
@@ -99,13 +103,15 @@ export async function getBtcDashboard(): Promise<BtcDashboard> {
     };
     const keys = Object.keys(returnTimes) as ReturnKey[];
 
-    const [history, returnPts, intraday] = await Promise.all([
+    const [history, returnPts, intraday, juneLow] = await Promise.all([
       cachedHistory(day),
       btcPricesAt(
         keys.map((k) => returnTimes[k]),
         latest,
       ),
       recentRounds(INTRADAY_ROUNDS, latest),
+      // Never sinks the page: without it the window just does not show.
+      monthLow(2026, 6).catch(() => null),
     ]);
 
     const { closes, yearOpens } = history;
@@ -132,6 +138,7 @@ export async function getBtcDashboard(): Promise<BtcDashboard> {
         return { year, open, close, pct: pct(open, close) };
       }),
       regime: values.length >= 200 ? regime(values, latest.answer) : null,
+      juneLow,
     };
   } catch (err) {
     console.error('Chainlink BTC read failed:', err instanceof Error ? err.message : err);

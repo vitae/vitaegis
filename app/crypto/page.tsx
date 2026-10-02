@@ -2,10 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getBtcDashboard } from '@/lib/crypto/btc';
 import { getGainers, WINDOWS } from '@/lib/crypto/gainers';
+import { getWatchlist } from '@/lib/crypto/watchlist';
 import type { Lean } from '@/lib/crypto/signals';
 import BtcLive from './BtcLive';
 import BtcChart from './BtcChart';
 import GainersBoard from './GainersBoard';
+import DipWindow from './DipWindow';
+import WatchList from './WatchList';
 import styles from './crypto.module.css';
 
 // Five-minute refresh for the page; the ticker re-reads Chainlink every minute on its own.
@@ -46,7 +49,11 @@ const monthName = (ym: string) =>
   });
 
 export default async function CryptoPage() {
-  const [btc, gainers] = await Promise.all([getBtcDashboard(), getGainers()]);
+  const [btc, gainers, watch] = await Promise.all([
+    getBtcDashboard(),
+    getGainers(),
+    getWatchlist(),
+  ]);
   const r = btc.regime;
 
   return (
@@ -74,8 +81,8 @@ export default async function CryptoPage() {
           </h1>
           <p className="mt-4 max-w-xl text-base font-light text-white/70">
             Bitcoin straight from the Chainlink oracle on Ethereum, its run over the day, week,
-            month and year, a read on whether the trend is bull or bear, and the coins moving
-            hardest right now.
+            month and year, a read on whether the trend is bull or bear, the levels to watch on the
+            altcoins that matter, and the coins moving hardest right now.
           </p>
         </header>
 
@@ -97,6 +104,15 @@ export default async function CryptoPage() {
           <p className="rounded-xl border border-white/15 px-4 py-10 text-center text-sm text-vitae-gray">
             The Chainlink feed could not be reached just now. This page retries every five minutes.
           </p>
+        )}
+
+        {btc.juneLow && btc.price !== null && btc.updatedAt !== null && (
+          <DipWindow
+            low={{ price: btc.juneLow.price, at: btc.juneLow.at }}
+            closes={btc.daily.map(({ date, close }) => ({ date, close }))}
+            livePrice={btc.price}
+            asOf={btc.updatedAt}
+          />
         )}
 
         {r && (
@@ -174,6 +190,8 @@ export default async function CryptoPage() {
           </section>
         )}
 
+        <WatchList rows={watch} />
+
         {btc.months.length > 0 && (
           <section aria-labelledby="months-heading" className={`mt-14 ${styles.numeric}`}>
             <h2 id="months-heading" className="text-xl font-medium text-white">
@@ -226,8 +244,12 @@ export default async function CryptoPage() {
           averages and momentum; it is not a forecast, and every one of these signals has been wrong
           before. Bitcoin prices come from the Chainlink BTC/USD price feed on Ethereum mainnet,
           which writes a new answer on every 0.5% move or at least hourly; daily closes are the
-          feed&apos;s price at 00:00 UTC. Gainers come from CoinGecko, refreshed every 15 minutes,
-          because Chainlink publishes feeds for only a few dozen assets.
+          feed&apos;s price at 00:00 UTC, and the June low is the lowest answer the feed wrote that
+          month. Watch-area prices for ETH, AVAX, AAVE and LINK come from their Chainlink feeds; XRP
+          and QNT have no live Chainlink feed on Ethereum, so their prices, every coin&apos;s
+          returns and the daily history behind the support and resistance levels come from
+          CoinGecko. Support and resistance are where a price has turned before, not where it must.
+          Gainers come from CoinGecko, refreshed every 15 minutes.
         </p>
       </div>
     </main>

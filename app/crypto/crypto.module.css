@@ -36,3 +36,10 @@
     animation: none;
   }
 }
+
+/* A watch-area card whose coin is pressing on a level. */
+.hot {
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 0, 0.15),
+    0 0 24px rgba(0, 255, 0, 0.12);
+}
