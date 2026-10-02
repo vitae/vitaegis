@@ -103,38 +103,30 @@ export default function AboutSection() {
             glow={true}
             className="p-3 sm:p-6 lg:p-10 w-full max-w-full"
           >
-            {/* Header: both words stretched to the same width so they stack as one block. */}
+            {/* Header: eight letters each, one grid, so every letter sits over its partner. */}
             <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mx-auto w-full max-w-md">
               <svg
-                viewBox="0 0 600 230"
+                viewBox="0 0 640 236"
                 className="block h-auto w-full"
                 role="img"
                 aria-label="Vitaegis Vitality"
               >
-                <text
-                  x="0"
-                  y="96"
-                  textLength="600"
-                  lengthAdjust="spacingAndGlyphs"
-                  fontFamily="Jost, 'Century Gothic', sans-serif"
-                  fontWeight={700}
-                  fontSize="112"
-                  fill="#FFFFFF"
-                >
-                  VITAEGIS
-                </text>
-                <text
-                  x="0"
-                  y="212"
-                  textLength="600"
-                  lengthAdjust="spacingAndGlyphs"
-                  fontFamily="Jost, 'Century Gothic', sans-serif"
-                  fontWeight={700}
-                  fontSize="112"
-                  fill="#00FF00"
-                >
-                  VITALITY
-                </text>
+                {(['VITAEGIS', 'VITALITY'] as const).map((word, row) =>
+                  word.split('').map((ch, i) => (
+                    <text
+                      key={`${word}-${i}`}
+                      x={i * 80 + 40}
+                      y={row === 0 ? 100 : 216}
+                      textAnchor="middle"
+                      fontFamily="Jost, 'Century Gothic', sans-serif"
+                      fontWeight={700}
+                      fontSize="104"
+                      fill={row === 0 ? '#FFFFFF' : '#00FF00'}
+                    >
+                      {ch}
+                    </text>
+                  )),
+                )}
               </svg>
             </h2>
 
