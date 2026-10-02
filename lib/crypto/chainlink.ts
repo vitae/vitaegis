@@ -42,7 +42,9 @@ async function post(url: string, body: unknown): Promise<RpcReply[]> {
       // Public endpoints sit behind bot filters that refuse requests with no agent.
       headers: { 'Content-Type': 'application/json', 'User-Agent': 'vitaegis.com/crypto' },
       body: JSON.stringify(body),
-      cache: 'no-store',
+      // Cached briefly rather than no-store: a no-store fetch would turn /crypto into a
+      // page rendered on every visit instead of once every five minutes.
+      next: { revalidate: 60 },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     // Rate limited: back off and try the same endpoint again before moving on.
