@@ -440,49 +440,30 @@ a:active,
     inset 1px 0 0 rgba(255, 255, 255, 0.08),
     inset -1px 0 0 rgba(255, 255, 255, 0.08),
     inset 0 0 40px rgba(255, 255, 255, 0.02),
-    0 1px 0 rgba(0, 255, 65, 0.08),
+    inset 0 0 6px rgba(0, 255, 65, 0.18),
+    0 0 1px rgba(0, 255, 65, 0.9),
+    0 0 8px rgba(0, 255, 65, 0.45),
+    0 0 22px rgba(0, 255, 65, 0.18),
     0 18px 50px rgba(0, 0, 0, 0.55);
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Rim: a neon rainbow hairline just inside the border — the full spectrum running around the
-   edge like light split through a cut facet, slowly rotating so the colours travel. */
-@property --glass-rim-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 210deg;
-}
+/* Rim: a neon green hairline just inside the border, lit like a laser beam — a hot core with
+   a soft green bloom. Static: no sweep, no spin. */
 .glass-panel::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  --glass-rim-angle: 210deg;
-  background: conic-gradient(
-    from var(--glass-rim-angle),
-    #ff2a6d 0deg,
-    #ff8c00 45deg,
-    #ffee00 90deg,
-    #00ff41 135deg,
-    #00f0ff 180deg,
-    #2a6bff 225deg,
-    #b04cff 270deg,
-    #ff2ad6 315deg,
-    #ff2a6d 360deg
-  );
+  background: linear-gradient(135deg, #c8ffd4 0%, #00ff41 18%, #00ff41 82%, #c8ffd4 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0.85;
-  filter: saturate(1.4) drop-shadow(0 0 3px rgba(255, 255, 255, 0.25));
+  opacity: 0.95;
   pointer-events: none;
   z-index: 0;
-  animation: glass-rim-spin 14s linear infinite;
-}
-@keyframes glass-rim-spin {
-  to { --glass-rim-angle: 570deg; }
 }
 
 /* Light on the face: a specular arc top-left, a thin bright crescent along the top edge,
@@ -500,8 +481,6 @@ a:active,
     radial-gradient(60% 38% at 22% -6%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.07) 45%, rgba(255, 255, 255, 0) 70%),
     /* crescent along the top edge */
     linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0px, rgba(255, 255, 255, 0.05) 6px, rgba(255, 255, 255, 0) 22px),
-    /* sweeping glint */
-    linear-gradient(115deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.09) 46%, rgba(255, 255, 255, 0.22) 50%, rgba(255, 255, 255, 0.09) 54%, rgba(255, 255, 255, 0) 62%),
     /* facets */
     radial-gradient(circle at 9% 18%, rgba(255, 255, 255, 0.9) 0 0.6px, rgba(255, 255, 255, 0.25) 1.4px, rgba(255, 255, 255, 0) 3px),
     radial-gradient(circle at 31% 7%, rgba(255, 255, 255, 0.85) 0 0.5px, rgba(255, 255, 255, 0.2) 1.2px, rgba(255, 255, 255, 0) 2.6px),
@@ -509,17 +488,9 @@ a:active,
     radial-gradient(circle at 70% 92%, rgba(255, 255, 255, 0.7) 0 0.5px, rgba(255, 255, 255, 0.15) 1.1px, rgba(255, 255, 255, 0) 2.4px),
     radial-gradient(circle at 4% 78%, rgba(255, 255, 255, 0.7) 0 0.5px, rgba(255, 255, 255, 0.15) 1.1px, rgba(255, 255, 255, 0) 2.4px);
   background-repeat: no-repeat;
-  background-size: 100% 100%, 100% 100%, 260% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-  background-position: 0 0, 0 0, -160% 0, 0 0, 0 0, 0 0, 0 0, 0 0;
-  animation:
-    glass-glint 11s cubic-bezier(0.4, 0, 0.2, 1) infinite,
-    glass-twinkle 4.5s ease-in-out infinite;
+  animation: glass-twinkle 4.5s ease-in-out infinite;
 }
 
-@keyframes glass-glint {
-  0%, 62% { background-position: 0 0, 0 0, -160% 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
-  82%, 100% { background-position: 0 0, 0 0, 160% 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
-}
 @keyframes glass-twinkle {
   0%, 100% { opacity: 0.75; }
   35% { opacity: 1; }
@@ -554,12 +525,8 @@ a:active,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .glass-panel::before {
-    animation: none;
-  }
   .glass-panel::after {
     animation: none;
-    background-position: 0 0, 0 0, 20% 0, 0 0, 0 0, 0 0, 0 0, 0 0;
   }
 }
 
