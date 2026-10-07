@@ -420,43 +420,130 @@ a:active,
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* The one glass surface every block on the site uses. On a near-black page a dark
-   tint reads as nothing, so the pane is a faint white frost with a hairline border,
-   a 1px highlight along the top edge (light catching the rim) and a soft diagonal
-   sheen, the way frosted glass sits over a dark room. */
+/* The one glass surface every block on the site uses — cut like clear glass, not frosted
+   plastic. A light blur keeps the rain legible through the pane; the tint is almost nothing so
+   the pane reads as transparent; a bright specular arc sits where a light source would catch a
+   polished face; the rim is a hairline of refracted, faintly prismatic light; a slow glint sweeps
+   the face and a few pinpoint facets twinkle. Layers: ::before = rim, ::after = light. */
 .glass-panel {
   position: relative;
+  isolation: isolate;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.035) 45%, rgba(255, 255, 255, 0.02) 100%);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+    radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 38%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.015) 50%, rgba(0, 255, 65, 0.025) 100%);
+  backdrop-filter: blur(9px) saturate(190%) brightness(1.12) contrast(1.05);
+  -webkit-backdrop-filter: blur(9px) saturate(190%) brightness(1.12) contrast(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 12px 40px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    inset 1px 0 0 rgba(255, 255, 255, 0.08),
+    inset -1px 0 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 40px rgba(255, 255, 255, 0.02),
+    0 1px 0 rgba(0, 255, 65, 0.08),
+    0 18px 50px rgba(0, 0, 0, 0.55);
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
+
+/* Rim: a prismatic hairline just inside the border, as if light refracted through the edge. */
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 210deg,
+    rgba(255, 255, 255, 0.55) 0deg,
+    rgba(180, 255, 220, 0.35) 40deg,
+    rgba(255, 255, 255, 0.08) 95deg,
+    rgba(255, 200, 255, 0.18) 150deg,
+    rgba(255, 255, 255, 0.5) 200deg,
+    rgba(200, 240, 255, 0.3) 250deg,
+    rgba(255, 255, 255, 0.08) 300deg,
+    rgba(255, 255, 255, 0.55) 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Light on the face: a specular arc top-left, a thin bright crescent along the top edge,
+   a glint that sweeps the pane, and pinpoint facets that twinkle. */
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+  background:
+    /* specular arc */
+    radial-gradient(60% 38% at 22% -6%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.07) 45%, rgba(255, 255, 255, 0) 70%),
+    /* crescent along the top edge */
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0px, rgba(255, 255, 255, 0.05) 6px, rgba(255, 255, 255, 0) 22px),
+    /* sweeping glint */
+    linear-gradient(115deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.09) 46%, rgba(255, 255, 255, 0.22) 50%, rgba(255, 255, 255, 0.09) 54%, rgba(255, 255, 255, 0) 62%),
+    /* facets */
+    radial-gradient(circle at 9% 18%, rgba(255, 255, 255, 0.9) 0 0.6px, rgba(255, 255, 255, 0.25) 1.4px, rgba(255, 255, 255, 0) 3px),
+    radial-gradient(circle at 31% 7%, rgba(255, 255, 255, 0.85) 0 0.5px, rgba(255, 255, 255, 0.2) 1.2px, rgba(255, 255, 255, 0) 2.6px),
+    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.8) 0 0.5px, rgba(255, 255, 255, 0.2) 1.2px, rgba(255, 255, 255, 0) 2.6px),
+    radial-gradient(circle at 70% 92%, rgba(255, 255, 255, 0.7) 0 0.5px, rgba(255, 255, 255, 0.15) 1.1px, rgba(255, 255, 255, 0) 2.4px),
+    radial-gradient(circle at 4% 78%, rgba(255, 255, 255, 0.7) 0 0.5px, rgba(255, 255, 255, 0.15) 1.1px, rgba(255, 255, 255, 0) 2.4px);
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 100%, 260% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0, -160% 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+  animation:
+    glass-glint 11s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+    glass-twinkle 4.5s ease-in-out infinite;
+}
+
+@keyframes glass-glint {
+  0%, 62% { background-position: 0 0, 0 0, -160% 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+  82%, 100% { background-position: 0 0, 0 0, 160% 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+}
+@keyframes glass-twinkle {
+  0%, 100% { opacity: 0.75; }
+  35% { opacity: 1; }
+  60% { opacity: 0.6; }
+}
+
 .glass-panel--subtle {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.025) 50%, rgba(255, 255, 255, 0.015) 100%);
-  border-color: rgba(255, 255, 255, 0.1);
+    radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border-color: rgba(255, 255, 255, 0.11);
 }
 .glass-panel--prominent {
-  border-color: rgba(0, 255, 0, 0.22);
+  border-color: rgba(0, 255, 0, 0.24);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 0 40px rgba(0, 255, 0, 0.08),
-    0 12px 40px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 40px rgba(0, 255, 65, 0.04),
+    0 0 44px rgba(0, 255, 0, 0.1),
+    0 18px 50px rgba(0, 0, 0, 0.55);
 }
 .glass-panel--hover:hover {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.03) 100%);
+    radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.025) 50%, rgba(0, 255, 65, 0.05) 100%);
   border-color: rgba(0, 255, 0, 0.4);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 0 24px rgba(0, 255, 0, 0.15),
-    0 12px 40px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 0 28px rgba(0, 255, 0, 0.16),
+    0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-panel::after {
+    animation: none;
+    background-position: 0 0, 0 0, 20% 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
