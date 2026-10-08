@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import s from './bitcoin.module.css';
+import HalvingClock from './HalvingClock';
 
 export const metadata: Metadata = {
   title: 'Bitcoin | VITAEGIS WEALTH',
@@ -120,6 +121,95 @@ const references = [
   'W. Feller, An Introduction to Probability Theory and Its Applications, 1957',
 ];
 
+const cycles: {
+  halving: string;
+  peak: string;
+  toPeak: string;
+  top: string;
+  bottom: string;
+  drawdown: string;
+}[] = [
+  {
+    halving: '28 Nov 2012',
+    peak: 'Dec 2013',
+    toPeak: '~371',
+    top: '~$1,150',
+    bottom: 'Jan 2015 · ~$150',
+    drawdown: '−87%',
+  },
+  {
+    halving: '9 Jul 2016',
+    peak: '17 Dec 2017',
+    toPeak: '~525',
+    top: '~$19,700',
+    bottom: 'Dec 2018 · $3,122',
+    drawdown: '−84%',
+  },
+  {
+    halving: '11 May 2020',
+    peak: '10 Nov 2021',
+    toPeak: '~547',
+    top: '~$69,000',
+    bottom: 'Nov 2022 · $15,476',
+    drawdown: '−78%',
+  },
+  {
+    halving: '20 Apr 2024',
+    peak: '6 Oct 2025',
+    toPeak: '~534',
+    top: '$126,198',
+    bottom: 'Low so far: 5 Jun 2026 · ~$59,100',
+    drawdown: '−53% so far',
+  },
+];
+
+const watch: { date: string; what: string }[] = [
+  {
+    date: 'Oct – Nov 2026',
+    what: 'Pattern bottom window. Past bears bottomed 364–406 days after the peak, which puts this one between about 5 Oct and 16 Nov 2026.',
+  },
+  {
+    date: '~Apr 2028',
+    what: 'Fifth halving at block 1,050,000. Block reward drops from 3.125 to 1.5625 BTC.',
+  },
+  {
+    date: '~Sep – Oct 2029',
+    what: 'Pattern peak window. The last three peaks came 525–547 days after their halving.',
+  },
+  {
+    date: '$200,000',
+    what: 'Needs about 1.6× the $126k high. Each peak has beaten the last by less: about 17×, then 3.5×, then 1.8×. If that keeps shrinking, $200k lands at the very top of the 2029 peak, or not at all this cycle.',
+  },
+];
+
+const trackers: { href: string; label: string; what: string }[] = [
+  {
+    href: 'https://www.bitcoinmagazinepro.com/charts/',
+    label: 'Bitcoin Magazine Pro',
+    what: 'Halving-cycle overlays, Pi Cycle Top, MVRV Z-Score, 200-week MA. Formerly LookIntoBitcoin.',
+  },
+  {
+    href: 'https://charts.bitbo.io/',
+    label: 'Bitbo Charts',
+    what: 'Cycle repeat and halving progress charts, plus a halving countdown.',
+  },
+  {
+    href: 'https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/',
+    label: 'Rainbow Chart',
+    what: 'Log-regression bands showing where price sits in the cycle.',
+  },
+  {
+    href: 'https://alternative.me/crypto/fear-and-greed-index/',
+    label: 'Fear & Greed Index',
+    what: 'Daily sentiment score. Extreme fear has marked past dips.',
+  },
+  {
+    href: 'https://mempool.space/',
+    label: 'mempool.space',
+    what: 'Live block height and the halving progress used for the countdown above.',
+  },
+];
+
 const links: { href: string; label: string }[] = [
   { href: 'https://bitcoin.org/bitcoin.pdf', label: 'Read the PDF' },
   { href: 'http://www.weidai.com/bmoney.txt', label: 'b-money · 1998' },
@@ -146,8 +236,96 @@ export default function BitcoinPage() {
             Primary sources on Bitcoin: the protocol, its economics and its security model, with the
             key mechanics and numbers pulled out of each paper.
           </p>
-          <span className={s.count}>1 entry · updated 2026-10-08</span>
+          <span className={s.count}>Cycle tracker + 1 entry · updated 2026-10-08</span>
         </header>
+
+        <article className={s.entry} id="cycle">
+          <div className={s.entryHead}>
+            <div className={s.tags}>
+              <span className={s.tagAlt}>Cycle tracker</span>
+              <span className={s.tag}>Halvings</span>
+              <span className={s.tag}>Bull · Dip</span>
+            </div>
+            <h2>Halving clock and the four-year cycle</h2>
+            <div className={s.meta}>
+              <span>Price on 8 Oct 2026: ~$82,600</span>
+              <span>All-time high: $126,198 · 6 Oct 2025</span>
+              <span>~35% below the high</span>
+            </div>
+          </div>
+
+          <div className={s.section}>
+            <span className={s.eyebrow}>Next halving · live</span>
+            <HalvingClock />
+          </div>
+
+          <div className={s.section}>
+            <span className={s.eyebrow}>What to watch</span>
+            <div className={s.chain}>
+              {watch.map((w) => (
+                <div key={w.date} className={s.block}>
+                  <span className={s.no}>{w.date}</span>
+                  <p>{w.what}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={s.section}>
+            <span className={s.eyebrow}>Past cycles</span>
+            <div className={s.tablewrap}>
+              <table className={s.table}>
+                <thead>
+                  <tr>
+                    <th>Halving</th>
+                    <th>Peak</th>
+                    <th>Days to peak</th>
+                    <th>Peak price</th>
+                    <th>Bear bottom</th>
+                    <th>Drawdown</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cycles.map((c) => (
+                    <tr key={c.halving}>
+                      <td>{c.halving}</td>
+                      <td>{c.peak}</td>
+                      <td className={s.warn}>{c.toPeak}</td>
+                      <td className={s.good}>{c.top}</td>
+                      <td>{c.bottom}</td>
+                      <td className={s.warn}>{c.drawdown}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className={s.note}>
+            <b>Pattern, not a promise</b>
+            Four cycles is a small sample, and the 2024 cycle already broke the mold: Bitcoin set a
+            new high before its halving, thanks to the spot ETFs. The dates above are where the old
+            pattern points, not a forecast. Not financial advice.
+          </div>
+
+          <div className={s.section}>
+            <span className={s.eyebrow}>Sites that track the cycle</span>
+            <div className={s.grid2}>
+              {trackers.map((t) => (
+                <a
+                  key={t.href}
+                  href={t.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={s.card}
+                >
+                  <span className={s.who}>{t.label} ↗</span>
+                  <p>{t.what}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        </article>
 
         <article className={s.entry} id="whitepaper">
           <div className={s.entryHead}>
