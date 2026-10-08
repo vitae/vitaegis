@@ -106,6 +106,12 @@
   font-weight: 600;
 }
 
+/* Vitaegis pillar color: this page sits under Wealth. */
+.wealth {
+  color: #00ff00;
+  font-weight: 600;
+}
+
 .lede {
   font-size: 1.1rem;
   font-weight: 300;

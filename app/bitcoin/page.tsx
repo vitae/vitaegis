@@ -227,7 +227,9 @@ export default function BitcoinPage() {
         <header className={s.header}>
           <div className={s.brand}>
             <b>VITAEGIS</b>
-            <span>Health · Stealth · Wealth</span>
+            <span>
+              Health · Stealth · <span className={s.wealth}>Wealth</span>
+            </span>
           </div>
           <h1>
             Bit<span>coin</span>
