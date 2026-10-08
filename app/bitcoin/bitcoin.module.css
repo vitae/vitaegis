@@ -61,18 +61,16 @@
   margin: 0;
 }
 
-.back {
-  font-size: 0.72rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--orange);
+.home {
+  color: #00ff00;
   font-weight: 600;
   text-decoration: none;
 }
 
-.back:hover,
-.back:focus-visible {
+.home:hover,
+.home:focus-visible {
   color: var(--ink);
+  outline: none;
 }
 
 .eyebrow {

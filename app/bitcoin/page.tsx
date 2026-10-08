@@ -220,13 +220,11 @@ export default function BitcoinPage() {
   return (
     <main className={s.page}>
       <div className={s.wrap}>
-        <Link href="/" className={s.back}>
-          ← Vitaegis
-        </Link>
-
         <header className={s.header}>
           <div className={s.brand}>
-            <b>VITAEGIS</b>
+            <Link href="/" className={s.home}>
+              VITAEGIS
+            </Link>
             <span>
               Health · Stealth · <span className={s.wealth}>Wealth</span>
             </span>
