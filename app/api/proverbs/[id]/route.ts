@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { adminAuthedRequest } from '@/lib/admin-auth';
 
 function getSupabase() {
   return createClient(
@@ -8,7 +9,8 @@ function getSupabase() {
   );
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!adminAuthedRequest(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
   const supabase = getSupabase();
 

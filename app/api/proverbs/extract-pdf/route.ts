@@ -1,11 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
+import { adminAuthedRequest } from '@/lib/admin-auth';
 
 function getAnthropic() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 }
 
 export async function POST(req: Request) {
+  if (!adminAuthedRequest(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { pdfBase64, bookTitle, defaultTag } = await req.json();
 
   if (!pdfBase64) {

@@ -429,8 +429,18 @@ a:active,
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 38%, rgba(255, 255, 255, 0) 62%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.015) 50%, rgba(0, 255, 65, 0.025) 100%);
+    radial-gradient(
+      120% 90% at 18% 0%,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.04) 38%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.045) 0%,
+      rgba(255, 255, 255, 0.015) 50%,
+      rgba(0, 255, 65, 0.025) 100%
+    );
   backdrop-filter: blur(9px) saturate(190%) brightness(1.12) contrast(1.05);
   -webkit-backdrop-filter: blur(9px) saturate(190%) brightness(1.12) contrast(1.05);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -445,7 +455,10 @@ a:active,
     0 0 8px rgba(0, 255, 65, 0.45),
     0 0 22px rgba(0, 255, 65, 0.18),
     0 18px 50px rgba(0, 0, 0, 0.55);
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 /* Rim: a neon green hairline just inside the border, lit like a laser beam — a hot core with
@@ -457,8 +470,12 @@ a:active,
   border-radius: inherit;
   padding: 1.5px;
   background: linear-gradient(135deg, #c8ffd4 0%, #00ff41 18%, #00ff41 82%, #c8ffd4 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0.95;
@@ -477,15 +494,30 @@ a:active,
   mix-blend-mode: screen;
   background:
     /* specular arc */
-    radial-gradient(60% 38% at 22% -6%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.07) 45%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(
+      60% 38% at 22% -6%,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0.07) 45%,
+      rgba(255, 255, 255, 0) 70%
+    ),
     /* crescent along the top edge */
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0px, rgba(255, 255, 255, 0.05) 6px, rgba(255, 255, 255, 0) 22px);
+    linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.16) 0px,
+        rgba(255, 255, 255, 0.05) 6px,
+        rgba(255, 255, 255, 0) 22px
+      );
   background-repeat: no-repeat;
 }
 
 .glass-panel--subtle {
   background:
-    radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0) 62%),
+    radial-gradient(
+      120% 90% at 18% 0%,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.02) 40%,
+      rgba(255, 255, 255, 0) 62%
+    ),
     linear-gradient(160deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
   border-color: rgba(255, 255, 255, 0.11);
 }
@@ -500,8 +532,18 @@ a:active,
 }
 .glass-panel--hover:hover {
   background:
-    radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0) 62%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.025) 50%, rgba(0, 255, 65, 0.05) 100%);
+    radial-gradient(
+      120% 90% at 18% 0%,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.06) 38%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.07) 0%,
+      rgba(255, 255, 255, 0.025) 50%,
+      rgba(0, 255, 65, 0.05) 100%
+    );
   border-color: rgba(0, 255, 0, 0.4);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
@@ -509,7 +551,6 @@ a:active,
     0 0 28px rgba(0, 255, 0, 0.16),
     0 18px 50px rgba(0, 0, 0, 0.55);
 }
-
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    Neon Effects
@@ -610,5 +651,229 @@ a:active,
 
   .h-screen {
     height: 100svh;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Liquid glass buttons (admin + anywhere a small control sits on the glass panels).
+   Same optics as .glass-panel, scaled to a pill: clear pane, bright top highlight, hairline
+   rim, a soft neon bloom on hover, and a press that sinks the pane.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.liquid-btn {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--vitae-green);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(
+      120% 90% at 18% 0%,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.05) 40%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.015) 55%,
+      rgba(0, 255, 65, 0.05) 100%
+    );
+  backdrop-filter: blur(10px) saturate(180%) brightness(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(180%) brightness(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 10px rgba(255, 255, 255, 0.03),
+    0 0 0 1px rgba(0, 255, 65, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.liquid-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      70% 55% at 24% -10%,
+      rgba(255, 255, 255, 0.34) 0%,
+      rgba(255, 255, 255, 0.08) 45%,
+      rgba(255, 255, 255, 0) 70%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.18) 0px,
+      rgba(255, 255, 255, 0.04) 5px,
+      rgba(255, 255, 255, 0) 14px
+    );
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+.liquid-btn:hover {
+  border-color: rgba(0, 255, 0, 0.55);
+  color: #fff;
+  background:
+    radial-gradient(
+      120% 90% at 18% 0%,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.07) 40%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(0, 255, 65, 0.14) 0%,
+      rgba(0, 255, 65, 0.05) 55%,
+      rgba(0, 255, 65, 0.1) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 14px rgba(0, 255, 65, 0.14),
+    0 0 1px rgba(0, 255, 65, 0.9),
+    0 0 18px rgba(0, 255, 65, 0.35),
+    0 10px 28px rgba(0, 0, 0, 0.5);
+}
+.liquid-btn:hover::after {
+  opacity: 1;
+}
+.liquid-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.45),
+    inset 0 0 12px rgba(0, 255, 65, 0.12),
+    0 0 10px rgba(0, 255, 65, 0.25);
+}
+.liquid-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 0 0 2px rgba(0, 255, 65, 0.6),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.liquid-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary: white glass, lights green on hover. */
+.liquid-btn--quiet {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.75rem;
+  padding: 0.375rem 0.8rem;
+}
+
+/* Destructive: red tint, red bloom. */
+.liquid-btn--danger {
+  color: #f87171;
+  font-size: 0.75rem;
+  padding: 0.375rem 0.8rem;
+  border-color: rgba(248, 113, 113, 0.35);
+  background:
+    radial-gradient(
+      120% 90% at 18% 0%,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.04) 40%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(160deg, rgba(248, 113, 113, 0.08) 0%, rgba(248, 113, 113, 0.03) 100%);
+}
+.liquid-btn--danger:hover {
+  color: #fff;
+  border-color: rgba(248, 113, 113, 0.7);
+  background: linear-gradient(160deg, rgba(248, 113, 113, 0.22) 0%, rgba(248, 113, 113, 0.08) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 14px rgba(248, 113, 113, 0.16),
+    0 0 18px rgba(248, 113, 113, 0.35),
+    0 10px 28px rgba(0, 0, 0, 0.5);
+}
+
+/* Tabs and filters: uppercase tracking, lit when selected. */
+.liquid-btn--pill {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.85rem;
+}
+.liquid-btn--pill:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+.liquid-btn--on,
+.liquid-btn--on:hover {
+  color: var(--vitae-green);
+  border-color: rgba(0, 255, 0, 0.65);
+  background:
+    radial-gradient(
+      120% 90% at 18% 0%,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.05) 40%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(0, 255, 65, 0.18) 0%,
+      rgba(0, 255, 65, 0.06) 55%,
+      rgba(0, 255, 65, 0.12) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 0 14px rgba(0, 255, 65, 0.16),
+    0 0 1px rgba(0, 255, 65, 0.9),
+    0 0 14px rgba(0, 255, 65, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Inputs that sit on the glass. */
+.liquid-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0.35) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 2px 8px rgba(0, 0, 0, 0.35);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #fff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.liquid-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+.liquid-input:focus {
+  outline: none;
+  border-color: rgba(0, 255, 0, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 2px 8px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(0, 255, 65, 0.25),
+    0 0 14px rgba(0, 255, 65, 0.18);
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid-btn {
+    transition: none;
   }
 }

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { adminAuthedRequest } from '@/lib/admin-auth';
 
 function getSupabase() {
   return createClient(
@@ -22,6 +23,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!adminAuthedRequest(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const supabase = getSupabase();
   const { text, source, tag, note } = await req.json();
 

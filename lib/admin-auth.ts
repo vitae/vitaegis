@@ -10,3 +10,10 @@ export function adminAuthed(req: NextRequest) {
   if (!key) return false;
   return req.headers.get('x-admin-key') === key || req.nextUrl.searchParams.get('key') === key;
 }
+
+/** Same gate for handlers that take a plain `Request` (header only). */
+export function adminAuthedRequest(req: Request) {
+  const key = process.env.CONTENT_ADMIN_KEY;
+  if (!key) return false;
+  return req.headers.get('x-admin-key') === key;
+}

@@ -21,9 +21,8 @@ export default function AgentConsole() {
       wide
       blurb={
         <>
-          Vitae runs the content engine, the research desk and the revenue loop. It queues and
-          plans on its own; publishing and anything that charges money pause here for your
-          approval.
+          Vitae runs the content engine, the research desk and the revenue loop. It queues and plans
+          on its own; publishing and anything that charges money pause here for your approval.
         </>
       }
     >
@@ -121,9 +120,7 @@ function Chat({ adminKey }: { adminKey: string }) {
                 <button
                   key={o.id}
                   type="button"
-                  onClick={() =>
-                    void agent.respond([{ requestId: req.requestId, optionId: o.id }])
-                  }
+                  onClick={() => void agent.respond([{ requestId: req.requestId, optionId: o.id }])}
                   className={ui.btn}
                 >
                   {o.label}
@@ -170,8 +167,8 @@ function Chat({ adminKey }: { adminKey: string }) {
         </button>
       </form>
       <p className="text-xs text-white/40">
-        Scheduled runs (06:00 brief, Monday revenue, six-hourly watchdog) write to the dashboard
-        and never publish. Session: {agent.session?.sessionId ?? 'not started'}.
+        Scheduled runs (06:00 brief, Monday revenue, six-hourly watchdog) write to the dashboard and
+        never publish. Session: {agent.session?.sessionId ?? 'not started'}.
       </p>
     </div>
   );

@@ -9,22 +9,18 @@ import { usePathname } from 'next/navigation';
 
 export const KEY_STORAGE = 'vitaegis-content-admin-key';
 
+/**
+ * The admin design tokens. Every control is liquid glass (see .liquid-btn in globals.css),
+ * every surface is the site's glass pane, so the admin reads as part of vitaegis.com.
+ */
 export const ui = {
-  glass: 'rounded-2xl border border-vitae-green/25 bg-white/[0.03] backdrop-blur-lg',
+  glass: 'glass-panel rounded-2xl',
   label: 'text-[11px] font-semibold uppercase tracking-[0.25em] text-vitae-green',
-  input:
-    'w-full rounded-lg border border-vitae-green/30 bg-black px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-vitae-green focus:outline-none',
-  btn: 'rounded-lg border border-vitae-green/50 px-4 py-2 text-sm text-vitae-green hover:bg-vitae-green/10 disabled:opacity-40',
-  btnQuiet:
-    'rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-40',
-  btnDanger:
-    'rounded-lg border border-red-500/40 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 disabled:opacity-40',
-  pill: (on: boolean) =>
-    `rounded-full border px-3 py-1 text-xs uppercase tracking-[0.15em] transition-colors ${
-      on
-        ? 'border-vitae-green/60 bg-vitae-green/10 text-vitae-green'
-        : 'border-white/15 text-white/40 hover:border-white/30'
-    }`,
+  input: 'liquid-input',
+  btn: 'liquid-btn',
+  btnQuiet: 'liquid-btn liquid-btn--quiet',
+  btnDanger: 'liquid-btn liquid-btn--danger',
+  pill: (on: boolean) => `liquid-btn liquid-btn--pill${on ? ' liquid-btn--on' : ''}`,
 };
 
 const NAV = [
@@ -65,12 +61,25 @@ export default function AdminShell({
       setError('');
       try {
         const res = await fetch(probe, { headers: { 'x-admin-key': k }, cache: 'no-store' });
-        if (res.status === 403) {
+        if (res.status === 403 || res.status === 401) {
           setError('That key was rejected.');
           setAuthed(false);
           return;
         }
-        if (!res.ok) throw new Error(String(res.status));
+        if (!res.ok) {
+          // The key may be fine and the screen's own backend broken (a missing table, say).
+          // Say what the server said instead of blaming the network.
+          let detail = `HTTP ${res.status}`;
+          try {
+            const body = (await res.json()) as { error?: string };
+            if (body?.error) detail = body.error;
+          } catch {
+            /* not JSON */
+          }
+          setError(`The server answered with an error: ${detail}`);
+          setAuthed(false);
+          return;
+        }
         setAuthed(true);
         try {
           localStorage.setItem(KEY_STORAGE, k);
@@ -122,7 +131,7 @@ export default function AdminShell({
             );
           })}
           {authed && (
-            <button onClick={signOut} className="ml-auto text-xs text-white/40 hover:text-white/70">
+            <button onClick={signOut} className={`${ui.btnQuiet} ml-auto`}>
               Sign out
             </button>
           )}
@@ -135,7 +144,7 @@ export default function AdminShell({
         {blurb && <div className="mt-3 max-w-2xl text-sm font-light text-white/60">{blurb}</div>}
 
         {!authed && (
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className={`${ui.glass} mt-6 flex flex-wrap items-center gap-3 p-4`}>
             <input
               type="password"
               value={key}
@@ -143,7 +152,8 @@ export default function AdminShell({
               onKeyDown={(e) => e.key === 'Enter' && tryKey(key)}
               placeholder="Admin key"
               autoFocus
-              className="w-64 rounded-lg border border-vitae-green/30 bg-black px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-vitae-green focus:outline-none"
+              className={`${ui.input} w-64`}
+              style={{ width: '16rem' }}
             />
             <button onClick={() => tryKey(key)} className={ui.btn}>
               Open
