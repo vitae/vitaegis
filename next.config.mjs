@@ -27,11 +27,8 @@ const nextConfig = {
   },
   async rewrites() {
     // Routes are case-sensitive; serve the shared /ED link from app/ed.
-    // /bitcoin answers in any capitalization (/Bitcoin, /BITCOIN, /bItCoIn ...).
-    return [
-      { source: '/ED', destination: '/ed' },
-      { source: '/:slug([Bb][Ii][Tt][Cc][Oo][Ii][Nn])', destination: '/bitcoin' },
-    ];
+    // Other case-insensitive routes (e.g. /Bitcoin) are handled in proxy.ts.
+    return [{ source: '/ED', destination: '/ed' }];
   },
 };
 
