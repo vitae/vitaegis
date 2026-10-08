@@ -7,12 +7,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint app components lib hooks e2e --ext .ts,.tsx,.js,.mjs",
+    "lint": "eslint app components lib hooks agent e2e --ext .ts,.tsx,.js,.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "agent": "eve dev",
+    "agent:info": "eve info",
+    "agent:build": "eve build",
+    "agent:deploy": "eve deploy",
+    "agent:eval": "eve eval"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
@@ -30,7 +35,10 @@
     "@supabase/supabase-js": "^2.98.0",
     "@tanstack/react-virtual": "^3.14.13",
     "@vercel/analytics": "^1.5.0",
+    "@vercel/config": "^0.12.0",
     "@vercel/speed-insights": "^1.2.0",
+    "ai": "^7.0.133",
+    "eve": "^0.74.0",
     "ffmpeg-static": "^5.3.0",
     "framer-motion": "^10.16.0",
     "idb": "^8.0.3",
@@ -41,7 +49,8 @@
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",
     "stripe": "^14.25.0",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
@@ -60,6 +69,6 @@
     "vitest": "^5.0.1"
   },
   "engines": {
-    "node": ">=18.0.0 <24.0.0"
+    "node": ">=24.0.0"
   }
 }

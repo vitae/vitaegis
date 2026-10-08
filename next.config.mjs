@@ -1,3 +1,5 @@
+import { withEve } from 'eve/next';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -23,11 +25,12 @@ const nextConfig = {
   images: {
     domains: [],
   },
-  // No custom experimental options needed for Turbopack in Next.js 14+
   async rewrites() {
     // Routes are case-sensitive; serve the shared /ED link from app/ed.
     return [{ source: '/ED', destination: '/ed' }];
   },
 };
 
-module.exports = nextConfig;
+// withEve mounts the operator agent in agent/ at /eve/v1/* (same origin), boots it beside
+// `next dev`, and deploys it as a sibling Vercel service with its schedules as Cron Jobs.
+export default withEve(nextConfig);

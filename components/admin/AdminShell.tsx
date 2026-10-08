@@ -29,6 +29,7 @@ export const ui = {
 
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
+  { href: '/admin/agent', label: 'Agent' },
   { href: '/admin/content', label: 'Content' },
   { href: '/admin/research', label: 'Research' },
   { href: '/admin/proverbs', label: 'Proverbs' },

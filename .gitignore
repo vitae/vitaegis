@@ -161,3 +161,9 @@ test-results/
 
 # Google Drive for desktop temp uploads
 .tmp.driveupload/
+
+# Google Drive sync temp files
+.tmp.drivedownload/
+
+# eve build artifacts and local dev state
+.eve/
