@@ -1,12 +1,14 @@
 import { defineAgent } from 'eve';
+import { anthropic } from 'eve/models/anthropic';
 
 /**
- * The Vitaegis operator agent. Model ids route through the Vercel AI Gateway, so the
- * deployment authenticates with project OIDC and needs no provider key of its own.
- * Change the model here or with `eve set model <id>`.
+ * The Vitaegis operator agent. It calls Anthropic directly with ANTHROPIC_API_KEY (already
+ * set on the Vercel project); the team's AI Gateway is on the free tier, which does not
+ * serve Opus. To route through the gateway later, replace the model with a
+ * "anthropic/<id>" string. Model ids verified against the key on 2026-10-08.
  */
 export default defineAgent({
-  model: 'anthropic/claude-opus-5.5',
+  model: anthropic('claude-opus-5-5'),
   reasoning: 'medium',
   compaction: { thresholdPercent: 0.8 },
   limits: {

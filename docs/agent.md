@@ -83,9 +83,14 @@ New, all optional:
 | `POSTHOG_MCP_URL`          | Override for EU cloud                                              |
 | `FIRECRAWL_API_KEY`        | Firecrawl MCP                                                      |
 
-Models route through the Vercel AI Gateway with project OIDC, so no Anthropic key is needed
-in production. Locally, `npm run agent` asks you to connect a gateway, Vercel account, or
-provider key once.
+Models call Anthropic directly with `ANTHROPIC_API_KEY` (Opus 5.5 for the operator, Sonnet
+5.5 for the subagents). The team's AI Gateway is on the free tier, which refuses Opus; once it
+has credits, a `"anthropic/<id>"` string in `agent/agent.ts` routes through the gateway
+instead and picks up its fallbacks and spend reports. Locally, `vercel env pull .env.local`
+brings the key down; sensitive variables such as `CONTENT_ADMIN_KEY` arrive as placeholders.
+
+For API access without the admin key, the channel also accepts the project's Vercel OIDC
+token (`VERCEL_OIDC_TOKEN` from `vercel env pull`) as a bearer token.
 
 ## Run it
 
