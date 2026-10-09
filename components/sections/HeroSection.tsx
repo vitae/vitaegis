@@ -91,7 +91,7 @@ export default function HeroSection() {
           </p>
 
           {/* Pillars: three equal columns spanning the card, one word centred in each */}
-          <div className="grid w-full grid-cols-3 items-center mb-3 sm:mb-4">
+          <div className="grid w-full grid-cols-3 items-center mb-6 sm:mb-8">
             {(
               [
                 ['/health', 'HEALTH'],
@@ -107,19 +107,6 @@ export default function HeroSection() {
                 {label}
               </Link>
             ))}
-          </div>
-
-          {/* The fourth beat: SELF, the sovereign individual the three pillars build */}
-          <div className="mb-6 sm:mb-8 flex flex-col items-center">
-            <span
-              className="block text-center whitespace-nowrap text-base sm:text-2xl md:text-3xl lg:text-4xl font-light text-[#ff0000] tracking-[0.1em] sm:tracking-[0.2em]"
-              style={{ textShadow: '0 0 18px rgba(255, 0, 0, 0.45)' }}
-            >
-              SELF
-            </span>
-            <span className="mt-1 text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#ff0000]/70">
-              The Sovereign Individual
-            </span>
           </div>
 
           {/* CTA Buttons with touch feedback */}
