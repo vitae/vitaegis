@@ -8,8 +8,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 export const SECRETS_COOKIE = 'vitaegis_secrets';
-export const SECRETS_PRICE_CENTS = 999;
-export const SECRETS_PRICE_LABEL = '$9.99';
+export { SECRETS_PRICE_CENTS, SECRETS_PRICE_LABEL } from './price';
 /** One year of access per purchase. */
 export const SECRETS_TTL_SECONDS = 365 * 24 * 60 * 60;
 
