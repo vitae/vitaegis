@@ -60,8 +60,8 @@ export default function Footer() {
               </p>
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/70">
                 Advanced Intelligence as a Service. <em>Vitae</em> and <em>Aegis</em>: Life Energy.
-                Intelligence orchestrated agentically with curated knowledge which automatically and
-                constantly improves itself. Turning ideas into reality, in real time.
+                Intelligence orchestrated agentically with curated knowledge which constantly
+                improves itself. Turning ideas into reality, in real time.
               </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
                 {socials.map((social) => {

@@ -60,9 +60,9 @@ export default function AboutSection() {
                 Vitaegis is a portmanteau of <em>Vitae</em> and <em>Aegis</em>: Life Energy.
               </p>
               <p>
-                Intelligence orchestrated agentically with curated knowledge which automatically and
-                constantly improves itself, served through streaming APIs on serverless
-                infrastructure. Turning ideas into reality, in real time.
+                Intelligence orchestrated agentically with curated knowledge which constantly
+                improves itself, served through streaming APIs on serverless infrastructure. Turning
+                ideas into reality, in real time.
               </p>
             </div>
 
