@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useRef, useState, useEffect } from 'react';
 import GlassContainer from '@/components/GlassContainer';
 import LogoGlow from '@/components/LogoGlow';
@@ -90,17 +92,26 @@ export default function HeroSection() {
 
           {/* Tagline with Instagram spacing */}
           <div className="flex flex-nowrap whitespace-nowrap items-center justify-center gap-1.5 sm:gap-3 mb-5 sm:mb-6">
-            <span className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em]">
+            <Link
+              href="/health"
+              className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
+            >
               HEALTH
-            </span>
+            </Link>
             <span className="text-xs sm:text-base text-[#00ff00]/50">•</span>
-            <span className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em]">
+            <Link
+              href="/stealth"
+              className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
+            >
               STEALTH
-            </span>
+            </Link>
             <span className="text-xs sm:text-base text-[#00ff00]/50">•</span>
-            <span className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em]">
+            <Link
+              href="/wealth"
+              className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
+            >
               WEALTH
-            </span>
+            </Link>
           </div>
 
           {/* CTA Buttons with touch feedback */}

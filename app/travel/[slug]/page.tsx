@@ -5,6 +5,7 @@ import RadarConsole from '../_radar/RadarConsole';
 import { legMiles, waypoints } from '../_radar/geo';
 import { airports, findTravelPage, home, legend, legs, travelPages, travelSlugs } from '../sectors';
 import '../_radar/radar.css';
+import PillarLinks from '@/components/PillarLinks';
 
 export const dynamicParams = false;
 
@@ -240,9 +241,7 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
             — a planning budget, not a quote. Entry notes are for US passports. Compiled by
             Vitaegis.
           </p>
-          <Link href="/" className={`${label} mt-4 inline-block hover:text-white`}>
-            Health • Stealth • Wealth
-          </Link>
+          <PillarLinks className={`${label} mt-4 inline-block`} />
         </footer>
       </div>
     </main>

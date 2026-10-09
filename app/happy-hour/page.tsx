@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { spots, lateNight, lateNightLeftOut, steakForTwo, type Spot, type MenuGroup } from './data';
+import PillarLinks from '@/components/PillarLinks';
 
 export const metadata: Metadata = {
   title: 'Happy Hour Hawaiʻi | VITAEGIS',
@@ -313,9 +314,7 @@ export default function HappyHourPage() {
             Hours and prices change — call ahead before you go. Compiled by Vitaegis from each
             restaurant&apos;s official site.
           </p>
-          <Link href="/" className={`${label} mt-4 inline-block hover:text-white`}>
-            Health • Stealth • Wealth
-          </Link>
+          <PillarLinks className={`${label} mt-4 inline-block`} />
         </footer>
       </div>
     </main>

@@ -18,6 +18,7 @@ import {
 } from './data';
 import { ASIA_RED, travelPages } from '../sectors';
 import '../_radar/radar.css';
+import PillarLinks from '@/components/PillarLinks';
 
 export const metadata: Metadata = {
   title: 'The Pacific Circuit | VITAEGIS Travel',
@@ -445,9 +446,7 @@ export default function TravelPage() {
             lowest one-way economy prices seen on fare aggregators in September 2026 — a planning
             budget, not a quote. Entry rules are for US passports. Compiled by Vitaegis.
           </p>
-          <Link href="/" className={`${label} mt-4 inline-block hover:text-white`}>
-            Health • Stealth • Wealth
-          </Link>
+          <PillarLinks className={`${label} mt-4 inline-block`} />
         </footer>
       </div>
     </main>

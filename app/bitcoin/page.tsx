@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import s from './bitcoin.module.css';
 import HalvingClock from './HalvingClock';
+import PillarLinks from '@/components/PillarLinks';
 
 export const metadata: Metadata = {
   title: 'Bitcoin | VITAEGIS WEALTH',
@@ -225,9 +226,12 @@ export default function BitcoinPage() {
             <Link href="/" className={s.home}>
               VITAEGIS
             </Link>
-            <span>
-              Health · Stealth · <span className={s.wealth}>Wealth</span>
-            </span>
+            <PillarLinks
+              separator="·"
+              active="wealth"
+              linkClassName={s.pillar}
+              activeClassName={s.wealth}
+            />
           </div>
           <h1>
             Bit<span>coin</span>

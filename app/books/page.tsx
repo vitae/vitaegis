@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import PillarLinks from '@/components/PillarLinks';
 
 export const metadata: Metadata = {
   title: 'The Canon | VITAEGIS BOOKS',
@@ -291,8 +292,8 @@ export default function BooksPage() {
             The Canon
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            Ten books behind everything we build. Strategy, energy, sovereignty, and purpose,
-            mapped to Health • Stealth • Wealth.
+            Ten books behind everything we build. Strategy, energy, sovereignty, and purpose, mapped
+            to <PillarLinks linkClassName="text-[#00ff00] transition-colors hover:text-white" />.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {(['Health', 'Stealth', 'Wealth'] as Pillar[]).map((p) => (
@@ -308,7 +309,11 @@ export default function BooksPage() {
 
         <div className="divide-y divide-vitae-green/20 border-y border-vitae-green/20">
           {books.map((b) => (
-            <article key={b.code} id={b.code.toLowerCase()} className="grid gap-6 py-12 sm:grid-cols-[7rem_1fr]">
+            <article
+              key={b.code}
+              id={b.code.toLowerCase()}
+              className="grid gap-6 py-12 sm:grid-cols-[7rem_1fr]"
+            >
               <div className="flex items-baseline gap-4 sm:flex-col sm:gap-2">
                 <span className="text-3xl font-light text-vitae-green">{b.code}</span>
                 <span className="text-xs uppercase tracking-[0.2em] text-white/50">{b.year}</span>
@@ -328,7 +333,9 @@ export default function BooksPage() {
                   ))}
                 </div>
 
-                <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-white/90">{b.thesis}</p>
+                <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-white/90">
+                  {b.thesis}
+                </p>
 
                 <div className="mt-6 grid gap-6 sm:grid-cols-2">
                   <div>
@@ -356,7 +363,10 @@ export default function BooksPage() {
                 {b.quotes && (
                   <div className="mt-6 space-y-3">
                     {b.quotes.map((q) => (
-                      <blockquote key={q.text} className="border-l-2 border-red-600 bg-white/[0.03] px-4 py-3">
+                      <blockquote
+                        key={q.text}
+                        className="border-l-2 border-red-600 bg-white/[0.03] px-4 py-3"
+                      >
                         <p className="font-light italic text-white/90">&ldquo;{q.text}&rdquo;</p>
                         <cite className="mt-1 block text-[11px] not-italic uppercase tracking-[0.2em] text-white/45">
                           {q.source}

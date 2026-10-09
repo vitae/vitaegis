@@ -446,3 +446,24 @@ a.card:focus-visible {
 a.card .who {
   color: var(--orange);
 }
+
+.pillar {
+  color: inherit;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.pillar:hover,
+.pillar:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+
+.pillar.wealth {
+  color: #00ff00;
+}
+
+.pillar.wealth:hover,
+.pillar.wealth:focus-visible {
+  color: var(--ink);
+}

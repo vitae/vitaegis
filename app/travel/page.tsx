@@ -13,6 +13,7 @@ import {
   worldOverview,
 } from './sectors';
 import './_radar/radar.css';
+import PillarLinks from '@/components/PillarLinks';
 
 export const metadata: Metadata = {
   title: 'Flight Radar | VITAEGIS Travel',
@@ -186,9 +187,7 @@ export default function TravelRadarPage() {
             — a planning budget, not a quote. Entry notes are for US passports. Compiled by
             Vitaegis.
           </p>
-          <Link href="/" className={`${label} mt-4 inline-block hover:text-white`}>
-            Health • Stealth • Wealth
-          </Link>
+          <PillarLinks className={`${label} mt-4 inline-block`} />
         </footer>
       </div>
     </main>

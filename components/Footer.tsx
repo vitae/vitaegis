@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import { socials } from '@/components/socials';
+import PillarLinks from '@/components/PillarLinks';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Footer
@@ -54,7 +55,7 @@ export default function Footer() {
                 Vitaegis
               </span>
               <p className="mt-1 text-xs uppercase tracking-[0.3em] text-[#00ff00]/80">
-                Health • Stealth • Wealth
+                <PillarLinks />
               </p>
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
                 Advanced Intelligence as a Service. <em>Vitae</em> and <em>Aegis</em>: Life Energy,
