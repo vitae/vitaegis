@@ -167,3 +167,6 @@ test-results/
 
 # eve build artifacts and local dev state
 .eve/
+
+# local card renders from scripts/render-cards.ts
+.tmp-cards/

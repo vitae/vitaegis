@@ -26,11 +26,17 @@ export interface PostSummary {
   source: { origin: string; kind: string; note: string; topic?: string; pillar?: string } | null;
 }
 
-export async function listPosts(opts: { status?: PostStatus | 'needs'; limit?: number; q?: string }) {
+export async function listPosts(opts: {
+  status?: PostStatus | 'needs';
+  limit?: number;
+  q?: string;
+}) {
   const limit = Math.min(50, Math.max(1, opts.limit ?? 20));
   let query = db()
     .from('content_posts')
-    .select('id, status, created_at, published_at, media_kind, platforms, captions, error, results, ingest_id')
+    .select(
+      'id, status, created_at, published_at, media_kind, platforms, captions, error, results, ingest_id',
+    )
     .order('created_at', { ascending: false })
     .limit(limit);
   if (opts.status === 'needs') query = query.in('status', ['ready', 'draft', 'failed']);
@@ -43,10 +49,7 @@ export async function listPosts(opts: { status?: PostStatus | 'needs'; limit?: n
   const ingestIds = [...new Set(rows.map((r) => r.ingest_id).filter(Boolean))] as string[];
   const ingests = ingestIds.length
     ? ((
-        await db()
-          .from('content_ingest')
-          .select('id, origin, kind, note, meta')
-          .in('id', ingestIds)
+        await db().from('content_ingest').select('id, origin, kind, note, meta').in('id', ingestIds)
       ).data ?? [])
     : [];
   const byId = new Map(ingests.map((i) => [i.id, i]));
@@ -83,17 +86,25 @@ export async function counts() {
   const head = (table: string) => db().from(table).select('*', { head: true, count: 'exact' });
   const n = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
   const since7 = new Date(Date.now() - 7 * DAY).toISOString();
-  const [needsReview, drafting, published7, failed, jobsQueued, jobsRunning, jobsFailed, briefsReady] =
-    await Promise.all([
-      n(head('content_posts').eq('status', 'ready')),
-      n(head('content_posts').in('status', ['draft', 'approved', 'publishing'])),
-      n(head('content_posts').eq('status', 'published').gte('published_at', since7)),
-      n(head('content_posts').eq('status', 'failed')),
-      n(head('content_jobs').eq('state', 'queued')),
-      n(head('content_jobs').eq('state', 'running')),
-      n(head('content_jobs').eq('state', 'failed')),
-      n(head('research_briefs').eq('status', 'ready')),
-    ]);
+  const [
+    needsReview,
+    drafting,
+    published7,
+    failed,
+    jobsQueued,
+    jobsRunning,
+    jobsFailed,
+    briefsReady,
+  ] = await Promise.all([
+    n(head('content_posts').eq('status', 'ready')),
+    n(head('content_posts').in('status', ['draft', 'approved', 'publishing'])),
+    n(head('content_posts').eq('status', 'published').gte('published_at', since7)),
+    n(head('content_posts').eq('status', 'failed')),
+    n(head('content_jobs').eq('state', 'queued')),
+    n(head('content_jobs').eq('state', 'running')),
+    n(head('content_jobs').eq('state', 'failed')),
+    n(head('research_briefs').eq('status', 'ready')),
+  ]);
   return {
     posts: { needsReview, drafting, published7, failed },
     jobs: { queued: jobsQueued, running: jobsRunning, failed: jobsFailed },

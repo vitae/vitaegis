@@ -13,7 +13,11 @@ export default defineTool({
     const now = new Date().toISOString();
     const { data, error } = await db()
       .from('content_posts')
-      .update({ status: 'rejected', error: `Rejected by agent: ${reason}`.slice(0, 1000), updated_at: now })
+      .update({
+        status: 'rejected',
+        error: `Rejected by agent: ${reason}`.slice(0, 1000),
+        updated_at: now,
+      })
       .eq('id', postId)
       .in('status', ['ready', 'draft', 'failed'])
       .select('id')

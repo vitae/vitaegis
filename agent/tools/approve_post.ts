@@ -32,7 +32,11 @@ export default defineTool({
       throw new Error(`Post is "${post.status}", only "ready" posts can be approved.`);
     }
 
-    const patch: Record<string, unknown> = { status: 'approved', approved_at: now, updated_at: now };
+    const patch: Record<string, unknown> = {
+      status: 'approved',
+      approved_at: now,
+      updated_at: now,
+    };
     if (platforms) patch.platforms = platforms.filter((p) => (PLATFORMS as string[]).includes(p));
     if (captions) patch.captions = { ...(post.captions as Record<string, string>), ...captions };
 

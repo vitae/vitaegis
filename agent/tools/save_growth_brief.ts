@@ -13,7 +13,7 @@ const Idea = z.object({
 
 export default defineTool({
   description:
-    'Save the daily growth brief: a headline, the ranked ideas, and the full markdown report. One per run; it shows up in the admin dashboard and feeds tomorrow\'s brief.',
+    "Save the daily growth brief: a headline, the ranked ideas, and the full markdown report. One per run; it shows up in the admin dashboard and feeds tomorrow's brief.",
   inputSchema: z.object({
     headline: z.string().min(5).max(200),
     ideas: z.array(Idea).min(1).max(8),

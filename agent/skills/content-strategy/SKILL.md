@@ -17,6 +17,23 @@ description: Use when planning a day or week of posts, choosing topics, or decid
    the `copywriter` subagent first and queue its output.
 7. Report: what you queued, what it will cost, and what the operator must approve.
 
+## Concept posts (cards and reels)
+
+The fastest, cheapest post. The concept is already written on the site: a pillar directive, a
+dossier entry, a protocol step, a proverb, a research finding. Your job is to cut it into
+cards and write the captions; the server draws the cards.
+
+1. Pick the concept and its code (e.g. H-01 Circadian Rhythm). Keep the site's wording where
+   it is already good.
+2. Ask the `copywriter` subagent for: 3 to 5 cards (each: title under 8 words, 1 to 3 points
+   under 15 words) and captions for Instagram, Facebook, YouTube (first line is the Short
+   title, under 60 characters), TikTok and X. Give it the concept text verbatim.
+3. Call `queue_post` with mediaKind "reel" for Instagram, Facebook and YouTube together, or
+   "cards" for a feed carousel on Instagram, Facebook and X. Pass `slides`, `captions`,
+   `pillar`, `topic` and a footer like "vitaegis.com/health".
+4. Card 1 is the hook, the middle cards are the points, the last card is the practice to try
+   today with the site link.
+
 ## What a good post brief contains
 
 - The subject in one line, and the pillar.

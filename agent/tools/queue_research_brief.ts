@@ -20,7 +20,11 @@ export default defineTool({
     if (error || !data) throw new Error(error?.message ?? 'Insert failed');
     const { error: jErr } = await db()
       .from('content_jobs')
-      .insert({ kind: 'research_brief', payload: { briefId: data.id }, run_after: new Date().toISOString() });
+      .insert({
+        kind: 'research_brief',
+        payload: { briefId: data.id },
+        run_after: new Date().toISOString(),
+      });
     if (jErr) throw new Error(jErr.message);
     return { briefId: data.id, topic };
   },

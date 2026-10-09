@@ -34,12 +34,18 @@ export default defineTool({
       const { data, error } = await q;
       if (error) throw new Error(error.message);
       return {
-        findings: (data ?? []).map((f) => ({ ...f, text: clip(f.text, 400), evidence: clip(f.evidence, 300) })),
+        findings: (data ?? []).map((f) => ({
+          ...f,
+          text: clip(f.text, 400),
+          evidence: clip(f.evidence, 300),
+        })),
       };
     }
     let q = db()
       .from('research_briefs')
-      .select('id, topic, title, hook, summary, key_findings, takeaway, status, ingest_id, created_at')
+      .select(
+        'id, topic, title, hook, summary, key_findings, takeaway, status, ingest_id, created_at',
+      )
       .order('created_at', { ascending: false })
       .limit(limit);
     if (topic) q = q.eq('topic', topic);

@@ -18,6 +18,7 @@ import { askJev, choice, jevConfigured } from './jev';
 import { autopilotConfig, maybeAutoPublish } from './autopilot';
 import { stitch, type MontageScene } from './montage';
 import { introFor, thumbnailPng } from './intro';
+import { cardPng, cardsReel, type CardSpec } from './cards';
 
 const BUCKET = 'content';
 /** Long enough for the publisher to fetch the media and for you to preview it. */
@@ -31,6 +32,7 @@ type JobKind =
   | 'video_poll'
   | 'montage'
   | 'montage_poll'
+  | 'cards'
   | 'publish'
   | 'research_extract'
   | 'research_brief'
@@ -529,6 +531,61 @@ async function runMontagePoll(job: Job) {
   await maybeAutoPublish(post);
 }
 
+/**
+ * Stage 2f: concept cards. Payload: { slides: CardSpec[], reel: boolean, seconds? }. The
+ * cards are drawn here (resvg), so nothing is generated and no AI label is owed; a reel
+ * cuts the same cards into a vertical MP4 for Shorts, Reels and TikTok.
+ */
+async function runCards(job: Job) {
+  const slides = (job.payload.slides as CardSpec[] | undefined) ?? [];
+  if (!slides.length) throw new Error('No slides in payload');
+  const reel = Boolean(job.payload.reel);
+  const seconds = Number(job.payload.seconds ?? 4);
+  const post = job.post_id!;
+  const now = new Date().toISOString();
+
+  if (reel) {
+    const pngs = slides.slice(0, 10).map((s, i) => cardPng(s, 'reel', i, slides.length));
+    const video = await cardsReel(pngs, seconds);
+    const path = await store(`generated/${post}.mp4`, video, 'video/mp4');
+    const thumb = await store(`generated/${post}-thumb.png`, pngs[0], 'image/png');
+    await archiveToDrive(post, 'reel', [{ bytes: video, mimeType: 'video/mp4' }]);
+    await db()
+      .from('content_posts')
+      .update({
+        media_kind: 'video',
+        thumb_path: thumb,
+        media_path: path,
+        media_paths: [path],
+        media_url: await signedUrl(path),
+        status: 'ready',
+        updated_at: now,
+      })
+      .eq('id', post);
+  } else {
+    const paths: string[] = [];
+    const archive: { bytes: Buffer; mimeType: string }[] = [];
+    for (const [i, s] of slides.slice(0, 10).entries()) {
+      const png = cardPng(s, 'feed', i, slides.length);
+      paths.push(await store(`generated/${post}-${i + 1}.png`, png, 'image/png'));
+      archive.push({ bytes: png, mimeType: 'image/png' });
+    }
+    await archiveToDrive(post, 'card', archive);
+    await db()
+      .from('content_posts')
+      .update({
+        media_kind: paths.length > 1 ? 'slides' : 'image',
+        media_path: paths[0],
+        media_paths: paths,
+        media_url: await signedUrl(paths[0]),
+        status: 'ready',
+        updated_at: now,
+      })
+      .eq('id', post);
+  }
+  await maybeAutoPublish(post);
+}
+
 /** Stage 4: fan out to the networks. Only ever queued by an explicit approval. */
 async function runPublish(job: Job) {
   const { data: post, error } = await db()
@@ -682,6 +739,7 @@ const STAGES: Record<JobKind, (job: Job) => Promise<void>> = {
   video_poll: runVideoPoll,
   montage: runMontage,
   montage_poll: runMontagePoll,
+  cards: runCards,
   publish: runPublish,
   research_extract: runResearchExtract,
   research_brief: runResearchBrief,

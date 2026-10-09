@@ -16,6 +16,11 @@ These come from running the pipeline, not from docs. Plan around them.
 
 ## Media kinds and cost
 
+- **cards**: branded concept cards drawn on the server from text you supply (title, points,
+  dossier code). Free, instant, exact wording, no AI label. Feed carousel: Instagram, Facebook, X.
+- **reel**: the same cards cut into a vertical video. Free, instant. Goes everywhere: Instagram
+  Reels, Facebook, YouTube Shorts, TikTok. The default for YouTube when Veo is unavailable.
+
 - **original**: the operator's own captured photo or clip. Free, no AI label, best content. Only
   available when a capture came in from the Shortcut; the agent cannot create one.
 - **slides**: four-slide Nano Banana Pro carousel. Cheap. Goes to Instagram, Facebook, X.
@@ -23,7 +28,7 @@ These come from running the pipeline, not from docs. Plan around them.
 - **video**: a Veo clip. Priced per second of generated video and by far the most expensive.
   Goes everywhere, and is the only kind YouTube and TikTok accept.
 
-Default to slides. Use video when the subject needs motion, when the target is YouTube or
+Default to cards for the feed and reel for YouTube. Use Veo video when the subject needs motion, when the target is YouTube or
 TikTok, or when the operator asked for a clip. The YouTube autopilot already makes a few
 clips a day when `AUTOPILOT_ENABLED` is true; check `pipeline_status` before adding more.
 
