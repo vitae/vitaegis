@@ -34,7 +34,7 @@ export default function AboutSection() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative flex min-h-screen flex-col items-center pt-8 pb-16 text-center sm:pt-10"
+      className="relative flex flex-col items-center py-8 text-center sm:py-10"
     >
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"

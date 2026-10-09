@@ -43,7 +43,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function Footer() {
   return (
-    <footer className="relative pb-6 pt-0">
+    <footer className="relative pb-6 pt-8 sm:pt-10">
       <div className="section-container mx-auto w-full">
         <GlassContainer variant="default" glow className="w-full p-5 sm:p-7">
           <div className="grid gap-6 text-center md:grid-cols-[1.4fr_repeat(3,1fr)] md:text-left">
@@ -103,9 +103,9 @@ export default function Footer() {
           </div>
 
           {/* Donation box: Monero, Lightning (Strike) and on-chain Bitcoin rails */}
-          <div className="mt-6 flex flex-col items-center gap-4 border-t border-white/10 pt-5 sm:flex-row sm:justify-center sm:gap-6">
+          <div className="mx-auto mt-6 flex max-w-sm flex-col items-center gap-4 border-t border-white/10 pt-5 text-center">
             <LightningTip inline />
-            <div className="flex max-w-xs flex-col items-center gap-2 text-center sm:items-start sm:text-left">
+            <div className="flex max-w-xs flex-col items-center gap-2 text-center">
               <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#ff8000]">
                 ⚡ Donate
               </h4>
@@ -122,9 +122,9 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-1 border-t border-white/10 pt-4 text-xs text-white/40">
+          <div className="mt-5 flex flex-nowrap items-center justify-between gap-x-5 border-t border-white/10 pt-4 text-xs text-white/40">
             <span className="whitespace-nowrap">© 2026 VITAEGIS. All rights reserved.</span>
-            <div className="flex gap-5">
+            <div className="flex shrink-0 gap-5">
               <Link href="/privacy" className="transition-colors hover:text-white">
                 Privacy
               </Link>

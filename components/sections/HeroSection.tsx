@@ -40,7 +40,7 @@ export default function HeroSection() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center text-center"
+      className="relative mb-8 flex min-h-screen flex-col items-center justify-center text-center sm:mb-10"
       style={{ minHeight: 'calc(100svh - var(--nav-top) - var(--nav-bottom) - var(--sab))' }}
     >
       {/* Content container with safe area padding and global alignment */}
