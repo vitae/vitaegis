@@ -50,6 +50,14 @@ describe('isReadToolName', () => {
       expect(isReadToolName(`stripe__${n}`)).toBe(false);
     }
   });
+  it('matches verbs as whole words, anywhere in the name', () => {
+    expect(isReadToolName('stripe__stripe_api_read')).toBe(true);
+    expect(isReadToolName('stripe__search_documentation')).toBe(true);
+    expect(isReadToolName('stripe__stripe_api_write')).toBe(false);
+    expect(isReadToolName('posthog__insights-get-all')).toBe(true);
+    expect(isReadToolName('supabase__list_and_delete')).toBe(false);
+    expect(isReadToolName('stripe__getaway')).toBe(false);
+  });
   it('honours extra read names', () => {
     expect(isReadToolName('supabase__execute_sql')).toBe(false);
     expect(isReadToolName('supabase__execute_sql', ['execute_sql'])).toBe(true);
