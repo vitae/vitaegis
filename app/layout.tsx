@@ -4,6 +4,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import GlassNav from '@/components/GlassNav';
 import NoZoom from '@/components/NoZoom';
+import VitaeOrb from '@/components/vitae/VitaeOrb';
 
 export const metadata: Metadata = {
   title: 'VITAEGIS | Health • Stealth • Wealth',
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased text-white selection:bg-vitae-green selection:text-black min-h-screen flex flex-col text-center">
         {children}
+        <VitaeOrb />
         <GlassNav />
         <NoZoom />
         <SpeedInsights />

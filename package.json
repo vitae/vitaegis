@@ -26,6 +26,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@elevenlabs/react": "^1.17.0",
     "@metamask/sdk": "^0.34.0",
     "@react-three/drei": "^9.92.7",
     "@react-three/fiber": "^8.15.12",
