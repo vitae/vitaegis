@@ -91,27 +91,19 @@ export default function HeroSection() {
           </p>
 
           {/* Tagline with Instagram spacing */}
-          <div className="flex flex-nowrap whitespace-nowrap items-center justify-center gap-1.5 sm:gap-3 mb-5 sm:mb-6">
+          <div className="flex flex-nowrap whitespace-nowrap items-center justify-center gap-4 sm:gap-8 mb-5 sm:mb-6">
             <Link
               href="/health"
               className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
             >
               HEALTH
             </Link>
-            <span
-              aria-hidden
-              className="inline-block h-[0.3em] w-[0.3em] flex-none rounded-full bg-[#00ff00] opacity-80"
-            />
             <Link
               href="/stealth"
               className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
             >
               STEALTH
             </Link>
-            <span
-              aria-hidden
-              className="inline-block h-[0.3em] w-[0.3em] flex-none rounded-full bg-[#00ff00] opacity-80"
-            />
             <Link
               href="/wealth"
               className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
