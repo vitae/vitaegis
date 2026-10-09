@@ -66,7 +66,7 @@ export default function CommunitySection() {
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
-        <SectionTitle tagline="Connect with practitioners worldwide. Share your journey, learn from masters, and grow together.">
+        <SectionTitle tagline="Connect globally, share your journey, let's grow together.">
           Connect
         </SectionTitle>
 
@@ -81,7 +81,7 @@ export default function CommunitySection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`VITAEGIS on ${social.name}`}
-                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group glass-panel glass-panel--hover relative p-4 sm:p-6 rounded-xl text-center"
+                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group glass-panel glass-panel--hover relative min-w-0 px-1 py-4 sm:p-6 rounded-xl text-center"
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
                 {/* Icon */}
@@ -94,7 +94,9 @@ export default function CommunitySection() {
                 </div>
 
                 {/* Name */}
-                <div className="text-white font-medium">{social.name}</div>
+                <div className="text-[11px] leading-tight text-white font-medium sm:text-sm lg:text-base">
+                  {social.name}
+                </div>
 
                 {/* Hover glow */}
                 <div
