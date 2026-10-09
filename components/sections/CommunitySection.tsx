@@ -111,24 +111,30 @@ export default function CommunitySection() {
                 <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
                   Stay <span className="text-vitae-green">Connected</span>
                 </h3>
-                <p className="text-white/70">Get updates on new information and events.</p>
+                <p className="text-white/70">Get updates on new intel and events.</p>
               </div>
 
               {/* Right - Form */}
               <div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 relative">
+                {/* Field and button: one glass surface, one height, one radius */}
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  <label className="glass-panel glass-panel--hover flex min-h-[52px] flex-1 items-center rounded-xl px-6 focus-within:border-[#00ff00]/60">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your Email"
-                      className="glass-panel glass-panel--subtle w-full min-h-[44px] px-5 py-3 rounded-lg text-center text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50"
+                      aria-label="Your email"
+                      className="relative z-10 w-full bg-transparent text-center text-base text-white placeholder:text-white/30 outline-none"
                     />
-                  </div>
-                  <GlassButton variant="primary" size="lg">
-                    Subscribe
-                  </GlassButton>
+                  </label>
+                  <button
+                    type="button"
+                    className="glass-panel glass-panel--hover flex min-h-[52px] items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white sm:min-w-[160px]"
+                    style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
+                  >
+                    <span className="relative z-10">Subscribe</span>
+                  </button>
                 </div>
                 <p className="mt-3 text-xs text-white/40"></p>
               </div>

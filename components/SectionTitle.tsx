@@ -8,17 +8,19 @@ interface Props {
   children: string;
   /** One line under the title, optional. */
   tagline?: string;
+  /** h2 on the home page sections; h1 when the title heads a standalone page. */
+  as?: 'h1' | 'h2';
 }
 
-export default function SectionTitle({ children, tagline }: Props) {
+export default function SectionTitle({ children, tagline, as: Heading = 'h2' }: Props) {
   return (
     <header className="mb-10 flex w-full flex-col items-center text-center sm:mb-14">
-      <h2
+      <Heading
         className="text-4xl font-bold uppercase tracking-[0.18em] text-white sm:text-5xl lg:text-6xl"
         style={{ textShadow: '0 0 28px rgba(0,255,0,0.25)' }}
       >
         {children}
-      </h2>
+      </Heading>
       <div
         className="mt-5 h-px w-24 sm:w-32"
         style={{ background: 'linear-gradient(90deg, transparent, #00ff00, transparent)' }}

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
+import SectionTitle from '@/components/SectionTitle';
 import { pillars } from '@/lib/pillars';
 import { secretsAccess } from '@/lib/secrets/access-server';
 import { SECRETS_PRICE_LABEL } from '@/lib/secrets/token';
@@ -24,32 +25,30 @@ export default async function SecretsPage({
   const [access, params] = await Promise.all([secretsAccess(), searchParams]);
 
   return (
-    <main
-      className="min-h-screen w-full bg-black text-left text-white"
-      style={{ fontFamily: "'Jost', sans-serif" }}
-    >
-      <div className="mx-auto max-w-3xl px-4 pb-32 pt-10 sm:px-6">
-        <Link href="/" className={`${label} hover:text-white`}>
-          ← Vitaegis
-        </Link>
+    <main className="min-h-screen w-full bg-black text-white">
+      <div className="mx-auto w-full max-w-screen-md px-4 sm:px-6">
+        <section className="relative flex flex-col items-center py-10 text-center sm:py-14">
+          <SectionTitle
+            as="h1"
+            tagline={
+              access
+                ? 'The protocols behind everything we build. Yours for a year.'
+                : 'The protocols behind everything we build. Health, Stealth and Wealth, step by step.'
+            }
+          >
+            Secrets
+          </SectionTitle>
 
-        <header className="py-12 text-center sm:py-16">
-          <p className={label}>Center for Inner Peace</p>
-          <h1 className="mt-4 text-4xl font-bold sm:text-5xl lg:text-6xl">
-            Our <span className="text-vitae-green">Secrets</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-white/70 sm:text-lg">
-            {access
-              ? 'The protocols behind everything we build. Yours for a year.'
-              : 'The protocols behind everything we build. Health, Stealth and Wealth, step by step.'}
-          </p>
-        </header>
+          {access ? (
+            <Unlocked unlockedNow={params.unlocked === '1'} />
+          ) : (
+            <Paywall failed={params.error === '1'} />
+          )}
 
-        {access ? (
-          <Unlocked unlockedNow={params.unlocked === '1'} />
-        ) : (
-          <Paywall failed={params.error === '1'} />
-        )}
+          <Link href="/" className={`${label} mt-8 hover:text-white sm:mt-10`}>
+            ← Vitaegis
+          </Link>
+        </section>
       </div>
     </main>
   );
@@ -89,7 +88,7 @@ function Paywall({ failed }: { failed: boolean }) {
 
 function Unlocked({ unlockedNow }: { unlockedNow: boolean }) {
   return (
-    <div className="flex flex-col gap-8 sm:gap-10">
+    <div className="flex w-full flex-col gap-8 text-left sm:gap-10">
       {unlockedNow && (
         <p className="text-center text-sm text-vitae-green">
           Unlocked. This device keeps access for a year.

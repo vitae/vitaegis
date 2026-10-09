@@ -157,11 +157,6 @@ export default function AboutSection() {
             </div>
           </GlassContainer>
         </div>
-
-        {/* Bottom decorative line */}
-        <div className="reveal opacity-0 transition-all duration-1000 [&.revealed]:opacity-100 mt-10 flex w-full items-center justify-center sm:mt-14">
-          <div className="h-px w-full max-w-md bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        </div>
       </div>
     </section>
   );
