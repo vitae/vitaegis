@@ -27,6 +27,8 @@ type Book = {
   angles: string[];
   quotes?: { text: string; source: string }[];
   search: string;
+  /** Free public-domain PDF hosted in /public. */
+  pdf?: string;
 };
 
 const books: Book[] = [
@@ -177,6 +179,7 @@ const books: Book[] = [
       { text: 'A foolish consistency is the hobgoblin of little minds.', source: 'Emerson, 1841' },
     ],
     search: 'self-reliance emerson',
+    pdf: '/self-reliance-emerson.pdf',
   },
   {
     code: 'LF',
@@ -385,14 +388,26 @@ export default function BooksPage() {
                   </div>
                 )}
 
-                <a
-                  href={`https://bookshop.org/search?keywords=${encodeURIComponent(b.search)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 inline-block rounded-full border border-vitae-green px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-vitae-green transition hover:bg-vitae-green hover:text-black"
-                >
-                  Get the book
-                </a>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {b.pdf && (
+                    <a
+                      href={b.pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block rounded-full border border-[#ff0000] px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff0000] transition hover:bg-[#ff0000] hover:text-black"
+                    >
+                      Read the PDF · Free
+                    </a>
+                  )}
+                  <a
+                    href={`https://bookshop.org/search?keywords=${encodeURIComponent(b.search)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block rounded-full border border-vitae-green px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-vitae-green transition hover:bg-vitae-green hover:text-black"
+                  >
+                    Get the book
+                  </a>
+                </div>
               </div>
             </article>
           ))}

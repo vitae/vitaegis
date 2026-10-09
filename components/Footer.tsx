@@ -58,6 +58,9 @@ export default function Footer() {
               <p className="mt-1 text-xs uppercase tracking-[0.3em] text-[#00ff00]/80">
                 <PillarLinks />
               </p>
+              <p className="mt-1 text-xs uppercase tracking-[0.3em] text-[#ff0000]">
+                Self <span className="text-[#ff0000]/60">· The Sovereign Individual</span>
+              </p>
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/70">
                 Advanced Intelligence as a Service. <em>Vitae</em> and <em>Aegis</em>: Life Energy,
                 run as an intelligence layer. Turning ideas into reality, in real time.
@@ -127,7 +130,9 @@ export default function Footer() {
             <Link href="/privacy" className="ml-4 transition-colors hover:text-white">
               Privacy
             </Link>
-            <span className="mx-2" aria-hidden="true">·</span>
+            <span className="mx-2" aria-hidden="true">
+              ·
+            </span>
             <Link href="/terms" className="transition-colors hover:text-white">
               Terms
             </Link>
