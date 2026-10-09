@@ -128,7 +128,7 @@ export default function ClassesPage() {
         {/* Footer */}
         <div className="container mx-auto px-4 py-8 text-center text-gray-500 text-sm">
           <p>PEACE • PRESENCE • POWER</p>
-          <p className="mt-2">© 2025 Meditation Mondays. All rights reserved.</p>
+          <p className="mt-2">© 2025 Meditation Mondays. All Rights Reserved.</p>
         </div>
       </div>
     </main>
