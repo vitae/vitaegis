@@ -105,7 +105,7 @@ export default function CommunitySection() {
             {/* Top edge glow */}
             <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
-            <div className="relative grid gap-6 items-center sm:gap-8 lg:grid-cols-2">
+            <div className="relative grid gap-6 sm:gap-8">
               {/* Left - Text */}
               <div>
                 <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
@@ -118,19 +118,19 @@ export default function CommunitySection() {
               <div>
                 {/* Field and button: one glass surface, one height, one radius */}
                 <div className="flex flex-col gap-4 sm:flex-row">
-                  <label className="glass-panel glass-panel--hover flex min-h-[52px] flex-1 items-center rounded-xl px-6 focus-within:border-[#00ff00]/60">
+                  <label className="glass-panel glass-panel--hover flex min-h-[52px] min-w-0 flex-1 items-center rounded-xl px-4 focus-within:border-[#00ff00]/60">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your Email"
                       aria-label="Your email"
-                      className="relative z-10 w-full bg-transparent text-center text-base text-white placeholder:text-white/30 outline-none"
+                      className="relative z-10 w-full min-w-0 bg-transparent text-left text-base text-white placeholder:text-white/30 outline-none"
                     />
                   </label>
                   <button
                     type="button"
-                    className="glass-panel glass-panel--hover flex min-h-[52px] items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white sm:min-w-[160px]"
+                    className="glass-panel glass-panel--hover flex min-h-[52px] shrink-0 items-center justify-center rounded-xl px-5 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white"
                     style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
                   >
                     <span className="relative z-10">Subscribe</span>
