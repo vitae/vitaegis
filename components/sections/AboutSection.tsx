@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
@@ -59,15 +60,18 @@ export default function AboutSection() {
                 Vitaegis is a portmanteau of <em>Vitae</em> and <em>Aegis</em>: Life Energy.
               </p>
               <p>
-                We run it as an intelligence layer. Intelligence orchestrated agentically over
-                curated knowledge, served through streaming APIs on serverless infrastructure.
-                Turning ideas into reality, in real time.
+                Intelligence orchestrated agentically with curated knowledge which automatically and
+                constantly improves itself, served through streaming APIs on serverless
+                infrastructure. Turning ideas into reality, in real time.
               </p>
             </div>
 
             {/* CTA Link */}
             <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8">
-              <button className="group inline-flex items-center gap-2 text-vitae-green font-medium tracking-[0.2em] hover:gap-4 transition-all duration-300">
+              <Link
+                href="/secrets"
+                className="group inline-flex items-center gap-2 text-vitae-green font-medium tracking-[0.2em] hover:gap-4 transition-all duration-300"
+              >
                 LEARN OUR SECRETS
                 <svg
                   className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
@@ -82,7 +86,7 @@ export default function AboutSection() {
                     d="M17 8l4 4m0 0l-4 4m4-4H3"
                   />
                 </svg>
-              </button>
+              </Link>
             </div>
           </GlassContainer>
         </div>
