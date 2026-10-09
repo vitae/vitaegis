@@ -124,8 +124,7 @@ export default function Footer() {
 
           <p className="mt-5 whitespace-nowrap border-t border-white/10 pt-4 text-center text-xs text-white/40">
             © 2026 VITAEGIS. All rights reserved.
-            <span className="mx-2" aria-hidden="true">·</span>
-            <Link href="/privacy" className="transition-colors hover:text-white">
+            <Link href="/privacy" className="ml-4 transition-colors hover:text-white">
               Privacy
             </Link>
             <span className="mx-2" aria-hidden="true">·</span>
