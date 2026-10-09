@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import PillarLinks from '@/components/PillarLinks';
+import CategoryPosts, { type CategoryPost } from '@/components/CategoryPosts';
 
 export const metadata: Metadata = {
   title: 'The Canon | VITAEGIS BOOKS',
@@ -272,6 +273,14 @@ const pillarStyle: Record<Pillar, string> = {
 
 const label = 'text-[11px] font-semibold uppercase tracking-[0.25em] text-vitae-green';
 
+const morePosts: CategoryPost[] = [
+  {
+    href: '/proverbs',
+    label: 'Proverbs & Oracle',
+    blurb: 'A living archive of Zen, Stoic, Taoist and Kundalini wisdom. Ask the Oracle.',
+  },
+];
+
 export default function BooksPage() {
   return (
     <main
@@ -388,6 +397,8 @@ export default function BooksPage() {
             </article>
           ))}
         </div>
+
+        <CategoryPosts posts={morePosts} title="More in Books" />
 
         <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/45">
           Summaries are original Vitaegis notes. Quotes are from public-domain editions.
