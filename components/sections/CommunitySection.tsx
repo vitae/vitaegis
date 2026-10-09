@@ -94,10 +94,7 @@ export default function CommunitySection() {
                 </div>
 
                 {/* Name */}
-                <div className="text-white font-medium mb-1">{social.name}</div>
-
-                {/* Members */}
-                <div className="text-sm text-white/50">{social.members} members</div>
+                <div className="text-white font-medium">{social.name}</div>
 
                 {/* Hover glow */}
                 <div
