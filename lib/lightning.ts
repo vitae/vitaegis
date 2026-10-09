@@ -73,7 +73,7 @@ export function donationRails(overrides?: Partial<Record<RailId, string | null>>
   if (btc)
     rails.push({
       id: 'bitcoin',
-      tab: 'On-chain',
+      tab: 'Bitcoin',
       label: 'Bitcoin on-chain',
       address: btc,
       uri: bitcoinUri(btc),

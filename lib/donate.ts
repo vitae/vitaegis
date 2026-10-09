@@ -58,7 +58,7 @@ const ALL_RAILS: Rail[] = [
   },
   {
     key: 'onchain',
-    tag: '₿ On-chain',
+    tag: '₿ Bitcoin',
     label: 'Bitcoin on-chain',
     note: 'Regular bitcoin transaction. Network fees apply. Best for larger amounts.',
     value: ONCHAIN_ADDRESS,

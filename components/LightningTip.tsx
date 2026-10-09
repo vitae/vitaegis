@@ -35,7 +35,7 @@ export default function LightningTip({ inline = false }: { inline?: boolean }) {
     // on the inner box instead of fighting Tailwind's fixed.
     <aside
       aria-label="Donate"
-      className={inline ? 'w-[12rem]' : 'fixed bottom-24 right-4 z-40 w-[12rem] sm:right-6'}
+      className={inline ? 'w-[13.5rem]' : 'fixed bottom-24 right-4 z-40 w-[13.5rem] sm:right-6'}
       style={inline ? undefined : { position: 'fixed' }}
     >
       <div
