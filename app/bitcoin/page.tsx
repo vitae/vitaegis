@@ -3,6 +3,7 @@ import Link from 'next/link';
 import s from './bitcoin.module.css';
 import HalvingClock from './HalvingClock';
 import PillarLinks from '@/components/PillarLinks';
+import LightningTip from '@/components/LightningTip';
 
 export const metadata: Metadata = {
   title: 'Bitcoin | VITAEGIS WEALTH',
@@ -486,6 +487,7 @@ export default function BitcoinPage() {
           <span>Bitcoin</span>
         </footer>
       </div>
+      <LightningTip />
     </main>
   );
 }

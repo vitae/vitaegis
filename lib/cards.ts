@@ -14,6 +14,7 @@ import { promisify } from 'node:util';
 import ffmpegPath from 'ffmpeg-static';
 import { Resvg } from '@resvg/resvg-js';
 import { FONT_FILE } from './montage';
+import { BITCOIN_ORANGE, lightningUri, qrMatrix, qrPath } from './lightning';
 
 const run = promisify(execFile);
 
@@ -36,6 +37,8 @@ export interface CardSpec {
   lines: string[];
   /** Small line at the foot, e.g. "vitaegis.com/health". */
   footer?: string;
+  /** A Bitcoin Lightning address: draws its QR and the address, in orange, at the lower right. */
+  lightning?: string;
 }
 
 const GREEN = '#00FF00';
@@ -85,7 +88,8 @@ export function cardSvg(spec: CardSpec, format: CardFormat, index = 0, total = 1
   // Content height, so the pane can be centred vertically in the frame.
   const titleH = titleLines.length * (titleSize * 1.12);
   const bodyH = points.reduce((sum, ls) => sum + ls.length * (bodySize * 1.35) + 26, 0);
-  const contentH = 72 + (kicker ? 54 : 0) + titleH + 40 + bodyH + 70;
+  const tipH = spec.lightning ? 250 : 0;
+  const contentH = 72 + (kicker ? 54 : 0) + titleH + 40 + bodyH + 70 + tipH;
   const paneH = Math.min(h - pad * 2, Math.max(520, contentH));
   const paneY = Math.round((h - paneH) / 2);
 
@@ -121,6 +125,21 @@ export function cardSvg(spec: CardSpec, format: CardFormat, index = 0, total = 1
   const footer = spec.footer ?? 'vitaegis.com';
   const foot = paneY + paneH - 40;
 
+  // Lightning tip jar: QR on white (scannable by any wallet), label and address in orange.
+  let tip = '';
+  if (spec.lightning) {
+    const qrSide = 168;
+    const box = qrSide + 20;
+    const bx = paneX + paneW - 44 - box;
+    const by = foot - 92 - box;
+    const m = qrMatrix(lightningUri(spec.lightning));
+    tip =
+      `<rect x="${bx}" y="${by}" width="${box}" height="${box}" rx="14" fill="#FFFFFF"/>` +
+      `<path transform="translate(${bx + 10} ${by + 10})" d="${qrPath(m, qrSide)}" fill="#000000"/>` +
+      `<text x="${bx + box / 2}" y="${by + box + 34}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="15" letter-spacing="2.5" fill="${BITCOIN_ORANGE}">BITCOIN LIGHTNING</text>` +
+      `<text x="${bx + box / 2}" y="${by + box + 64}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="${Math.min(22, Math.floor((box + 40) / (spec.lightning.length * 0.52)))}" fill="${BITCOIN_ORANGE}">${xml(spec.lightning)}</text>`;
+  }
+
   // A quiet rain of glyphs behind the pane, deterministic per card.
   const glyphs = '0123456789ABCDEF'.split('');
   const rain: string[] = [];
@@ -150,6 +169,7 @@ export function cardSvg(spec: CardSpec, format: CardFormat, index = 0, total = 1
     `<rect x="${paneX}" y="${paneY}" width="${paneW}" height="${paneH}" rx="36" fill="none" stroke="${GREEN}" stroke-width="3"/>` +
     `<rect x="${paneX + 6}" y="${paneY + 6}" width="${paneW - 12}" height="${paneH - 12}" rx="31" fill="none" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5"/>` +
     parts.join('') +
+    tip +
     `<text x="${paneX + 44}" y="${foot}" font-family="Jost" font-weight="600" font-size="24" letter-spacing="4" fill="${GREEN}" opacity="0.85">${xml(footer)}</text>` +
     (total > 1 || spec.id
       ? `<text x="${paneX + paneW - 44}" y="${foot}" text-anchor="end" font-family="Jost" font-weight="600" font-size="24" letter-spacing="3" fill="#FFFFFF" opacity="0.5">${xml([spec.id, total > 1 ? `${index + 1} / ${total}` : ''].filter(Boolean).join('  ·  '))}</text>`

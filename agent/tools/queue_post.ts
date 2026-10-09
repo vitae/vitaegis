@@ -72,11 +72,27 @@ Two paths:
     ),
     platforms: z.array(z.enum(PLATFORMS)).min(1).optional(),
     secondsPerCard: z.number().min(2).max(8).optional().describe('Reel only. Default 4.'),
+    tip: z
+      .boolean()
+      .optional()
+      .describe(
+        'Put the Bitcoin Lightning tip QR and address on the last card (needs NEXT_PUBLIC_LIGHTNING_ADDRESS). Default false.',
+      ),
     pillar: z.enum(['health', 'stealth', 'wealth']).optional(),
     topic: z.string().optional().describe('A stable topic key, e.g. "H-01:morning-light".'),
   }),
   label: { start: ({ mediaKind }) => `Queue a ${mediaKind} post` },
-  async execute({ note, mediaKind, slides, captions, platforms, secondsPerCard, pillar, topic }) {
+  async execute({
+    note,
+    mediaKind,
+    slides,
+    captions,
+    platforms,
+    secondsPerCard,
+    tip,
+    pillar,
+    topic,
+  }) {
     const now = new Date().toISOString();
 
     if (mediaKind === 'cards' || mediaKind === 'reel') {
@@ -142,7 +158,18 @@ Two paths:
           kind: 'cards',
           post_id: post.id,
           ingest_id: ingest.id,
-          payload: { slides, reel, seconds: secondsPerCard ?? 4 },
+          payload: {
+            slides:
+              tip && process.env.NEXT_PUBLIC_LIGHTNING_ADDRESS
+                ? slides.map((s, i) =>
+                    i === slides.length - 1
+                      ? { ...s, lightning: process.env.NEXT_PUBLIC_LIGHTNING_ADDRESS }
+                      : s,
+                  )
+                : slides,
+            reel,
+            seconds: secondsPerCard ?? 4,
+          },
           run_after: now,
         });
       if (jErr) throw new Error(jErr.message);
