@@ -86,30 +86,27 @@ export default function HeroSection() {
           style={{ transitionDelay: '400ms' }}
         >
           {/* Brand descriptor */}
-          <p className="text-sm sm:text-base text-[#00ff00] text-center tracking-[0.15em] uppercase mb-3 sm:mb-4">
+          <p className="text-sm sm:text-lg md:text-xl text-[#00ff00] text-center tracking-[0.2em] uppercase mb-4 sm:mb-5">
             Center for Inner Peace
           </p>
 
-          {/* Tagline with Instagram spacing */}
-          <div className="flex flex-nowrap whitespace-nowrap items-center justify-center gap-4 sm:gap-8 mb-5 sm:mb-6">
-            <Link
-              href="/health"
-              className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
-            >
-              HEALTH
-            </Link>
-            <Link
-              href="/stealth"
-              className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
-            >
-              STEALTH
-            </Link>
-            <Link
-              href="/wealth"
-              className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
-            >
-              WEALTH
-            </Link>
+          {/* Pillars: three equal columns spanning the card, one word centred in each */}
+          <div className="grid w-full grid-cols-3 items-center mb-6 sm:mb-8">
+            {(
+              [
+                ['/health', 'HEALTH'],
+                ['/stealth', 'STEALTH'],
+                ['/wealth', 'WEALTH'],
+              ] as const
+            ).map(([href, label]) => (
+              <Link
+                key={href}
+                href={href}
+                className="block text-center whitespace-nowrap text-base sm:text-2xl md:text-3xl lg:text-4xl font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
+              >
+                {label}
+              </Link>
+            ))}
           </div>
 
           {/* CTA Buttons with touch feedback */}
