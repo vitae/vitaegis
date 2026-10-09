@@ -124,8 +124,8 @@ export default function CommunitySection() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter"
-                      className="glass-panel glass-panel--subtle w-full px-6 py-4 rounded-2xl text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50"
+                      placeholder="Enter Your Email"
+                      className="glass-panel glass-panel--subtle w-full px-6 py-4 rounded-2xl text-center text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50"
                     />
                   </div>
                   <GlassButton variant="primary" size="lg">
