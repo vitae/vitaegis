@@ -4,10 +4,12 @@
    PROJECTS, STORE and CONNECT all land the same way when their nav item is tapped.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
+import type { ReactNode } from 'react';
+
 interface Props {
   children: string;
   /** One line under the title, optional. */
-  tagline?: string;
+  tagline?: ReactNode;
   /** h2 on the home page sections; h1 when the title heads a standalone page. */
   as?: 'h1' | 'h2';
 }

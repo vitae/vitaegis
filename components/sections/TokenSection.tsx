@@ -9,27 +9,26 @@ export default function TokenSection() {
   const products = [
     {
       name: 'Matcha Green Tea from Yame, Japan',
-      description:
-        'Premium ceremonial matcha direct from Yame, Fukuoka. Includes digital NFT certificate.',
+      description: 'Premium ceremonial matcha direct from Yame, Fukuoka.',
       image: '/images/matcha.jpg',
       price: '$29.99',
       featured: true,
     },
     {
-      name: 'The Art of Zen: NFT eBook',
-      description: 'A beautifully illustrated eBook on Zen philosophy, delivered as an NFT.',
+      name: 'The Art of Zen',
+      description: 'A beautifully illustrated eBook on Zen philosophy.',
       image: '/images/zenbook.jpg',
       price: '$14.99',
     },
     {
-      name: 'Yoga for Life: NFT Guide',
-      description: 'A digital yoga guide with lifetime updates, secured on-chain as an NFT.',
+      name: 'Yoga for Life',
+      description: 'A digital yoga guide with lifetime updates.',
       image: '/images/yogabook.jpg',
       price: '$19.99',
     },
     {
-      name: 'Tai Chi Flow: NFT Video Course',
-      description: 'A full video course on Tai Chi, with NFT proof of ownership.',
+      name: 'Tai Chi Flow',
+      description: 'A full video course on Tai Chi.',
       image: '/images/taichicourse.jpg',
       price: '$24.99',
     },
