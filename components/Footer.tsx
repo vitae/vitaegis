@@ -4,8 +4,7 @@ import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import { socials } from '@/components/socials';
 import PillarLinks from '@/components/PillarLinks';
-import CopyButton from '@/components/CopyButton';
-import { LIGHTNING_ADDRESS, LIGHTNING_QR, LIGHTNING_URI } from '@/lib/donate';
+import LightningTip from '@/components/LightningTip';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Footer
@@ -103,45 +102,23 @@ export default function Footer() {
             ))}
           </div>
 
-          {/* Bitcoin donation (Lightning, Strike) */}
+          {/* Donation box: Monero, Lightning (Strike) and on-chain Bitcoin rails */}
           <div className="mt-6 flex flex-col items-center gap-4 border-t border-white/10 pt-5 sm:flex-row sm:justify-center sm:gap-6">
-            <a
-              href={LIGHTNING_URI}
-              aria-label={`Donate bitcoin over Lightning to ${LIGHTNING_ADDRESS}`}
-              className="block overflow-hidden rounded-xl"
-              style={{ boxShadow: '0 0 28px rgba(255,128,0,0.35)' }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={LIGHTNING_QR}
-                alt={`Lightning QR code for ${LIGHTNING_ADDRESS}`}
-                width={128}
-                height={128}
-                loading="lazy"
-              />
-            </a>
-            <div className="flex flex-col items-center gap-2 sm:items-start">
+            <LightningTip inline />
+            <div className="flex max-w-xs flex-col items-center gap-2 text-center sm:items-start sm:text-left">
               <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#ff8000]">
-                ⚡ Donate Bitcoin
+                ⚡ Donate
               </h4>
-              <a
-                href={LIGHTNING_URI}
-                className="font-mono text-sm text-white/80 transition-colors hover:text-[#ff8000]"
+              <p className="text-sm leading-relaxed text-white/70">
+                Monero, Bitcoin over Lightning, or Bitcoin on-chain. Scan the code, or tap the
+                address to copy it.
+              </p>
+              <Link
+                href="/donate"
+                className="text-xs text-white/50 transition-colors hover:text-[#ff8000]"
               >
-                {LIGHTNING_ADDRESS}
-              </a>
-              <div className="flex items-center gap-4 text-xs">
-                <CopyButton
-                  value={LIGHTNING_ADDRESS}
-                  className="min-h-0 whitespace-nowrap rounded-full border border-[#ff8000] px-3 py-1 leading-tight text-[#ff8000] transition hover:bg-[#ff8000] hover:text-black"
-                />
-                <Link
-                  href="/donate"
-                  className="text-white/50 transition-colors hover:text-[#ff8000]"
-                >
-                  On-chain, Monero &amp; more →
-                </Link>
-              </div>
+                All donation options →
+              </Link>
             </div>
           </div>
 

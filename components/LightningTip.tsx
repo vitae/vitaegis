@@ -11,7 +11,8 @@ import { donationRails, qrMatrix, qrPath, shortAddress, type RailId } from '@/li
 
 const RAILS = donationRails();
 
-export default function LightningTip() {
+export default function LightningTip({ inline = false }: { inline?: boolean }) {
+  // inline: sits in the page flow (the footer donate block) instead of pinned lower right.
   const [active, setActive] = useState<RailId>(RAILS[0]?.id ?? 'lightning');
   const [copied, setCopied] = useState(false);
   const rail = RAILS.find((r) => r.id === active) ?? RAILS[0];
@@ -34,8 +35,8 @@ export default function LightningTip() {
     // on the inner box instead of fighting Tailwind's fixed.
     <aside
       aria-label="Donate"
-      className="fixed bottom-24 right-4 z-40 w-[12rem] sm:right-6"
-      style={{ position: 'fixed' }}
+      className={inline ? 'w-[12rem]' : 'fixed bottom-24 right-4 z-40 w-[12rem] sm:right-6'}
+      style={inline ? undefined : { position: 'fixed' }}
     >
       <div
         className="glass-panel flex flex-col items-center rounded-2xl p-2.5 text-center"

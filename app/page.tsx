@@ -65,7 +65,6 @@ const CommunitySection = dynamic(() => import('@/components/sections/CommunitySe
   loading: () => <SkeletonSection className="min-h-screen p-8" />,
 });
 
-const LightningTip = dynamic(() => import('@/components/LightningTip'), { ssr: false });
 const Footer = dynamic(() => import('@/components/Footer'), {
   loading: () => <div className="h-32" />,
 });
@@ -160,8 +159,6 @@ export default function Home() {
         <Suspense fallback={<div className="h-32" />}>
           <Footer />
         </Suspense>
-        {/* Bitcoin Lightning donation window, lower right, above the bottom nav. */}
-        <LightningTip />
       </main>
     </div>
   );
