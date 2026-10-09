@@ -36,18 +36,16 @@ export default function TokenSection() {
   ];
 
   return (
-    <section
-      id="token"
-      className="relative flex flex-col items-center py-8 text-center sm:py-10"
-    >
+    <section id="token" className="relative flex flex-col items-center py-10 text-center sm:py-14">
       <div className="section-container flex flex-col items-center justify-center mx-auto w-full max-w-full min-w-0">
         <SectionTitle>Store</SectionTitle>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
           {products.map((product, idx) => (
             <GlassContainer
               key={product.name}
               variant="default"
               glow={product.featured}
+              padding="lg"
               className="flex flex-col items-center justify-between h-full min-h-[340px] text-center"
             >
               <div className="flex flex-col items-center gap-3 w-full">

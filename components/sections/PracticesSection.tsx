@@ -37,16 +37,12 @@ export default function PracticesSection() {
     <section
       id="practices"
       ref={sectionRef}
-      className="relative flex flex-col items-center py-8 text-center sm:py-10"
+      className="relative flex flex-col items-center py-10 text-center sm:py-14"
     >
       <div className="section-container mx-auto w-full">
         <SectionTitle>Live</SectionTitle>
         <LiveStream />
-        <GlassContainer
-          variant="default"
-          glow={true}
-          className="mx-auto mt-10 max-w-4xl p-4 sm:p-8"
-        >
+        <GlassContainer variant="default" glow={true} padding="lg" className="mt-8 w-full sm:mt-10">
           <div className="grid grid-cols-3 divide-x divide-vitae-green/20">
             {pillars.map((pillar) => (
               <div

@@ -24,12 +24,12 @@ export default function GlassContainer({
   padding = 'md',
   style,
 }: GlassContainerProps) {
-  // Instagram spacing: 4, 8, 12, 16px
+  // One padding scale for every card on the site: 12/16, 16/24, 24/32px
   const paddingClasses = {
     none: '',
-    sm: 'p-2 sm:p-3', // 8px, 12px
-    md: 'p-3 sm:p-4', // 12px, 16px
-    lg: 'p-4 sm:p-6', // 16px, 24px
+    sm: 'p-3 sm:p-4',
+    md: 'p-4 sm:p-6',
+    lg: 'p-6 sm:p-8',
   };
 
   const variantClasses = {

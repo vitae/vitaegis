@@ -37,7 +37,7 @@ export default function CommunitySection() {
     <section
       id="community"
       ref={sectionRef}
-      className="relative flex flex-col items-center py-8 text-center sm:py-10"
+      className="relative flex flex-col items-center py-10 text-center sm:py-14"
     >
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"
@@ -48,7 +48,7 @@ export default function CommunitySection() {
         </SectionTitle>
 
         {/* Social Links Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12 w-full max-w-full">
+        <div className="mb-8 grid w-full grid-cols-2 gap-4 sm:mb-10 sm:grid-cols-4 sm:gap-6">
           {socials.map((social, index) => {
             const Icon = social.icon;
             return (
@@ -58,7 +58,7 @@ export default function CommunitySection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`VITAEGIS on ${social.name}`}
-                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group glass-panel glass-panel--hover relative p-3 sm:p-6 rounded-2xl text-center"
+                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group glass-panel glass-panel--hover relative p-4 sm:p-6 rounded-xl text-center"
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
                 {/* Icon */}
@@ -78,7 +78,7 @@ export default function CommunitySection() {
 
                 {/* Hover glow */}
                 <div
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                  className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
                   style={{
                     boxShadow: `0 0 40px ${social.color}20`,
                   }}
@@ -90,7 +90,7 @@ export default function CommunitySection() {
 
         {/* Newsletter Section */}
         <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 w-full">
-          <div className="glass-panel glass-panel--prominent relative p-4 sm:p-12 rounded-3xl overflow-hidden w-full">
+          <div className="glass-panel glass-panel--prominent relative p-6 sm:p-8 rounded-xl overflow-hidden w-full">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div
@@ -105,7 +105,7 @@ export default function CommunitySection() {
             {/* Top edge glow */}
             <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
-            <div className="relative grid lg:grid-cols-2 gap-8 items-center">
+            <div className="relative grid gap-6 items-center sm:gap-8 lg:grid-cols-2">
               {/* Left - Text */}
               <div>
                 <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
@@ -125,7 +125,7 @@ export default function CommunitySection() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter Your Email"
-                      className="glass-panel glass-panel--subtle w-full px-6 py-4 rounded-2xl text-center text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50"
+                      className="glass-panel glass-panel--subtle w-full min-h-[44px] px-5 py-3 rounded-lg text-center text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50"
                     />
                   </div>
                   <GlassButton variant="primary" size="lg">
@@ -139,8 +139,8 @@ export default function CommunitySection() {
         </div>
 
         {/* Community Stats in Glassmorphic Container */}
-        <GlassContainer variant="subtle" className="mt-12 p-4 sm:p-8 w-full">
-          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+        <GlassContainer variant="subtle" padding="lg" className="mt-8 w-full sm:mt-10">
+          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 grid grid-cols-2 gap-4 text-center sm:gap-6 lg:grid-cols-4">
             {[
               { value: '99K', label: 'Community Members' },
               { value: '120+', label: 'Countries' },

@@ -42,7 +42,7 @@ export default function LiveStream() {
 
   if (status?.live && status.videoId) {
     return (
-      <GlassContainer variant="default" glow className="mx-auto w-full max-w-4xl p-2 sm:p-3">
+      <GlassContainer variant="default" glow padding="sm" className="mx-auto w-full">
         <p className="mb-2 flex items-center justify-center gap-2 text-xs font-medium uppercase tracking-[0.3em] text-vitae-red">
           <span
             className="inline-block h-2 w-2 animate-pulse rounded-full bg-vitae-red"
@@ -67,7 +67,7 @@ export default function LiveStream() {
   }
 
   return (
-    <GlassContainer variant="default" glow className="mx-auto w-full max-w-3xl p-6 sm:p-8">
+    <GlassContainer variant="default" glow padding="lg" className="mx-auto w-full">
       <p className="text-xs font-medium uppercase tracking-[0.3em] text-vitae-gray">
         {status === null ? 'Checking the channel' : 'Off air'}
       </p>

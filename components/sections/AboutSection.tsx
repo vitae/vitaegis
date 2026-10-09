@@ -34,20 +34,16 @@ export default function AboutSection() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative flex flex-col items-center py-8 text-center sm:py-10"
+      className="relative flex flex-col items-center py-10 text-center sm:py-14"
     >
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
         <SectionTitle>About Vitaegis</SectionTitle>
-        <div className="w-full max-w-3xl mx-auto">
+        <div className="w-full">
           {/* Text Content in Glassmorphic Container */}
-          <GlassContainer
-            variant="default"
-            glow={true}
-            className="p-3 sm:p-6 lg:p-10 w-full max-w-full"
-          >
+          <GlassContainer variant="default" glow={true} padding="lg" className="w-full">
             {/* Main Heading */}
             <h3 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
               Advanced Intelligence
@@ -92,12 +88,8 @@ export default function AboutSection() {
         </div>
 
         {/* Vitality */}
-        <div className="w-full max-w-3xl mx-auto mt-10">
-          <GlassContainer
-            variant="default"
-            glow={true}
-            className="p-3 sm:p-6 lg:p-10 w-full max-w-full"
-          >
+        <div className="mt-8 w-full sm:mt-10">
+          <GlassContainer variant="default" glow={true} padding="lg" className="w-full">
             {/* Header: eight letters each, one grid, so every letter sits over its partner. */}
             <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mx-auto w-full max-w-md">
               <svg
@@ -163,7 +155,7 @@ export default function AboutSection() {
         </div>
 
         {/* Bottom decorative line */}
-        <div className="reveal opacity-0 transition-all duration-1000 [&.revealed]:opacity-100 mt-20 flex items-center justify-center">
+        <div className="reveal opacity-0 transition-all duration-1000 [&.revealed]:opacity-100 mt-10 flex w-full items-center justify-center sm:mt-14">
           <div className="h-px w-full max-w-md bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         </div>
       </div>

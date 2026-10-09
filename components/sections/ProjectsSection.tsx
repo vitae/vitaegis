@@ -41,7 +41,7 @@ export default function ProjectsSection() {
     <section
       id="projects"
       ref={sectionRef}
-      className="relative flex flex-col items-center py-8 text-center sm:py-10"
+      className="relative flex flex-col items-center py-10 text-center sm:py-14"
     >
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"
@@ -52,11 +52,11 @@ export default function ProjectsSection() {
         </SectionTitle>
 
         {/* Three on the front page; the rest live in the Projects menu and on /projects. */}
-        <ProjectGrid className="w-full max-w-5xl" only={['/stocks', '/crypto', '/travel']} />
+        <ProjectGrid className="w-full" only={['/stocks', '/crypto', '/travel']} />
 
         <Link
           href="/projects"
-          className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 glass-panel glass-panel--hover mt-8 inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white min-h-[44px]"
+          className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 glass-panel glass-panel--hover mt-8 sm:mt-10 inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white min-h-[44px]"
         >
           View all projects
           <HiArrowRight size={16} />
