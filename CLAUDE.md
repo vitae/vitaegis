@@ -34,3 +34,8 @@ GitHub, so keep private material inside `PROJECTS/` or `.claude/`.
 Push live immediately. When a change passes typecheck, lint and tests, commit
 it, push it, and merge it to `main` right away so Vercel deploys to production.
 Do not wait for preview approval or leave PRs in draft.
+
+## Vitae, the voice bot, lives in `lib/vitae/` and `components/vitae/`
+
+Read `docs/vitae.md`. Its ElevenLabs configuration is pushed by `npm run vitae:sync`;
+never edit the agent in the ElevenLabs dashboard, edit the repo and sync.
