@@ -9,6 +9,29 @@ import { socials } from '@/components/socials';
 export default function CommunitySection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState('');
+  const [subscribeState, setSubscribeState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+  const [subscribeNote, setSubscribeNote] = useState('');
+
+  async function subscribe() {
+    if (subscribeState === 'busy') return;
+    setSubscribeState('busy');
+    setSubscribeNote('');
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'home' }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) throw new Error(json.error || 'Could not save that. Try again.');
+      setSubscribeState('done');
+      setSubscribeNote("You're in.");
+      setEmail('');
+    } catch (err) {
+      setSubscribeState('error');
+      setSubscribeNote(err instanceof Error ? err.message : 'Could not save that. Try again.');
+    }
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -117,10 +140,17 @@ export default function CommunitySection() {
               {/* Right - Form */}
               <div>
                 {/* Field and button: one glass surface, one height, one radius */}
-                <div className="flex flex-col gap-4 sm:flex-row">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    subscribe();
+                  }}
+                  className="flex flex-col gap-4 sm:flex-row"
+                >
                   <label className="glass-panel glass-panel--hover flex min-h-[52px] min-w-0 flex-1 items-center rounded-xl px-4 focus-within:border-[#00ff00]/60">
                     <input
                       type="email"
+                      required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your Email"
@@ -129,14 +159,26 @@ export default function CommunitySection() {
                     />
                   </label>
                   <button
-                    type="button"
-                    className="glass-panel glass-panel--hover flex min-h-[52px] shrink-0 items-center justify-center rounded-xl px-5 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white"
+                    type="submit"
+                    disabled={subscribeState === 'busy'}
+                    className="glass-panel glass-panel--hover flex min-h-[52px] shrink-0 items-center justify-center rounded-xl px-5 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white disabled:opacity-60"
                     style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
                   >
-                    <span className="relative z-10">Subscribe</span>
+                    <span className="relative z-10">
+                      {subscribeState === 'busy'
+                        ? 'Sending…'
+                        : subscribeState === 'done'
+                          ? "You're in"
+                          : 'Subscribe'}
+                    </span>
                   </button>
-                </div>
-                <p className="mt-3 text-xs text-white/40"></p>
+                </form>
+                <p
+                  className={`mt-3 min-h-[1rem] text-xs ${subscribeState === 'error' ? 'text-vitae-red' : 'text-vitae-green'}`}
+                  aria-live="polite"
+                >
+                  {subscribeNote}
+                </p>
               </div>
             </div>
           </div>
