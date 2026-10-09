@@ -56,7 +56,7 @@ export function donationRails(overrides?: Partial<Record<RailId, string | null>>
     rails.push({
       id: 'monero',
       tab: 'Monero',
-      label: 'Monero (XMR)',
+      label: 'XMR for Privacy',
       address: xmr,
       uri: moneroUri(xmr),
       color: MONERO_ORANGE,
@@ -65,7 +65,7 @@ export function donationRails(overrides?: Partial<Record<RailId, string | null>>
     rails.push({
       id: 'lightning',
       tab: 'Lightning',
-      label: 'Bitcoin Lightning',
+      label: 'Bitcoin Lightning for Tips',
       address: ln,
       uri: lightningUri(ln),
       color: BITCOIN_ORANGE,
@@ -74,7 +74,7 @@ export function donationRails(overrides?: Partial<Record<RailId, string | null>>
     rails.push({
       id: 'bitcoin',
       tab: 'Bitcoin',
-      label: 'Bitcoin on-chain',
+      label: 'Bitcoin On-Chain for Large Amounts',
       address: btc,
       uri: bitcoinUri(btc),
       color: BITCOIN_ORANGE,

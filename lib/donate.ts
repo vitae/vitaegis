@@ -39,7 +39,7 @@ const ALL_RAILS: Rail[] = [
   {
     key: 'monero',
     tag: 'ɱ Monero',
-    label: 'Monero (XMR)',
+    label: 'XMR for Privacy',
     note: 'Private by default. One permanent address; every payment lands on a fresh stealth address.',
     value: MONERO_ADDRESS,
     uri: MONERO_URI,
@@ -49,7 +49,7 @@ const ALL_RAILS: Rail[] = [
   {
     key: 'lightning',
     tag: '⚡ Lightning',
-    label: 'Bitcoin Lightning',
+    label: 'Bitcoin Lightning for Tips',
     note: 'Instant, near-zero fees. Any amount, any Lightning wallet. Best for tips.',
     value: LIGHTNING_ADDRESS,
     uri: LIGHTNING_URI,
@@ -59,7 +59,7 @@ const ALL_RAILS: Rail[] = [
   {
     key: 'onchain',
     tag: '₿ Bitcoin',
-    label: 'Bitcoin on-chain',
+    label: 'Bitcoin On-Chain for Large Amounts',
     note: 'Regular bitcoin transaction. Network fees apply. Best for larger amounts.',
     value: ONCHAIN_ADDRESS,
     uri: ONCHAIN_URI,
