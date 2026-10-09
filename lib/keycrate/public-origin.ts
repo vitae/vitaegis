@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 
 /** Hosts allowed to serve KeyCrate, so a forged value can't send Stripe back to a stranger's site. */
-const PUBLIC_ORIGINS = new Set([
+export const PUBLIC_ORIGINS = new Set([
   'https://www.vitaegis.com',
   'https://vitaegis.com',
   'https://www.glowwitdaflow.com',
