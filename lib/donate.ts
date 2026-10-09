@@ -4,9 +4,64 @@
 
 export const LIGHTNING_ADDRESS = 'vitaegis@strike.me';
 export const ONCHAIN_ADDRESS = 'bc1q827gcfh0m0uj69ylzhdx2hjfpgryadghkwm4sp';
+/* Monero primary address (or a dedicated subaddress) from Cake Wallet. Permanent and safe to
+   reuse: Monero derives a one-time stealth address on chain for every payment. Empty until set;
+   the Monero rail is hidden while it is empty. */
+export const MONERO_ADDRESS = '';
 
 export const LIGHTNING_URI = `lightning:${LIGHTNING_ADDRESS}`;
 export const ONCHAIN_URI = `bitcoin:${ONCHAIN_ADDRESS}`;
+export const MONERO_URI = `monero:${MONERO_ADDRESS}`;
 
 export const LIGHTNING_QR = '/donate/lightning.svg';
 export const ONCHAIN_QR = '/donate/onchain.svg';
+export const MONERO_QR = '/donate/monero.svg';
+
+export const BITCOIN_ORANGE = '#f7931a';
+export const MONERO_ORANGE = '#f26822';
+
+export interface Rail {
+  key: 'monero' | 'lightning' | 'onchain';
+  tag: string;
+  label: string;
+  note: string;
+  value: string;
+  uri: string;
+  qr: string;
+  color: string;
+}
+
+/** Every rail with an address, Monero first (left), then Lightning, then on-chain. */
+const ALL_RAILS: Rail[] = [
+  {
+    key: 'monero',
+    tag: 'ɱ Monero',
+    label: 'Monero (XMR)',
+    note: 'Private by default. One permanent address; every payment lands on a fresh stealth address.',
+    value: MONERO_ADDRESS,
+    uri: MONERO_URI,
+    qr: MONERO_QR,
+    color: MONERO_ORANGE,
+  },
+  {
+    key: 'lightning',
+    tag: '⚡ Lightning',
+    label: 'Bitcoin Lightning',
+    note: 'Instant, near-zero fees. Any amount, any Lightning wallet. Best for tips.',
+    value: LIGHTNING_ADDRESS,
+    uri: LIGHTNING_URI,
+    qr: LIGHTNING_QR,
+    color: BITCOIN_ORANGE,
+  },
+  {
+    key: 'onchain',
+    tag: '₿ On-chain',
+    label: 'Bitcoin on-chain',
+    note: 'Regular bitcoin transaction. Network fees apply. Best for larger amounts.',
+    value: ONCHAIN_ADDRESS,
+    uri: ONCHAIN_URI,
+    qr: ONCHAIN_QR,
+    color: BITCOIN_ORANGE,
+  },
+];
+export const DONATION_RAILS: Rail[] = ALL_RAILS.filter((r) => r.value);

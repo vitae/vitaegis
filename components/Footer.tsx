@@ -44,10 +44,10 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function Footer() {
   return (
-    <footer className="relative pb-10 pt-2">
+    <footer className="relative pb-6 pt-0">
       <div className="section-container mx-auto w-full">
-        <GlassContainer variant="default" glow className="w-full p-6 sm:p-10">
-          <div className="grid gap-10 text-center md:grid-cols-[1.4fr_repeat(3,1fr)] md:text-left">
+        <GlassContainer variant="default" glow className="w-full p-5 sm:p-7">
+          <div className="grid gap-6 text-center md:grid-cols-[1.4fr_repeat(3,1fr)] md:text-left">
             {/* Brand */}
             <div className="flex flex-col items-center md:items-start">
               <span
@@ -59,11 +59,11 @@ export default function Footer() {
               <p className="mt-1 text-xs uppercase tracking-[0.3em] text-[#00ff00]/80">
                 <PillarLinks />
               </p>
-              <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
+              <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/70">
                 Advanced Intelligence as a Service. <em>Vitae</em> and <em>Aegis</em>: Life Energy,
                 run as an intelligence layer. Turning ideas into reality, in real time.
               </p>
-              <div className="mt-5 flex flex-wrap justify-center gap-2 md:justify-start">
+              <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
                 {socials.map((social) => {
                   const Icon = social.icon;
                   return (
@@ -87,7 +87,7 @@ export default function Footer() {
                 <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#00ff00]">
                   {col.title}
                 </h4>
-                <ul className="mt-4 space-y-2">
+                <ul className="mt-2 space-y-1">
                   {col.links.map((link) => (
                     <li key={link.label}>
                       <Link
@@ -104,7 +104,7 @@ export default function Footer() {
           </div>
 
           {/* Bitcoin donation (Lightning, Strike) */}
-          <div className="mt-10 flex flex-col items-center gap-5 border-t border-white/10 pt-8 sm:flex-row sm:justify-center sm:gap-8">
+          <div className="mt-6 flex flex-col items-center gap-4 border-t border-white/10 pt-5 sm:flex-row sm:justify-center sm:gap-6">
             <a
               href={LIGHTNING_URI}
               aria-label={`Donate bitcoin over Lightning to ${LIGHTNING_ADDRESS}`}
@@ -139,14 +139,14 @@ export default function Footer() {
                   href="/donate"
                   className="text-white/50 transition-colors hover:text-[#f7931a]"
                 >
-                  On-chain &amp; more →
+                  On-chain, Monero &amp; more →
                 </Link>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:justify-between">
-            <span>© 2026 VITAEGIS. All rights reserved.</span>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-1 border-t border-white/10 pt-4 text-xs text-white/40">
+            <span className="whitespace-nowrap">© 2026 VITAEGIS. All rights reserved.</span>
             <div className="flex gap-5">
               <Link href="/privacy" className="transition-colors hover:text-white">
                 Privacy

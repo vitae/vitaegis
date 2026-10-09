@@ -1,21 +1,84 @@
-// Bitcoin Lightning tips. One address (a Strike username, e.g. "vitaegis@strike.me"), encoded
-// as a `lightning:` URI so any Lightning wallet, Strike included, opens a payment to it when the
-// QR is scanned. The QR is drawn as SVG rects from the module matrix, which is synchronous and
-// works both in React and inside the resvg card renderer.
+// Donation rails: Bitcoin over Lightning (a Strike address), Bitcoin on-chain, and Monero.
+// Each is one env var; a rail with no address is simply not shown. Addresses are encoded as
+// wallet URIs (lightning:, bitcoin:, monero:) so scanning opens a payment in Strike, Cake
+// Wallet or any other wallet. The QR is drawn as SVG rects from the module matrix, which is
+// synchronous and works both in React and inside the resvg card renderer.
 
 import QRCode from 'qrcode';
+import { LIGHTNING_ADDRESS, MONERO_ADDRESS, ONCHAIN_ADDRESS } from './donate';
 
-/** Bitcoin orange, the colour every address and label is set in. */
+/** Bitcoin orange, the colour every Bitcoin address and label is set in. */
 export const BITCOIN_ORANGE = '#f7931a';
+/** Monero orange. */
+export const MONERO_ORANGE = '#f26822';
+
+export type RailId = 'lightning' | 'bitcoin' | 'monero';
+
+export interface DonationRail {
+  id: RailId;
+  /** Short tab label. */
+  tab: string;
+  /** What it is, spelled out under the QR. */
+  label: string;
+  address: string;
+  /** Wallet URI the QR encodes. */
+  uri: string;
+  color: string;
+}
+
+const env = (name: string) => {
+  const v = process.env[name]?.trim();
+  return v ? v : null;
+};
 
 /** The configured Lightning address, or null when tips are off. */
 export function lightningAddress(): string | null {
-  const a = process.env.NEXT_PUBLIC_LIGHTNING_ADDRESS?.trim();
-  return a ? a : null;
+  return env('NEXT_PUBLIC_LIGHTNING_ADDRESS') ?? (LIGHTNING_ADDRESS || null);
 }
 
 /** LUD-16 style URI: wallets open a payment to the address. */
 export const lightningUri = (address: string) => `lightning:${address}`;
+export const bitcoinUri = (address: string) => `bitcoin:${address}`;
+export const moneroUri = (address: string) => `monero:${address}`;
+
+/**
+ * Every rail with an address set, in display order. Read in the browser through
+ * NEXT_PUBLIC_* at build time and on the server at request time.
+ */
+export function donationRails(overrides?: Partial<Record<RailId, string | null>>): DonationRail[] {
+  const ln = overrides?.lightning ?? lightningAddress();
+  const btc = overrides?.bitcoin ?? env('NEXT_PUBLIC_BITCOIN_ADDRESS') ?? (ONCHAIN_ADDRESS || null);
+  const xmr = overrides?.monero ?? env('NEXT_PUBLIC_MONERO_ADDRESS') ?? (MONERO_ADDRESS || null);
+  const rails: DonationRail[] = [];
+  if (xmr)
+    rails.push({
+      id: 'monero',
+      tab: 'Monero',
+      label: 'Monero (XMR)',
+      address: xmr,
+      uri: moneroUri(xmr),
+      color: MONERO_ORANGE,
+    });
+  if (ln)
+    rails.push({
+      id: 'lightning',
+      tab: 'Lightning',
+      label: 'Bitcoin Lightning',
+      address: ln,
+      uri: lightningUri(ln),
+      color: BITCOIN_ORANGE,
+    });
+  if (btc)
+    rails.push({
+      id: 'bitcoin',
+      tab: 'On-chain',
+      label: 'Bitcoin on-chain',
+      address: btc,
+      uri: bitcoinUri(btc),
+      color: BITCOIN_ORANGE,
+    });
+  return rails;
+}
 
 export interface QrMatrix {
   size: number;
@@ -33,7 +96,7 @@ export function qrMatrix(text: string): QrMatrix {
 
 /**
  * One SVG <path> drawing every dark module of the matrix, scaled so the whole code is
- * `side` units wide, with `quiet` modules of white margin accounted for by the caller.
+ * `side` units wide. The caller leaves a white quiet zone around it.
  */
 export function qrPath(m: QrMatrix, side: number): string {
   const unit = side / m.size;
@@ -48,3 +111,7 @@ export function qrPath(m: QrMatrix, side: number): string {
   }
   return d.join('');
 }
+
+/** Shorten a long address for display: first 10 and last 8 characters. */
+export const shortAddress = (a: string, head = 10, tail = 8) =>
+  a.length <= head + tail + 1 ? a : `${a.slice(0, head)}…${a.slice(-tail)}`;

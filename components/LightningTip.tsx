@@ -1,28 +1,27 @@
 'use client';
 
-// A Bitcoin Lightning donation window pinned to the lower right of the page, above the
-// site's bottom nav: the QR opens the
-// address in any Lightning wallet (Strike included), the address is printed under it in
-// Bitcoin orange, and the label says what it is. Renders nothing until
-// NEXT_PUBLIC_LIGHTNING_ADDRESS is set.
+// The donation window pinned to the lower right of the page, above the site's bottom nav.
+// One rail at a time, Monero on the left, then Bitcoin over Lightning (Strike), then Bitcoin
+// on-chain. Each shows a QR that opens the payment in a wallet, the label saying what it is,
+// and the address, in Bitcoin orange for Bitcoin and Monero orange for XMR. Tap the address
+// to copy it. Addresses live in lib/donate.ts; a rail with no address is not shown.
 
 import { useMemo, useState } from 'react';
-import { BITCOIN_ORANGE, lightningAddress, lightningUri, qrMatrix, qrPath } from '@/lib/lightning';
+import { donationRails, qrMatrix, qrPath, shortAddress, type RailId } from '@/lib/lightning';
 
-export default function LightningTip({
-  address = lightningAddress(),
-}: {
-  address?: string | null;
-}) {
+const RAILS = donationRails();
+
+export default function LightningTip() {
+  const [active, setActive] = useState<RailId>(RAILS[0]?.id ?? 'lightning');
   const [copied, setCopied] = useState(false);
-  const uri = address ? lightningUri(address) : null;
-  const qr = useMemo(() => (uri ? qrMatrix(uri) : null), [uri]);
-  if (!address || !uri || !qr) return null;
+  const rail = RAILS.find((r) => r.id === active) ?? RAILS[0];
+  const qr = useMemo(() => (rail ? qrMatrix(rail.uri) : null), [rail]);
+  if (!rail || !qr) return null;
 
-  const side = 128;
+  const side = 124;
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(address);
+      await navigator.clipboard.writeText(rail.address);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -32,11 +31,38 @@ export default function LightningTip({
 
   return (
     <aside
-      aria-label="Bitcoin Lightning tips"
-      className="glass-panel fixed bottom-24 right-4 z-40 flex w-[11.5rem] flex-col items-center rounded-2xl p-3 text-center sm:right-6"
-      style={{ borderColor: `${BITCOIN_ORANGE}66` }}
+      aria-label="Donate"
+      className="glass-panel fixed bottom-24 right-4 z-40 flex w-[12rem] flex-col items-center rounded-2xl p-2.5 text-center sm:right-6"
+      style={{ borderColor: `${rail.color}66` }}
     >
-      <a href={uri} aria-label={`Pay ${address} over Bitcoin Lightning`} className="block">
+      {RAILS.length > 1 && (
+        <div className="mb-2 flex w-full gap-1" role="tablist" aria-label="Donation rails">
+          {RAILS.map((r) => {
+            const on = r.id === rail.id;
+            return (
+              <button
+                key={r.id}
+                role="tab"
+                aria-selected={on}
+                type="button"
+                onClick={() => {
+                  setActive(r.id);
+                  setCopied(false);
+                }}
+                className="flex-1 rounded-full border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] transition"
+                style={{
+                  color: on ? '#000' : r.color,
+                  background: on ? r.color : 'transparent',
+                  borderColor: `${r.color}66`,
+                }}
+              >
+                {r.tab}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <a href={rail.uri} aria-label={`Pay ${rail.address}: ${rail.label}`} className="block">
         <svg
           viewBox={`0 0 ${side + 16} ${side + 16}`}
           width={side + 16}
@@ -50,19 +76,19 @@ export default function LightningTip({
         </svg>
       </a>
       <p
-        className="mt-2 text-[10px] font-semibold uppercase tracking-[0.22em]"
-        style={{ color: BITCOIN_ORANGE }}
+        className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
+        style={{ color: rail.color }}
       >
-        ₿ Bitcoin Lightning
+        {rail.label}
       </p>
       <button
         type="button"
         onClick={copy}
-        title="Copy the Lightning address"
-        className="mt-1 max-w-full break-all font-mono text-xs leading-snug hover:underline"
-        style={{ color: BITCOIN_ORANGE }}
+        title={`Copy ${rail.address}`}
+        className="mt-0.5 max-w-full break-all font-mono text-[11px] leading-snug hover:underline"
+        style={{ color: rail.color }}
       >
-        {copied ? 'Copied' : address}
+        {copied ? 'Copied' : rail.id === 'lightning' ? rail.address : shortAddress(rail.address)}
       </button>
     </aside>
   );
