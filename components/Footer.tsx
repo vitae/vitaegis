@@ -122,17 +122,17 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-nowrap items-center justify-between gap-x-5 border-t border-white/10 pt-4 text-xs text-white/40">
-            <span className="whitespace-nowrap">© 2026 VITAEGIS. All rights reserved.</span>
-            <div className="flex shrink-0 gap-5">
-              <Link href="/privacy" className="transition-colors hover:text-white">
-                Privacy
-              </Link>
-              <Link href="/terms" className="transition-colors hover:text-white">
-                Terms
-              </Link>
-            </div>
-          </div>
+          <p className="mt-5 whitespace-nowrap border-t border-white/10 pt-4 text-center text-xs text-white/40">
+            © 2026 VITAEGIS. All rights reserved.
+            <span className="mx-2" aria-hidden="true">·</span>
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              Privacy
+            </Link>
+            <span className="mx-2" aria-hidden="true">·</span>
+            <Link href="/terms" className="transition-colors hover:text-white">
+              Terms
+            </Link>
+          </p>
         </GlassContainer>
       </div>
     </footer>
