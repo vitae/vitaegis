@@ -112,7 +112,7 @@ export default function CommunitySection() {
                   Stay <span className="text-vitae-green">Connected</span>
                 </h3>
                 <p className="text-white/70">
-                  Get weekly insights on practice techniques, skill updates, community events.
+                  Get updates on new information and events.
                 </p>
               </div>
 
@@ -124,7 +124,7 @@ export default function CommunitySection() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter Your Email"
+                      placeholder="Your Email"
                       className="glass-panel glass-panel--subtle w-full min-h-[44px] px-5 py-3 rounded-lg text-center text-white placeholder:text-white/30 outline-none focus:border-[#00ff00]/50"
                     />
                   </div>
