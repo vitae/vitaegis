@@ -23,8 +23,9 @@ The fastest, cheapest post. The concept is already written on the site: a pillar
 dossier entry, a protocol step, a proverb, a research finding. Your job is to cut it into
 cards and write the captions; the server draws the cards.
 
-1. Pick the concept and its code (e.g. H-01 Circadian Rhythm). Keep the site's wording where
-   it is already good.
+1. Find the tenets with the `tenets` tool (search by pillar, dossier or text). Every tenet has a
+   registry ID such as H-01.02 (dossier H-01, entry 2), S-00.03 (Stealth directive 3) or W-P.01
+   (Wealth protocol step 1). Keep the site's wording where it is already good.
 2. Ask the `copywriter` subagent for: 3 to 5 cards (each: title under 8 words, 1 to 3 points
    under 15 words) and captions for Instagram, Facebook, YouTube (first line is the Short
    title, under 60 characters), TikTok and X. Give it the concept text verbatim.
@@ -32,7 +33,10 @@ cards and write the captions; the server draws the cards.
    "cards" for a feed carousel on Instagram, Facebook and X. Pass `slides`, `captions`,
    `pillar`, `topic` and a footer like "vitaegis.com/health".
 4. Card 1 is the hook, the middle cards are the points, the last card is the practice to try
-   today with the site link.
+   today with the site link. **Every card that teaches a tenet carries that tenet's `id`**; the
+   ID prints on the card and resolves at vitaegis.com/<pillar>#<id>, and the post records which
+   tenets it covered so `list_posts` shows them and you never repeat one too soon. The hook
+   card may carry the dossier `code` instead. Use the footer "vitaegis.com/<pillar>".
 
 ## What a good post brief contains
 

@@ -23,7 +23,14 @@ export interface PostSummary {
   caption: string;
   error: string | null;
   links: { platform: string; url: string | null }[];
-  source: { origin: string; kind: string; note: string; topic?: string; pillar?: string } | null;
+  source: {
+    origin: string;
+    kind: string;
+    note: string;
+    topic?: string;
+    pillar?: string;
+    tenets?: string[];
+  } | null;
 }
 
 export async function listPosts(opts: {
@@ -56,7 +63,7 @@ export async function listPosts(opts: {
 
   return rows.map((r): PostSummary => {
     const ingest = r.ingest_id ? byId.get(r.ingest_id) : undefined;
-    const meta = (ingest?.meta ?? {}) as { topic?: string; pillar?: string };
+    const meta = (ingest?.meta ?? {}) as { topic?: string; pillar?: string; tenets?: string[] };
     return {
       id: r.id,
       status: r.status,
@@ -76,6 +83,7 @@ export async function listPosts(opts: {
             note: clip(ingest.note, 200),
             topic: meta.topic,
             pillar: meta.pillar,
+            tenets: meta.tenets,
           }
         : null,
     };

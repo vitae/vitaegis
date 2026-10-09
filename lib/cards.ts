@@ -24,7 +24,9 @@ export const CARD_SIZE: Record<CardFormat, { w: number; h: number }> = {
 };
 
 export interface CardSpec {
-  /** Dossier code shown in the kicker, e.g. "H-01". Optional. */
+  /** The tenet's registry ID (lib/tenets.ts), e.g. "H-01.02". Shown in the kicker and the foot. */
+  id?: string;
+  /** Dossier code for the kicker when a card has no single tenet, e.g. "H-01". */
   code?: string;
   /** Pillar name for the kicker, e.g. "Health". Optional. */
   pillar?: string;
@@ -78,7 +80,7 @@ export function cardSvg(spec: CardSpec, format: CardFormat, index = 0, total = 1
   const bodySize = format === 'reel' ? 46 : 42;
   const titleLines = wrapLines(spec.title, titleSize, inner).slice(0, 3);
   const points = spec.lines.slice(0, 4).map((l) => wrapLines(l, bodySize, inner - 56));
-  const kicker = [spec.code, spec.pillar?.toUpperCase()].filter(Boolean).join(' · ');
+  const kicker = [spec.id ?? spec.code, spec.pillar?.toUpperCase()].filter(Boolean).join(' · ');
 
   // Content height, so the pane can be centred vertically in the frame.
   const titleH = titleLines.length * (titleSize * 1.12);
@@ -149,8 +151,8 @@ export function cardSvg(spec: CardSpec, format: CardFormat, index = 0, total = 1
     `<rect x="${paneX + 6}" y="${paneY + 6}" width="${paneW - 12}" height="${paneH - 12}" rx="31" fill="none" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5"/>` +
     parts.join('') +
     `<text x="${paneX + 44}" y="${foot}" font-family="Jost" font-weight="600" font-size="24" letter-spacing="4" fill="${GREEN}" opacity="0.85">${xml(footer)}</text>` +
-    (total > 1
-      ? `<text x="${paneX + paneW - 44}" y="${foot}" text-anchor="end" font-family="Jost" font-weight="600" font-size="24" letter-spacing="3" fill="#FFFFFF" opacity="0.5">${index + 1} / ${total}</text>`
+    (total > 1 || spec.id
+      ? `<text x="${paneX + paneW - 44}" y="${foot}" text-anchor="end" font-family="Jost" font-weight="600" font-size="24" letter-spacing="3" fill="#FFFFFF" opacity="0.5">${xml([spec.id, total > 1 ? `${index + 1} / ${total}` : ''].filter(Boolean).join('  ·  '))}</text>`
       : '') +
     // Wordmark and tagline outside the pane.
     `<text x="${w / 2}" y="${paneY - 44}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="34" letter-spacing="12" fill="${GREEN}">VITAEGIS</text>` +

@@ -10,7 +10,7 @@ const PILLARS: { id: Pillar; label: string; href: string }[] = [
 ];
 
 type Props = {
-  /** Separator between pillars. */
+  /** Separator between pillars. Omit for a true centred dot drawn in CSS. */
   separator?: string;
   /** Render labels in capitals (the text itself, not just CSS). */
   upper?: boolean;
@@ -22,9 +22,14 @@ type Props = {
   separatorClassName?: string;
 };
 
-/** "Health • Stealth • Wealth", each pillar linking to its category page. */
+/**
+ * "Health · Stealth · Wealth", each pillar linking to its category page. Always one line:
+ * the three words and their dots are an inline flex row that never wraps, and the dot is a
+ * real circle vertically centred on the text, so letter-spacing on the parent cannot push it
+ * around or stretch the gaps.
+ */
 export default function PillarLinks({
-  separator = '•',
+  separator,
   upper = false,
   active,
   className,
@@ -33,10 +38,20 @@ export default function PillarLinks({
   separatorClassName,
 }: Props) {
   return (
-    <span className={className}>
+    <span className={`inline-flex items-center whitespace-nowrap ${className ?? ''}`}>
       {PILLARS.map((p, i) => (
         <Fragment key={p.id}>
-          {i > 0 && <span className={separatorClassName}> {separator} </span>}
+          {i > 0 &&
+            (separator ? (
+              <span aria-hidden className={`mx-2 tracking-normal ${separatorClassName ?? ''}`}>
+                {separator}
+              </span>
+            ) : (
+              <span
+                aria-hidden
+                className={`mx-[0.7em] inline-block h-[0.28em] w-[0.28em] flex-none rounded-full bg-current opacity-70 ${separatorClassName ?? ''}`}
+              />
+            ))}
           <Link
             href={p.href}
             className={[linkClassName, p.id === active ? activeClassName : '']

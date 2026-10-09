@@ -1,6 +1,7 @@
 import { defineTool } from 'eve/tools';
 import { z } from 'zod';
 import { db } from '../lib/db';
+import { findTenet, TENET_ID } from '../../lib/tenets';
 
 /**
  * Media routing is decided by keywords in the note (see docs/content-pipeline.md). For the
@@ -16,6 +17,16 @@ const KEYWORD: Record<string, string> = {
 const PLATFORMS = ['instagram', 'facebook', 'youtube', 'tiktok', 'twitter'] as const;
 
 const Card = z.object({
+  id: z
+    .string()
+    .regex(
+      TENET_ID,
+      'Tenet IDs look like H-01.02, S-00.03 or W-P.01; find them with the tenets tool.',
+    )
+    .optional()
+    .describe(
+      'The registry ID of the tenet this card teaches (from the tenets tool). Required on every card except a pure hook or closing card.',
+    ),
   code: z.string().max(12).optional().describe('Dossier code for the kicker, e.g. "H-01".'),
   pillar: z.enum(['Health', 'Stealth', 'Wealth']).optional(),
   title: z.string().min(3).max(90).describe('The headline. Short; two lines at most.'),
@@ -72,6 +83,18 @@ Two paths:
       if (!slides?.length) throw new Error('cards and reel need `slides`.');
       if (!captions) throw new Error('cards and reel need `captions`.');
       const reel = mediaKind === 'reel';
+      const tenetIds = [
+        ...new Set(slides.map((s) => s.id).filter((id): id is string => Boolean(id))),
+      ];
+      const unknown = tenetIds.filter((id) => !findTenet(id));
+      if (unknown.length) {
+        throw new Error(
+          `Unknown tenet id(s): ${unknown.join(', ')}. Look them up with the tenets tool.`,
+        );
+      }
+      if (!tenetIds.length) {
+        throw new Error('At least one card must carry a tenet id so the post can be traced.');
+      }
       const targets =
         platforms ??
         (reel
@@ -85,7 +108,7 @@ Two paths:
           origin: 'agent',
           note,
           status: 'done',
-          meta: { topic: topic ?? null, pillar: pillar ?? null, mediaKind },
+          meta: { topic: topic ?? null, pillar: pillar ?? null, mediaKind, tenets: tenetIds },
         })
         .select('id')
         .single();
@@ -129,6 +152,7 @@ Two paths:
         ingestId: ingest.id,
         mediaKind,
         platforms: targets,
+        tenets: tenetIds,
         next: `The worker renders the ${reel ? 'reel' : 'cards'} within a couple of minutes; it then shows under list_posts as "ready" for the operator to approve.`,
       };
     }

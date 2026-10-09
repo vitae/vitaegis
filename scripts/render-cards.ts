@@ -10,7 +10,7 @@ async function main() {
 
   const specs: CardSpec[] = [
     {
-      code: 'H-01',
+      id: 'H-01.01',
       pillar: 'Health',
       title: 'Circadian Rhythm',
       lines: [
@@ -20,7 +20,7 @@ async function main() {
       footer: 'vitaegis.com/health',
     },
     {
-      code: 'H-01',
+      id: 'H-01.03',
       pillar: 'Health',
       title: 'Try it today',
       lines: ['Ten minutes outside before your first screen.', 'No sunglasses. No phone.'],

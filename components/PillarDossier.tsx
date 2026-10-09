@@ -1,11 +1,24 @@
 import Link from 'next/link';
 import OpenHashDetails from '@/components/OpenHashDetails';
 import { pillars, type Pillar } from '@/lib/pillars';
+import { LETTER, tenetId } from '@/lib/tenets';
 
 const label = 'text-[11px] font-semibold uppercase tracking-[0.25em]';
 
 export default function PillarDossier({ pillar }: { pillar: Pillar }) {
   const c = pillar.color;
+  const L = LETTER[pillar.slug];
+  // Every tenet carries its registry ID (see lib/tenets.ts) so a card can be traced here.
+  const Tag = ({ id }: { id: string }) => (
+    <a
+      href={`#${id}`}
+      className="ml-2 inline-block rounded-full border px-2 py-px align-middle font-mono text-[10px] tracking-[0.12em] opacity-60 transition hover:opacity-100"
+      style={{ borderColor: `${c}66`, color: c }}
+      title={`Tenet ${id}`}
+    >
+      {id}
+    </a>
+  );
   const others = pillars.filter((p) => p.slug !== pillar.slug);
 
   return (
@@ -61,13 +74,17 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
             {pillar.directives.map((d, i) => (
               <li
                 key={d}
-                className="grid grid-cols-[3rem_1fr] py-3"
+                id={tenetId(`${L}-00`, i + 1)}
+                className="grid scroll-mt-24 grid-cols-[3rem_1fr] py-3"
                 style={{ borderColor: `${c}33` }}
               >
                 <span className="text-2xl font-light leading-none" style={{ color: c }}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <span className="font-light text-white/85">{d}</span>
+                <span className="font-light text-white/85">
+                  {d}
+                  <Tag id={tenetId(`${L}-00`, i + 1)} />
+                </span>
               </li>
             ))}
           </ol>
@@ -79,14 +96,16 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
             {pillar.protocolTitle}
           </h2>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {pillar.protocol.map((p) => (
+            {pillar.protocol.map((p, i) => (
               <li
                 key={p.k}
-                className="rounded-xl border p-5"
+                id={tenetId(`${L}-P`, i + 1)}
+                className="scroll-mt-24 rounded-xl border p-5"
                 style={{ borderColor: `${c}4d`, background: `${c}0a` }}
               >
                 <p className={label} style={{ color: c }}>
                   {p.k}
+                  <Tag id={tenetId(`${L}-P`, i + 1)} />
                 </p>
                 <p className="mt-2 font-light leading-relaxed text-white/80">{p.v}</p>
               </li>
@@ -139,14 +158,16 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
                   {d.brief}
                 </p>
                 <dl className="mt-4 divide-y" style={{ borderColor: `${c}26` }}>
-                  {d.entries.map((e) => (
+                  {d.entries.map((e, j) => (
                     <div
                       key={e.k}
-                      className="grid gap-1 py-3 sm:grid-cols-[12rem_1fr] sm:gap-6"
+                      id={tenetId(d.code, j + 1)}
+                      className="grid scroll-mt-24 gap-1 py-3 sm:grid-cols-[12rem_1fr] sm:gap-6"
                       style={{ borderColor: `${c}26` }}
                     >
                       <dt className="font-medium" style={{ color: c }}>
                         {e.k}
+                        <Tag id={tenetId(d.code, j + 1)} />
                       </dt>
                       <dd className="font-light leading-relaxed text-white/80">{e.v}</dd>
                     </div>
