@@ -111,9 +111,7 @@ export default function CommunitySection() {
                 <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
                   Stay <span className="text-vitae-green">Connected</span>
                 </h3>
-                <p className="text-white/70">
-                  Get updates on new information and events.
-                </p>
+                <p className="text-white/70">Get updates on new information and events.</p>
               </div>
 
               {/* Right - Form */}
