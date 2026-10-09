@@ -98,14 +98,14 @@ export default function HeroSection() {
             >
               HEALTH
             </Link>
-            <span className="text-xs sm:text-base text-[#00ff00]/50">•</span>
+            <span className="text-xs sm:text-base text-[#00ff00]">•</span>
             <Link
               href="/stealth"
               className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
             >
               STEALTH
             </Link>
-            <span className="text-xs sm:text-base text-[#00ff00]/50">•</span>
+            <span className="text-xs sm:text-base text-[#00ff00]">•</span>
             <Link
               href="/wealth"
               className="text-xs sm:text-base font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"

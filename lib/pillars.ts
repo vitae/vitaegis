@@ -29,7 +29,8 @@ export type Pillar = {
   protocolTitle: string;
   protocol: Entry[];
   dossiers: Dossier[];
-  related: { href: string; label: string }[];
+  /** Every site page filed under this pillar. */
+  related: { href: string; label: string; blurb?: string }[];
   disclaimer: string;
 };
 
@@ -367,10 +368,37 @@ export const pillars: Pillar[] = [
       },
     ],
     related: [
-      { href: '/run', label: 'Run routes & log' },
-      { href: '/vitamins', label: 'Vitamins' },
-      { href: '/ed', label: 'Vitality guide' },
-      { href: '/classes', label: 'Classes' },
+      {
+        href: '/vitamins',
+        label: 'Daily Stack',
+        blurb: 'Seven supplements, what each one is for, and when to take it.',
+      },
+      {
+        href: '/wholefoods',
+        label: 'Whole Foods Run',
+        blurb: 'The grocery checklist: what to buy, what is stocked, every pickup.',
+      },
+      {
+        href: '/ed',
+        label: 'Erections, Libido & Testosterone',
+        blurb: 'Pycnogenol, arginine, citrulline and herbs: what the research says.',
+      },
+      { href: '/sexfu', label: 'Sex Fu', blurb: 'Taoist techniques for her pleasure.' },
+      {
+        href: '/run',
+        label: 'Run · Diamond Head',
+        blurb: 'Running routes from Kaimana Beach, shortest to longest.',
+      },
+      {
+        href: '/classes',
+        label: 'Meditation Mondays',
+        blurb: 'Sunset meditation and yoga every Monday at Lēʻahi Beach Park.',
+      },
+      {
+        href: '/happy-hour',
+        label: 'Happy Hour Hawaiʻi',
+        blurb: 'The best food-first happy hours in Honolulu and Waikiki, ranked.',
+      },
     ],
     disclaimer:
       'Education only, not medical advice. These statements have not been evaluated by the FDA. Herbs and supplements interact with medications. Talk to a doctor before starting anything new, especially if you are pregnant, take prescription drugs or have a medical condition.',
@@ -718,9 +746,46 @@ export const pillars: Pillar[] = [
       },
     ],
     related: [
-      { href: '/keycrate', label: 'KeyCrate' },
-      { href: '/proverbs', label: 'Proverbs' },
-      { href: '/travel', label: 'Travel' },
+      {
+        href: '/travel',
+        label: 'Flight Radar',
+        blurb: 'Common flight paths out of Honolulu on a live radar scope.',
+      },
+      {
+        href: '/travel/asia',
+        label: 'The Pacific Circuit',
+        blurb: 'Honolulu to six Asian countries and home on eight one-way flights.',
+      },
+      {
+        href: '/travel/sa',
+        label: 'South America',
+        blurb: 'Routes, fares and entry notes from Honolulu.',
+      },
+      {
+        href: '/travel/rio',
+        label: 'Rio de Janeiro',
+        blurb: 'Getting from Honolulu to Rio: routes, fares and entry notes.',
+      },
+      {
+        href: '/travel/alaska',
+        label: 'Alaska',
+        blurb: 'Routes, fares and entry notes from Honolulu.',
+      },
+      {
+        href: '/travel/dallas',
+        label: 'Dallas',
+        blurb: 'Routes, fares and entry notes from Honolulu.',
+      },
+      {
+        href: '/travel/switzerland',
+        label: 'Switzerland',
+        blurb: 'Routes, fares and entry notes from Honolulu.',
+      },
+      {
+        href: '/travel/reykjavik',
+        label: 'Reykjavik',
+        blurb: 'Routes, fares and entry notes from Honolulu.',
+      },
     ],
     disclaimer:
       'Education only. This is defensive guidance for protecting yourself and your property. Use force only as a lawful last resort, and follow the laws where you live and travel.',
@@ -1060,9 +1125,26 @@ export const pillars: Pillar[] = [
       },
     ],
     related: [
-      { href: '/stocks', label: 'Stocks board' },
-      { href: '/keycrate', label: 'KeyCrate' },
-      { href: '/projects', label: 'Projects' },
+      {
+        href: '/bitcoin',
+        label: 'Bitcoin',
+        blurb: 'The whitepaper, the halving clock and the four-year cycle.',
+      },
+      {
+        href: '/crypto',
+        label: 'Bitcoin Board',
+        blurb: 'Live BTC price, chart, dip windows and the crypto watchlist.',
+      },
+      {
+        href: '/stocks',
+        label: 'Stocks',
+        blurb: 'Chips, metals, miners and uranium, refreshed hourly.',
+      },
+      {
+        href: '/ubereats',
+        label: 'Uber Eats on a Onewheel',
+        blurb: 'The GLITCH playbook for earning the most delivering in Waikiki.',
+      },
     ],
     disclaimer:
       'Education only, not financial, tax or legal advice. All investing carries risk, including loss of principal, and bitcoin and crypto are highly volatile. Talk to a licensed advisor, CPA or attorney before acting.',

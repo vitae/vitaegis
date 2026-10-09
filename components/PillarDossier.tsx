@@ -160,17 +160,23 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
         {pillar.related.length > 0 && (
           <section className="mt-12">
             <h2 className={label} style={{ color: c }}>
-              Related files
+              Posts · {pillar.related.length}
             </h2>
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {pillar.related.map((r) => (
                 <Link
                   key={r.href}
                   href={r.href}
-                  className="rounded-full border px-5 py-2 text-sm font-medium text-white/80 transition hover:text-white"
-                  style={{ borderColor: `${c}66` }}
+                  className="group rounded-2xl border p-5 transition hover:bg-white/[0.04]"
+                  style={{ borderColor: `${c}4d` }}
                 >
-                  {r.label} →
+                  <p className="text-lg font-medium text-white">
+                    {r.label}{' '}
+                    <span className="transition group-hover:translate-x-0.5" style={{ color: c }}>
+                      →
+                    </span>
+                  </p>
+                  {r.blurb && <p className="mt-1 text-sm font-light text-white/60">{r.blurb}</p>}
                 </Link>
               ))}
             </div>
