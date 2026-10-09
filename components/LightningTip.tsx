@@ -1,6 +1,7 @@
 'use client';
 
-// A Bitcoin Lightning tip jar pinned to the lower right of the page: the QR opens the
+// A Bitcoin Lightning donation window pinned to the lower right of the page, above the
+// site's bottom nav: the QR opens the
 // address in any Lightning wallet (Strike included), the address is printed under it in
 // Bitcoin orange, and the label says what it is. Renders nothing until
 // NEXT_PUBLIC_LIGHTNING_ADDRESS is set.
@@ -32,7 +33,7 @@ export default function LightningTip({
   return (
     <aside
       aria-label="Bitcoin Lightning tips"
-      className="glass-panel fixed bottom-24 right-4 z-40 flex w-[11.5rem] flex-col items-center rounded-2xl p-3 text-center sm:bottom-6 sm:right-6"
+      className="glass-panel fixed bottom-24 right-4 z-40 flex w-[11.5rem] flex-col items-center rounded-2xl p-3 text-center sm:right-6"
       style={{ borderColor: `${BITCOIN_ORANGE}66` }}
     >
       <a href={uri} aria-label={`Pay ${address} over Bitcoin Lightning`} className="block">

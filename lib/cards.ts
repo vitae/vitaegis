@@ -88,7 +88,7 @@ export function cardSvg(spec: CardSpec, format: CardFormat, index = 0, total = 1
   // Content height, so the pane can be centred vertically in the frame.
   const titleH = titleLines.length * (titleSize * 1.12);
   const bodyH = points.reduce((sum, ls) => sum + ls.length * (bodySize * 1.35) + 26, 0);
-  const tipH = spec.lightning ? 250 : 0;
+  const tipH = spec.lightning ? 190 : 0;
   const contentH = 72 + (kicker ? 54 : 0) + titleH + 40 + bodyH + 70 + tipH;
   const paneH = Math.min(h - pad * 2, Math.max(520, contentH));
   const paneY = Math.round((h - paneH) / 2);
@@ -128,16 +128,16 @@ export function cardSvg(spec: CardSpec, format: CardFormat, index = 0, total = 1
   // Lightning tip jar: QR on white (scannable by any wallet), label and address in orange.
   let tip = '';
   if (spec.lightning) {
-    const qrSide = 168;
-    const box = qrSide + 20;
+    const qrSide = 112;
+    const box = qrSide + 16;
     const bx = paneX + paneW - 44 - box;
-    const by = foot - 92 - box;
+    const by = foot - 84 - box;
     const m = qrMatrix(lightningUri(spec.lightning));
     tip =
       `<rect x="${bx}" y="${by}" width="${box}" height="${box}" rx="14" fill="#FFFFFF"/>` +
-      `<path transform="translate(${bx + 10} ${by + 10})" d="${qrPath(m, qrSide)}" fill="#000000"/>` +
-      `<text x="${bx + box / 2}" y="${by + box + 34}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="15" letter-spacing="2.5" fill="${BITCOIN_ORANGE}">BITCOIN LIGHTNING</text>` +
-      `<text x="${bx + box / 2}" y="${by + box + 64}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="${Math.min(22, Math.floor((box + 40) / (spec.lightning.length * 0.52)))}" fill="${BITCOIN_ORANGE}">${xml(spec.lightning)}</text>`;
+      `<path transform="translate(${bx + 8} ${by + 8})" d="${qrPath(m, qrSide)}" fill="#000000"/>` +
+      `<text x="${bx + box / 2}" y="${by + box + 30}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="13" letter-spacing="2" fill="${BITCOIN_ORANGE}">BITCOIN LIGHTNING</text>` +
+      `<text x="${bx + box / 2}" y="${by + box + 56}" text-anchor="middle" font-family="Jost" font-weight="600" font-size="${Math.min(20, Math.floor((box + 60) / (spec.lightning.length * 0.52)))}" fill="${BITCOIN_ORANGE}">${xml(spec.lightning)}</text>`;
   }
 
   // A quiet rain of glyphs behind the pane, deterministic per card.
