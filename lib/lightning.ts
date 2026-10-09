@@ -8,9 +8,11 @@ import QRCode from 'qrcode';
 import { LIGHTNING_ADDRESS, MONERO_ADDRESS, ONCHAIN_ADDRESS } from './donate';
 
 /** Bitcoin orange, the colour every Bitcoin address and label is set in. */
-export const BITCOIN_ORANGE = '#f7931a';
+/** Vitae orange (#FF8000): full-intensity orange matched to the brand green #00FF00. */
+export const VITAE_ORANGE = '#ff8000';
+export const BITCOIN_ORANGE = VITAE_ORANGE;
 /** Monero orange. */
-export const MONERO_ORANGE = '#f26822';
+export const MONERO_ORANGE = VITAE_ORANGE;
 
 export type RailId = 'lightning' | 'bitcoin' | 'monero';
 

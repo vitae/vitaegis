@@ -1,8 +1,8 @@
 /* /donate: Vitaegis dark layout in Bitcoin orange, matching /bitcoin. */
 
 .page {
-  --orange: #f7931a;
-  --orange-dim: rgba(247, 147, 26, 0.12);
+  --orange: #ff8000;
+  --orange-dim: rgba(255, 128, 0, 0.12);
   --line: #221e19;
   --ink-2: #d2ccc4;
   --ink-3: #8a8278;
@@ -42,7 +42,7 @@
 
 .page h1 span {
   color: var(--orange);
-  text-shadow: 0 0 24px rgba(247, 147, 26, 0.45);
+  text-shadow: 0 0 24px rgba(255, 128, 0, 0.45);
 }
 
 .page header {
@@ -89,7 +89,7 @@
   max-width: 264px;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 0 32px rgba(247, 147, 26, 0.35);
+  box-shadow: 0 0 32px rgba(255, 128, 0, 0.35);
 }
 
 .qr img {

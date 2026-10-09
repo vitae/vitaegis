@@ -5,9 +5,10 @@
 export const LIGHTNING_ADDRESS = 'vitaegis@strike.me';
 export const ONCHAIN_ADDRESS = 'bc1q827gcfh0m0uj69ylzhdx2hjfpgryadghkwm4sp';
 /* Monero primary address (or a dedicated subaddress) from Cake Wallet. Permanent and safe to
-   reuse: Monero derives a one-time stealth address on chain for every payment. Empty until set;
-   the Monero rail is hidden while it is empty. */
-export const MONERO_ADDRESS = '';
+   reuse: Monero derives a one-time stealth address on chain for every payment. The Monero rail is
+   hidden if this is ever emptied. */
+export const MONERO_ADDRESS =
+  '49a7q7N9HLZ6SG25vw55o72jqbkSsLTy5hBxfcvqtsXbWoaYUSTsfau8VJgposmrW1fjYjrGuXisQZ1Pw4Ca18XiAMjaH9v';
 
 export const LIGHTNING_URI = `lightning:${LIGHTNING_ADDRESS}`;
 export const ONCHAIN_URI = `bitcoin:${ONCHAIN_ADDRESS}`;
@@ -17,8 +18,10 @@ export const LIGHTNING_QR = '/donate/lightning.svg';
 export const ONCHAIN_QR = '/donate/onchain.svg';
 export const MONERO_QR = '/donate/monero.svg';
 
-export const BITCOIN_ORANGE = '#f7931a';
-export const MONERO_ORANGE = '#f26822';
+/** Vitae orange (#FF8000): full-intensity orange matched to the brand green #00FF00. */
+export const VITAE_ORANGE = '#ff8000';
+export const BITCOIN_ORANGE = VITAE_ORANGE;
+export const MONERO_ORANGE = VITAE_ORANGE;
 
 export interface Rail {
   key: 'monero' | 'lightning' | 'onchain';

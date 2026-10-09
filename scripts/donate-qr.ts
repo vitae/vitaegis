@@ -1,6 +1,6 @@
 // Regenerate the donation QR codes in public/donate/ from the addresses in lib/donate.ts:
 //   npx tsx scripts/donate-qr.ts
-// Black modules on the rail's colour (Bitcoin orange, Monero orange), with a quiet zone, as
+// Black modules on the rail's colour (Vitae orange #FF8000), with a quiet zone, as
 // SVG so they stay crisp at any size. Run it whenever an address in lib/donate.ts changes.
 import { mkdir, writeFile } from 'node:fs/promises';
 import QRCode from 'qrcode';

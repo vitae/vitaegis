@@ -109,7 +109,7 @@ export default function Footer() {
               href={LIGHTNING_URI}
               aria-label={`Donate bitcoin over Lightning to ${LIGHTNING_ADDRESS}`}
               className="block overflow-hidden rounded-xl"
-              style={{ boxShadow: '0 0 28px rgba(247,147,26,0.35)' }}
+              style={{ boxShadow: '0 0 28px rgba(255,128,0,0.35)' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -121,23 +121,23 @@ export default function Footer() {
               />
             </a>
             <div className="flex flex-col items-center gap-2 sm:items-start">
-              <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#f7931a]">
+              <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#ff8000]">
                 ⚡ Donate Bitcoin
               </h4>
               <a
                 href={LIGHTNING_URI}
-                className="font-mono text-sm text-white/80 transition-colors hover:text-[#f7931a]"
+                className="font-mono text-sm text-white/80 transition-colors hover:text-[#ff8000]"
               >
                 {LIGHTNING_ADDRESS}
               </a>
               <div className="flex items-center gap-4 text-xs">
                 <CopyButton
                   value={LIGHTNING_ADDRESS}
-                  className="min-h-0 whitespace-nowrap rounded-full border border-[#f7931a] px-3 py-1 leading-tight text-[#f7931a] transition hover:bg-[#f7931a] hover:text-black"
+                  className="min-h-0 whitespace-nowrap rounded-full border border-[#ff8000] px-3 py-1 leading-tight text-[#ff8000] transition hover:bg-[#ff8000] hover:text-black"
                 />
                 <Link
                   href="/donate"
-                  className="text-white/50 transition-colors hover:text-[#f7931a]"
+                  className="text-white/50 transition-colors hover:text-[#ff8000]"
                 >
                   On-chain, Monero &amp; more →
                 </Link>
