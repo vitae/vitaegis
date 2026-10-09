@@ -1,8 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { validateOpenPage, validateStartCheckout, validateSubscribeEmail } from '@/lib/vitae/tools';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  planNavigation,
+  validateOpenPage,
+  validateStartCheckout,
+  validateSubscribeEmail,
+} from '@/lib/vitae/tools';
 
 type Handler = (parameters: Record<string, unknown>) => Promise<string>;
 
@@ -12,13 +17,18 @@ export function useVitaeTools(): Record<
   Handler
 > {
   const router = useRouter();
+  const pathname = usePathname();
   return useMemo(
     () => ({
       open_page: async (p) => {
         const v = validateOpenPage(p);
         if (!v.ok) return v.error;
-        if (v.path.startsWith('/#')) window.location.assign(v.path);
-        else router.push(v.path);
+        const nav = planNavigation(v.path, pathname);
+        if (nav.kind === 'scroll') {
+          document.getElementById(nav.id)?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          router.push(nav.path);
+        }
         return `Opening ${v.path}.`;
       },
       start_checkout: async (p) => {
@@ -64,6 +74,6 @@ export function useVitaeTools(): Record<
         }
       },
     }),
-    [router],
+    [router, pathname],
   );
 }

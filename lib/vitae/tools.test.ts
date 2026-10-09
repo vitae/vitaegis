@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   VITAE_TOOLS,
   normalizeEmail,
+  planNavigation,
   validateOpenPage,
   validateStartCheckout,
   validateSubscribeEmail,
@@ -85,6 +86,10 @@ describe('emails', () => {
   it('normalizes case and whitespace', () => {
     expect(normalizeEmail('  Anthony@Example.com ')).toBe('anthony@example.com');
   });
+  it('rejects addresses over 254 characters', () => {
+    expect(normalizeEmail('a'.repeat(250) + '@b.co')).toBeNull();
+    expect(normalizeEmail('a'.repeat(240) + '@b.co')).not.toBeNull();
+  });
   it('rejects malformed addresses', () => {
     for (const bad of ['anthony@', '@example.com', 'anthony', 'a b@example.com', '', null, 42]) {
       expect(normalizeEmail(bad)).toBeNull();
@@ -93,5 +98,17 @@ describe('emails', () => {
   it('validateSubscribeEmail wraps normalizeEmail', () => {
     expect(validateSubscribeEmail({ email: 'A@B.co' })).toEqual({ ok: true, email: 'a@b.co' });
     expect(validateSubscribeEmail({ email: 'nope' }).ok).toBe(false);
+  });
+});
+
+describe('planNavigation', () => {
+  it('scrolls to the section when already on the home page', () => {
+    expect(planNavigation('/#token', '/')).toEqual({ kind: 'scroll', id: 'token' });
+  });
+  it('pushes a hash path from another page instead of reloading', () => {
+    expect(planNavigation('/#token', '/books')).toEqual({ kind: 'push', path: '/#token' });
+  });
+  it('pushes plain paths', () => {
+    expect(planNavigation('/stealth', '/')).toEqual({ kind: 'push', path: '/stealth' });
   });
 });

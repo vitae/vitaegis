@@ -114,11 +114,29 @@ export function validateStartCheckout(
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** RFC 5321 ceiling; also the check constraint on public.subscribers. */
+export const EMAIL_MAX_LENGTH = 254;
 
 export function normalizeEmail(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const email = raw.trim().toLowerCase();
-  return EMAIL.test(email) ? email : null;
+  return email.length <= EMAIL_MAX_LENGTH && EMAIL.test(email) ? email : null;
+}
+
+/**
+ * How open_page should move the visitor without dropping the live session: a same-page
+ * hash scrolls in place, everything else goes through the App Router.
+ */
+export function planNavigation(
+  path: string,
+  currentPathname: string,
+): { kind: 'scroll'; id: string } | { kind: 'push'; path: string } {
+  const hash = path.indexOf('#');
+  if (hash >= 0) {
+    const base = path.slice(0, hash) || '/';
+    if (base === currentPathname) return { kind: 'scroll', id: path.slice(hash + 1) };
+  }
+  return { kind: 'push', path };
 }
 
 export function validateSubscribeEmail(args: unknown): Ok<{ email: string }> | Fail {

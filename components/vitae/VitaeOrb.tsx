@@ -1,7 +1,10 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import VitaeConversation from './VitaeConversation';
+
+/* The ElevenLabs SDK carries the WebRTC stack; fetch it only when the orb actually renders. */
+const VitaeConversation = dynamic(() => import('./VitaeConversation'), { ssr: false });
 
 /** Floating Vitae control on every page but /vitae. Absent unless NEXT_PUBLIC_VITAE_ENABLED=1. */
 export default function VitaeOrb() {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
-import VitaeConversation from '@/components/vitae/VitaeConversation';
+import VitaePanel from '@/components/vitae/VitaePanel';
 import { vitaeClientEnabled } from '@/lib/vitae/env';
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default function VitaePage() {
 
           <GlassContainer variant="prominent" glow padding="lg" className="w-full">
             {enabled ? (
-              <VitaeConversation size="page" />
+              <VitaePanel />
             ) : (
               <p className="text-base text-white/70 sm:text-lg">Vitae is being tuned. Soon.</p>
             )}
