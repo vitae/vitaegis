@@ -68,7 +68,9 @@ function Inner({
   const disc = size === 'orb' ? 'h-14 w-14' : 'h-24 w-24';
 
   return (
-    <div className={`flex flex-col items-center gap-3 ${size === 'page' ? 'w-full' : ''}`}>
+    <div
+      className={`flex flex-col gap-3 ${size === 'page' ? 'w-full items-center' : 'items-end text-right'}`}
+    >
       <button
         type="button"
         aria-label={live ? 'End conversation with Vitae' : 'Talk to Vitae'}
@@ -91,7 +93,7 @@ function Inner({
         {label}
       </p>
       {size === 'orb' && last && live && (
-        <p className="max-w-[16rem] text-center text-xs text-white/60">{last.text}</p>
+        <p className="max-w-[16rem] text-xs text-white/60">{last.text}</p>
       )}
       {size === 'page' && lines.length > 0 && (
         <ol className="mt-4 flex w-full flex-col gap-2 text-left">
