@@ -85,43 +85,45 @@ export default function HeroSection() {
           `}
           style={{ transitionDelay: '400ms' }}
         >
-          {/* Brand descriptor */}
-          <p className="text-sm sm:text-lg md:text-xl text-[#00ff00] text-center tracking-[0.2em] uppercase mb-4 sm:mb-5">
-            Center for Inner Peace
-          </p>
+          {/* Three rows, one gap: descriptor, pillars, call to action */}
+          <div className="flex w-full flex-col items-center gap-5 sm:gap-6">
+            {/* Brand descriptor */}
+            <p className="text-sm sm:text-lg md:text-xl text-[#00ff00] text-center tracking-[0.2em] uppercase">
+              Center for Inner Peace
+            </p>
 
-          {/* Pillars: three equal columns spanning the card, one word centred in each */}
-          <div className="grid w-full grid-cols-3 items-center mb-6 sm:mb-8">
-            {(
-              [
-                ['/health', 'HEALTH'],
-                ['/stealth', 'STEALTH'],
-                ['/wealth', 'WEALTH'],
-              ] as const
-            ).map(([href, label]) => (
-              <Link
-                key={href}
-                href={href}
-                className="block text-center whitespace-nowrap text-base sm:text-2xl md:text-3xl lg:text-4xl font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
+            {/* Pillars: three equal columns spanning the card, one word centred in each */}
+            <div className="grid w-full grid-cols-3 items-center">
+              {(
+                [
+                  ['/health', 'HEALTH'],
+                  ['/stealth', 'STEALTH'],
+                  ['/wealth', 'WEALTH'],
+                ] as const
+              ).map(([href, label]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="block text-center whitespace-nowrap text-base sm:text-2xl md:text-3xl lg:text-4xl font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
 
-          {/* CTA Buttons with touch feedback */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            {/* Primary CTA */}
-            <button
-              onClick={() =>
-                document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
-              }
-              onTouchStart={() => setPrimaryPressed(true)}
-              onTouchEnd={() => setPrimaryPressed(false)}
-              onMouseDown={() => setPrimaryPressed(true)}
-              onMouseUp={() => setPrimaryPressed(false)}
-              onMouseLeave={() => setPrimaryPressed(false)}
-              className="
+            {/* CTA Buttons with touch feedback */}
+            <div className="flex w-full flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              {/* Primary CTA */}
+              <button
+                onClick={() =>
+                  document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+                }
+                onTouchStart={() => setPrimaryPressed(true)}
+                onTouchEnd={() => setPrimaryPressed(false)}
+                onMouseDown={() => setPrimaryPressed(true)}
+                onMouseUp={() => setPrimaryPressed(false)}
+                onMouseLeave={() => setPrimaryPressed(false)}
+                className="
                   w-full sm:w-auto
                   px-5 sm:px-6 py-3
                   bg-[#00ff00] text-black
@@ -130,13 +132,14 @@ export default function HeroSection() {
                   min-h-[44px]
                   transition-all duration-200
                 "
-              style={{
-                transform: primaryPressed ? 'scale(0.97)' : 'scale(1)',
-                boxShadow: primaryPressed ? 'none' : '0 0 20px rgba(0, 255, 0, 0.5)',
-              }}
-            >
-              ENTER VITAEGIS
-            </button>
+                style={{
+                  transform: primaryPressed ? 'scale(0.97)' : 'scale(1)',
+                  boxShadow: primaryPressed ? 'none' : '0 0 20px rgba(0, 255, 0, 0.5)',
+                }}
+              >
+                ENTER VITAEGIS
+              </button>
+            </div>
           </div>
         </GlassContainer>
       </div>
