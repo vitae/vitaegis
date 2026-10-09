@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Single-segment routes that should answer in any capitalization (/Bitcoin, /BITCOIN, ...).
-const CASE_INSENSITIVE = new Set(['bitcoin']);
+const CASE_INSENSITIVE = new Set(['bitcoin', 'donate']);
 
 export function proxy(req: NextRequest) {
   const slug = req.nextUrl.pathname.slice(1);

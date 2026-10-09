@@ -1,0 +1,151 @@
+/* /donate: Vitaegis dark layout in Bitcoin orange, matching /bitcoin. */
+
+.page {
+  --orange: #f7931a;
+  --orange-dim: rgba(247, 147, 26, 0.12);
+  --line: #221e19;
+  --ink-2: #d2ccc4;
+  --ink-3: #8a8278;
+
+  min-height: 100vh;
+  width: 100%;
+  background: #000;
+  color: #fff;
+  font-family: 'Jost', 'Montserrat', Arial, sans-serif;
+  line-height: 1.55;
+  padding: 40px 16px 128px;
+}
+
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  gap: 36px;
+}
+
+.kicker {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.page h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 7vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.page h1 span {
+  color: var(--orange);
+  text-shadow: 0 0 24px rgba(247, 147, 26, 0.45);
+}
+
+.page header {
+  text-align: center;
+}
+
+.lede {
+  margin: 14px auto 0;
+  max-width: 560px;
+  color: var(--ink-2);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #0d0b08, #050505);
+  box-shadow: 0 0 40px var(--orange-dim);
+  text-align: center;
+  min-width: 0;
+}
+
+.tag {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.qr {
+  display: block;
+  width: 100%;
+  max-width: 264px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 0 32px rgba(247, 147, 26, 0.35);
+}
+
+.qr img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.addr {
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.85rem;
+  color: #fff;
+  word-break: break-all;
+  text-decoration: none;
+}
+
+.addr:hover {
+  color: var(--orange);
+}
+
+.copy {
+  min-height: 0;
+  line-height: 1.2;
+  padding: 8px 18px;
+  border: 1px solid var(--orange);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--orange);
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.copy:hover {
+  background: var(--orange);
+  color: #000;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 0;
+}
+
+.back a {
+  color: var(--orange);
+  text-decoration: none;
+}

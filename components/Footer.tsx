@@ -4,6 +4,8 @@ import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import { socials } from '@/components/socials';
 import PillarLinks from '@/components/PillarLinks';
+import CopyButton from '@/components/CopyButton';
+import { LIGHTNING_ADDRESS, LIGHTNING_QR, LIGHTNING_URI } from '@/lib/donate';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Footer
@@ -101,7 +103,49 @@ export default function Footer() {
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col items-center gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:justify-between">
+          {/* Bitcoin donation (Lightning, Strike) */}
+          <div className="mt-10 flex flex-col items-center gap-5 border-t border-white/10 pt-8 sm:flex-row sm:justify-center sm:gap-8">
+            <a
+              href={LIGHTNING_URI}
+              aria-label={`Donate bitcoin over Lightning to ${LIGHTNING_ADDRESS}`}
+              className="block overflow-hidden rounded-xl"
+              style={{ boxShadow: '0 0 28px rgba(247,147,26,0.35)' }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={LIGHTNING_QR}
+                alt={`Lightning QR code for ${LIGHTNING_ADDRESS}`}
+                width={128}
+                height={128}
+                loading="lazy"
+              />
+            </a>
+            <div className="flex flex-col items-center gap-2 sm:items-start">
+              <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#f7931a]">
+                ⚡ Donate Bitcoin
+              </h4>
+              <a
+                href={LIGHTNING_URI}
+                className="font-mono text-sm text-white/80 transition-colors hover:text-[#f7931a]"
+              >
+                {LIGHTNING_ADDRESS}
+              </a>
+              <div className="flex items-center gap-4 text-xs">
+                <CopyButton
+                  value={LIGHTNING_ADDRESS}
+                  className="min-h-0 whitespace-nowrap rounded-full border border-[#f7931a] px-3 py-1 leading-tight text-[#f7931a] transition hover:bg-[#f7931a] hover:text-black"
+                />
+                <Link
+                  href="/donate"
+                  className="text-white/50 transition-colors hover:text-[#f7931a]"
+                >
+                  On-chain &amp; more →
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:justify-between">
             <span>© 2026 VITAEGIS. All rights reserved.</span>
             <div className="flex gap-5">
               <Link href="/privacy" className="transition-colors hover:text-white">
