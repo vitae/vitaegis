@@ -30,66 +30,73 @@ export default function LightningTip() {
   };
 
   return (
+    // The outer box is the fixed anchor; .glass-panel sets position: relative, so it lives
+    // on the inner box instead of fighting Tailwind's fixed.
     <aside
       aria-label="Donate"
-      className="glass-panel fixed bottom-24 right-4 z-40 flex w-[12rem] flex-col items-center rounded-2xl p-2.5 text-center sm:right-6"
-      style={{ borderColor: `${rail.color}66` }}
+      className="fixed bottom-24 right-4 z-40 w-[12rem] sm:right-6"
+      style={{ position: 'fixed' }}
     >
-      {RAILS.length > 1 && (
-        <div className="mb-2 flex w-full gap-1" role="tablist" aria-label="Donation rails">
-          {RAILS.map((r) => {
-            const on = r.id === rail.id;
-            return (
-              <button
-                key={r.id}
-                role="tab"
-                aria-selected={on}
-                type="button"
-                onClick={() => {
-                  setActive(r.id);
-                  setCopied(false);
-                }}
-                className="flex-1 rounded-full border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] transition"
-                style={{
-                  color: on ? '#000' : r.color,
-                  background: on ? r.color : 'transparent',
-                  borderColor: `${r.color}66`,
-                }}
-              >
-                {r.tab}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      <a href={rail.uri} aria-label={`Pay ${rail.address}: ${rail.label}`} className="block">
-        <svg
-          viewBox={`0 0 ${side + 16} ${side + 16}`}
-          width={side + 16}
-          height={side + 16}
-          className="rounded-lg"
-          role="img"
-          aria-hidden
+      <div
+        className="glass-panel flex flex-col items-center rounded-2xl p-2.5 text-center"
+        style={{ borderColor: `${rail.color}66` }}
+      >
+        {RAILS.length > 1 && (
+          <div className="mb-2 flex w-full gap-1" role="tablist" aria-label="Donation rails">
+            {RAILS.map((r) => {
+              const on = r.id === rail.id;
+              return (
+                <button
+                  key={r.id}
+                  role="tab"
+                  aria-selected={on}
+                  type="button"
+                  onClick={() => {
+                    setActive(r.id);
+                    setCopied(false);
+                  }}
+                  className="flex-1 rounded-full border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] transition"
+                  style={{
+                    color: on ? '#000' : r.color,
+                    background: on ? r.color : 'transparent',
+                    borderColor: `${r.color}66`,
+                  }}
+                >
+                  {r.tab}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <a href={rail.uri} aria-label={`Pay ${rail.address}: ${rail.label}`} className="block">
+          <svg
+            viewBox={`0 0 ${side + 16} ${side + 16}`}
+            width={side + 16}
+            height={side + 16}
+            className="rounded-lg"
+            role="img"
+            aria-hidden
+          >
+            <rect width={side + 16} height={side + 16} rx="10" fill="#fff" />
+            <path transform="translate(8 8)" d={qrPath(qr, side)} fill="#000" />
+          </svg>
+        </a>
+        <p
+          className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
+          style={{ color: rail.color }}
         >
-          <rect width={side + 16} height={side + 16} rx="10" fill="#fff" />
-          <path transform="translate(8 8)" d={qrPath(qr, side)} fill="#000" />
-        </svg>
-      </a>
-      <p
-        className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
-        style={{ color: rail.color }}
-      >
-        {rail.label}
-      </p>
-      <button
-        type="button"
-        onClick={copy}
-        title={`Copy ${rail.address}`}
-        className="mt-0.5 max-w-full break-all font-mono text-[11px] leading-snug hover:underline"
-        style={{ color: rail.color }}
-      >
-        {copied ? 'Copied' : rail.id === 'lightning' ? rail.address : shortAddress(rail.address)}
-      </button>
+          {rail.label}
+        </p>
+        <button
+          type="button"
+          onClick={copy}
+          title={`Copy ${rail.address}`}
+          className="mt-0.5 max-w-full break-all font-mono text-[11px] leading-snug hover:underline"
+          style={{ color: rail.color }}
+        >
+          {copied ? 'Copied' : rail.id === 'lightning' ? rail.address : shortAddress(rail.address)}
+        </button>
+      </div>
     </aside>
   );
 }

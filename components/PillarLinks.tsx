@@ -54,7 +54,11 @@ export default function PillarLinks({
             ))}
           <Link
             href={p.href}
-            className={[linkClassName, p.id === active ? activeClassName : '']
+            className={[
+              'inline-flex items-center',
+              linkClassName,
+              p.id === active ? activeClassName : '',
+            ]
               .filter(Boolean)
               .join(' ')}
           >
