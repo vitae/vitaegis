@@ -48,7 +48,7 @@ export default function CommunitySection() {
         </SectionTitle>
 
         {/* Social Links Grid */}
-        <div className="mb-8 grid w-full grid-cols-2 gap-4 sm:mb-10 sm:grid-cols-4 sm:gap-6">
+        <div className="mb-8 grid w-full grid-cols-4 gap-3 sm:mb-10 sm:gap-6">
           {socials.map((social, index) => {
             const Icon = social.icon;
             return (
@@ -125,7 +125,7 @@ export default function CommunitySection() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your Email"
                       aria-label="Your email"
-                      className="relative z-10 w-full min-w-0 bg-transparent text-left text-base text-white placeholder:text-white/30 outline-none"
+                      className="relative z-10 w-full min-w-0 bg-transparent text-center text-base text-white placeholder:text-white/30 outline-none"
                     />
                   </label>
                   <button
