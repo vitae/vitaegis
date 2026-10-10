@@ -28,8 +28,8 @@
 
 :root {
   /* Core palette: pure neon on black. Mirrors tailwind.config.js and the vitaegis-brand skill.
-     Main focus is green, black and white. Accents form a square scheme with green:
-     azure (blue) #0080ff, magenta #ff00ff, orange #ff8000. Red is reserved for SELF. */
+     The brand is green, black and white only. The other tokens below are kept for
+     functional uses (errors, Bitcoin/donation marks, SELF) and are not brand colors. */
   --vitae-green: #00ff00;
   --vitae-green-dim: #003311;
   --vitae-green-glow: rgba(0, 255, 0, 0.5);

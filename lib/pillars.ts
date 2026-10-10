@@ -5,11 +5,11 @@
 
 export type PillarSlug = 'health' | 'stealth' | 'wealth';
 
-/** Pillar colors: Health green, Stealth magenta, Wealth orange (square scheme with the brand green). */
+/** Pillar colors. The Vitaegis brand is green, black and white only, so every pillar is green. */
 export const PILLAR_COLORS: Record<PillarSlug, string> = {
   health: '#00ff00',
-  stealth: '#ff00ff',
-  wealth: '#ff8000',
+  stealth: '#00ff00',
+  wealth: '#00ff00',
 };
 
 export type Entry = { k: string; v: string };
@@ -418,7 +418,7 @@ export const pillars: Pillar[] = [
     name: 'Stealth',
     codename: 'Operation Shadow',
     glyph: '忍',
-    color: '#ff00ff',
+    color: '#00ff00',
     doctrine: 'What they cannot see, they cannot target. Be unremarkable, be encrypted, be ready.',
     summary:
       'Cybersecurity, anonymity, encryption, key custody, situational awareness and self-defense. The shinobi code for the digital age.',
@@ -805,7 +805,7 @@ export const pillars: Pillar[] = [
     name: 'Wealth',
     codename: 'Operation Treasury',
     glyph: '財',
-    color: '#ff8000',
+    color: '#00ff00',
     doctrine: 'Own assets, not liabilities. Compound quietly. Let time do the heavy lifting.',
     summary:
       'Bitcoin, stocks, saving, trusts, LLCs, business building and the legal "glitches" the wealthy use. Build it, protect it, pass it on.',
