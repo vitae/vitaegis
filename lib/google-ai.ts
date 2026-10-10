@@ -199,14 +199,26 @@ export async function generateImage(
  * Veo is long-running: this kicks it off and returns the operation name. The worker
  * polls with pollVideo on later cron ticks rather than blocking a request.
  */
-export async function startVideo(
-  prompt: string,
-  opts: { aspectRatio?: '9:16' | '16:9' } = {},
-): Promise<string> {
+export interface VideoOptions {
+  /** Veo renders 16:9 unless told otherwise; Shorts and Reels need 9:16. */
+  aspectRatio?: '9:16' | '16:9';
+  /** Things the model should keep out of the frame, comma separated. */
+  negativePrompt?: string;
+  /** 720p is the default; 1080p costs the same but renders only at 16:9 on Veo 3.1. */
+  resolution?: '720p' | '1080p';
+  /** Clip length. Veo 3.1 accepts 4, 6 or 8 and defaults to 8. */
+  durationSeconds?: 4 | 6 | 8;
+}
+
+export async function startVideo(prompt: string, opts: VideoOptions = {}): Promise<string> {
+  const parameters: Record<string, string | number> = {};
+  if (opts.aspectRatio) parameters.aspectRatio = opts.aspectRatio;
+  if (opts.negativePrompt) parameters.negativePrompt = opts.negativePrompt;
+  if (opts.resolution) parameters.resolution = opts.resolution;
+  if (opts.durationSeconds) parameters.durationSeconds = opts.durationSeconds;
   const json = await call(`/models/${VIDEO_MODEL}:predictLongRunning`, {
     instances: [{ prompt }],
-    // Veo renders 16:9 unless told otherwise; Shorts and Reels need 9:16.
-    ...(opts.aspectRatio ? { parameters: { aspectRatio: opts.aspectRatio } } : {}),
+    ...(Object.keys(parameters).length ? { parameters } : {}),
   });
   const name = json?.name;
   if (!name)

@@ -19,7 +19,8 @@
     "agent:deploy": "eve deploy",
     "agent:eval": "eve eval",
     "vitae:sync": "tsx scripts/vitae-sync.ts",
-    "vitae:voice": "tsx scripts/vitae-voice.ts"
+    "vitae:voice": "tsx scripts/vitae-voice.ts",
+    "logo:reveal": "tsx scripts/render-logo-reveal.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
