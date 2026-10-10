@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, type CSSProperties } from 'react';
+import { PILLAR_COLORS } from '@/lib/pillars';
 import GlassContainer from '@/components/GlassContainer';
 import LogoGlow from '@/components/LogoGlow';
 
@@ -96,15 +97,16 @@ export default function HeroSection() {
             <div className="grid w-full grid-cols-3 items-center">
               {(
                 [
-                  ['/health', 'HEALTH'],
-                  ['/stealth', 'STEALTH'],
-                  ['/wealth', 'WEALTH'],
+                  ['/health', 'HEALTH', PILLAR_COLORS.health],
+                  ['/stealth', 'STEALTH', PILLAR_COLORS.stealth],
+                  ['/wealth', 'WEALTH', PILLAR_COLORS.wealth],
                 ] as const
-              ).map(([href, label]) => (
+              ).map(([href, label, color]) => (
                 <Link
                   key={href}
                   href={href}
-                  className="block text-center whitespace-nowrap text-base sm:text-2xl md:text-3xl lg:text-4xl font-light text-[#00ff00] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
+                  style={{ '--pc': color } as CSSProperties}
+                  className="block text-center whitespace-nowrap text-base sm:text-2xl md:text-3xl lg:text-4xl font-light text-[color:var(--pc)] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
                 >
                   {label}
                 </Link>

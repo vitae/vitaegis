@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Fragment } from 'react';
+import { Fragment, type CSSProperties } from 'react';
+import { PILLAR_COLORS } from '@/lib/pillars';
 
 export type Pillar = 'health' | 'stealth' | 'wealth';
 
@@ -54,8 +55,9 @@ export default function PillarLinks({
             ))}
           <Link
             href={p.href}
+            style={{ '--pc': PILLAR_COLORS[p.id] } as CSSProperties}
             className={[
-              'inline-flex items-center',
+              'inline-flex items-center text-[color:var(--pc)]',
               linkClassName,
               p.id === active ? activeClassName : '',
             ]

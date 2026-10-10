@@ -45,7 +45,7 @@ export default function BooksPage() {
               <>
                 Ten books behind everything we build. Strategy, energy, sovereignty, and purpose,
                 mapped to{' '}
-                <PillarLinks linkClassName="text-[#00ff00] transition-colors hover:text-white" />.
+                <PillarLinks />.
               </>
             }
           >

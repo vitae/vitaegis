@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import { pillars } from '@/lib/pillars';
@@ -47,12 +47,13 @@ export default function PracticesSection() {
             {pillars.map((pillar) => (
               <div
                 key={pillar.slug}
+                style={{ '--pc': pillar.color } as CSSProperties}
                 className="pillar-column flex flex-col items-center px-1 opacity-0 translate-y-8 transition-all duration-700 sm:px-4 [&.revealed]:opacity-100 [&.revealed]:translate-y-0"
               >
                 <Link
                   href={`/${pillar.slug}`}
-                  className="text-base font-bold uppercase tracking-[0.12em] text-vitae-green transition hover:text-white sm:text-2xl sm:tracking-[0.2em]"
-                  style={{ textShadow: '0 0 16px rgba(0,255,0,0.35)' }}
+                  className="text-base font-bold uppercase tracking-[0.12em] text-[color:var(--pc)] transition hover:text-white sm:text-2xl sm:tracking-[0.2em]"
+                  style={{ '--pc': pillar.color, textShadow: `0 0 16px ${pillar.color}59` } as CSSProperties}
                 >
                   {pillar.name}
                 </Link>
@@ -61,7 +62,7 @@ export default function PracticesSection() {
                     <li key={topic.code}>
                       <Link
                         href={`/${pillar.slug}#${topic.code}`}
-                        className="flex items-center justify-center text-xs font-light leading-snug text-white/70 transition hover:text-vitae-green sm:text-base"
+                        className="flex items-center justify-center text-xs font-light leading-snug text-white/70 transition hover:text-[color:var(--pc)] sm:text-base"
                       >
                         {topic.label}
                       </Link>
