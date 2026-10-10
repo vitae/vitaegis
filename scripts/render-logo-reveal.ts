@@ -56,7 +56,8 @@ async function main() {
     aspectRatio: '16:9',
     resolution,
     durationSeconds: 8,
-    negativePrompt: LOGO_REVEAL_NEGATIVE_PROMPT,
+    // Veo 3.1 Lite rejects negativePrompt outright, so only the full models get it.
+    ...(VIDEO_MODEL.includes('lite') ? {} : { negativePrompt: LOGO_REVEAL_NEGATIVE_PROMPT }),
   });
   console.log(`Operation ${op}`);
 
