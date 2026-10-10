@@ -27,7 +27,9 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Core palette: pure neon on black. Mirrors tailwind.config.js and the vitaegis-brand skill. */
+  /* Core palette: pure neon on black. Mirrors tailwind.config.js and the vitaegis-brand skill.
+     Main focus is green, black and white. Accents form a square scheme with green:
+     azure (blue) #0080ff, magenta #ff00ff, orange #ff8000. Red is reserved for SELF. */
   --vitae-green: #00ff00;
   --vitae-green-dim: #003311;
   --vitae-green-glow: rgba(0, 255, 0, 0.5);
@@ -35,8 +37,8 @@
   --vitae-magenta: #ff00ff;
   --vitae-yellow: #ffff00;
   --vitae-cyan: #00ffff;
-  --vitae-orange: #f7931a;
-  --vitae-blue: #1a7df7;
+  --vitae-orange: #ff8000;
+  --vitae-blue: #0080ff;
   --vitae-black: #000000;
   --vitae-white: #ffffff;
   --vitae-gray: #808080;

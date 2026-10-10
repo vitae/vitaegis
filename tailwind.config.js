@@ -14,6 +14,8 @@ module.exports = {
       },
       // Vitaegis palette: pure neon on black. Mirrors --vitae-* in app/globals.css
       // and the vitaegis-brand skill; change all three together.
+      // Main focus: green, black, white. Square-scheme accents: blue (azure), magenta,
+      // orange. Red is reserved for SELF.
       colors: {
         vitae: {
           green: '#00ff00',
@@ -23,8 +25,8 @@ module.exports = {
           magenta: '#ff00ff',
           yellow: '#ffff00',
           cyan: '#00ffff',
-          orange: '#f7931a',
-          blue: '#1a7df7',
+          orange: '#ff8000',
+          blue: '#0080ff',
           black: '#000000',
           white: '#ffffff',
           gray: '#808080',
