@@ -381,6 +381,11 @@ export const pillars: Pillar[] = [
         blurb: 'Seven supplements, what each one is for, and when to take it.',
       },
       {
+        href: '/mitochondria',
+        label: 'Mitochondria',
+        blurb: 'How cells make ATP, and every supplement with evidence for more energy.',
+      },
+      {
         href: '/wholefoods',
         label: 'Whole Foods Run',
         blurb: 'The grocery checklist: what to buy, what is stocked, every pickup.',

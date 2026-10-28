@@ -90,6 +90,13 @@ export const projects: Project[] = [
     icon: HiBeaker,
   },
   {
+    href: '/mitochondria',
+    label: 'MITOCHONDRIA',
+    title: 'Mitochondria',
+    description: 'How cells make ATP, and every supplement with evidence for more energy.',
+    icon: HiLightningBolt,
+  },
+  {
     href: '/proverbs',
     label: 'PROVERBS',
     title: 'Proverbs & Oracle',
