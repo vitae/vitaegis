@@ -58,9 +58,9 @@ const groups: { title: string; intro: string; items: Supp[] }[] = [
         tier: 'B',
       },
       {
-        name: 'Niacin (vitamin B3)',
-        dose: '25–100 mg, or 250–500 mg nicotinamide',
-        role: 'The original NAD+ precursor, a fraction of the price of NR. Plain niacin flushes above ~50 mg; nicotinamide does not. High-dose niacin raised NAD+ and muscle strength in a 2020 mitochondrial-myopathy trial.',
+        name: 'Niacinamide (vitamin B3)',
+        dose: '250–500 mg; or niacin 25–100 mg',
+        role: 'Both are B3 and both feed NAD+, at a fraction of the price of NR. Niacinamide does not flush, so it is the daily form; plain niacin flushes above ~50 mg but is the only one that lowers LDL (at 1–2 g, under a doctor). High-dose niacin raised NAD+ and muscle strength in a 2020 mitochondrial-myopathy trial.',
         tier: 'B',
       },
       {
@@ -286,7 +286,10 @@ const ranked = [
   { name: 'Fish oil', why: 'Strong for inflammation, moderate for energy' },
   { name: 'Taurine + GlyNAC', why: 'Cheap, new, well-run human trials' },
   { name: 'Ubiquinol', why: 'Especially past 40 or on a statin' },
-  { name: 'NAD+ precursor (niacin, NR, or NMN)', why: 'Good mechanism, human data still maturing; niacin is the cheap route' },
+  {
+    name: 'NAD+ precursor (niacinamide, NR, or NMN)',
+    why: 'Good mechanism, human data still maturing; niacinamide is the cheap route',
+  },
   { name: 'ALA + ALCAR', why: 'The classic pair for aging mitochondria' },
   { name: 'Urolithin A + PQQ', why: 'Clear the old, build the new. The most speculative tier' },
 ];
