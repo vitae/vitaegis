@@ -53,8 +53,14 @@ const groups: { title: string; intro: string; items: Supp[] }[] = [
       },
       {
         name: 'NAD+ precursors',
-        dose: 'NMN or NR 250–1,000 mg, or niacin',
+        dose: 'NMN or NR 250–1,000 mg',
         role: 'NAD+ is the electron carrier Complex I runs on and what sirtuins need. Declines with age.',
+        tier: 'B',
+      },
+      {
+        name: 'Niacin (vitamin B3)',
+        dose: '25–100 mg, or 250–500 mg nicotinamide',
+        role: 'The original NAD+ precursor, a fraction of the price of NR. Plain niacin flushes above ~50 mg; nicotinamide does not. High-dose niacin raised NAD+ and muscle strength in a 2020 mitochondrial-myopathy trial.',
         tier: 'B',
       },
       {
@@ -280,7 +286,7 @@ const ranked = [
   { name: 'Fish oil', why: 'Strong for inflammation, moderate for energy' },
   { name: 'Taurine + GlyNAC', why: 'Cheap, new, well-run human trials' },
   { name: 'Ubiquinol', why: 'Especially past 40 or on a statin' },
-  { name: 'NAD+ precursor', why: 'Good mechanism, human data still maturing' },
+  { name: 'NAD+ precursor (niacin, NR, or NMN)', why: 'Good mechanism, human data still maturing; niacin is the cheap route' },
   { name: 'ALA + ALCAR', why: 'The classic pair for aging mitochondria' },
   { name: 'Urolithin A + PQQ', why: 'Clear the old, build the new. The most speculative tier' },
 ];
