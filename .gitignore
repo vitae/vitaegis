@@ -170,3 +170,8 @@ test-results/
 
 # local card renders from scripts/render-cards.ts
 .tmp-cards/
+
+# Kalshi API private keys (scripts/kalshi_bot.py)
+*.key
+*.pem
+__pycache__/
