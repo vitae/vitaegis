@@ -1,0 +1,27 @@
+# systemd unit for scripts/kalshi_bot.py. Install per docs/kalshi.md:
+#   sudo cp scripts/kalshi-bot.service /etc/systemd/system/
+#   sudo systemctl enable --now kalshi-bot
+[Unit]
+Description=Kalshi KXBTC15M bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kalshi
+WorkingDirectory=/opt/vitaegis
+EnvironmentFile=/etc/kalshi-bot.env
+ExecStart=/opt/vitaegis/.venv/bin/python -u scripts/kalshi_bot.py --live
+Restart=always
+RestartSec=5
+# Never let a crash loop hammer the API: at most 10 restarts in 5 minutes.
+StartLimitIntervalSec=300
+StartLimitBurst=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/opt/vitaegis
+
+[Install]
+WantedBy=multi-user.target

@@ -17,6 +17,10 @@ Environment:
   KALSHI_MAX_ORDERS_PER_DAY default 6
   KALSHI_POLL_SECONDS       default 15
   KALSHI_TIME_IN_FORCE      immediate_or_cancel (default) | good_till_canceled | fill_or_kill
+
+Optional telemetry for /admin/kalshi on vitaegis.com (skipped when unset):
+  SUPABASE_URL              project URL (NEXT_PUBLIC_SUPABASE_URL also accepted)
+  SUPABASE_SERVICE_ROLE_KEY service role key; rows go to the kalshi_events table
 """
 
 from __future__ import annotations
@@ -26,6 +30,7 @@ import base64
 import logging
 import os
 import sys
+import threading
 import time
 import uuid
 from dataclasses import dataclass
@@ -160,6 +165,46 @@ class KalshiClient:
 
 
 # ---------------------------------------------------------------------------
+# Telemetry sink (optional)
+# ---------------------------------------------------------------------------
+class SupabaseSink:
+    """Writes kalshi_events rows on a background thread so trading never waits on it."""
+
+    def __init__(self, url: str | None, key: str | None):
+        self.url = url.rstrip("/") + "/rest/v1/kalshi_events" if url else None
+        self.key = key
+        self.session = requests.Session()
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.url and self.key)
+
+    def write(self, kind: str, **fields: Any) -> None:
+        if not self.enabled:
+            return
+        row = {"kind": kind, **{k: v for k, v in fields.items() if v is not None}}
+        threading.Thread(target=self._post, args=(row,), daemon=True).start()
+
+    def _post(self, row: dict[str, Any]) -> None:
+        try:
+            resp = self.session.post(
+                self.url,
+                json=row,
+                timeout=5,
+                headers={
+                    "apikey": self.key,
+                    "Authorization": f"Bearer {self.key}",
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal",
+                },
+            )
+            if resp.status_code >= 400:
+                log.warning("telemetry rejected: HTTP %s %s", resp.status_code, resp.text[:120])
+        except requests.RequestException as e:
+            log.warning("telemetry failed: %s", e)
+
+
+# ---------------------------------------------------------------------------
 # Pure helpers (no I/O)
 # ---------------------------------------------------------------------------
 def dollars_to_cents(value: str | None) -> int | None:
@@ -168,6 +213,14 @@ def dollars_to_cents(value: str | None) -> int | None:
         return None
     cents = int((Decimal(value) * 100).to_integral_value())
     return cents if 1 <= cents <= 99 else None
+
+
+def _int_or_none(value: Any) -> int | None:
+    """'35.00' -> 35 for Kalshi fixed-point counts."""
+    try:
+        return int(Decimal(str(value))) if value not in (None, "") else None
+    except (ValueError, ArithmeticError):
+        return None
 
 
 def parse_iso_ms(value: str) -> float:
@@ -200,12 +253,17 @@ def contracts_for(bet_usd: Decimal, price_cents: int) -> int:
 # Runner
 # ---------------------------------------------------------------------------
 class Bot:
-    def __init__(self, cfg: Config, client: KalshiClient):
+    HEARTBEAT_SECONDS = 60
+
+    def __init__(self, cfg: Config, client: KalshiClient, sink: SupabaseSink | None = None):
         self.cfg = cfg
         self.client = client
+        self.sink = sink or SupabaseSink(None, None)
         self.traded: set[str] = set()
         self.orders_today = 0
         self.today = date.today()
+        self._last_quote: tuple[str, int | None, int | None] | None = None
+        self._last_logged = 0.0
 
     def tick(self) -> None:
         if date.today() != self.today:
@@ -221,6 +279,11 @@ class Bot:
         no_ask = dollars_to_cents(market.get("no_ask_dollars"))
         close_in = int((parse_iso_ms(market["close_time"]) - time.time() * 1000) / 1000)
         log.info("%s closes in %ds | YES ask %s¢ | NO ask %s¢", ticker, close_in, yes_ask, no_ask)
+
+        quote = (ticker, yes_ask, no_ask)
+        if quote != self._last_quote or time.time() - self._last_logged >= self.HEARTBEAT_SECONDS:
+            self._last_quote, self._last_logged = quote, time.time()
+            self.sink.write("tick", live=self.cfg.live, ticker=ticker, close_time=market["close_time"], yes_ask_cents=yes_ask, no_ask_cents=no_ask)
 
         if ticker in self.traded:
             return
@@ -240,9 +303,25 @@ class Bot:
         log.info("[%s] buy %dx %s @ %d¢ on %s", mode, count, outcome.upper(), price, ticker)
         self.traded.add(ticker)
         self.orders_today += 1
+        result: dict[str, Any] = {}
         if self.cfg.live:
             result = self.client.buy(ticker, outcome, price, count)
             log.info("order %s filled %s remaining %s avg %s", result.get("order_id"), result.get("fill_count"), result.get("remaining_count"), result.get("average_fill_price"))
+        self.sink.write(
+            "order",
+            live=self.cfg.live,
+            ticker=ticker,
+            close_time=market["close_time"],
+            yes_ask_cents=yes_ask,
+            no_ask_cents=no_ask,
+            outcome=outcome,
+            price_cents=price,
+            count=count,
+            order_id=result.get("order_id"),
+            fill_count=_int_or_none(result.get("fill_count")),
+            remaining_count=_int_or_none(result.get("remaining_count")),
+            avg_fill_cents=dollars_to_cents(result.get("average_fill_price")),
+        )
 
     def run_forever(self) -> None:
         backoff = self.cfg.poll_seconds
@@ -252,9 +331,11 @@ class Bot:
                 backoff = self.cfg.poll_seconds
             except KalshiError as e:
                 log.error("kalshi: %s", e)
+                self.sink.write("error", live=self.cfg.live, message=str(e))
                 backoff = min(backoff * 2, 300) if e.status == 429 else self.cfg.poll_seconds
             except requests.RequestException as e:
                 log.error("network: %s", e)
+                self.sink.write("error", live=self.cfg.live, message=f"network: {e}")
             time.sleep(backoff)
 
 
@@ -267,16 +348,24 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
     cfg = Config.from_env(live=args.live)
     client = KalshiClient(cfg)
+    sink = SupabaseSink(
+        os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL"),
+        os.environ.get("SUPABASE_SERVICE_ROLE_KEY"),
+    )
+    log.info("telemetry %s", "on" if sink.enabled else "off (set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY)")
 
+    balance = None
     if cfg.live:
         if not cfg.key_id:
             log.error("KALSHI_KEY_ID is required for --live")
             return 2
-        log.info("auth ok, balance $%.2f", client.balance_cents() / 100)
+        balance = client.balance_cents()
+        log.info("auth ok, balance $%.2f", balance / 100)
     else:
         log.info("dry run: no orders will be placed (pass --live to trade)")
+    sink.write("status", live=cfg.live, balance_cents=balance, message="started")
 
-    bot = Bot(cfg, client)
+    bot = Bot(cfg, client, sink)
     if args.once:
         try:
             bot.tick()

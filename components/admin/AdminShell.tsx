@@ -30,6 +30,7 @@ const NAV = [
   { href: '/admin/research', label: 'Research' },
   { href: '/admin/proverbs', label: 'Proverbs' },
   { href: '/admin/log', label: 'Oracle log' },
+  { href: '/admin/kalshi', label: 'Kalshi' },
 ];
 
 interface AdminShellProps {
