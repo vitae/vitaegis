@@ -39,3 +39,30 @@ Do not wait for preview approval or leave PRs in draft.
 
 Read `docs/vitae.md`. Its ElevenLabs configuration is pushed by `npm run vitae:sync`;
 never edit the agent in the ElevenLabs dashboard, edit the repo and sync.
+
+## Project guidelines for Claude Code
+
+### Commands & checks
+
+- **Build:** `npm run build`
+- **Test:** `npm test` (Vitest; `npm run test:e2e` for Playwright)
+- **Lint/Typecheck:** `npm run lint && npm run typecheck`
+- **Rule:** ALWAYS run typecheck and tests before claiming a task is complete.
+  Fix any regressions immediately.
+
+### Architecture & conventions
+
+- **Stack:** Next.js 16 (App Router), React 18, TypeScript, Tailwind CSS,
+  Supabase, Stripe, Vitest, Playwright. Deployed on Vercel.
+- **Design patterns:** Functional React components in `components/`, App Router
+  pages in `app/`, Route Handlers in `app/api/*/route.ts`, shared logic in `lib/`.
+- **Style rules:**
+  - Keep changes minimal, modular, and focused.
+  - Do NOT add unnecessary code comments unless explicitly asked.
+  - Follow existing idioms in the codebase.
+
+### Workflow rules
+
+- **Git:** NEVER automatically commit changes unless explicitly told to do so.
+- **File management:** Always prefer editing existing files over creating new
+  ones. Never commit or log secrets/API keys.
