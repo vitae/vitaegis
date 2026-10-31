@@ -28,7 +28,7 @@ export async function GET() {
   ]);
   const failed = [newest, ticks, orders, settles, errors].find((r) => r.error);
   if (failed?.error) {
-    const missing = failed.error.code === '42P01';
+    const missing = failed.error.code === '42P01' || /kalshi_events/.test(failed.error.message);
     return NextResponse.json(
       {
         error: missing

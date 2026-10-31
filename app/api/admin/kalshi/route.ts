@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     .limit(400);
 
   if (error) {
-    const missing = error.code === '42P01';
+    const missing = error.code === '42P01' || /kalshi_events/.test(error.message);
     return NextResponse.json(
       {
         error: missing
