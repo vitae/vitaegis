@@ -1,0 +1,4 @@
+# Python dependencies for scripts/kalshi_bot.py:  pip install -r scripts/kalshi-requirements.txt
+requests>=2.32
+cryptography>=42
+websockets>=13

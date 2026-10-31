@@ -1,0 +1,52 @@
+/* Styles Tailwind does not express cleanly for /kalshi. */
+
+.numeric {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.pulse {
+  animation: pulse 1.6s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.7);
+}
+
+/* The BTC price flashes the direction of its last move, like an exchange ticker. */
+.up {
+  animation: flashUp 700ms ease-out;
+}
+.down {
+  animation: flashDown 700ms ease-out;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes flashUp {
+  0% {
+    color: #00ff00;
+  }
+  100% {
+    color: #ffffff;
+  }
+}
+@keyframes flashDown {
+  0% {
+    color: #ff0000;
+  }
+  100% {
+    color: #ffffff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .up,
+  .down {
+    animation: none;
+  }
+}

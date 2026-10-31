@@ -33,7 +33,7 @@ export default function KalshiDesk() {
   return (
     <AdminShell
       title="Kalshi bot"
-      blurb="The KXBTC15M contrarian bot, read from its own log. It refreshes every 15 seconds; the bot polls Kalshi on the same cadence from wherever it runs."
+      blurb="The KXBTC15M contrarian bot, read from its own log, with the account balance. The public live view is at /kalshi."
       probe="/api/admin/kalshi"
     >
       {(key) => <Body adminKey={key} />}
@@ -240,6 +240,16 @@ function OrderRow({ o }: { o: KalshiEvent }) {
           .filter(Boolean)
           .join(' · ')}
       </span>
+      {o.result && (
+        <span
+          className={o.pnl_cents != null && o.pnl_cents >= 0 ? 'text-vitae-green' : 'text-red-400'}
+        >
+          {o.result.toUpperCase()} ·{' '}
+          {o.pnl_cents == null
+            ? '—'
+            : `${o.pnl_cents < 0 ? '−' : '+'}$${(Math.abs(o.pnl_cents) / 100).toFixed(2)}`}
+        </span>
+      )}
       <span className="ml-auto text-xs text-white/40">{hst(o.created_at)}</span>
     </article>
   );
