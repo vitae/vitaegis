@@ -33,6 +33,11 @@ create index if not exists trade_executions_window_idx on trade_executions (wind
 alter table market_windows enable row level security;
 alter table trade_executions enable row level security;
 
+-- The bot's setup created an allow-everything policy for every role, which let the
+-- website's anon key write. The bot writes with the service-role key, which bypasses RLS.
+drop policy if exists "Allow server insert/select" on market_windows;
+drop policy if exists "Allow server insert/select" on trade_executions;
+
 drop policy if exists "public read market_windows" on market_windows;
 create policy "public read market_windows" on market_windows
   for select to anon, authenticated using (true);
