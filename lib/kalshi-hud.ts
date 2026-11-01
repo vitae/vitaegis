@@ -1,7 +1,8 @@
-// Types and pure logic for the /kalshi HUD, which reads the Rust bot's three tables
-// (market_windows, bot_signals, trade_executions) over Supabase Realtime and polls the bot's
-// HTTP status endpoint through /api/bot-status. Schema: supabase/migrations/*_kalshi_hud.sql;
-// contract: docs/kalshi-hud.md. Money is in integer cents, probabilities are 0–1.
+// Types and pure logic for the /kalshi HUD. The Rust bot (C:\vitaegis\kalshirust, running as
+// kalshi-bot.service on the Lightsail VPS) writes two tables in the site's Supabase project:
+// market_windows and trade_executions. The HUD reads them with the anon key over Realtime
+// and polls the bot's optional HTTP status endpoint through /api/bot-status.
+// Contract: docs/kalshi-hud.md. Money on screen is in cents; probabilities are 0–1.
 
 export type Side = 'yes' | 'no';
 
@@ -9,9 +10,9 @@ export type Side = 'yes' | 'no';
 export const MAX_BETS_PER_WINDOW = 2;
 export const GBM_WEIGHT = 0.4;
 export const ML_WEIGHT = 0.6;
-/** $10 unit the bot bets, for Kelly sizing on the matrix. */
+/** Stake unit for Kelly sizing on the matrix. */
 export const BET_CENTS = 1000;
-/** A signal or status older than this means the bot has gone quiet. */
+/** A status older than this means the bot has gone quiet. */
 export const STALE_MS = 90_000;
 /** Annualized BTC volatility assumed until the spot feed has enough history. */
 export const DEFAULT_SIGMA = 0.6;
@@ -19,80 +20,46 @@ const SECONDS_PER_YEAR = 365.25 * 86_400;
 const DAY_MS = 86_400_000;
 
 // ---------------------------------------------------------------------------
-// Rows
+// Rows, exactly as the bot's tables define them
 // ---------------------------------------------------------------------------
-/** One 15-minute contract window. */
+/** market_windows: one row per 15-minute contract. */
 export interface MarketWindow {
-  id: string;
-  created_at: string;
-  updated_at: string | null;
+  id: number;
   ticker: string;
-  event_ticker: string | null;
-  title: string | null;
-  open_time: string | null;
+  strike: number | null;
   close_time: string;
-  strike: number | null;
-  strike_type: string | null;
-  spot_open: number | null;
-  spot_close: number | null;
-  status: 'open' | 'closed' | 'settled';
-  result: Side | null;
-  bets_placed: number;
-  max_bets: number;
-  pnl_cents: number | null;
+  bets_placed: number | null;
+  status: string | null;
+  created_at: string | null;
+  /** Optional columns the bot may add; the HUD uses them when present. */
+  result?: string | null;
+  title?: string | null;
+  open_time?: string | null;
 }
 
-/** One inference tick: both models against the book. */
-export interface BotSignal {
-  id: string;
-  created_at: string;
-  ticker: string;
-  spot: number | null;
-  strike: number | null;
-  seconds_to_close: number | null;
-  yes_ask_cents: number | null;
-  no_ask_cents: number | null;
-  gbm_prob: number | null;
-  ml_prob: number | null;
-  composite_prob: number | null;
-  market_prob: number | null;
-  edge: number | null;
-  kelly: number | null;
-  side: Side | null;
-  action: 'buy' | 'hold' | 'skip' | null;
-  reason: string | null;
-  kalshi_ws: boolean | null;
-  live: boolean;
-}
-
-export type ExecutionStatus = 'filled' | 'partial' | 'rejected' | 'dry_run' | 'settled';
-
-/** One order the bot sent. */
+/** trade_executions: one row per order the bot sent. */
 export interface TradeExecution {
-  id: string;
-  created_at: string;
-  ticker: string;
-  window_id: string | null;
-  bet_number: number;
-  side: Side;
-  price_cents: number;
-  count: number;
-  fill_count: number | null;
-  avg_fill_cents: number | null;
-  fee_cents: number | null;
-  stake_cents: number | null;
-  latency_ms: number | null;
-  order_id: string | null;
-  client_order_id: string | null;
-  status: ExecutionStatus;
-  result: Side | null;
-  pnl_cents: number | null;
-  settled_at: string | null;
-  live: boolean;
+  id: number;
+  window_ticker: string;
+  /** YES or NO (any casing; "buy_yes" style values are read too). */
+  action: string;
+  /** Contract price: dollars (0.35) or cents (35); both are read. */
+  price: number;
+  /** Contracts bought. */
+  size: number;
+  /** The bot's blended model P(YES), 0–1 (or 0–100). */
+  blended_prob: number;
+  executed_at: string | null;
+  /** Optional columns the bot may add; the HUD uses them when present. */
+  gbm_prob?: number | null;
+  ml_prob?: number | null;
+  result?: string | null;
+  pnl?: number | null;
+  fee?: number | null;
+  latency_ms?: number | null;
 }
 
-/** What the Rust bot's HTTP status endpoint returns (GET $KALSHI_BOT_URL/status). Every
- *  field is optional on the wire; /api/bot-status normalizes it. */
+/** What the bot's HTTP status endpoint returns (GET $KALSHI_BOT_URL/status), all optional. */
 export interface BotStatusWire {
   ok?: boolean;
   version?: string;
@@ -150,6 +117,61 @@ export interface MarketInfo {
 }
 
 // ---------------------------------------------------------------------------
+// Reading the bot's values
+// ---------------------------------------------------------------------------
+/** "YES", "no", "buy_yes", "BUY NO" → the side bought. */
+export function sideOf(action: string | null | undefined): Side | null {
+  const a = (action ?? '').toLowerCase();
+  if (/\byes\b|_yes$|^yes/.test(a)) return 'yes';
+  if (/\bno\b|_no$|^no/.test(a)) return 'no';
+  return null;
+}
+
+/** 0.35 or 35 → 35¢. */
+export const priceCents = (price: number | null | undefined) =>
+  price == null ? null : Math.round(price > 1 ? price : price * 100);
+
+/** 0.62 or 62 → 0.62. */
+export const probOf = (p: number | null | undefined) =>
+  p == null ? null : Math.min(1, Math.max(0, p > 1 ? p / 100 : p));
+
+/** YES, NO, settled_yes, won_no… → the market's result. */
+export function resultOf(value: string | null | undefined): Side | null {
+  const v = (value ?? '').toLowerCase();
+  if (/yes/.test(v)) return 'yes';
+  if (/\bno\b|_no$|^no$/.test(v)) return 'no';
+  return null;
+}
+
+export const executedAt = (x: TradeExecution) => x.executed_at ?? '';
+
+/** Contracts × entry price, in cents. */
+export const stakeCents = (x: TradeExecution) => Math.round(x.size * (priceCents(x.price) ?? 0));
+
+/** Kalshi's taker fee, ceil(0.07 · C · P · (1 − P)) dollars, in cents. */
+export function kalshiFeeCents(contracts: number, cents: number): number {
+  const p = cents / 100;
+  return Math.ceil(7 * contracts * p * (1 - p) - 1e-9);
+}
+
+/** Realized P&L after fees once the window has a result; null while it is open. */
+export function executionPnlCents(x: TradeExecution, windowResult: Side | null): number | null {
+  if (x.pnl != null) return Math.round(x.pnl > 100 || x.pnl < -100 ? x.pnl : x.pnl * 100);
+  const result = resultOf(x.result) ?? windowResult;
+  const side = sideOf(x.action);
+  const entry = priceCents(x.price);
+  if (!result || !side || entry == null) return null;
+  const fee =
+    x.fee != null ? Math.round(x.fee > 1 ? x.fee : x.fee * 100) : kalshiFeeCents(x.size, entry);
+  return side === result
+    ? Math.round(x.size * (100 - entry)) - fee
+    : -Math.round(x.size * entry) - fee;
+}
+
+export const windowResult = (w: MarketWindow | null | undefined): Side | null =>
+  w ? (resultOf(w.result) ?? resultOf(w.status)) : null;
+
+// ---------------------------------------------------------------------------
 // Window execution tracker (max 2 bets per window)
 // ---------------------------------------------------------------------------
 export interface WindowTracker {
@@ -164,33 +186,32 @@ export interface WindowTracker {
   pnlCents: number | null;
 }
 
-export const stakeOf = (x: TradeExecution) =>
-  x.stake_cents ?? (x.fill_count ?? x.count) * (x.avg_fill_cents ?? x.price_cents);
-
-/** Entries in the current window against the per-window cap. Counts rows that reached the
- *  exchange; rejected orders do not use a slot. */
+/** Entries in the current window against the per-window cap. `reported` is the bot's own
+ *  count (market_windows.bets_placed or the status endpoint) when it is higher. */
 export function windowTracker(
   executions: TradeExecution[],
   ticker: string | null,
+  reported: (number | null | undefined)[] = [],
+  result: Side | null = null,
   max = MAX_BETS_PER_WINDOW,
 ): WindowTracker {
   const own = ticker
     ? executions
-        .filter((x) => x.ticker === ticker)
-        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .filter((x) => x.window_ticker === ticker)
+        .sort((a, b) => executedAt(a).localeCompare(executedAt(b)))
     : [];
-  const counted = own.filter((x) => x.status !== 'rejected');
-  const settled = own.filter((x) => x.pnl_cents != null);
+  const count = Math.max(own.length, ...reported.map((n) => n ?? 0));
+  const pnls = own.map((x) => executionPnlCents(x, result)).filter((p): p is number => p != null);
   return {
     ticker,
-    placed: Math.min(counted.length, max),
+    placed: Math.min(count, max),
     max,
-    remaining: Math.max(0, max - counted.length),
-    locked: counted.length >= max,
-    slots: Array.from({ length: max }, (_, i) => (i < counted.length ? 'filled' : 'open')),
+    remaining: Math.max(0, max - count),
+    locked: count >= max,
+    slots: Array.from({ length: max }, (_, i) => (i < count ? 'filled' : 'open')),
     executions: own,
-    stakeCents: counted.reduce((a, x) => a + stakeOf(x), 0),
-    pnlCents: settled.length ? settled.reduce((a, x) => a + (x.pnl_cents ?? 0), 0) : null,
+    stakeCents: own.reduce((a, x) => a + stakeCents(x), 0),
+    pnlCents: pnls.length ? pnls.reduce((a, b) => a + b, 0) : null,
   };
 }
 
@@ -199,7 +220,7 @@ export const slotGlyphs = (slots: WindowTracker['slots']) =>
   `[${slots.map((s) => (s === 'filled' ? '●' : '◯')).join(' ')}]`;
 
 // ---------------------------------------------------------------------------
-// Performance from executions
+// Performance from executions and window results
 // ---------------------------------------------------------------------------
 export interface Performance {
   trades: number;
@@ -212,36 +233,45 @@ export interface Performance {
   stakedCents: number;
   openStakeCents: number;
   roi: number | null;
+  avgEntryCents: number | null;
+  avgBlended: number | null;
   equity: { at: string; cumCents: number }[];
 }
 
-export function performance(executions: TradeExecution[], now = Date.now()): Performance {
-  const real = executions.filter((x) => x.status !== 'rejected');
-  const settled = real
-    .filter((x) => x.pnl_cents != null)
-    .sort((a, b) => (a.settled_at ?? a.created_at).localeCompare(b.settled_at ?? b.created_at));
-  const wins = settled.filter((x) => (x.pnl_cents ?? 0) > 0).length;
-  const net = settled.reduce((a, x) => a + (x.pnl_cents ?? 0), 0);
+export function performance(
+  executions: TradeExecution[],
+  windows: MarketWindow[],
+  now = Date.now(),
+): Performance {
+  const byTicker = new Map(windows.map((w) => [w.ticker, w]));
+  const rows = executions
+    .map((x) => ({ x, pnl: executionPnlCents(x, windowResult(byTicker.get(x.window_ticker))) }))
+    .sort((a, b) => executedAt(a.x).localeCompare(executedAt(b.x)));
+  const settled = rows.filter((r) => r.pnl != null) as { x: TradeExecution; pnl: number }[];
+  const wins = settled.filter((r) => r.pnl > 0).length;
+  const net = settled.reduce((a, r) => a + r.pnl, 0);
   const since = now - DAY_MS;
-  const net24h = settled
-    .filter((x) => Date.parse(x.settled_at ?? x.created_at) >= since)
-    .reduce((a, x) => a + (x.pnl_cents ?? 0), 0);
-  const staked = settled.reduce((a, x) => a + stakeOf(x), 0);
+  const staked = settled.reduce((a, r) => a + stakeCents(r.x), 0);
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
   let cum = 0;
   return {
-    trades: real.length,
+    trades: rows.length,
     settled: settled.length,
-    open: real.length - settled.length,
+    open: rows.length - settled.length,
     wins,
     winRate: settled.length ? wins / settled.length : null,
     netCents: net,
-    net24hCents: net24h,
+    net24hCents: settled
+      .filter((r) => Date.parse(executedAt(r.x)) >= since)
+      .reduce((a, r) => a + r.pnl, 0),
     stakedCents: staked,
-    openStakeCents: real.filter((x) => x.pnl_cents == null).reduce((a, x) => a + stakeOf(x), 0),
+    openStakeCents: rows.filter((r) => r.pnl == null).reduce((a, r) => a + stakeCents(r.x), 0),
     roi: staked > 0 ? net / staked : null,
-    equity: settled.map((x) => {
-      cum += x.pnl_cents ?? 0;
-      return { at: x.settled_at ?? x.created_at, cumCents: cum };
+    avgEntryCents: mean(rows.map((r) => priceCents(r.x.price) ?? 0)),
+    avgBlended: mean(rows.map((r) => probOf(r.x.blended_prob) ?? 0)),
+    equity: settled.map((r) => {
+      cum += r.pnl;
+      return { at: executedAt(r.x), cumCents: cum };
     }),
   };
 }
@@ -304,9 +334,9 @@ export function gbmProbability(
   return above ? pAbove : 1 - pAbove;
 }
 
-/** Kelly fraction for a binary contract bought at `priceCents` that pays 100¢ with chance q. */
-export function kellyFraction(q: number, priceCents: number): number {
-  const p = priceCents / 100;
+/** Kelly fraction for a binary contract bought at `cents` that pays 100¢ with chance q. */
+export function kellyFraction(q: number, cents: number): number {
+  const p = cents / 100;
   if (p <= 0 || p >= 1) return 0;
   return Math.max(0, (q - p) / (1 - p));
 }
@@ -314,7 +344,7 @@ export function kellyFraction(q: number, priceCents: number): number {
 export interface ModelMatrix {
   gbm: number | null;
   ml: number | null;
-  /** 0.4·GBM + 0.6·ML, or GBM alone while the ML score is absent. */
+  /** The bot's blended_prob when it has traded this window; else 0.4·GBM + 0.6·ML, else GBM. */
   composite: number | null;
   /** Kalshi's implied P(YES): the YES/NO mid when both sides quote, else the YES ask. */
   market: number | null;
@@ -324,8 +354,8 @@ export interface ModelMatrix {
   edgeCents: number | null;
   kelly: number | null;
   kellyStakeCents: number | null;
-  /** Where the scores came from: the bot's signal row, or the HUD's own GBM fallback. */
-  source: 'bot' | 'local';
+  /** Where the composite came from. */
+  source: 'bot' | 'blend' | 'gbm' | 'none';
   sigma: number;
   sigmaSource: 'realized' | 'default';
 }
@@ -333,15 +363,24 @@ export interface ModelMatrix {
 export function modelMatrix(input: {
   gbm: number | null;
   ml?: number | null;
+  blended?: number | null;
   yesAsk: number | null;
   noAsk: number | null;
   sigma?: number | null;
   betCents?: number;
-  source?: 'bot' | 'local';
 }): ModelMatrix {
   const ml = input.ml ?? null;
+  const blended = input.blended ?? null;
   const composite =
-    input.gbm == null ? null : ml == null ? input.gbm : GBM_WEIGHT * input.gbm + ML_WEIGHT * ml;
+    blended != null
+      ? blended
+      : input.gbm == null
+        ? null
+        : ml == null
+          ? input.gbm
+          : GBM_WEIGHT * input.gbm + ML_WEIGHT * ml;
+  const source: ModelMatrix['source'] =
+    blended != null ? 'bot' : composite == null ? 'none' : ml == null ? 'gbm' : 'blend';
   const yes = input.yesAsk;
   const no = input.noAsk;
   const market =
@@ -376,47 +415,10 @@ export function modelMatrix(input: {
     edgeCents,
     kelly,
     kellyStakeCents: kelly == null ? null : Math.round(Math.min(1, kelly) * bet),
-    source: input.source ?? 'local',
+    source,
     sigma: input.sigma ?? DEFAULT_SIGMA,
     sigmaSource: input.sigma == null ? 'default' : 'realized',
   };
-}
-
-/** The matrix from the bot's own signal row (both models), or the HUD's GBM when it has none. */
-export function matrixFromSignal(
-  signal: BotSignal | null,
-  local: {
-    spot: number | null;
-    strike: number | null;
-    secondsToClose: number | null;
-    sigma: number | null;
-    strikeType: StrikeType | null;
-  },
-  book: { yesAsk: number | null; noAsk: number | null },
-): ModelMatrix {
-  if (signal && signal.gbm_prob != null) {
-    return modelMatrix({
-      gbm: signal.gbm_prob,
-      ml: signal.ml_prob,
-      yesAsk: book.yesAsk ?? signal.yes_ask_cents,
-      noAsk: book.noAsk ?? signal.no_ask_cents,
-      source: 'bot',
-    });
-  }
-  return modelMatrix({
-    gbm: gbmProbability(
-      local.spot,
-      local.strike,
-      local.secondsToClose,
-      local.sigma ?? DEFAULT_SIGMA,
-      local.strikeType,
-    ),
-    ml: signal?.ml_prob ?? null,
-    yesAsk: book.yesAsk,
-    noAsk: book.noAsk,
-    sigma: local.sigma,
-    source: 'local',
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -443,42 +445,29 @@ export const signedDollars = (cents: number | null | undefined) =>
 export const pct = (x: number | null | undefined, digits = 0) =>
   x == null ? '—' : `${(x * 100).toFixed(digits)}%`;
 
-export function signalLine(s: BotSignal): LogLine {
-  const act = s.action
-    ? ` ${s.action.toUpperCase()}${s.side ? ` ${s.side.toUpperCase()}` : ''}`
-    : '';
-  return {
-    id: `sig-${s.id}`,
-    at: s.created_at,
-    level: s.action === 'buy' ? 'ok' : 'tick',
-    text: `signal ${shortTicker(s.ticker)} gbm=${pct(s.gbm_prob)} ml=${pct(s.ml_prob)} mkt=${pct(s.market_prob)} edge=${s.edge == null ? '—' : (s.edge * 100).toFixed(1) + '¢'}${act}${s.reason ? ` (${s.reason})` : ''}`,
-  };
-}
-
-export function executionLine(x: TradeExecution): LogLine {
-  const mode = x.live ? 'LIVE' : 'DRY';
-  const fill = x.fill_count != null ? `fill ${x.fill_count}/${x.count}` : x.status;
-  const settled =
-    x.pnl_cents != null
-      ? ` → ${x.pnl_cents > 0 ? 'WON' : 'LOST'} ${signedDollars(x.pnl_cents)}`
-      : '';
+export function executionLine(x: TradeExecution, result: Side | null = null, n?: number): LogLine {
+  const pnl = executionPnlCents(x, result);
+  const side = sideOf(x.action)?.toUpperCase() ?? x.action;
+  const settled = pnl != null ? ` → ${pnl > 0 ? 'WON' : 'LOST'} ${signedDollars(pnl)}` : '';
   return {
     id: `exec-${x.id}`,
-    at: x.created_at,
-    level:
-      x.status === 'rejected' ? 'err' : x.pnl_cents != null && x.pnl_cents <= 0 ? 'warn' : 'ok',
-    text: `[${mode}] BET ${x.bet_number}/${MAX_BETS_PER_WINDOW} BUY ${x.side.toUpperCase()} ${shortTicker(x.ticker)} ${x.count}×${x.price_cents}¢ ${fill}${x.avg_fill_cents != null ? ` @${x.avg_fill_cents}¢` : ''} fee ${dollars(x.fee_cents)}${x.latency_ms != null ? ` ${x.latency_ms}ms` : ''}${settled}`,
+    at: executedAt(x),
+    level: pnl != null && pnl <= 0 ? 'warn' : 'ok',
+    text: `BET${n ? ` ${n}/${MAX_BETS_PER_WINDOW}` : ''} BUY ${side} ${shortTicker(x.window_ticker)} ${x.size}×${priceCents(x.price)}¢ stake ${dollars(stakeCents(x))} p=${pct(probOf(x.blended_prob), 1)}${x.latency_ms != null ? ` ${x.latency_ms}ms` : ''}${settled}`,
   };
 }
 
 export function windowLine(w: MarketWindow): LogLine {
-  const text =
-    w.status === 'settled'
-      ? `window ${shortTicker(w.ticker)} settled ${w.result?.toUpperCase() ?? '?'}${w.pnl_cents != null ? ` ${signedDollars(w.pnl_cents)}` : ''}`
-      : w.status === 'closed'
-        ? `window ${shortTicker(w.ticker)} closed, awaiting result`
-        : `window ${shortTicker(w.ticker)} open${w.strike != null ? ` strike $${w.strike.toLocaleString('en-US')}` : ''} ${w.bets_placed}/${w.max_bets} bets`;
-  return { id: `win-${w.id}-${w.status}`, at: w.updated_at ?? w.created_at, level: 'info', text };
+  const result = windowResult(w);
+  const text = result
+    ? `window ${shortTicker(w.ticker)} settled ${result.toUpperCase()}`
+    : `window ${shortTicker(w.ticker)} ${w.status ?? 'open'}${w.strike != null ? ` strike $${w.strike.toLocaleString('en-US')}` : ''} ${w.bets_placed ?? 0}/${MAX_BETS_PER_WINDOW} bets`;
+  return {
+    id: `win-${w.id}-${w.status ?? ''}`,
+    at: w.created_at ?? w.close_time,
+    level: 'info',
+    text,
+  };
 }
 
 /** Normalizes a log entry from the bot's status endpoint. */
@@ -498,7 +487,7 @@ export function wireLogLine(l: { ts?: string; level?: string; msg?: string }, i:
   };
 }
 
-/** Merges lines by id, newest last, capped. */
+/** Merges lines by id, oldest first, capped. */
 export function mergeLines(existing: LogLine[], incoming: LogLine[], keep = 300): LogLine[] {
   const byId = new Map(existing.map((l) => [l.id, l]));
   for (const l of incoming) byId.set(l.id, l);
@@ -506,7 +495,7 @@ export function mergeLines(existing: LogLine[], incoming: LogLine[], keep = 300)
 }
 
 // ---------------------------------------------------------------------------
-// Status normalization
+// Status normalization and window selection
 // ---------------------------------------------------------------------------
 export function normalizeWire(
   w: BotStatusWire,

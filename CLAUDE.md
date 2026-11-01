@@ -37,9 +37,9 @@ Do not wait for preview approval or leave PRs in draft.
 
 ## The Kalshi HUD lives in `app/kalshi/` and `lib/kalshi-hud.ts`
 
-Read `docs/kalshi-hud.md`. It reads the Rust bot's `market_windows`, `bot_signals` and
-`trade_executions` tables over Supabase Realtime and polls `/api/bot-status` for the VPS.
-Change the contract in the migration, the doc and `lib/kalshi-hud.ts` together.
+Read `docs/kalshi-hud.md`. It reads the Rust bot's `market_windows` and `trade_executions`
+tables over Supabase Realtime and polls `/api/bot-status` for the VPS. The bot owns the
+table shapes; change `lib/kalshi-hud.ts`, the migration and the doc together.
 
 ## Vitae, the voice bot, lives in `lib/vitae/` and `components/vitae/`
 

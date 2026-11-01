@@ -1,11 +1,14 @@
 'use client';
 
-// /kalshi: the trading HUD. Rows stream from the Rust bot's tables over Supabase Realtime,
-// the VPS is polled through /api/bot-status, and BTC/USD streams from Coinbase. Every
-// number on screen comes from one of those three; nothing here is simulated.
+// /kalshi: the trading HUD. market_windows and trade_executions stream from the Rust bot's
+// Supabase tables over Realtime, the VPS is polled through /api/bot-status, and BTC/USD
+// streams from Coinbase. Every number on screen comes from one of those three.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { Activity, Database, Lock, Radio, Server, ShieldCheck, TerminalSquare } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import {
   GBM_WEIGHT,
   MAX_BETS_PER_WINDOW,
@@ -13,21 +16,27 @@ import {
   currentWindow,
   dollars,
   executionLine,
+  executionPnlCents,
   isFresh,
-  matrixFromSignal,
   mergeLines,
+  modelMatrix,
+  gbmProbability,
   pct,
   performance,
+  priceCents,
+  probOf,
   realizedVol,
   shortTicker,
-  signalLine,
+  sideOf,
   signedDollars,
   slotGlyphs,
-  stakeOf,
+  stakeCents,
   windowLine,
+  windowResult,
   windowTracker,
   type LogLine,
   type ModelMatrix,
+  type Side,
   type TradeExecution,
 } from '@/lib/kalshi-hud';
 import { useCoinbaseTicker } from './useFeeds';
@@ -37,7 +46,7 @@ import styles from './hud.module.css';
 const WINDOW_MS = 15 * 60_000;
 
 const hms = (iso: string | number | null | undefined) =>
-  iso == null
+  iso == null || iso === ''
     ? '--:--:--'
     : new Date(iso).toLocaleTimeString('en-US', {
         timeZone: 'Pacific/Honolulu',
@@ -75,19 +84,15 @@ export default function KalshiHud() {
     return () => window.clearInterval(t);
   }, []);
 
-  // Which window we are in: the bot's word first, then its freshest signal, then the table.
-  const freshSignal = rows.signals.find((s) => isFresh(s.created_at, now)) ?? null;
+  // Which window we are in: the bot's word first, then the newest open row, then Kalshi.
   const ticker =
     status?.ticker ??
-    freshSignal?.ticker ??
     currentWindow(rows.windows, null, now)?.ticker ??
     status?.market?.ticker ??
     null;
   const win = currentWindow(rows.windows, ticker, now);
   const market =
     status?.market && (!ticker || status.market.ticker === ticker) ? status.market : null;
-  const signal = rows.signals.find((s) => s.ticker === ticker) ?? null;
-  const signalFresh = signal != null && isFresh(signal.created_at, now);
 
   const closeTime = win?.close_time ?? status?.closeTime ?? market?.closeTime ?? null;
   const closeMs = closeTime ? Date.parse(closeTime) : null;
@@ -104,57 +109,64 @@ export default function KalshiHud() {
       ? Math.min(1, Math.max(0, (now - openMs) / (closeMs - openMs)))
       : 0;
 
-  const strike = win?.strike ?? status?.strike ?? market?.strike ?? signal?.strike ?? null;
-  const strikeType = win?.strike_type ?? market?.strikeType ?? null;
-  const spot = btc.price ?? status?.spot ?? (signalFresh ? signal?.spot : null) ?? null;
-  const yesAsk = (signalFresh ? signal?.yes_ask_cents : null) ?? market?.yesAsk ?? null;
-  const noAsk = (signalFresh ? signal?.no_ask_cents : null) ?? market?.noAsk ?? null;
+  const strike = win?.strike ?? status?.strike ?? market?.strike ?? null;
+  const strikeType = market?.strikeType ?? null;
+  const spot = btc.price ?? status?.spot ?? null;
+  const yesAsk = market?.yesAsk ?? null;
+  const noAsk = market?.noAsk ?? null;
+  const result: Side | null = windowResult(win);
+
+  const tracker = useMemo(
+    () => windowTracker(rows.executions, ticker, [win?.bets_placed, status?.betsInWindow], result),
+    [rows.executions, ticker, win?.bets_placed, status?.betsInWindow, result],
+  );
+  const latest = tracker.executions[tracker.executions.length - 1] ?? null;
 
   const sigma = useMemo(() => realizedVol(btc.history), [btc.history]);
   const matrix = useMemo(
     () =>
-      matrixFromSignal(
-        signalFresh ? signal : null,
-        { spot, strike, secondsToClose: secondsLeft, sigma, strikeType },
-        { yesAsk, noAsk },
-      ),
-    [signal, signalFresh, spot, strike, secondsLeft, sigma, strikeType, yesAsk, noAsk],
+      modelMatrix({
+        gbm:
+          latest?.gbm_prob != null
+            ? probOf(latest.gbm_prob)
+            : gbmProbability(spot, strike, secondsLeft, sigma ?? undefined, strikeType),
+        ml: latest?.ml_prob != null ? probOf(latest.ml_prob) : null,
+        blended: latest ? probOf(latest.blended_prob) : null,
+        yesAsk,
+        noAsk,
+        sigma,
+      }),
+    [latest, spot, strike, secondsLeft, sigma, strikeType, yesAsk, noAsk],
   );
 
-  const tracker = useMemo(() => windowTracker(rows.executions, ticker), [rows.executions, ticker]);
-  const placed = Math.min(
-    MAX_BETS_PER_WINDOW,
-    Math.max(tracker.placed, win?.bets_placed ?? 0, status?.betsInWindow ?? 0),
+  const perf = useMemo(
+    () => performance(rows.executions, rows.windows, now),
+    [rows.executions, rows.windows, now],
   );
-  const slots = Array.from({ length: MAX_BETS_PER_WINDOW }, (_, i) =>
-    i < placed ? ('filled' as const) : ('open' as const),
-  );
-  const locked = placed >= MAX_BETS_PER_WINDOW;
 
-  const perf = useMemo(() => performance(rows.executions, now), [rows.executions, now]);
-
-  const lines = useMemo(
-    () =>
-      mergeLines(
-        [],
-        [
-          ...rows.executions.slice(0, 60).map(executionLine),
-          ...rows.signals.slice(0, 40).map(signalLine),
-          ...rows.windows.slice(0, 10).map(windowLine),
-          ...(status?.logs ?? []),
-        ],
-      ),
-    [rows.executions, rows.signals, rows.windows, status?.logs],
-  );
+  const lines = useMemo(() => {
+    const byTicker = new Map(rows.windows.map((w) => [w.ticker, w]));
+    return mergeLines(
+      [],
+      [
+        ...rows.executions
+          .slice(0, 80)
+          .map((x) => executionLine(x, windowResult(byTicker.get(x.window_ticker)))),
+        ...rows.windows.slice(0, 12).map(windowLine),
+        ...(status?.logs ?? []),
+      ],
+    );
+  }, [rows.executions, rows.windows, status?.logs]);
 
   // Connection pills.
-  const botHeartbeat = signalFresh || isFresh(rows.signals[0]?.created_at, now);
+  const botHeartbeat =
+    isFresh(latest?.executed_at, now) || isFresh(rows.windows[0]?.created_at, now);
   const vpsOn = status?.vps.ok === true || (!status?.vps.configured && botHeartbeat);
   const vpsLabel =
     status?.vps.ok === true
       ? `ONLINE${status.vps.latencyMs != null ? ` ${status.vps.latencyMs}ms` : ''}`
       : status?.vps.configured
-        ? status.vps.detail?.toUpperCase() === 'TIMEOUT'
+        ? status.vps.detail === 'timeout'
           ? 'TIMEOUT'
           : 'OFFLINE'
         : botHeartbeat
@@ -163,36 +175,36 @@ export default function KalshiHud() {
             ? 'NO PROBE'
             : 'PROBING';
   const rtOn = rows.realtime === 'connected';
-  const rtLabel =
-    rows.realtime === 'connected'
-      ? 'CONNECTED'
-      : rows.realtime === 'connecting'
-        ? 'CONNECTING'
-        : rows.realtime === 'error'
-          ? 'ERROR'
-          : 'UNCONFIGURED';
-  const wssOn = status?.kalshiWs === true || (signalFresh && signal?.kalshi_ws === true);
-  const wssLabel = wssOn
-    ? 'ACTIVE'
-    : status?.kalshiWs === false || signal?.kalshi_ws === false
-      ? 'DOWN'
-      : 'UNKNOWN';
-  const live = status?.live ?? (signalFresh ? signal?.live : null) ?? null;
+  const rtLabel = {
+    connected: 'CONNECTED',
+    connecting: 'CONNECTING',
+    error: 'ERROR',
+    unconfigured: 'UNCONFIGURED',
+  }[rows.realtime];
+  const wssOn = status?.kalshiWs === true;
+  const wssLabel = wssOn ? 'ACTIVE' : status?.kalshiWs === false ? 'DOWN' : 'UNKNOWN';
+  const live = status?.live ?? null;
 
   return (
-    <main className={`${styles.hud} min-h-screen w-full text-left text-white`}>
+    <main className={cn(styles.hud, 'min-h-screen w-full text-left text-white')}>
       <div className="mx-auto max-w-7xl px-4 pb-28 pt-5 sm:px-6">
         {/* Header & system status bar ------------------------------------- */}
         <header
-          className={`${styles.panel} flex flex-wrap items-center justify-between gap-3 px-4 py-3`}
+          className={cn(
+            styles.panel,
+            'flex flex-wrap items-center justify-between gap-3 px-4 py-3',
+          )}
         >
           <div className="flex items-baseline gap-3">
             <span
-              className={`${styles.glowGreen} text-lg font-bold tracking-[0.3em] text-vitae-green`}
+              className={cn(
+                styles.glowGreen,
+                'text-lg font-bold tracking-[0.3em] text-vitae-green',
+              )}
             >
               VITAEGIS
             </span>
-            <span className={`${styles.glowMagenta} text-xs tracking-[0.3em] text-vitae-magenta`}>
+            <span className={cn(styles.glowMagenta, 'text-xs tracking-[0.3em] text-vitae-magenta')}>
               KALSHI HUD
             </span>
             <span className="hidden text-[11px] text-white/40 sm:inline">
@@ -200,13 +212,14 @@ export default function KalshiHud() {
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-[11px]">
-            <Pill on={vpsOn} label={`LIGHTSAIL VPS: ${vpsLabel}`} pulse={vpsOn} />
-            <Pill on={rtOn} label={`SUPABASE REALTIME: ${rtLabel}`} pulse={rtOn} />
-            <Pill on={wssOn} label={`KALSHI WSS: ${wssLabel}`} />
+            <Pill on={vpsOn} label={`LIGHTSAIL VPS: ${vpsLabel}`} pulse={vpsOn} icon={Server} />
+            <Pill on={rtOn} label={`SUPABASE REALTIME: ${rtLabel}`} pulse={rtOn} icon={Database} />
+            <Pill on={wssOn} label={`KALSHI WSS: ${wssLabel}`} icon={Radio} />
             <Pill
               on={live === true}
               label={live == null ? 'MODE: —' : live ? 'MODE: LIVE' : 'MODE: DRY RUN'}
               magenta={live === true}
+              icon={ShieldCheck}
             />
             <span className="text-white/40">{now ? hms(now) : '--:--:--'} HST</span>
           </div>
@@ -220,17 +233,21 @@ export default function KalshiHud() {
 
         <div className="mt-4 grid gap-4 lg:grid-cols-12">
           {/* Active ticker card ------------------------------------------- */}
-          <section className={`${styles.panel} p-4 lg:col-span-8`} aria-labelledby="ticker-heading">
+          <section
+            className={cn(styles.panel, 'p-4 lg:col-span-8')}
+            aria-labelledby="ticker-heading"
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 id="ticker-heading" className="text-[11px] tracking-[0.3em] text-white/50">
                   ACTIVE 15-MIN TICKER
                 </h2>
-                <p className={`${styles.glowWhite} mt-1 text-xl font-semibold sm:text-2xl`}>
+                <p className={cn(styles.glowWhite, 'mt-1 text-xl font-semibold sm:text-2xl')}>
                   {ticker ?? 'KXBTC15M · waiting for a window'}
                 </p>
                 <p className="mt-1 text-xs text-white/50">
                   {win?.title ?? market?.title ?? 'BTC price up in next 15 mins?'}
+                  {win?.status ? ` · ${win.status}` : ''}
                 </p>
               </div>
               <Countdown seconds={secondsLeft} progress={progress} closeTime={closeTime} />
@@ -240,7 +257,11 @@ export default function KalshiHud() {
               <Stat
                 label="BTC SPOT"
                 value={usd(spot)}
-                valueClass={`${styles.glowWhite} ${btc.dir === 'up' ? styles.up : btc.dir === 'down' ? styles.down : ''}`}
+                valueClass={cn(
+                  styles.glowWhite,
+                  btc.dir === 'up' && styles.up,
+                  btc.dir === 'down' && styles.down,
+                )}
                 sub={
                   btc.connected
                     ? 'Coinbase · live'
@@ -252,7 +273,13 @@ export default function KalshiHud() {
               <Stat
                 label="STRIKE"
                 value={usd(strike)}
-                sub={strikeType ? strikeType.replace(/_/g, ' ') : 'Kalshi floor strike'}
+                sub={
+                  win
+                    ? 'market_windows.strike'
+                    : strikeType
+                      ? strikeType.replace(/_/g, ' ')
+                      : 'Kalshi floor strike'
+                }
               />
               <Stat
                 label="SPOT − STRIKE"
@@ -264,8 +291,8 @@ export default function KalshiHud() {
                 valueClass={
                   spot != null && strike != null
                     ? spot >= strike
-                      ? `${styles.glowGreen} text-vitae-green`
-                      : `${styles.glowMagenta} text-vitae-magenta`
+                      ? cn(styles.glowGreen, 'text-vitae-green')
+                      : cn(styles.glowMagenta, 'text-vitae-magenta')
                     : ''
                 }
                 sub={
@@ -283,57 +310,74 @@ export default function KalshiHud() {
             </div>
             <p className="mt-3 text-[10px] text-white/35">
               {market
-                ? `vol ${market.volume?.toLocaleString('en-US') ?? '—'} · OI ${market.openInterest?.toLocaleString('en-US') ?? '—'} · `
-                : ''}
-              book:{' '}
-              {signalFresh
-                ? `bot signal ${hms(signal?.created_at)}`
-                : market
-                  ? 'Kalshi public API'
-                  : '—'}
+                ? `vol ${market.volume?.toLocaleString('en-US') ?? '—'} · OI ${market.openInterest?.toLocaleString('en-US') ?? '—'} · book: Kalshi public API`
+                : 'book: —'}
             </p>
           </section>
 
           {/* Window execution tracker ------------------------------------- */}
           <section
-            className={`${styles.panel} ${locked ? styles.panelLocked : placed > 0 ? styles.panelHot : ''} p-4 lg:col-span-4`}
+            className={cn(
+              styles.panel,
+              tracker.locked ? styles.panelLocked : tracker.placed > 0 && styles.panelHot,
+              'p-4 lg:col-span-4',
+            )}
             aria-labelledby="tracker-heading"
           >
-            <h2 id="tracker-heading" className="text-[11px] tracking-[0.3em] text-white/50">
+            <h2
+              id="tracker-heading"
+              className="flex items-center gap-2 text-[11px] tracking-[0.3em] text-white/50"
+            >
+              {tracker.locked ? (
+                <Lock className="h-3.5 w-3.5 text-vitae-magenta" aria-hidden />
+              ) : (
+                <Activity className="h-3.5 w-3.5 text-vitae-green" aria-hidden />
+              )}
               WINDOW EXECUTION TRACKER
             </h2>
             <div className="mt-3 flex items-center justify-between">
               <div
                 className="flex items-center gap-3"
-                aria-label={`${placed} of ${MAX_BETS_PER_WINDOW} bets placed`}
+                aria-label={`${tracker.placed} of ${MAX_BETS_PER_WINDOW} bets placed`}
               >
-                {slots.map((s, i) => (
+                {tracker.slots.map((s, i) => (
                   <span
                     key={i}
-                    className={`${styles.slot} ${s === 'filled' ? (locked ? styles.slotLocked : styles.slotFilled) : ''} text-sm`}
+                    className={cn(
+                      styles.slot,
+                      s === 'filled' && (tracker.locked ? styles.slotLocked : styles.slotFilled),
+                      'text-sm',
+                    )}
                   >
                     {s === 'filled' ? '●' : '◯'}
                   </span>
                 ))}
               </div>
               <span
-                className={`text-2xl font-bold ${locked ? `${styles.glowMagenta} text-vitae-magenta` : `${styles.glowGreen} text-vitae-green`}`}
+                className={cn(
+                  'text-2xl font-bold',
+                  tracker.locked
+                    ? cn(styles.glowMagenta, 'text-vitae-magenta')
+                    : cn(styles.glowGreen, 'text-vitae-green'),
+                )}
               >
-                {slotGlyphs(slots)}
+                {slotGlyphs(tracker.slots)}
               </span>
             </div>
-            <p className={`mt-3 text-sm ${locked ? 'text-vitae-magenta' : 'text-white'}`}>
-              {locked
+            <p className={cn('mt-3 text-sm', tracker.locked ? 'text-vitae-magenta' : 'text-white')}>
+              {tracker.locked
                 ? `CIRCUIT BREAKER · ${MAX_BETS_PER_WINDOW}/${MAX_BETS_PER_WINDOW} BETS · LOCKED UNTIL NEXT WINDOW`
-                : `BET ${placed + 1}/${MAX_BETS_PER_WINDOW} ARMED · ${MAX_BETS_PER_WINDOW - placed} SLOT${MAX_BETS_PER_WINDOW - placed === 1 ? '' : 'S'} OPEN`}
+                : `BET ${tracker.placed + 1}/${MAX_BETS_PER_WINDOW} ARMED · ${tracker.remaining} SLOT${tracker.remaining === 1 ? '' : 'S'} OPEN`}
             </p>
             <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
               <dt className="text-white/45">Window</dt>
               <dd className="text-right">{shortTicker(ticker)}</dd>
+              <dt className="text-white/45">bets_placed</dt>
+              <dd className="text-right">{win?.bets_placed ?? '—'}</dd>
               <dt className="text-white/45">Staked</dt>
               <dd className="text-right">{dollars(tracker.stakeCents)}</dd>
               <dt className="text-white/45">Window P&amp;L</dt>
-              <dd className={`text-right ${tone(tracker.pnlCents)}`}>
+              <dd className={cn('text-right', tone(tracker.pnlCents))}>
                 {tracker.pnlCents == null ? 'OPEN' : signedDollars(tracker.pnlCents)}
               </dd>
               <dt className="text-white/45">Closes</dt>
@@ -342,22 +386,32 @@ export default function KalshiHud() {
           </section>
 
           {/* Model probability matrix ------------------------------------- */}
-          <section className={`${styles.panel} p-4 lg:col-span-4`} aria-labelledby="matrix-heading">
+          <section
+            className={cn(styles.panel, 'p-4 lg:col-span-4')}
+            aria-labelledby="matrix-heading"
+          >
             <div className="flex items-baseline justify-between">
               <h2 id="matrix-heading" className="text-[11px] tracking-[0.3em] text-white/50">
                 MODEL PROBABILITY MATRIX
               </h2>
               <span
-                className={`text-[10px] ${matrix.source === 'bot' ? 'text-vitae-magenta' : 'text-white/40'}`}
+                className={cn(
+                  'text-[10px]',
+                  matrix.source === 'bot' ? 'text-vitae-magenta' : 'text-white/40',
+                )}
               >
-                {matrix.source === 'bot' ? 'BOT INFERENCE' : 'HUD GBM FALLBACK'}
+                {matrix.source === 'bot'
+                  ? `BOT BLEND · ${hms(latest?.executed_at)}`
+                  : matrix.source === 'blend'
+                    ? 'HUD 40/60 BLEND'
+                    : 'HUD GBM ESTIMATE'}
               </span>
             </div>
             <Matrix m={matrix} />
           </section>
 
           {/* Live window trade log ---------------------------------------- */}
-          <section className={`${styles.panel} p-4 lg:col-span-8`} aria-labelledby="log-heading">
+          <section className={cn(styles.panel, 'p-4 lg:col-span-8')} aria-labelledby="log-heading">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 id="log-heading" className="text-[11px] tracking-[0.3em] text-white/50">
                 LIVE WINDOW TRADE LOG
@@ -367,23 +421,26 @@ export default function KalshiHud() {
                 {tracker.executions.length === 1 ? '' : 'S'} THIS WINDOW
               </span>
             </div>
-            <TradeTable executions={tracker.executions} />
+            <TradeTable executions={tracker.executions} result={result} />
           </section>
 
           {/* P&L strip ----------------------------------------------------- */}
           <section
-            className={`${styles.panel} grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:col-span-12 lg:grid-cols-6`}
+            className={cn(
+              styles.panel,
+              'grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:col-span-12 lg:grid-cols-6',
+            )}
             aria-label="Performance"
           >
             <Stat
               label="NET P&L"
-              value={signedDollars(perf.netCents)}
-              valueClass={`${tone(perf.netCents)} ${perf.netCents > 0 ? styles.glowGreen : ''}`}
-              sub={`${perf.settled} settled`}
+              value={perf.settled ? signedDollars(perf.netCents) : '—'}
+              valueClass={cn(tone(perf.netCents), perf.netCents > 0 && styles.glowGreen)}
+              sub={perf.settled ? `${perf.settled} settled` : 'awaiting window results'}
             />
             <Stat
               label="24H P&L"
-              value={signedDollars(perf.net24hCents)}
+              value={perf.settled ? signedDollars(perf.net24hCents) : '—'}
               valueClass={tone(perf.net24hCents)}
               sub="settled today"
             />
@@ -393,10 +450,9 @@ export default function KalshiHud() {
               sub={`${perf.wins}/${perf.settled} wins`}
             />
             <Stat
-              label="ROI"
-              value={pct(perf.roi, 1)}
-              valueClass={tone(perf.roi)}
-              sub={`on ${dollars(perf.stakedCents)} staked`}
+              label="TRADES"
+              value={String(perf.trades)}
+              sub={`avg entry ${cents(perf.avgEntryCents == null ? null : Math.round(perf.avgEntryCents))} · p ${pct(perf.avgBlended)}`}
             />
             <Stat
               label="OPEN EXPOSURE"
@@ -418,9 +474,9 @@ export default function KalshiHud() {
         </div>
 
         <p className="mt-6 text-[10px] text-white/35">
-          Rows: Rust bot → Supabase (market_windows, bot_signals, trade_executions) → Realtime →
-          this page. VPS: /api/bot-status → kalshi-bot.service. BTC/USD: Coinbase Exchange, direct.
-          Times are Honolulu. Models: GBM {Math.round(GBM_WEIGHT * 100)}% + XGBoost{' '}
+          Rows: Rust bot → Supabase (market_windows, trade_executions) → Realtime → this page. VPS:
+          /api/bot-status → kalshi-bot.service. BTC/USD: Coinbase Exchange, direct. Times are
+          Honolulu. Models: GBM {Math.round(GBM_WEIGHT * 100)}% + XGBoost{' '}
           {Math.round(ML_WEIGHT * 100)}%.{' '}
           <Link href="/kalshi/analytics" className="underline">
             Legacy analytics
@@ -440,21 +496,32 @@ function Pill({
   label,
   pulse,
   magenta,
+  icon: IconEl,
 }: {
   on: boolean;
   label: string;
   pulse?: boolean;
   magenta?: boolean;
+  icon: LucideIcon;
 }) {
-  const color = magenta
-    ? 'border-vitae-magenta/60 text-vitae-magenta'
-    : 'border-vitae-green/60 text-vitae-green';
   return (
     <span
-      className={`inline-flex items-center gap-2 border px-2 py-1 tracking-[0.15em] ${on ? color : 'border-white/15 text-white/45'}`}
+      className={cn(
+        'inline-flex items-center gap-2 border px-2 py-1 tracking-[0.15em]',
+        on
+          ? magenta
+            ? 'border-vitae-magenta/60 text-vitae-magenta'
+            : 'border-vitae-green/60 text-vitae-green'
+          : 'border-white/15 text-white/45',
+      )}
     >
+      <IconEl className="h-3 w-3" aria-hidden />
       <span
-        className={`inline-block h-1.5 w-1.5 rounded-full ${on ? (magenta ? styles.dotMagenta : styles.dotGreen) : styles.dotOff} ${pulse && on ? styles.pulse : ''}`}
+        className={cn(
+          'inline-block h-1.5 w-1.5 rounded-full',
+          on ? (magenta ? styles.dotMagenta : styles.dotGreen) : styles.dotOff,
+          pulse && on && styles.pulse,
+        )}
         aria-hidden
       />
       [{label}]
@@ -466,7 +533,7 @@ function Stat({
   label,
   value,
   sub,
-  valueClass = '',
+  valueClass,
 }: {
   label: string;
   value: string;
@@ -476,7 +543,7 @@ function Stat({
   return (
     <div className="border border-white/10 bg-white/[0.02] px-3 py-2">
       <p className="text-[10px] tracking-[0.25em] text-white/45">{label}</p>
-      <p className={`mt-1 truncate text-xl font-semibold ${valueClass}`}>{value}</p>
+      <p className={cn('mt-1 truncate text-xl font-semibold', valueClass)}>{value}</p>
       {sub && <p className="mt-0.5 truncate text-[10px] text-white/40">{sub}</p>}
     </div>
   );
@@ -496,14 +563,21 @@ function Countdown({
     <div className="min-w-[160px] text-right">
       <p className="text-[10px] tracking-[0.25em] text-white/45">EXPIRES IN</p>
       <p
-        className={`text-3xl font-bold ${seconds == null ? 'text-white/40' : urgent ? `${styles.glowMagenta} text-vitae-magenta` : `${styles.glowGreen} text-vitae-green`}`}
+        className={cn(
+          'text-3xl font-bold',
+          seconds == null
+            ? 'text-white/40'
+            : urgent
+              ? cn(styles.glowMagenta, 'text-vitae-magenta')
+              : cn(styles.glowGreen, 'text-vitae-green'),
+        )}
         aria-live="polite"
       >
         {seconds == null ? '--:--' : mmss(seconds)}
       </p>
-      <div className={`${styles.bar} mt-1`} aria-hidden>
+      <div className={cn(styles.bar, 'mt-1')} aria-hidden>
         <div
-          className={`${styles.barFill} ${urgent ? styles.barMagenta : styles.barGreen}`}
+          className={cn(styles.barFill, urgent ? styles.barMagenta : styles.barGreen)}
           style={{ width: `${progress * 100}%` }}
         />
       </div>
@@ -515,12 +589,20 @@ function Countdown({
 function Quote({ side, ask, hot }: { side: 'YES' | 'NO'; ask: number | null; hot: boolean }) {
   return (
     <div
-      className={`border px-3 py-2 ${hot ? `border-vitae-green bg-vitae-green/10 ${styles.panelHot}` : 'border-white/10 bg-white/[0.02]'}`}
+      className={cn(
+        'border px-3 py-2',
+        hot
+          ? cn('border-vitae-green bg-vitae-green/10', styles.panelHot)
+          : 'border-white/10 bg-white/[0.02]',
+      )}
       aria-label={`${side} ask ${cents(ask)}`}
     >
       <p className="text-[10px] tracking-[0.25em] text-white/45">{side} ASK</p>
       <p
-        className={`mt-1 text-2xl font-semibold ${hot ? `${styles.glowGreen} text-vitae-green` : ''}`}
+        className={cn(
+          'mt-1 text-2xl font-semibold',
+          hot && cn(styles.glowGreen, 'text-vitae-green'),
+        )}
       >
         {cents(ask)}
       </p>
@@ -607,29 +689,27 @@ function Bar({
   mark?: number | null;
   note?: string;
 }) {
-  const fill =
-    color === 'green' ? styles.barGreen : color === 'magenta' ? styles.barMagenta : styles.barWhite;
-  const text =
-    color === 'green'
-      ? 'text-vitae-green'
-      : color === 'magenta'
-        ? 'text-vitae-magenta'
-        : 'text-white';
+  const fill = { green: styles.barGreen, magenta: styles.barMagenta, white: styles.barWhite }[
+    color
+  ];
+  const text = { green: 'text-vitae-green', magenta: 'text-vitae-magenta', white: 'text-white' }[
+    color
+  ];
   return (
     <div>
       <div className="flex justify-between text-xs">
         <span className="text-white/60">{label}</span>
-        <span className={`${text} font-semibold`}>{value == null ? '—' : pct(value, 1)}</span>
+        <span className={cn(text, 'font-semibold')}>{value == null ? '—' : pct(value, 1)}</span>
       </div>
       <div
-        className={`${styles.bar} mt-1`}
+        className={cn(styles.bar, 'mt-1')}
         role="meter"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={value == null ? undefined : Math.round(value * 100)}
         aria-label={label}
       >
-        <div className={`${styles.barFill} ${fill}`} style={{ width: `${(value ?? 0) * 100}%` }} />
+        <div className={cn(styles.barFill, fill)} style={{ width: `${(value ?? 0) * 100}%` }} />
         {mark != null && (
           <div
             className={styles.barMark}
@@ -658,9 +738,9 @@ function Matrix({ m }: { m: ModelMatrix }) {
         color="white"
         mark={m.market}
         note={
-          m.source === 'local'
-            ? `σ ${m.sigma.toFixed(2)} ${m.sigmaSource === 'realized' ? 'realized' : 'default'}`
-            : undefined
+          m.source === 'bot' && m.gbm != null
+            ? 'HUD estimate; the bot stores the blend'
+            : `σ ${m.sigma.toFixed(2)} ${m.sigmaSource}`
         }
       />
       <Bar
@@ -668,29 +748,34 @@ function Matrix({ m }: { m: ModelMatrix }) {
         value={m.ml}
         color="magenta"
         mark={m.market}
-        note={m.ml == null ? 'no ML score in the latest signal' : undefined}
+        note={m.ml == null ? 'not stored separately (trade_executions.ml_prob)' : undefined}
       />
       <Bar
-        label="COMPOSITE P(YES)"
+        label={m.source === 'bot' ? 'BLENDED P(YES) · BOT' : 'COMPOSITE P(YES)'}
         value={m.composite}
         color="green"
         mark={m.market}
         note={m.market != null ? `white mark: Kalshi implied ${pct(m.market, 1)}` : undefined}
       />
       <div
-        className={`border px-3 py-2 text-center text-sm font-bold tracking-[0.2em] ${m.side ? `border-vitae-green text-vitae-green ${styles.glowGreen}` : 'border-white/15 text-white/50'}`}
+        className={cn(
+          'border px-3 py-2 text-center text-sm font-bold tracking-[0.2em]',
+          m.side
+            ? cn('border-vitae-green text-vitae-green', styles.glowGreen)
+            : 'border-white/15 text-white/50',
+        )}
       >
         {signalText}
       </div>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
         <dt className="text-white/45">Edge vs market</dt>
-        <dd className={`text-right ${tone(m.edge)}`}>
+        <dd className={cn('text-right', tone(m.edge))}>
           {m.edge == null
             ? '—'
             : `${m.edge >= 0 ? '+' : '−'}${(Math.abs(m.edge) * 100).toFixed(1)}pts`}
         </dd>
         <dt className="text-white/45">Kelly fraction</dt>
-        <dd className={`text-right ${m.kelly ? `text-vitae-magenta ${styles.glowMagenta}` : ''}`}>
+        <dd className={cn('text-right', m.kelly && cn('text-vitae-magenta', styles.glowMagenta))}>
           {m.kelly == null ? '—' : pct(m.kelly, 1)}
         </dd>
         <dt className="text-white/45">Kelly stake / $10</dt>
@@ -700,7 +785,7 @@ function Matrix({ m }: { m: ModelMatrix }) {
   );
 }
 
-function TradeTable({ executions }: { executions: TradeExecution[] }) {
+function TradeTable({ executions, result }: { executions: TradeExecution[]; result: Side | null }) {
   if (!executions.length) {
     return (
       <p className="mt-6 text-center text-xs text-white/40">
@@ -717,58 +802,60 @@ function TradeTable({ executions }: { executions: TradeExecution[] }) {
           <tr className="border-b border-white/10 text-left">
             <th className={th}>BET</th>
             <th className={th}>TIME</th>
-            <th className={th}>SIDE</th>
-            <th className={`${th} text-right`}>ENTRY</th>
-            <th className={`${th} text-right`}>QTY</th>
-            <th className={`${th} text-right`}>STAKE</th>
-            <th className={`${th} text-right`}>FEE</th>
-            <th className={`${th} text-right`}>LAT</th>
+            <th className={th}>TICKER</th>
+            <th className={th}>ACTION</th>
+            <th className={cn(th, 'text-right')}>ASK</th>
+            <th className={cn(th, 'text-right')}>SIZE</th>
+            <th className={cn(th, 'text-right')}>STAKE</th>
+            <th className={cn(th, 'text-right')}>MODEL P</th>
             <th className={th}>STATUS</th>
-            <th className={`${th} text-right`}>P&amp;L</th>
+            <th className={cn(th, 'text-right')}>P&amp;L</th>
           </tr>
         </thead>
         <tbody>
-          {executions.map((x) => {
-            const won = x.pnl_cents != null ? x.pnl_cents > 0 : null;
-            const state =
-              x.status === 'rejected'
-                ? 'REJECTED'
-                : x.pnl_cents != null
-                  ? won
-                    ? 'WON'
-                    : 'LOST'
-                  : x.status === 'dry_run'
-                    ? 'DRY RUN'
-                    : x.status === 'partial'
-                      ? 'PARTIAL'
-                      : 'OPEN';
+          {executions.map((x, i) => {
+            const pnl = executionPnlCents(x, result);
+            const side = sideOf(x.action);
+            const state = pnl != null ? (pnl > 0 ? 'WON' : 'LOST') : 'OPEN';
             return (
               <tr key={x.id} className="border-b border-white/5">
                 <td className="px-2 py-1.5 text-vitae-green">
-                  {x.bet_number}/{MAX_BETS_PER_WINDOW}
+                  {Math.min(i + 1, MAX_BETS_PER_WINDOW)}/{MAX_BETS_PER_WINDOW}
                 </td>
-                <td className="px-2 py-1.5 text-white/70">{hms(x.created_at)}</td>
+                <td className="px-2 py-1.5 text-white/70">{hms(x.executed_at)}</td>
+                <td className="px-2 py-1.5 text-white/70">{shortTicker(x.window_ticker)}</td>
                 <td
-                  className={`px-2 py-1.5 font-semibold ${x.side === 'yes' ? 'text-vitae-green' : 'text-vitae-magenta'}`}
+                  className={cn(
+                    'px-2 py-1.5 font-semibold',
+                    side === 'yes'
+                      ? 'text-vitae-green'
+                      : side === 'no'
+                        ? 'text-vitae-magenta'
+                        : 'text-white',
+                  )}
                 >
-                  {x.side.toUpperCase()}
+                  {side ? side.toUpperCase() : x.action}
                 </td>
-                <td className="px-2 py-1.5 text-right">
-                  {cents(x.avg_fill_cents ?? x.price_cents)}
-                </td>
-                <td className="px-2 py-1.5 text-right">{x.fill_count ?? x.count}</td>
-                <td className="px-2 py-1.5 text-right">{dollars(stakeOf(x))}</td>
-                <td className="px-2 py-1.5 text-right text-white/60">{dollars(x.fee_cents)}</td>
-                <td className="px-2 py-1.5 text-right text-white/60">
-                  {x.latency_ms != null ? `${x.latency_ms}ms` : '—'}
+                <td className="px-2 py-1.5 text-right">{cents(priceCents(x.price))}</td>
+                <td className="px-2 py-1.5 text-right">{x.size}</td>
+                <td className="px-2 py-1.5 text-right">{dollars(stakeCents(x))}</td>
+                <td className="px-2 py-1.5 text-right text-vitae-magenta">
+                  {pct(probOf(x.blended_prob), 1)}
                 </td>
                 <td
-                  className={`px-2 py-1.5 ${state === 'WON' ? 'text-vitae-green' : state === 'LOST' || state === 'REJECTED' ? 'text-vitae-magenta' : 'text-white/70'}`}
+                  className={cn(
+                    'px-2 py-1.5',
+                    state === 'WON'
+                      ? 'text-vitae-green'
+                      : state === 'LOST'
+                        ? 'text-vitae-magenta'
+                        : 'text-white/70',
+                  )}
                 >
                   {state}
                 </td>
-                <td className={`px-2 py-1.5 text-right font-semibold ${tone(x.pnl_cents)}`}>
-                  {x.pnl_cents == null ? '—' : signedDollars(x.pnl_cents)}
+                <td className={cn('px-2 py-1.5 text-right font-semibold', tone(pnl))}>
+                  {pnl == null ? '—' : signedDollars(pnl)}
                 </td>
               </tr>
             );
@@ -791,27 +878,31 @@ function Terminal({ lines, connected }: { lines: LogLine[]; connected: boolean }
     setFollow(el.scrollHeight - el.scrollTop - el.clientHeight < 24);
   };
   const color = (l: LogLine['level']) =>
-    l === 'ok'
-      ? 'text-vitae-green'
-      : l === 'err'
-        ? 'text-vitae-magenta'
-        : l === 'warn'
-          ? 'text-vitae-magenta/80'
-          : l === 'tick'
-            ? 'text-white/40'
-            : 'text-white/75';
+    ({
+      ok: 'text-vitae-green',
+      err: 'text-vitae-magenta',
+      warn: 'text-vitae-magenta/80',
+      tick: 'text-white/40',
+      info: 'text-white/75',
+    })[l];
   return (
-    <div className={`${styles.terminal} p-3`}>
+    <div className={cn(styles.terminal, 'p-3')}>
       <div className="flex items-center justify-between text-[10px] tracking-[0.25em] text-white/45">
-        <span id="terminal-heading">LIVE TERMINAL LOG STREAM</span>
+        <span id="terminal-heading" className="flex items-center gap-2">
+          <TerminalSquare className="h-3.5 w-3.5 text-vitae-green" aria-hidden />
+          LIVE TERMINAL LOG STREAM
+        </span>
         <span className="flex items-center gap-3">
-          <span className={connected ? 'text-vitae-green' : ''}>
+          <span className={cn(connected && 'text-vitae-green')}>
             {connected ? '● STREAMING' : '○ SNAPSHOT'}
           </span>
           <button
             type="button"
             onClick={() => setFollow((f) => !f)}
-            className={`border px-2 py-0.5 ${follow ? 'border-vitae-green/60 text-vitae-green' : 'border-white/20 text-white/50'}`}
+            className={cn(
+              'border px-2 py-0.5',
+              follow ? 'border-vitae-green/60 text-vitae-green' : 'border-white/20 text-white/50',
+            )}
           >
             FOLLOW {follow ? 'ON' : 'OFF'}
           </button>
@@ -826,7 +917,7 @@ function Terminal({ lines, connected }: { lines: LogLine[]; connected: boolean }
       >
         {lines.length === 0 && <p className="text-white/40">$ waiting for the bot…</p>}
         {lines.map((l) => (
-          <p key={l.id} className={`whitespace-pre-wrap break-words ${color(l.level)}`}>
+          <p key={l.id} className={cn('whitespace-pre-wrap break-words', color(l.level))}>
             <span className="text-white/30">{hms(l.at)}</span> {l.text}
           </p>
         ))}

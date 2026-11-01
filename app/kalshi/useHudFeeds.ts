@@ -1,37 +1,40 @@
 'use client';
 
-// The feeds behind the /kalshi HUD: the Rust bot's three tables over Supabase Realtime
-// (snapshot once, then every insert and update), and /api/bot-status polled for the VPS.
+// The feeds behind the /kalshi HUD: the Rust bot's market_windows and trade_executions over
+// Supabase Realtime (snapshot once, then every insert and update), and /api/bot-status
+// polled for the VPS.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase-browser';
-import type { BotSignal, BotStatus, MarketWindow, TradeExecution } from '@/lib/kalshi-hud';
+import type { BotStatus, MarketWindow, TradeExecution } from '@/lib/kalshi-hud';
 
 export interface HudRows {
   windows: MarketWindow[];
-  signals: BotSignal[];
   executions: TradeExecution[];
 }
 
 export type RealtimeState = 'unconfigured' | 'connecting' | 'connected' | 'error';
 
-const LIMITS = { windows: 24, signals: 80, executions: 400 };
+const LIMITS = { windows: 48, executions: 500 };
 
-function upsert<T extends { id: string }>(rows: T[], row: T, key: keyof T, limit: number): T[] {
-  const rest = rows.filter((r) => r.id !== row.id);
-  return [row, ...rest]
-    .sort((a, b) => String(b[key]).localeCompare(String(a[key])))
+function upsert<T extends { id: number }>(
+  rows: T[],
+  row: T,
+  key: (r: T) => string,
+  limit: number,
+): T[] {
+  return [row, ...rows.filter((r) => r.id !== row.id)]
+    .sort((a, b) => key(b).localeCompare(key(a)))
     .slice(0, limit);
 }
 
-/** Snapshot plus live changes for market_windows, bot_signals and trade_executions. Rows
- *  are newest first. */
+/** Snapshot plus live changes for market_windows and trade_executions, newest first. */
 export function useHudRows(): HudRows & {
   realtime: RealtimeState;
   error: string;
   reload: () => Promise<void>;
 } {
-  const [rows, setRows] = useState<HudRows>({ windows: [], signals: [], executions: [] });
+  const [rows, setRows] = useState<HudRows>({ windows: [], executions: [] });
   const [realtime, setRealtime] = useState<RealtimeState>('connecting');
   const [error, setError] = useState('');
 
@@ -42,24 +45,19 @@ export function useHudRows(): HudRows & {
       setError('Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL / ANON_KEY).');
       return;
     }
-    const [w, s, x] = await Promise.all([
+    const [w, x] = await Promise.all([
       sb
         .from('market_windows')
         .select('*')
         .order('close_time', { ascending: false })
         .limit(LIMITS.windows),
       sb
-        .from('bot_signals')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(LIMITS.signals),
-      sb
         .from('trade_executions')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('executed_at', { ascending: false, nullsFirst: false })
         .limit(LIMITS.executions),
     ]);
-    const failed = [w, s, x].find((r) => r.error);
+    const failed = [w, x].find((r) => r.error);
     if (failed?.error) {
       const missing =
         failed.error.code === '42P01' || /does not exist|schema cache/.test(failed.error.message);
@@ -73,7 +71,6 @@ export function useHudRows(): HudRows & {
     setError('');
     setRows({
       windows: (w.data ?? []) as MarketWindow[],
-      signals: (s.data ?? []) as BotSignal[],
       executions: (x.data ?? []) as TradeExecution[],
     });
   }, []);
@@ -92,18 +89,7 @@ export function useHudRows(): HudRows & {
           'id' in row &&
           setRows((r) => ({
             ...r,
-            windows: upsert(r.windows, row as MarketWindow, 'close_time', LIMITS.windows),
-          })),
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'bot_signals' },
-        ({ new: row }) =>
-          row &&
-          'id' in row &&
-          setRows((r) => ({
-            ...r,
-            signals: upsert(r.signals, row as BotSignal, 'created_at', LIMITS.signals),
+            windows: upsert(r.windows, row as MarketWindow, (w) => w.close_time, LIMITS.windows),
           })),
       )
       .on(
@@ -117,7 +103,7 @@ export function useHudRows(): HudRows & {
             executions: upsert(
               r.executions,
               row as TradeExecution,
-              'created_at',
+              (x) => x.executed_at ?? '',
               LIMITS.executions,
             ),
           })),
