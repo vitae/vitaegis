@@ -1,0 +1,26 @@
+# systemd unit for the Rust bot. Install:
+#   sudo cp scripts/kalshirust/kalshi-bot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now kalshi-bot
+[Unit]
+Description=Kalshi KXBTC15M bot (Rust) with HUD status endpoint
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kalshi
+WorkingDirectory=/opt/kalshirust
+EnvironmentFile=/etc/kalshi-bot.env
+ExecStart=/opt/kalshirust/target/release/kalshirust
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=300
+StartLimitBurst=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/opt/kalshirust
+
+[Install]
+WantedBy=multi-user.target
