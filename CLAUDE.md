@@ -35,6 +35,12 @@ Push live immediately. When a change passes typecheck, lint and tests, commit
 it, push it, and merge it to `main` right away so Vercel deploys to production.
 Do not wait for preview approval or leave PRs in draft.
 
+## The Kalshi HUD lives in `app/kalshi/` and `lib/kalshi-hud.ts`
+
+Read `docs/kalshi-hud.md`. It reads the Rust bot's `market_windows`, `bot_signals` and
+`trade_executions` tables over Supabase Realtime and polls `/api/bot-status` for the VPS.
+Change the contract in the migration, the doc and `lib/kalshi-hud.ts` together.
+
 ## Vitae, the voice bot, lives in `lib/vitae/` and `components/vitae/`
 
 Read `docs/vitae.md`. Its ElevenLabs configuration is pushed by `npm run vitae:sync`;

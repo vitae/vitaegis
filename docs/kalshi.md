@@ -1,4 +1,8 @@
-# Kalshi bot
+# Kalshi bot (legacy Python bot)
+
+> The live HUD at `/kalshi` now reads the Rust bot's tables; see `docs/kalshi-hud.md`.
+> This document covers the Python bot and the `kalshi_events` board, which moved to
+> `/kalshi/analytics`.
 
 `scripts/kalshi_bot.py` trades the KXBTC15M series (15-minute Bitcoin markets). It buys
 the cheap side when the crowd leans hard the other way: YES ask at or above 72¢ makes NO
@@ -9,7 +13,7 @@ The bot never runs on Vercel. It is one always-on Python process on a small serv
 streams quotes from Kalshi's WebSocket, acts on each quote the moment it lands, and
 broadcasts every change to Supabase Realtime. Two pages read that:
 
-- **`/kalshi`** (public): the market being watched with a live YES price chart, both
+- **`/kalshi/analytics`** (public): the market being watched with a live YES price chart, both
   asks, the entry-zone meter, BTC/USD streamed from Coinbase, profitability, every trade
   in full, settled markets, and a backtest of other entry lines. No balance.
 - **`/admin/kalshi`** (admin key): the same log with the account balance.

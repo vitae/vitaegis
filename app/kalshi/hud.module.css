@@ -1,0 +1,236 @@
+/* /kalshi HUD: obsidian grid, neon green / magenta / white, monospace data. */
+
+/* globals.css puts Jost on every div and p; the HUD is monospace throughout and its
+   terminal text can be selected. */
+.hud,
+.hud * {
+  font-family:
+    var(--font-hud), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
+    'Liberation Mono', monospace;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.hud {
+  font-family:
+    var(--font-hud), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
+    'Liberation Mono', monospace;
+  font-variant-numeric: tabular-nums lining-nums;
+  background-color: #0a0a0a;
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(255, 0, 255, 0.08), transparent 55%),
+    radial-gradient(ellipse at 50% 110%, rgba(0, 255, 0, 0.06), transparent 55%),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    40px 40px,
+    40px 40px;
+}
+
+.panel {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 10, 10, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+.panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #00ff00;
+  border-left: 2px solid #00ff00;
+}
+.panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid #ff00ff;
+  border-right: 2px solid #ff00ff;
+}
+.panelHot {
+  border-color: rgba(0, 255, 0, 0.45);
+  box-shadow:
+    0 0 18px rgba(0, 255, 0, 0.18),
+    inset 0 0 24px rgba(0, 255, 0, 0.05);
+}
+.panelLocked {
+  border-color: rgba(255, 0, 255, 0.45);
+  box-shadow:
+    0 0 18px rgba(255, 0, 255, 0.18),
+    inset 0 0 24px rgba(255, 0, 255, 0.05);
+}
+
+.glowGreen {
+  text-shadow:
+    0 0 6px rgba(0, 255, 0, 0.8),
+    0 0 18px rgba(0, 255, 0, 0.4);
+}
+.glowMagenta {
+  text-shadow:
+    0 0 6px rgba(255, 0, 255, 0.8),
+    0 0 18px rgba(255, 0, 255, 0.4);
+}
+.glowWhite {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.45);
+}
+
+.bar {
+  position: relative;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  transition: width 400ms ease-out;
+}
+.barGreen {
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.35), #00ff00);
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.7);
+}
+.barMagenta {
+  background: linear-gradient(90deg, rgba(255, 0, 255, 0.35), #ff00ff);
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.7);
+}
+.barWhite {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), #ffffff);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+.barMark {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.slot {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 300ms ease-out;
+}
+.slotFilled {
+  border-color: #00ff00;
+  background: rgba(0, 255, 0, 0.18);
+  box-shadow:
+    0 0 14px rgba(0, 255, 0, 0.7),
+    inset 0 0 10px rgba(0, 255, 0, 0.5);
+}
+.slotLocked {
+  border-color: #ff00ff;
+  background: rgba(255, 0, 255, 0.18);
+  box-shadow:
+    0 0 14px rgba(255, 0, 255, 0.7),
+    inset 0 0 10px rgba(255, 0, 255, 0.5);
+}
+
+.terminal {
+  position: relative;
+  background: #050505;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+}
+.terminal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.18) 3px
+  );
+}
+.cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: #00ff00;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.9);
+  animation: blink 1s steps(2, start) infinite;
+}
+
+.pulse {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.dotGreen {
+  background: #00ff00;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.9);
+}
+.dotMagenta {
+  background: #ff00ff;
+  box-shadow: 0 0 8px rgba(255, 0, 255, 0.9);
+}
+.dotOff {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.up {
+  animation: flashUp 700ms ease-out;
+}
+.down {
+  animation: flashDown 700ms ease-out;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes flashUp {
+  0% {
+    color: #00ff00;
+  }
+  100% {
+    color: #ffffff;
+  }
+}
+@keyframes flashDown {
+  0% {
+    color: #ff00ff;
+  }
+  100% {
+    color: #ffffff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .cursor,
+  .up,
+  .down {
+    animation: none;
+  }
+  .barFill,
+  .slot {
+    transition: none;
+  }
+}
