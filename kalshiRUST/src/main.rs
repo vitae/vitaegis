@@ -24,6 +24,9 @@ const MOMENTUM_LOOKBACK_SECS: i64 = 120;
 const SETTLE_WINDOW_SECS: f64 = 90.0;
 /// Too close to settlement to get an order through.
 const SETTLE_MIN_SECS_LEFT: f64 = 4.0;
+/// A window's second settlement trade waits this long after the first, so it is a new
+/// opportunity rather than the same one at a worse price.
+const SETTLE_REENTRY_SECS: i64 = 10;
 
 /// Entry rules for one mode. NORMAL is the measured-edge default; RISK is the turbo mode
 /// the HUD's red button switches on.
@@ -80,18 +83,27 @@ struct Ctx {
     settle_min_edge_cents: f64,
     settle_min_pwin: f64,
     settle_max_price: f64,
+    /// Dollar floor on the settlement estimate's spread (feed timing + basis error).
+    settle_noise_dollars: f64,
     /// RISK mode sizes settlement trades by fractional Kelly on this bankroll.
     bankroll_dollars: f64,
     kelly_fraction: f64,
+    /// RISK mode sizes each settlement trade so a win pays about this much.
+    risk_target_profit: f64,
 }
 
-/// Dollars for a settlement trade, scaled with certainty: Kelly for a binary at price p
-/// with win probability q is (q - p) / (1 - p) of bankroll. NORMAL takes a quarter of it,
-/// RISK half, both capped by the mode's maximum and floored at $1.
-fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64, kelly_fraction: f64) -> f64 {
-    let fraction = if mode.name == "RISK" { kelly_fraction * 2.0 } else { kelly_fraction };
+/// Dollars for a settlement trade. NORMAL is a flat stake. RISK stakes enough that a win
+/// pays the target profit (stake = target * p / (1 - p)), but never more than half-Kelly
+/// on the bankroll (Kelly for a binary at price p with win probability q is
+/// (q - p) / (1 - p)) and never more than the mode's cap.
+fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64, kelly_fraction: f64, target_profit: f64) -> f64 {
+    if mode.name != "RISK" {
+        return mode.max_order_dollars;
+    }
     let f_star = ((p_win - price) / (1.0 - price)).max(0.0);
-    (fraction * bankroll * f_star).max(1.0).min(mode.max_order_dollars)
+    let half_kelly = kelly_fraction * 2.0 * bankroll * f_star;
+    let for_target = target_profit * price / (1.0 - price);
+    for_target.min(half_kelly).max(1.0).min(mode.max_order_dollars)
 }
 
 impl Ctx {
@@ -145,8 +157,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         settle_min_edge_cents: env::var("SETTLE_MIN_EDGE_CENTS").ok().and_then(|v| v.parse().ok()).unwrap_or(2.0),
         settle_min_pwin: env::var("SETTLE_MIN_PWIN").ok().and_then(|v| v.parse().ok()).unwrap_or(0.8),
         settle_max_price: env::var("SETTLE_MAX_PRICE").ok().and_then(|v| v.parse().ok()).unwrap_or(0.97),
+        settle_noise_dollars: env::var("SETTLE_NOISE_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(4.0),
         bankroll_dollars: env::var("BANKROLL_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0),
         kelly_fraction: env::var("SETTLE_KELLY_FRACTION").ok().and_then(|v| v.parse().ok()).unwrap_or(0.25),
+        risk_target_profit: env::var("RISK_TARGET_PROFIT_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(3.0),
     });
 
     {
@@ -277,10 +291,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let mut spot_rx = spot_rx;
+    let mut windows_seen: Vec<String> = Vec::new();
+    let mut last_settled = usize::MAX;
     loop {
         {
             let mut b = ctx.book.lock().await;
             b.settle(&ctx.client, ctx.rest_base, ctx.supa.as_ref()).await;
+            if !windows_seen.is_empty() && b.settled_bot_count() != last_settled {
+                last_settled = b.settled_bot_count();
+                let mut traded = 0usize;
+                let mut net = 0.0;
+                let mut pending = 0usize;
+                for w in &windows_seen {
+                    let (n, pnl) = b.window_pnl(w);
+                    if n > 0 {
+                        traded += 1;
+                    }
+                    match pnl {
+                        Some(p) => net += p,
+                        None if n > 0 => pending += 1,
+                        None => {}
+                    }
+                }
+                let per = net / windows_seen.len() as f64;
+                println!(
+                    "[WINDOWS] {} observed | {} traded | {} with trades pending | net ${:+.2} | ${:+.2} per window | ${:+.2} per day at 96 windows | target ${:.0}/window ({})",
+                    windows_seen.len(), traded, pending, net, per, per * 96.0,
+                    if ctx.mode().name == "RISK" { ctx.risk_target_profit } else { 1.0 }, ctx.mode().name
+                );
+            }
             if b.is_done() {
                 b.print_summary();
                 println!("[+] {} settled 15m trades and nothing pending. Exiting.", b.bot_limit());
@@ -297,6 +336,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match discover_active_kxbtc15m(&ctx.client, ctx.rest_base).await {
             Ok(Some((ticker, strike, close_ts))) => {
                 println!("[+] Active 15m contract: {} | strike ${:.2} | closes in {}s", ticker, strike, close_ts - chrono::Utc::now().timestamp());
+                if !windows_seen.contains(&ticker) && close_ts > chrono::Utc::now().timestamp() {
+                    windows_seen.push(ticker.clone());
+                }
                 if let Err(e) = run_window(&ctx, ticker, strike, close_ts, &mut spot_rx).await {
                     eprintln!("[!] WebSocket stream error: {}. Reconnecting in 3s...", e);
                     if let Some(s) = &ctx.supa {
@@ -371,6 +413,7 @@ async fn run_window(
     let mut yes_bid: Option<f64> = None;
     let mut bets_early = 0usize;
     let mut bets_settle = 0usize;
+    let mut last_settle_entry = 0i64;
     let mut last_status = 0i64;
     let mut last_print = 0i64;
     let mut calib: Vec<(i64, f64, f64, f64)> = Vec::new();
@@ -378,7 +421,7 @@ async fn run_window(
     let mut tick = tokio::time::interval(Duration::from_secs(1));
 
     loop {
-        let from_book = tokio::select! {
+        let from_feed = tokio::select! {
             msg = read.next() => {
                 match msg {
                     None => break,
@@ -397,6 +440,8 @@ async fn run_window(
                 }
             }
             _ = tick.tick() => false,
+            // Coinbase ticks drive the settlement engine: the book lags them by a second or more.
+            changed = spot_rx.changed() => { if changed.is_err() { break; } true },
         };
 
         let now = chrono::Utc::now().timestamp();
@@ -405,7 +450,7 @@ async fn run_window(
             break;
         }
         let last_minute = rem <= SETTLE_WINDOW_SECS;
-        if from_book && !last_minute {
+        if from_feed && !last_minute {
             continue;
         }
         let no_ask = yes_bid.map(|b| 1.0 - b);
@@ -420,7 +465,7 @@ async fn run_window(
                 let s1 = b.sigma_1s().unwrap_or(0.00005);
                 let anchor = b.anchor(chrono::Utc::now().timestamp_millis());
                 let est = match (fresh, anchor) {
-                    (true, Some(a)) => settle::estimate(&b.raw, rem, settle::FEED_LAG_SECS, a, s1, strike),
+                    (true, Some(a)) => settle::estimate(&b.raw, rem, settle::FEED_LAG_SECS, a, s1, ctx.settle_noise_dollars, strike),
                     _ => None,
                 };
                 (est, fresh, s1, anchor)
@@ -461,12 +506,13 @@ async fn run_window(
                 }
                 if let Some(edge) = edge {
                     let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
-                    if bets_settle < mode.bets_per_window && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= ctx.settle_min_edge_cents && p_win >= ctx.settle_min_pwin {
-                        let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, ctx.kelly_fraction);
+                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= ctx.settle_min_edge_cents && p_win >= ctx.settle_min_pwin {
+                        let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, ctx.kelly_fraction, ctx.risk_target_profit);
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window };
                         if count >= 1 && allowed {
                             bets_settle += 1;
+                            last_settle_entry = now;
                             let note = format!("settlement engine | {}s left | {}/60 prints known | est {:.2} ± {:.2} vs strike {:.2}", rem as i64, est.known_prints, est.mean, est.sd, strike);
                             enter(ctx, &ticker, strike, close_ts, spot, est.p_yes, est.p_yes, 0.0, edge, dollars, "BTC 15 min (last minute)", "settle", &note, 10).await;
                         }

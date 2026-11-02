@@ -103,7 +103,7 @@ impl BrtiState {
     pub fn anchor(&self, now_ms: i64) -> Option<Anchor> {
         if let (Some((t, mid)), Some(basis)) = (self.coinbase.back(), self.basis()) {
             if now_ms - t <= 2000 {
-                return Some(Anchor { price: mid + basis, age: (now_ms - t) as f64 / 1000.0, from_coinbase: true });
+                return Some(Anchor { price: mid + basis, age: ((now_ms - t) as f64 / 1000.0).max(0.0), from_coinbase: true });
             }
         }
         self.raw.last().map(|p| Anchor { price: *p, age: (now_ms as f64 / 1000.0 - self.as_of as f64).max(0.0), from_coinbase: false })
@@ -141,7 +141,7 @@ pub struct Estimate {
 /// Settlement estimate with `secs_left` to close. `raw` holds the last 60 published prints
 /// (oldest first, newest `feed_lag` seconds old). Prints of the settlement minute that are
 /// already published are known; the rest are a driftless random walk from the anchor.
-pub fn estimate(raw: &[f64], secs_left: f64, feed_lag: f64, anchor: Anchor, sigma_1s: f64, strike: f64) -> Option<Estimate> {
+pub fn estimate(raw: &[f64], secs_left: f64, feed_lag: f64, anchor: Anchor, sigma_1s: f64, noise_dollars: f64, strike: f64) -> Option<Estimate> {
     if raw.is_empty() || secs_left < -60.0 {
         return None;
     }
@@ -175,7 +175,9 @@ pub fn estimate(raw: &[f64], secs_left: f64, feed_lag: f64, anchor: Anchor, sigm
             }
         }
     }
-    let sd = sigma_1s * anchor.price * (acc / 3600.0).sqrt();
+    // Random-walk spread plus a floor for feed timing and basis error, in quadrature.
+    let sd_walk = sigma_1s * anchor.price * (acc / 3600.0).sqrt();
+    let sd = (sd_walk.powi(2) + noise_dollars.powi(2)).sqrt();
     let p_yes = if sd <= 0.0 {
         if mean >= strike { 1.0 } else { 0.0 }
     } else {
@@ -219,7 +221,7 @@ mod tests {
 
     #[test]
     fn at_close_everything_is_known() {
-        let e = estimate(&flat(60, 100.0), -FEED_LAG_SECS, FEED_LAG_SECS, anchor(100.0), 0.001, 99.0).unwrap();
+        let e = estimate(&flat(60, 100.0), -FEED_LAG_SECS, FEED_LAG_SECS, anchor(100.0), 0.001, 0.0, 99.0).unwrap();
         assert_eq!(e.known_prints, 60);
         assert!((e.mean - 100.0).abs() < 1e-9);
         assert!(e.sd < 1e-9);
@@ -229,9 +231,9 @@ mod tests {
     #[test]
     fn uncertainty_grows_with_time_left() {
         let raw = flat(60, 100.0);
-        let a = estimate(&raw, 10.0, FEED_LAG_SECS, anchor(100.0), 0.001, 100.0).unwrap();
-        let b = estimate(&raw, 40.0, FEED_LAG_SECS, anchor(100.0), 0.001, 100.0).unwrap();
-        let c = estimate(&raw, 80.0, FEED_LAG_SECS, anchor(100.0), 0.001, 100.0).unwrap();
+        let a = estimate(&raw, 10.0, FEED_LAG_SECS, anchor(100.0), 0.001, 0.0, 100.0).unwrap();
+        let b = estimate(&raw, 40.0, FEED_LAG_SECS, anchor(100.0), 0.001, 0.0, 100.0).unwrap();
+        let c = estimate(&raw, 80.0, FEED_LAG_SECS, anchor(100.0), 0.001, 0.0, 100.0).unwrap();
         assert!(a.sd < b.sd && b.sd < c.sd, "{} {} {}", a.sd, b.sd, c.sd);
         assert!(a.known_prints > b.known_prints && b.known_prints > c.known_prints);
     }
@@ -241,7 +243,7 @@ mod tests {
         // 30 settlement prints known at 110, anchor (now) at 100, 27 s left + 3 s lag = 30 unknown.
         let mut raw = flat(30, 90.0);
         raw.extend(flat(30, 110.0));
-        let e = estimate(&raw, 27.0, FEED_LAG_SECS, anchor(100.0), 0.001, 104.0).unwrap();
+        let e = estimate(&raw, 27.0, FEED_LAG_SECS, anchor(100.0), 0.001, 0.0, 104.0).unwrap();
         assert_eq!(e.known_prints, 30);
         assert!((e.mean - 105.0).abs() < 1e-9, "{}", e.mean);
         assert!(e.p_yes > 0.5);
@@ -250,8 +252,8 @@ mod tests {
     #[test]
     fn fresh_anchor_tightens_the_estimate() {
         let raw = flat(60, 100.0);
-        let stale = estimate(&raw, 20.0, FEED_LAG_SECS, Anchor { price: 100.0, age: FEED_LAG_SECS, from_coinbase: false }, 0.001, 100.0).unwrap();
-        let live = estimate(&raw, 20.0, FEED_LAG_SECS, anchor(100.0), 0.001, 100.0).unwrap();
+        let stale = estimate(&raw, 20.0, FEED_LAG_SECS, Anchor { price: 100.0, age: FEED_LAG_SECS, from_coinbase: false }, 0.001, 0.0, 100.0).unwrap();
+        let live = estimate(&raw, 20.0, FEED_LAG_SECS, anchor(100.0), 0.001, 0.0, 100.0).unwrap();
         assert!(live.sd < stale.sd, "{} {}", live.sd, stale.sd);
     }
 

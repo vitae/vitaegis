@@ -117,6 +117,22 @@ impl TradeBook {
         println!("[BOOK] {} trade {}/{} logged", src.to_uppercase(), self.count_source(src), limit);
     }
 
+    /// Bot trades on one window and their settled P&L (None while any is pending).
+    pub fn window_pnl(&self, ticker: &str) -> (usize, Option<f64>) {
+        let ts: Vec<&Trade> = self.trades.iter().filter(|t| t.source == "bot" && t.ticker == ticker).collect();
+        if ts.is_empty() {
+            return (0, None);
+        }
+        if ts.iter().any(|t| t.pnl.is_none()) {
+            return (ts.len(), None);
+        }
+        (ts.len(), Some(ts.iter().map(|t| t.pnl.unwrap_or(0.0)).sum()))
+    }
+
+    pub fn settled_bot_count(&self) -> usize {
+        self.trades.iter().filter(|t| t.source == "bot" && t.pnl.is_some()).count()
+    }
+
     pub fn pending(&self) -> usize {
         self.trades.iter().filter(|t| t.result.is_none()).count()
     }
