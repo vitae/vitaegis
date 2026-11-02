@@ -96,6 +96,11 @@ impl TradeBook {
         self.trades.iter().any(|t| t.ticker == ticker && t.result.is_none())
     }
 
+    /// Open trades on one market, so a window can hold up to its mode's allowance.
+    pub fn open_on(&self, ticker: &str) -> usize {
+        self.trades.iter().filter(|t| t.ticker == ticker && t.result.is_none()).count()
+    }
+
     pub fn open_count(&self, source: &str) -> usize {
         self.trades.iter().filter(|t| t.source == source && t.result.is_none()).count()
     }

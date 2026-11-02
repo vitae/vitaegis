@@ -80,6 +80,20 @@ struct Ctx {
     settle_min_edge_cents: f64,
     settle_min_pwin: f64,
     settle_max_price: f64,
+    /// RISK mode sizes settlement trades by fractional Kelly on this bankroll.
+    bankroll_dollars: f64,
+    kelly_fraction: f64,
+}
+
+/// Dollars for a settlement trade. NORMAL is flat; RISK scales with certainty: Kelly for a
+/// binary at price p with win probability q is (q - p) / (1 - p) of bankroll, taken at a
+/// fraction and capped by the mode.
+fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64, kelly_fraction: f64) -> f64 {
+    if mode.name != "RISK" {
+        return mode.max_order_dollars;
+    }
+    let f_star = ((p_win - price) / (1.0 - price)).max(0.0);
+    (kelly_fraction * bankroll * f_star).max(1.0).min(mode.max_order_dollars)
 }
 
 impl Ctx {
@@ -133,6 +147,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         settle_min_edge_cents: env::var("SETTLE_MIN_EDGE_CENTS").ok().and_then(|v| v.parse().ok()).unwrap_or(2.0),
         settle_min_pwin: env::var("SETTLE_MIN_PWIN").ok().and_then(|v| v.parse().ok()).unwrap_or(0.8),
         settle_max_price: env::var("SETTLE_MAX_PRICE").ok().and_then(|v| v.parse().ok()).unwrap_or(0.97),
+        bankroll_dollars: env::var("BANKROLL_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0),
+        kelly_fraction: env::var("SETTLE_KELLY_FRACTION").ok().and_then(|v| v.parse().ok()).unwrap_or(0.25),
     });
 
     {
@@ -448,12 +464,13 @@ async fn run_window(
                 if let Some(edge) = edge {
                     let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
                     if bets_settle < mode.bets_per_window && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= ctx.settle_min_edge_cents && p_win >= ctx.settle_min_pwin {
-                        let count = (mode.max_order_dollars / edge.price).floor() as u32;
-                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && !b.has_open(&ticker) };
+                        let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, ctx.kelly_fraction);
+                        let count = (dollars / edge.price).floor() as u32;
+                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window };
                         if count >= 1 && allowed {
                             bets_settle += 1;
                             let note = format!("settlement engine | {}s left | {}/60 prints known | est {:.2} ± {:.2} vs strike {:.2}", rem as i64, est.known_prints, est.mean, est.sd, strike);
-                            enter(ctx, &ticker, strike, close_ts, spot, est.p_yes, est.p_yes, 0.0, edge, mode.max_order_dollars, "BTC 15 min (last minute)", "settle", &note, 10).await;
+                            enter(ctx, &ticker, strike, close_ts, spot, est.p_yes, est.p_yes, 0.0, edge, dollars, "BTC 15 min (last minute)", "settle", &note, 10).await;
                         }
                     }
                 }
@@ -528,7 +545,7 @@ async fn run_window(
         if bets_early >= mode.bets_per_window || !in_window || edge.cents < mode.min_edge_cents {
             continue;
         }
-        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && !b.has_open(&ticker) };
+        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window };
         if !allowed || (mode.max_order_dollars / edge.price).floor() < 1.0 {
             continue;
         }
