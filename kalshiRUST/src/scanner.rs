@@ -9,9 +9,10 @@ use crate::paper::{Trade, TradeBook};
 use crate::supa::Supa;
 use crate::vol::SharedVol;
 
-/// Series swept each scan: 15-minute, hourly range, hourly above/below, daily above/below,
-/// daily range.
-const SERIES: [&str; 5] = ["KXBTC15M", "KXBTC", "KXBTCD", "BTCD", "BTC"];
+/// Series swept each scan: hourly range, hourly above/below, daily above/below, daily
+/// range. The 15-minute market belongs to the two engines in main.rs, which price it
+/// with the market blend and the settlement math; the plain GBM here would only muddy it.
+const SERIES: [&str; 4] = ["KXBTC", "KXBTCD", "BTCD", "BTC"];
 pub struct ScanConfig {
     pub min_edge_cents: f64,
     pub dollars: f64,

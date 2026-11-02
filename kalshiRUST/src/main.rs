@@ -42,7 +42,7 @@ fn mode_params(name: &str) -> ModeParams {
     if name.eq_ignore_ascii_case("RISK") {
         ModeParams {
             name: "RISK".into(),
-            max_order_dollars: f("RISK_MAX_ORDER_DOLLARS", 20.0),
+            max_order_dollars: f("RISK_MAX_ORDER_DOLLARS", 100.0),
             min_edge_cents: f("RISK_MIN_EDGE_CENTS", 1.0),
             bets_per_window: 2,
             min_secs_left: f("RISK_MIN_SECS_LEFT", 30.0),
@@ -51,7 +51,7 @@ fn mode_params(name: &str) -> ModeParams {
     } else {
         ModeParams {
             name: "NORMAL".into(),
-            max_order_dollars: f("MAX_ORDER_DOLLARS", 5.0),
+            max_order_dollars: f("MAX_ORDER_DOLLARS", 25.0),
             min_edge_cents: f("MIN_EDGE_CENTS", 2.0),
             bets_per_window: 2,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
@@ -85,15 +85,13 @@ struct Ctx {
     kelly_fraction: f64,
 }
 
-/// Dollars for a settlement trade. NORMAL is flat; RISK scales with certainty: Kelly for a
-/// binary at price p with win probability q is (q - p) / (1 - p) of bankroll, taken at a
-/// fraction and capped by the mode.
+/// Dollars for a settlement trade, scaled with certainty: Kelly for a binary at price p
+/// with win probability q is (q - p) / (1 - p) of bankroll. NORMAL takes a quarter of it,
+/// RISK half, both capped by the mode's maximum and floored at $1.
 fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64, kelly_fraction: f64) -> f64 {
-    if mode.name != "RISK" {
-        return mode.max_order_dollars;
-    }
+    let fraction = if mode.name == "RISK" { kelly_fraction * 2.0 } else { kelly_fraction };
     let f_star = ((p_win - price) / (1.0 - price)).max(0.0);
-    (kelly_fraction * bankroll * f_star).max(1.0).min(mode.max_order_dollars)
+    (fraction * bankroll * f_star).max(1.0).min(mode.max_order_dollars)
 }
 
 impl Ctx {
