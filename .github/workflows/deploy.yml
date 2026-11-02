@@ -1,0 +1,67 @@
+name: Deploy KALSHIRUST to Lightsail
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kalshiRUST/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kalshirust-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      HOST: ${{ secrets.LIGHTSAIL_HOST }}
+      REMOTE_USER: ${{ secrets.LIGHTSAIL_USER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        run: |
+          if [ -z "$HOST" ] || [ -z "$REMOTE_USER" ] || [ -z "$SSH_KEY" ]; then
+            echo "Add the LIGHTSAIL_HOST, LIGHTSAIL_USER and LIGHTSAIL_SSH_KEY repository secrets first."
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Package the source
+        run: |
+          tar --exclude=target --exclude=.git --exclude=research --exclude='.env*' --exclude='*.key' --exclude='*.pem' \
+            -czf /tmp/kalshirust.tar.gz -C kalshiRUST .
+
+      - name: Copy to the server
+        run: scp -i ~/.ssh/id_rsa /tmp/kalshirust.tar.gz "$REMOTE_USER@$HOST:/tmp/kalshirust.tar.gz"
+
+      # The live service is kalshi-bot, running /opt/kalshirust. Tests must pass before any restart,
+      # and a restart waits until it is not inside a window's last 2 minutes. Repository logs are
+      # public, so nothing here prints the bot's settings or journal.
+      - name: Test, build and restart
+        run: |
+          ssh -i ~/.ssh/id_rsa -o ServerAliveInterval=30 "$REMOTE_USER@$HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/kalshirust
+          tar -xzf /tmp/kalshirust.tar.gz
+          rm -f /tmp/kalshirust.tar.gz
+          export RUSTFLAGS='-C target-cpu=native'
+          export CARGO_BUILD_JOBS=1
+          nice -n 10 "$HOME/.cargo/bin/cargo" test --release
+          nice -n 10 "$HOME/.cargo/bin/cargo" build --release
+          chmod +x target/release/kalshi_btc_bot
+          while [ $(( 900 - $(date +%s) % 900 )) -lt 120 ]; do sleep 5; done
+          sudo systemctl restart kalshi-bot
+          sleep 10
+          systemctl is-active kalshi-bot
+          REMOTE

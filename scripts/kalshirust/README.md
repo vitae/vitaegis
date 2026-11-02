@@ -129,3 +129,13 @@ From this PC, with the Lightsail key file and the instance's public IP:
 user, secrets 600), installs `kalshi-bot.service` and `kalshirust-supervisor.service`, and
 starts both. After that the RUN / STOP buttons control the VPS. Re-run the same command
 to ship updates. Stop any supervisor on the PC so only one host answers the HUD.
+
+## Automatic deploys
+
+`.github/workflows/deploy.yml` deploys on any push to `main` that changes `kalshiRUST/`, and can be run by hand from the Actions tab. It runs the tests, builds, and restarts `kalshi-bot` from `/opt/kalshirust`, waiting if a 15-minute window is in its last 2 minutes.
+
+It needs three repository secrets:
+
+- `LIGHTSAIL_HOST`: the server's public IPv4 address. GitHub-hosted runners have no IPv6 route.
+- `LIGHTSAIL_USER`: `ubuntu`.
+- `LIGHTSAIL_SSH_KEY`: the full text of the server's private key.
