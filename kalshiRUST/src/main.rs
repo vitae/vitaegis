@@ -33,17 +33,17 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
 /// After-9-minutes slot: the first minute from 5 to 2 minutes before close in which the YES mid
-/// moved this much and the side that rose is inside this slot's price ranges. On 2,958 windows:
-/// 342 trades, 73% wins, $0.74 a trade after fees, t=2.67, but flat in the newest third of the month.
-/// These settings were picked from many tried on the same data, so expect less in real trading.
+/// moved this much and the side that rose costs 72c to 82c. On 2,958 windows: 356 trades, 80.3% wins,
+/// $0.12 a trade after fees, positive in the older and newer parts but not statistically distinct
+/// from zero (t=0.94). These settings were picked from many tried on the same data.
 const ANYTIME_FIRST_MIN: i64 = 5;
 const ANYTIME_LAST_MIN: i64 = 2;
 const ANYTIME_MIN_MOVE: f64 = 0.15;
 const ANYTIME_MAX_PRICE: f64 = 0.85;
-/// Win rate above price used for expected profit. Below what the ranges measured, to stay conservative.
-const ANYTIME_EDGE: f64 = 0.0254;
-/// Cheap contracts with a large payoff, and the favorites that won most often.
-const ANYTIME_PRICE_BANDS: &[(f64, f64)] = &[(0.05, 0.30), (0.75, 0.82)];
+/// Win rate above price in the weakest part of the range, 72c to 75c.
+const ANYTIME_EDGE: f64 = 0.03;
+/// Every price here carries a 75%+ win chance: 72c plus the edge above.
+const ANYTIME_PRICE_BANDS: &[(f64, f64)] = &[(0.72, 0.82)];
 /// The prices NORMAL buys at in the last 90 s.
 const NORMAL_PRICE_BANDS: &[(f64, f64)] = &[(0.05, 0.60), (0.72, 0.82)];
 const ALL_PRICES: &[(f64, f64)] = &[(0.0, 1.0)];
@@ -124,7 +124,7 @@ fn mode_params(name: &str) -> ModeParams {
             name: "NORMAL".into(),
             max_order_dollars: f("MAX_ORDER_DOLLARS", 5.0),
             min_edge_cents: f("MIN_EDGE_CENTS", 2.0),
-            bets_per_window: 2,
+            bets_per_window: f("BETS_PER_WINDOW", 2.0) as usize,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.75),
@@ -280,7 +280,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pem_path = env::var("KALSHI_PRIVATE_KEY_PATH")?;
     let mut live = env::var("LIVE_TRADING").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
     let mut bankroll: f64 = env::var("BANKROLL_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0);
-    let daily_loss_limit: f64 = env::var("DAILY_LOSS_LIMIT_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0);
+    let daily_loss_limit: f64 = env::var("DAILY_LOSS_LIMIT_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(30.0);
     if live {
         match kalshi_balance(&client, rest_base, &api_key_id, &pem_path).await {
             Ok(bal) => {
@@ -1130,7 +1130,8 @@ mod tests {
     }
 
     #[test]
-    fn normal_has_one_settlement_trade_in_two_slots() {
+    fn normal_takes_one_trade_in_each_slot() {
+        std::env::remove_var("BETS_PER_WINDOW");
         let m = mode_params("NORMAL");
         assert_eq!((m.bets_per_window, m.settle_trades), (2, 1));
     }
@@ -1186,13 +1187,20 @@ mod tests {
     }
 
     #[test]
-    fn after_nine_slot_buys_only_cheap_or_favorite_prices() {
+    fn after_nine_slot_buys_only_at_72_to_82c() {
         let bands = mode_params("NORMAL").anytime_bands;
-        for inside in [0.05, 0.26, 0.30, 0.75, 0.78, 1.0 - 0.22, 0.82, 1.0 - 0.18] {
+        for inside in [0.72, 1.0 - 0.28, 0.75, 0.78, 1.0 - 0.22, 0.82, 1.0 - 0.18] {
             assert!(in_price_band(bands, inside), "{inside}");
         }
-        for outside in [0.04, 0.31, 0.50, 0.60, 0.72, 0.74, 0.83] {
+        for outside in [0.05, 0.26, 0.30, 0.50, 0.60, 0.71, 0.83] {
             assert!(!in_price_band(bands, outside), "{outside}");
+        }
+    }
+
+    #[test]
+    fn every_after_nine_price_carries_a_75_percent_win_chance() {
+        for (lo, _) in ANYTIME_PRICE_BANDS {
+            assert!(lo + ANYTIME_EDGE >= 0.75 - 1e-9);
         }
     }
 
