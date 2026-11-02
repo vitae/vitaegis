@@ -55,6 +55,10 @@ struct ModeParams {
     settle_second_min_known: usize,
     /// Stake as a multiple of Kelly on the bankroll; 0 means a flat stake.
     kelly_mult: f64,
+    /// Highest price the settlement engine will pay in this mode.
+    max_price: f64,
+    /// Minimum expected profit, in dollars, on the stake it would put down.
+    min_ev_dollars: f64,
 }
 
 fn mode_params(name: &str) -> ModeParams {
@@ -73,13 +77,15 @@ fn mode_params(name: &str) -> ModeParams {
             settle_second_min_pwin: f("RISK_SETTLE_SECOND_MIN_PWIN", 0.7),
             settle_second_min_known: f("RISK_SETTLE_SECOND_MIN_KNOWN", 0.0) as usize,
             kelly_mult: f("RISK_KELLY_MULT", 0.75),
+            max_price: f("RISK_SETTLE_MAX_PRICE", 0.97),
+            min_ev_dollars: f("RISK_MIN_EV_DOLLARS", 0.5),
         }
     } else {
         ModeParams {
             name: "NORMAL".into(),
             max_order_dollars: f("MAX_ORDER_DOLLARS", 25.0),
             min_edge_cents: f("MIN_EDGE_CENTS", 2.0),
-            bets_per_window: 2,
+            bets_per_window: 1,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.9),
@@ -88,6 +94,9 @@ fn mode_params(name: &str) -> ModeParams {
             settle_second_min_pwin: f("SETTLE_SECOND_MIN_PWIN", 0.95),
             settle_second_min_known: SETTLE_SECOND_MIN_KNOWN,
             kelly_mult: 0.0,
+            // 62.5c is where a $5 stake pays at least $3.
+            max_price: f("SETTLE_MAX_PRICE", BIG_WIN_MAX_PRICE),
+            min_ev_dollars: f("MIN_EV_DOLLARS", 0.5),
         }
     }
 }
@@ -109,7 +118,6 @@ struct Ctx {
     model_weight: f64,
     /// Published 1-second BRTI prints plus the Coinbase anchor for the settlement engine.
     brti: settle::SharedBrti,
-    settle_max_price: f64,
     /// Dollar floor on the settlement estimate's spread (feed timing + basis error).
     settle_noise_dollars: f64,
     /// Bankroll for Kelly sizing: the env value, capped by the live balance when live.
@@ -231,7 +239,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         momentum_weight: env::var("MOMENTUM_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.3),
         model_weight: env::var("MODEL_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.15),
         brti: settle::shared(),
-        settle_max_price: env::var("SETTLE_MAX_PRICE").ok().and_then(|v| v.parse().ok()).unwrap_or(0.97),
         settle_noise_dollars: env::var("SETTLE_NOISE_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(4.0),
         bankroll_dollars: bankroll,
         daily_loss_limit,
@@ -581,7 +588,7 @@ async fn run_window(
                         calib_marks.remove(0);
                     }
                 }
-                let edge = best_edge(est.p_yes, yes_ask, no_ask).filter(|e| e.price >= 0.05 && e.price <= ctx.settle_max_price);
+                let edge = best_edge(est.p_yes, yes_ask, no_ask).filter(|e| e.price >= 0.05 && e.price <= mode.max_price);
                 if now - last_print >= 5 {
                     println!(
                         "[SETTLE] {} | {}s left | known {}/60 | est {:.2} ± {:.2} vs strike {:.2} ({:+.2}) | P(up) {:.1}% | yes {}c/{}c | best {} {:+.2}c | sigma1s {:.4}% | anchor {}",
@@ -621,8 +628,11 @@ async fn run_window(
                         (mode.settle_second_min_pwin, mode.settle_second_min_known)
                     };
                     let edge_floor = if projection { mode.settle_min_edge_cents.max(3.0) } else { mode.settle_min_edge_cents };
-                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && p_win >= pwin_floor && est.known_prints >= known_floor {
-                        let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars);
+                    let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars);
+                    // Expected profit on the whole stake: what ranks trades, since a 5c edge on a
+                    // 30c contract is worth five times a 5c edge on a 93c one.
+                    let ev_dollars = (dollars / edge.price).floor() * edge.cents / 100.0;
+                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && ev_dollars >= mode.min_ev_dollars && p_win >= pwin_floor && est.known_prints >= known_floor {
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1 && allowed {
