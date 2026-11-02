@@ -368,7 +368,11 @@ def candidate():
         print(f"{name} 1-2m left, <=90c {tally(late).row()}")
 
 
-def anytime_trades(ws, thr=0.25, first_m=9, last_m=2, lo_p=0.05, hi_p=0.85, slip=0.0):
+NORMAL_BANDS = ((0.05, 0.60), (0.72, 0.82))
+AFTER_NINE_BANDS = ((0.05, 0.30), (0.75, 0.82))
+
+
+def anytime_trades(ws, thr=0.25, first_m=9, last_m=2, lo_p=0.05, hi_p=0.85, slip=0.0, bands=None, keep_looking=False):
     """The bot's any-time slot: the first sharp minute decides the window, in or out."""
     out = []
     for w in ws:
@@ -381,9 +385,11 @@ def anytime_trades(ws, thr=0.25, first_m=9, last_m=2, lo_p=0.05, hi_p=0.85, slip
                 continue
             side = "yes" if move > 0 else "no"
             p = (now[1] if side == "yes" else 1 - now[0]) + slip
-            if lo_p <= p <= hi_p:
+            if any(x - 1e-9 <= p <= y + 1e-9 for x, y in bands) if bands else lo_p <= p <= hi_p:
                 out.append((w, m, side, p))
-            break
+                break
+            if not keep_looking:
+                break
     return out
 
 
@@ -397,6 +403,10 @@ def anytime():
         print(f"--- move>={thr * 100:.0f}c, price<={hi_p * 100:.0f}c")
         print(f"OLD {tally(anytime_trades(train, thr, 9, 2, 0.05, hi_p)).row()}")
         print(f"NEW {tally(anytime_trades(test, thr, 9, 2, 0.05, hi_p)).row()}")
+    print("--- the bot's after-9-minutes slot: 15c move, 5 to 2 minutes left, 5-30c and 75-82c")
+    rule = dict(thr=0.15, first_m=5, last_m=2, bands=AFTER_NINE_BANDS, keep_looking=True)
+    print(f"OLD {tally(anytime_trades(train, **rule)).row()}")
+    print(f"NEW {tally(anytime_trades(test, **rule)).row()}")
     print("--- chosen rule by time left, all data")
     for a, b in ((9, 6), (5, 3), (2, 2)):
         print(f"{a}-{b}m left {tally(anytime_trades(ws, 0.25, a, b)).row()}")

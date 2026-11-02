@@ -25,8 +25,8 @@
    expected value: `EV = p_win·(1 − price) − (1 − p_win)·price − 0.07·price·(1 − price)`.
    NORMAL mode needs ≥ 2¢ per contract; RISK mode needs ≥ 1¢.
 2. **Prices both sides.** YES at the ask or NO at (1 − YES bid), whichever has the edge.
-3. **Enters at set points.** NORMAL: one any-time trade 9 to 2 minutes before close, one in
-   the last 90 s. RISK: the last 90 s, plus the early engine from 7 minutes out.
+3. **Enters at set points.** NORMAL: one trade 5 to 2 minutes before close, one in the last
+   90 s. RISK: the last 90 s, plus the early engine from 7 minutes out.
 4. **Caps size.** NORMAL $5 per trade, 2 per window. RISK up to $100, 2 per window.
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
@@ -42,24 +42,26 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | 2 | 2 |
-| Entry | one any-time trade, one in the last 90 s | last 90 s, plus the early engine from 7 min out |
-| Last-90 trade | 80%+ win chance; 90% and 3c of edge before 3 prints exist unless the price is 62.5c or less | 60%+ win chance, 5c of edge |
+| Entry | one trade after the first 9 minutes, one in the last 90 s | last 90 s, plus the early engine from 7 min out |
+| Last-90 trade | 75%+ win chance; 90% and 3c of edge before 3 prints exist unless the price is 62.5c or less | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | 2c of edge, $0.15 expected profit, 97c top price | $0.50 expected profit, 97c top price |
 
-The any-time slot takes the first minute from 9 to 2 minutes before close in which the YES mid
-moved 25c or more, and buys the side that rose. A win must pay over $1 after fees
-(`MIN_WIN_DOLLARS`), which on a $5 stake means paying 82c or less, and that floor also applies in
-the last 90 s. It removes the 90c+ trades, so most windows now have no trade.
+The after-9-minutes slot is the riskier trade. It takes the first minute from 5 to 2 minutes before
+close in which the YES mid moved 15c or more, buying the side that rose at 30c or less or at 75c to
+82c. The last-90 slot needs a 75%+ win chance and buys at 60c or less or at 72c to 82c. Both keep a
+win above $1 after fees (`MIN_WIN_DOLLARS`), and most windows still have no trade.
 
-On the month of data the any-time slot at 82c is 666 trades, 67% wins, about +$0.09 a trade,
-positive in both halves but not statistically distinct from zero, and negative with even 1c of
-worse fills. It is an experiment for the paper run to settle, and the HUD reports each slot's P&L
-apart so it can be judged alone.
+On the month of data the after-9-minutes slot is 342 trades in 12% of windows, 73% wins, +$0.74 a
+trade, about +$7.64 a day. Its t statistic is 2.67, it survives 2c of worse fills, and the placebo
+of buying the side that fell loses heavily. But it is flat in the newest third of the month, and
+these settings were picked from well over a hundred tried on the same data, so expect less. A live
+BTC model did not help before the last 90 s: alone it lost money, and larger model edges did worse.
+The HUD reports each slot's P&L apart so the paper run can judge it.
 
 A $1 win is not a $1 average. An average of $1 a trade on $5 needs 61.7% wins at 50c, 85.5% at
-70c and 97.1% at 80c, an edge of 12c to 17c, against the 2.5c measured here.
+70c and 97.1% at 80c.
 
 Orders are immediate-or-cancel through the V2 order API (`/portfolio/events/orders`), and
 each trade records its actual fill price and fee.

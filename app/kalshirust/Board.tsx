@@ -475,11 +475,11 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: up to 2 trades a window at $5 each. One any time from 9 to 2 min before close, after
-        a 25¢+ move in a minute. One in the last 90 s on settlement math at an 80%+ win chance, with
-        the analytics engine agreeing. A win must pay over $1 after fees, which on $5 means paying
-        82¢ or less, and expected profit after fees must be positive. Otherwise the window is
-        skipped. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from
+        NORMAL: up to 2 trades a window at $5 each. After the first 9 min, from 5 to 2 min before
+        close: a riskier trade after a 15¢+ move in a minute, buying the side that rose at 30¢ or
+        less or at 75–82¢. In the last 90 s: settlement math at a 75%+ win chance, at 60¢ or less or
+        at 72–82¢, with the analytics engine agreeing. No trade unless expected profit after fees is
+        positive. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from
         7 min out with no win-chance floor.
       </p>
     </div>
@@ -952,7 +952,7 @@ function Trades({
       )}
       {(totals.bySlot.anytime.trades > 0 || totals.bySlot.last90.trades > 0) && (
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/60">
-          <SlotSummary label="Any time" totals={totals.bySlot.anytime} />
+          <SlotSummary label="After 9 min" totals={totals.bySlot.anytime} />
           <SlotSummary label="Last 90 s" totals={totals.bySlot.last90} />
         </div>
       )}
@@ -992,7 +992,7 @@ function Trades({
                     className={`text-[11px] uppercase tracking-[0.15em] ${t.source === 'sniper' ? 'text-vitae-cyan' : 'text-white/60'}`}
                   >
                     {t.slot === 'anytime'
-                      ? 'any time'
+                      ? 'after 9 min'
                       : t.slot === 'last90'
                         ? 'last 90 s'
                         : t.source}
