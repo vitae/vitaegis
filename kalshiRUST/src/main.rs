@@ -1,8 +1,9 @@
-﻿use kalshi_btc_bot::{models, paper, scanner, settle, supa, vol};
+﻿use kalshi_btc_bot::{analytics, models, paper, scanner, settle, supa, vol};
 
 use futures_util::{SinkExt, StreamExt};
 use serde_json::json;
 use std::sync::Arc;
+use std::time::Instant;
 use std::{env, fs};
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
@@ -10,6 +11,7 @@ use tokio_tungstenite::tungstenite::handshake::client::Request;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use base64::Engine as _;
 
+use analytics::{ExecutionSignal, KalshiBookTop, KxBtc15mEngine};
 use models::{best_edge, clamp_binding, clamp_prob, prob_above, taker_fee, tradable_price, v2_fill_cost, v2_order_terms, Side};
 use paper::{Trade, TradeBook};
 use scanner::ScanConfig;
@@ -30,6 +32,17 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// A window's second trade must rest on this many published settlement prints: a
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
+/// Any-time slot: the first minute from 9 to 2 minutes before close in which the YES mid moved
+/// this much, buying the side that rose at no more than the top price. `research/window_study.py
+/// anytime` measured it on 2,958 windows: 742 trades, wins 2.54c above the price paid, about
+/// $0.09 a trade after fees, positive on both halves but not statistically distinct from zero.
+/// The $1 minimum win limits a $5 stake to 82c, where the numbers are about the same: 666 trades,
+/// 2.5c, $0.09 a trade, and negative with even 1c of worse fills.
+const ANYTIME_FIRST_MIN: i64 = 9;
+const ANYTIME_LAST_MIN: i64 = 2;
+const ANYTIME_MIN_MOVE: f64 = 0.25;
+const ANYTIME_MAX_PRICE: f64 = 0.85;
+const ANYTIME_EDGE: f64 = 0.0254;
 /// At or below this price a $5 stake wins at least $3 (5 * (1 - p) / p >= 3).
 const BIG_WIN_MAX_PRICE: f64 = 0.625;
 
@@ -55,6 +68,10 @@ struct ModeParams {
     settle_second_min_known: usize,
     /// Stake as a multiple of Kelly on the bankroll; 0 means a flat stake.
     kelly_mult: f64,
+    /// Flat stakes: multiplier on a sure bet. 1 keeps every trade the same size.
+    sure_mult: f64,
+    /// Trades the settlement engine may take in a window.
+    settle_trades: usize,
     /// The early engine trades before the settlement minute on a model blend, with no
     /// probability floor. It is not settlement math, so NORMAL keeps it off.
     early_engine: bool,
@@ -62,6 +79,10 @@ struct ModeParams {
     max_price: f64,
     /// Minimum expected profit, in dollars, on the stake it would put down.
     min_ev_dollars: f64,
+    /// A win must pay more than this, in dollars after the fee, or the trade is skipped.
+    min_win_dollars: f64,
+    /// Whether the any-time slot trades in this mode.
+    anytime_slot: bool,
 }
 
 fn mode_params(name: &str) -> ModeParams {
@@ -80,9 +101,13 @@ fn mode_params(name: &str) -> ModeParams {
             settle_second_min_pwin: f("RISK_SETTLE_SECOND_MIN_PWIN", 0.7),
             settle_second_min_known: f("RISK_SETTLE_SECOND_MIN_KNOWN", 0.0) as usize,
             kelly_mult: f("RISK_KELLY_MULT", 0.75),
+            sure_mult: 1.0,
+            settle_trades: 2,
             early_engine: env::var("RISK_EARLY_ENGINE").map(|v| !v.eq_ignore_ascii_case("false")).unwrap_or(true),
             max_price: f("RISK_SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("RISK_MIN_EV_DOLLARS", 0.5),
+            min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
+            anytime_slot: false,
         }
     } else {
         ModeParams {
@@ -98,9 +123,13 @@ fn mode_params(name: &str) -> ModeParams {
             settle_second_min_pwin: f("SETTLE_SECOND_MIN_PWIN", 0.95),
             settle_second_min_known: SETTLE_SECOND_MIN_KNOWN,
             kelly_mult: 0.0,
+            sure_mult: f("SURE_BET_MULT", 1.0),
+            settle_trades: 1,
             early_engine: env::var("EARLY_ENGINE").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false),
             max_price: f("SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("MIN_EV_DOLLARS", 0.15),
+            min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
+            anytime_slot: true,
         }
     }
 }
@@ -124,6 +153,8 @@ struct Ctx {
     brti: settle::SharedBrti,
     /// Dollar floor on the settlement estimate's spread (feed timing + basis error).
     settle_noise_dollars: f64,
+    /// The analytics engine must agree before a settlement trade. Off, it only logs.
+    analytics_veto: bool,
     /// Bankroll for Kelly sizing: the env value, capped by the live balance when live.
     bankroll_dollars: f64,
     /// Stop opening live trades once today's realized loss reaches this many dollars.
@@ -131,15 +162,43 @@ struct Ctx {
 }
 
 /// Dollars for a settlement trade. A flat stake when the mode's Kelly multiple is 0
-/// (NORMAL), doubled on a sure bet; otherwise that multiple of Kelly on the bankroll, where
+/// (NORMAL), scaled by `sure_mult` on a sure bet; otherwise that multiple of Kelly on the bankroll, where
 /// Kelly for a binary at price p with win probability q is (q - p) / (1 - p), floored at $5
 /// and capped by the mode.
 fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64, sure: bool) -> f64 {
     if mode.kelly_mult <= 0.0 {
-        return if sure { mode.max_order_dollars * 2.0 } else { mode.max_order_dollars };
+        return if sure { mode.max_order_dollars * mode.sure_mult } else { mode.max_order_dollars };
     }
     let f_star = ((p_win - price) / (1.0 - price)).max(0.0);
     (mode.kelly_mult * bankroll * f_star).max(5.0).min(mode.max_order_dollars)
+}
+
+/// What a win pays on this stake, in dollars after the taker fee, in whole contracts.
+fn win_dollars(stake: f64, price: f64) -> f64 {
+    (stake / price).floor() * (1.0 - price - models::taker_fee(price))
+}
+
+/// What the any-time slot would buy after a 60 s move in the YES mid, or None when the move is
+/// too small, the price is out of range, or expected profit after fees is not positive.
+fn anytime_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
+    if moved.abs() < ANYTIME_MIN_MOVE {
+        return None;
+    }
+    let side = if moved > 0.0 { Side::Yes } else { Side::No };
+    let price = match side {
+        Side::Yes => yes_ask,
+        Side::No => 1.0 - yes_bid,
+    };
+    if !(0.05..=ANYTIME_MAX_PRICE).contains(&price) {
+        return None;
+    }
+    let p_win = (price + ANYTIME_EDGE).min(1.0);
+    let p_yes = match side {
+        Side::Yes => p_win,
+        Side::No => 1.0 - p_win,
+    };
+    let cents = models::ev_cents(p_yes, side, price);
+    (cents > 0.0).then_some(models::Edge { side, price, cents, p_yes })
 }
 
 /// This machine's name for the HUD. systemd services have no HOSTNAME variable.
@@ -247,6 +306,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         model_weight: env::var("MODEL_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.15),
         brti: settle::shared(),
         settle_noise_dollars: env::var("SETTLE_NOISE_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(4.0),
+        analytics_veto: env::var("ANALYTICS_VETO").map(|v| !v.eq_ignore_ascii_case("false")).unwrap_or(true),
         bankroll_dollars: bankroll,
         daily_loss_limit,
     });
@@ -263,6 +323,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             b.count_source("bot"), bot_limit, b.count_source("sniper"), sniper_limit, b.pending()
         );
     }
+
+    println!("[+] Analytics engine: {}", if ctx.analytics_veto { "must agree before any settlement trade" } else { "logging only" });
+    println!("[+] Every trade must win over ${:.2} after fees", mode_params("NORMAL").min_win_dollars);
+    println!("[+] Any-time slot: first {:.0}c+ move in a minute from {} to {} minutes before close, paying up to {:.0}c", ANYTIME_MIN_MOVE * 100.0, ANYTIME_FIRST_MIN, ANYTIME_LAST_MIN, ANYTIME_MAX_PRICE * 100.0);
 
     // Coinbase spot: feeds both the watch channel and the tick-vol estimator.
     let (spot_tx, spot_rx) = tokio::sync::watch::channel(0.0_f64);
@@ -527,7 +591,15 @@ async fn run_window(
     let mut last_early_attempt = 0i64;
     let mut last_status = 0i64;
     let mut last_print = 0i64;
-    let mut calib: Vec<(i64, f64, f64, f64)> = Vec::new();
+    let mut calib: Vec<(i64, f64, f64, f64, Option<f64>)> = Vec::new();
+    let mut engine = KxBtc15mEngine::new(strike, ctx.settle_noise_dollars);
+    let mut engine_as_of = 0i64;
+    let mut book_updated = Instant::now();
+    let mut veto_logged = false;
+    let mut mark: Option<(i64, f64)> = None;
+    let mut mark_minute = 0i64;
+    let mut anytime_done = false;
+    let mut maker_logged = false;
     let mut calib_marks: Vec<i64> = vec![60, 45, 30, 15, 5];
     let mut tick = tokio::time::interval(Duration::from_secs(1));
 
@@ -541,6 +613,7 @@ async fn run_window(
                         if let Ok(v) = serde_json::from_str::<serde_json::Value>(&txt) {
                             if v["type"].as_str() == Some("ticker") {
                                 let m = &v["msg"];
+                                book_updated = Instant::now();
                                 if let Some(a) = price_field(m, "yes_ask_dollars", "yes_ask") { yes_ask = Some(a); }
                                 if let Some(b) = price_field(m, "yes_bid_dollars", "yes_bid") { yes_bid = Some(b); }
                             }
@@ -568,6 +641,58 @@ async fn run_window(
         let spot = *spot_rx.borrow();
         let mode = ctx.mode();
 
+        // New BRTI prints go to the analytics engine as they arrive.
+        {
+            let b = ctx.brti.lock().unwrap();
+            if b.as_of > engine_as_of && !b.raw.is_empty() {
+                let fresh = if engine_as_of == 0 { b.raw.len() } else { ((b.as_of - engine_as_of) as usize).min(b.raw.len()) };
+                let received = Instant::now();
+                for p in &b.raw[b.raw.len() - fresh..] {
+                    engine.on_brti_second_print(*p, received);
+                }
+                engine_as_of = b.as_of;
+            }
+        }
+
+        // ---- any-time slot -----------------------------------------------------------
+        // Compares the YES mid at whole minutes, the way the rule was measured. The first sharp
+        // minute decides the window whether or not its price qualifies.
+        let minute = (rem / 60.0).ceil() as i64;
+        if minute != mark_minute {
+            let on_a_boundary = mark_minute != 0;
+            mark_minute = minute;
+            if on_a_boundary {
+                if let (Some(bid), Some(ask)) = (yes_bid, yes_ask) {
+                    let mid = (bid + ask) / 2.0;
+                    if let Some((m0, mid0)) = mark {
+                        let moved = mid - mid0;
+                        if mode.anytime_slot && m0 == minute + 1 && !anytime_done && (ANYTIME_LAST_MIN..=ANYTIME_FIRST_MIN).contains(&minute) && moved.abs() >= ANYTIME_MIN_MOVE {
+                            anytime_done = true;
+                            match anytime_entry(moved, bid, ask) {
+                                Some(edge) => {
+                                    let p_win = match edge.side { Side::Yes => edge.p_yes, Side::No => 1.0 - edge.p_yes };
+                                    let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, false);
+                                    let count = (dollars / edge.price).floor();
+                                    let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
+                                    let pays = win_dollars(dollars, edge.price);
+                                    if pays <= mode.min_win_dollars {
+                                        println!("[ANY-TIME] {} | {}m left | {} @ {:.1}c would win only ${:.2}, skipped", ticker, minute, edge.side.as_str().to_uppercase(), edge.price * 100.0, pays);
+                                    } else if count >= 1.0 && allowed {
+                                        let note = format!("any-time slot | {}m left | YES mid {:+.1}c in 60 s | measured edge {:.2}c", minute, moved * 100.0, ANYTIME_EDGE * 100.0);
+                                        enter(ctx, &ticker, strike, close_ts, spot, edge.p_yes, edge.p_yes, moved, edge, dollars, "BTC 15 min (any time)", "anytime", &note).await;
+                                    }
+                                }
+                                None => println!("[ANY-TIME] {} | {}m left | YES mid {:+.1}c in 60 s | price out of range, skipped", ticker, minute, moved * 100.0),
+                            }
+                        }
+                    }
+                    mark = Some((minute, mid));
+                } else {
+                    mark = None;
+                }
+            }
+        }
+
         // ---- settlement engine -------------------------------------------------------
         if last_minute {
             // Millisecond time left and the feed's measured lag keep the known/unknown
@@ -591,21 +716,45 @@ async fn run_window(
                 };
                 (est, fresh, s1, anchor)
             };
+            // Analytics engine: the unknown stretch runs from its newest print, not from now.
+            let a_secs = rem_s + (now_ms as f64 / 1000.0 - engine_as_of as f64).clamp(1.0, 10.0);
+            let a_p = engine.compute_true_yes_probability(a_secs);
+            let a_signal = match (yes_bid, yes_ask) {
+                (Some(bid), Some(ask)) => engine.evaluate_signal(
+                    &KalshiBookTop { yes_bid: bid, yes_ask: ask, no_bid: 1.0 - ask, no_ask: 1.0 - bid, updated_at: book_updated },
+                    a_secs,
+                    Instant::now(),
+                    mode.settle_min_edge_cents,
+                ),
+                _ => ExecutionSignal::Hold,
+            };
+            let a_label = format!("analytics P(up) {} {}", a_p.map_or("-".to_string(), |p| format!("{:.1}%", p * 100.0)), match &a_signal {
+                ExecutionSignal::Hold => "hold".to_string(),
+                ExecutionSignal::PostMaker { side, price_dollars, .. } => format!("maker {:?} @ {:.1}c", side, price_dollars * 100.0),
+                ExecutionSignal::SnipeTaker { side, net_edge_cents, .. } => format!("taker {:?} {:+.2}c", side, net_edge_cents),
+            });
+            // Resting orders need tracking this bot does not have, so that branch only logs.
+            if let ExecutionSignal::PostMaker { side, price_dollars, contracts, ev_cents } = &a_signal {
+                if !maker_logged {
+                    println!("[MAKER IDEA] {} | {:?} x{} @ {:.1}c, {:+.2}c expected | not placed", ticker, side, contracts, price_dollars * 100.0, ev_cents);
+                    maker_logged = true;
+                }
+            }
             let anchor_label = anchor.map_or("-".to_string(), |a| if a.from_coinbase { format!("coinbase+basis {:.2} ({:.1}s old)", a.price, a.age) } else { format!("brti print {:.2} ({:.1}s old)", a.price, a.age) });
             if let Some(est) = est {
                 if let Some(mark) = calib_marks.first().copied() {
                     if rem <= mark as f64 {
-                        calib.push((rem as i64, est.mean, est.sd, est.p_yes));
+                        calib.push((rem as i64, est.mean, est.sd, est.p_yes, a_p));
                         calib_marks.remove(0);
                     }
                 }
                 let edge = best_edge(est.p_yes, yes_ask, no_ask).filter(|e| e.price >= 0.05 && e.price <= mode.max_price);
                 if now - last_print >= 5 {
                     println!(
-                        "[SETTLE] {} | {}s left | known {}/60 | est {:.2} ± {:.2} vs strike {:.2} ({:+.2}) | P(up) {:.1}% | yes {}c/{}c | best {} {:+.2}c | sigma1s {:.4}% | anchor {}",
+                        "[SETTLE] {} | {}s left | known {}/60 | est {:.2} ± {:.2} vs strike {:.2} ({:+.2}) | P(up) {:.1}% | yes {}c/{}c | best {} {:+.2}c | sigma1s {:.4}% | anchor {} | {}",
                         ticker, rem as i64, est.known_prints, est.mean, est.sd, strike, est.mean - strike, est.p_yes * 100.0,
                         yes_bid.map_or("-".into(), |b| format!("{:.0}", b * 100.0)), yes_ask.map_or("-".into(), |a| format!("{:.0}", a * 100.0)),
-                        edge.map_or("-".into(), |e| e.side.as_str().to_uppercase()), edge.map_or(0.0, |e| e.cents), sigma_1s * 100.0, anchor_label
+                        edge.map_or("-".into(), |e| e.side.as_str().to_uppercase()), edge.map_or(0.0, |e| e.cents), sigma_1s * 100.0, anchor_label, a_label
                     );
                     last_print = now;
                 }
@@ -620,13 +769,20 @@ async fn run_window(
                             "no_ask_cents": no_ask.map(|a| (a * 100.0).round() as i64),
                             "model_prob": est.p_yes, "edge_cents": edge.map(|e| e.cents),
                             "side": edge.map(|e| e.side.as_str()), "price_cents": edge.map(|e| (e.price * 100.0).round() as i64),
-                            "message": format!("settlement engine | {}/60 prints known | est {:.2} ± {:.2} | strike {:.2}", est.known_prints, est.mean, est.sd, strike),
+                            "message": format!("settlement engine | {}/60 prints known | est {:.2} ± {:.2} | strike {:.2} | {}", est.known_prints, est.mean, est.sd, strike, a_label),
                         }));
                     }
                     last_status = now;
                 }
                 if let Some(edge) = edge {
-                    let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
+                    let settle_p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
+                    let a_agrees = match &a_signal {
+                        ExecutionSignal::SnipeTaker { side, .. } => matches!((side, edge.side), (analytics::Side::Yes, Side::Yes) | (analytics::Side::No, Side::No)),
+                        _ => false,
+                    };
+                    let a_p_win = a_p.map(|p| match edge.side { Side::Yes => p, Side::No => 1.0 - p });
+                    // With both engines in play the lower win chance is the one that counts.
+                    let p_win = if ctx.analytics_veto { a_p_win.map_or(0.0, |a| settle_p_win.min(a)) } else { settle_p_win };
                     // Before 3 settlement prints exist the estimate is a projection, so the bar is
                     // higher: at least 90% and 3c of edge. With prints in hand the mode's floor applies.
                     // Big-win trades (a $5 stake pays $3 or more, i.e. price <= 62.5c) are worth
@@ -646,13 +802,21 @@ async fn run_window(
                     // Expected profit on the whole stake: what ranks trades, since a 5c edge on a
                     // 30c contract is worth five times a 5c edge on a 93c one.
                     let ev_dollars = (dollars / edge.price).floor() * edge.cents / 100.0;
-                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && ev_dollars >= mode.min_ev_dollars && p_win >= pwin_floor && est.known_prints >= known_floor && window_side.map_or(true, |w| w == edge.side.as_str()) {
+                    let settle_ok = win_dollars(dollars, edge.price) > mode.min_win_dollars && bets_settle < mode.settle_trades && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && ev_dollars >= mode.min_ev_dollars && settle_p_win >= pwin_floor && est.known_prints >= known_floor && window_side.map_or(true, |w| w == edge.side.as_str());
+                    let analytics_ok = !ctx.analytics_veto || (a_agrees && p_win >= pwin_floor);
+                    if settle_ok && !analytics_ok && !veto_logged {
+                        println!("[VETO] {} | settlement math: buy {} @ {:.1}c at {:.1}% | {} | no trade", ticker, edge.side.as_str().to_uppercase(), edge.price * 100.0, settle_p_win * 100.0, a_label);
+                        veto_logged = true;
+                    }
+                    if settle_ok && analytics_ok {
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1 && allowed {
                             last_settle_entry = now;
-                            let note = format!("settlement engine{} | {}s left | {}/60 prints known | est {:.2} ± {:.2} vs strike {:.2}", if sure && mode.kelly_mult <= 0.0 { " | sure bet, stake doubled" } else { "" }, rem as i64, est.known_prints, est.mean, est.sd, strike);
-                            if enter(ctx, &ticker, strike, close_ts, spot, est.p_yes, est.p_yes, 0.0, edge, dollars, "BTC 15 min (last minute)", "settle", &note).await {
+                            let file_size = match &a_signal { ExecutionSignal::SnipeTaker { contracts, .. } => *contracts, _ => 0 };
+                            let note = format!("settlement engine{} | {}s left | {}/60 prints known | est {:.2} ± {:.2} vs strike {:.2} | {} | analytics alone would size {} contracts", if sure && mode.kelly_mult <= 0.0 && mode.sure_mult > 1.0 { " | sure bet, stake raised" } else { "" }, rem as i64, est.known_prints, est.mean, est.sd, strike, a_label, file_size);
+                            let p_yes_used = match edge.side { Side::Yes => p_win, Side::No => 1.0 - p_win };
+                            if enter(ctx, &ticker, strike, close_ts, spot, p_yes_used, a_p.unwrap_or(est.p_yes), 0.0, edge, dollars, "BTC 15 min (last minute)", "settle", &note).await {
                                 bets_settle += 1;
                                 window_side = Some(edge.side.as_str());
                             }
@@ -734,7 +898,7 @@ async fn run_window(
         // Sized by the odds it just computed, never the mode's whole cap.
         let early_p_win = match edge.side { Side::Yes => p_yes, Side::No => 1.0 - p_yes };
         let early_dollars = settle_size(&mode, early_p_win, edge.price, ctx.bankroll_dollars, false);
-        if !allowed || (early_dollars / edge.price).floor() < 1.0 {
+        if !allowed || (early_dollars / edge.price).floor() < 1.0 || win_dollars(early_dollars, edge.price) <= mode.min_win_dollars {
             continue;
         }
         last_early_attempt = now;
@@ -755,13 +919,15 @@ async fn run_window(
             let outcome = if s >= strike { "YES" } else { "NO" };
             println!("[SETTLE CHECK] {} settled {:.2} vs strike {:.2} -> {}", ticker, s, strike, outcome);
             let mut lines = Vec::new();
-            for (secs, mean, sd, p) in &calib {
+            for (secs, mean, sd, p, a) in &calib {
                 let z = if *sd > 0.0 { (s - mean) / sd } else { 0.0 };
                 let called = if *p >= 0.5 { "YES" } else { "NO" };
-                lines.push(format!("{}s: est {:.2} ± {:.2} (z {:+.2}) P(up) {:.0}% -> called {} {}", secs, mean, sd, z, p * 100.0, called, if called == outcome { "ok" } else { "MISS" }));
+                let a_called = a.map(|x| if x >= 0.5 { "YES" } else { "NO" });
+                lines.push(format!("{}s: est {:.2} ± {:.2} (z {:+.2}) P(up) {:.0}% -> called {} {} [analytics {} {}]", secs, mean, sd, z, p * 100.0, called, if called == outcome { "ok" } else { "MISS" },
+                    a.map_or("-".to_string(), |x| format!("{:.0}%", x * 100.0)), a_called.map_or("-", |c| if c == outcome { "ok" } else { "MISS" })));
                 let _ = std::fs::OpenOptions::new().create(true).append(true).open("settle_calib.jsonl").and_then(|mut f| {
                     use std::io::Write;
-                    writeln!(f, "{}", json!({ "ticker": ticker, "strike": strike, "settled": s, "secs_left": secs, "mean": mean, "sd": sd, "p_yes": p, "z": z, "correct": called == outcome }))
+                    writeln!(f, "{}", json!({ "ticker": ticker, "strike": strike, "settled": s, "secs_left": secs, "mean": mean, "sd": sd, "p_yes": p, "z": z, "correct": called == outcome, "analytics_p_yes": a, "analytics_correct": a_called.map(|c| c == outcome) }))
                 });
             }
             for l in &lines {
@@ -936,10 +1102,42 @@ mod tests {
     use super::*;
 
     #[test]
-    fn normal_doubles_only_on_a_sure_bet() {
-        let m = mode_params("NORMAL");
+    fn normal_stakes_are_flat_unless_a_sure_bet_multiplier_is_set() {
+        let mut m = mode_params("NORMAL");
+        assert_eq!(settle_size(&m, 0.97, 0.90, 100.0, true), m.max_order_dollars);
+        m.sure_mult = 2.0;
         assert_eq!(settle_size(&m, 0.85, 0.80, 100.0, false), m.max_order_dollars);
         assert_eq!(settle_size(&m, 0.97, 0.90, 100.0, true), m.max_order_dollars * 2.0);
+    }
+
+    #[test]
+    fn normal_has_one_settlement_trade_in_two_slots() {
+        let m = mode_params("NORMAL");
+        assert_eq!((m.bets_per_window, m.settle_trades), (2, 1));
+    }
+
+    #[test]
+    fn any_time_slot_buys_the_side_that_rose() {
+        let up = anytime_entry(0.30, 0.59, 0.60).unwrap();
+        assert!(matches!(up.side, Side::Yes));
+        assert!((up.price - 0.60).abs() < 1e-9);
+        let down = anytime_entry(-0.30, 0.39, 0.40).unwrap();
+        assert!(matches!(down.side, Side::No));
+        assert!((down.price - 0.61).abs() < 1e-9);
+        assert!((down.p_yes - (1.0 - 0.61 - ANYTIME_EDGE)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn any_time_slot_skips_small_moves_and_high_prices() {
+        assert!(anytime_entry(0.24, 0.59, 0.60).is_none());
+        assert!(anytime_entry(0.30, 0.89, 0.90).is_none());
+        assert!(anytime_entry(-0.30, 0.10, 0.11).is_none());
+    }
+
+    #[test]
+    fn any_time_slot_only_trades_with_positive_expected_profit() {
+        let e = anytime_entry(0.30, 0.49, 0.50).unwrap();
+        assert!(e.cents > 0.0 && e.cents < ANYTIME_EDGE * 100.0);
     }
 
     #[test]
@@ -949,9 +1147,22 @@ mod tests {
     }
 
     #[test]
-    fn normal_allows_two_trades_and_keeps_the_early_engine_off() {
-        let m = mode_params("NORMAL");
-        assert_eq!(m.bets_per_window, 2);
-        assert!(!m.early_engine);
+    fn a_five_dollar_win_pays_over_a_dollar_only_at_82c_or_less() {
+        let floor = mode_params("NORMAL").min_win_dollars;
+        assert!(win_dollars(5.0, 0.82) > floor);
+        assert!(win_dollars(5.0, 0.83) < floor);
+        assert!(win_dollars(5.0, 0.95) < floor);
+        assert!(win_dollars(5.0, 0.50) > floor);
+    }
+
+    #[test]
+    fn only_normal_runs_the_any_time_slot() {
+        assert!(mode_params("NORMAL").anytime_slot);
+        assert!(!mode_params("RISK").anytime_slot);
+    }
+
+    #[test]
+    fn normal_keeps_the_early_engine_off() {
+        assert!(!mode_params("NORMAL").early_engine);
     }
 }

@@ -82,8 +82,18 @@ export interface Prediction {
   maxWinCents: number | null;
 }
 
+/** Which of the bot's entry slots took a trade, from its order id prefix. */
+export type TradeSlot = 'anytime' | 'last90' | 'other';
+
+export function tradeSlot(clientOrderId: string | null | undefined): TradeSlot {
+  if (clientOrderId?.startsWith('anytime-')) return 'anytime';
+  if (clientOrderId?.startsWith('settle-')) return 'last90';
+  return 'other';
+}
+
 export interface Trade extends Prediction {
   id: string;
+  slot: TradeSlot;
   at: string;
   ticker: string | null;
   source: RustSource;
@@ -170,7 +180,10 @@ export interface Summary {
   status: KalshirustEvent | null;
   online: boolean;
   trades: Trade[];
-  totals: Totals & { bySource: Record<RustSource, Totals> };
+  totals: Totals & {
+    bySource: Record<RustSource, Totals>;
+    bySlot: Record<'anytime' | 'last90', Totals>;
+  };
   windows: Windows;
   watchlist: WatchRow[];
   history: HistoryPoint[];
@@ -328,6 +341,7 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
       const secondsToClose = num(e.seconds_to_close);
       return {
         id: e.id,
+        slot: tradeSlot(e.client_order_id),
         at: e.created_at,
         ticker: e.ticker,
         source,
@@ -352,6 +366,10 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
     bySource: {
       bot: tally(trades.filter((t) => t.source === 'bot')),
       sniper: tally(trades.filter((t) => t.source === 'sniper')),
+    },
+    bySlot: {
+      anytime: tally(trades.filter((t) => t.slot === 'anytime')),
+      last90: tally(trades.filter((t) => t.slot === 'last90')),
     },
   };
 

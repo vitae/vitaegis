@@ -23,6 +23,7 @@ import {
   type Summary,
   type Trade,
   type WatchRow,
+  type Totals,
   type Windows,
   tradesSince,
   uptimeLabel,
@@ -474,10 +475,12 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: settlement math only, up to 2 trades a window in the last 90 s. $5 at an 80%+ win
-        chance, $10 when it reads 95%+ with 15 settlement prints in, and the second trade only at
-        that level. RISK: up to $100 a trade, 2 per window, as low as 60% in the last 90 s, plus
-        earlier trades from 7 min out with no win-chance floor.
+        NORMAL: up to 2 trades a window at $5 each. One any time from 9 to 2 min before close, after
+        a 25¢+ move in a minute. One in the last 90 s on settlement math at an 80%+ win chance, with
+        the analytics engine agreeing. A win must pay over $1 after fees, which on $5 means paying
+        82¢ or less, and expected profit after fees must be positive. Otherwise the window is
+        skipped. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from
+        7 min out with no win-chance floor.
       </p>
     </div>
   );
@@ -888,6 +891,18 @@ function Charts({ history }: { history: Summary['history'] }) {
   );
 }
 
+function SlotSummary({ label, totals }: { label: string; totals: Totals }) {
+  return (
+    <p>
+      {label}: {totals.trades} trade{totals.trades === 1 ? '' : 's'},{' '}
+      <span className={tone(totals.settled ? totals.pnlCents : null)}>
+        {totals.settled ? signedDollars(totals.pnlCents) : '—'}
+      </span>{' '}
+      net, {pct(totals.hitRate)} hit rate
+    </p>
+  );
+}
+
 function Trades({
   trades,
   totals,
@@ -935,12 +950,18 @@ function Trades({
           net, {pct(sniper.hitRate)} hit rate
         </p>
       )}
+      {(totals.bySlot.anytime.trades > 0 || totals.bySlot.last90.trades > 0) && (
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/60">
+          <SlotSummary label="Any time" totals={totals.bySlot.anytime} />
+          <SlotSummary label="Last 90 s" totals={totals.bySlot.last90} />
+        </div>
+      )}
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[1360px] text-left text-sm">
           <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
               <Th>Time</Th>
-              <Th>Source</Th>
+              <Th>Slot</Th>
               <Th>Ticker</Th>
               <Th>Entered</Th>
               <PredictionHeads />
@@ -970,7 +991,11 @@ function Trades({
                   <span
                     className={`text-[11px] uppercase tracking-[0.15em] ${t.source === 'sniper' ? 'text-vitae-cyan' : 'text-white/60'}`}
                   >
-                    {t.source}
+                    {t.slot === 'anytime'
+                      ? 'any time'
+                      : t.slot === 'last90'
+                        ? 'last 90 s'
+                        : t.source}
                   </span>
                 </Td>
                 <Td>

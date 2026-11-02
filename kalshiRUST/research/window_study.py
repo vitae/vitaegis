@@ -368,10 +368,57 @@ def candidate():
         print(f"{name} 1-2m left, <=90c {tally(late).row()}")
 
 
+def anytime_trades(ws, thr=0.25, first_m=9, last_m=2, lo_p=0.05, hi_p=0.85, slip=0.0):
+    """The bot's any-time slot: the first sharp minute decides the window, in or out."""
+    out = []
+    for w in ws:
+        for m in range(first_m, last_m - 1, -1):
+            now, before = w["book"].get(str(m * 60)), w["book"].get(str((m + 1) * 60))
+            if not now or not before or None in now or None in before:
+                continue
+            move = sum(now) / 2 - sum(before) / 2
+            if abs(move) < thr:
+                continue
+            side = "yes" if move > 0 else "no"
+            p = (now[1] if side == "yes" else 1 - now[0]) + slip
+            if lo_p <= p <= hi_p:
+                out.append((w, m, side, p))
+            break
+    return out
+
+
+def anytime():
+    ws = load()
+    cut = int(len(ws) * TRAIN_SHARE)
+    train, test = ws[:cut], ws[cut:]
+    print(f"{len(ws)} windows | older {len(train)} | newer {len(test)}")
+    print("Any-time slot: first whole minute 2-9m before close with a 60 s YES mid move >= threshold, buy the side that rose at <= the top price, $5.")
+    for thr, hi_p in ((0.25, 0.85), (0.25, 0.82), (0.25, 0.80), (0.20, 0.85), (0.30, 0.85), (0.25, 0.97)):
+        print(f"--- move>={thr * 100:.0f}c, price<={hi_p * 100:.0f}c")
+        print(f"OLD {tally(anytime_trades(train, thr, 9, 2, 0.05, hi_p)).row()}")
+        print(f"NEW {tally(anytime_trades(test, thr, 9, 2, 0.05, hi_p)).row()}")
+    print("--- chosen rule by time left, all data")
+    for a, b in ((9, 6), (5, 3), (2, 2)):
+        print(f"{a}-{b}m left {tally(anytime_trades(ws, 0.25, a, b)).row()}")
+    print("--- chosen rule with worse fills, all data")
+    for slip in (0.0, 0.01, 0.02, 0.03):
+        print(f"paying {slip * 100:.0f}c more: {tally(anytime_trades(ws, slip=slip)).row()}")
+    trades = anytime_trades(ws)
+    days = by_day(trades)
+    lo, hi = day_bootstrap(days)
+    up = sum(1 for v in days.values() if v > 0)
+    t = tally(trades)
+    edge = sum(1 for w, m, side, p in trades if w["result"] == side) / len(trades) - sum(p for _, _, _, p in trades) / len(trades)
+    print(f"--- {len(trades)} trades over {len(days)} days, {len(trades) / len(ws) * 100:.1f}% of windows | {up} up days, {len(days) - up} down | avg ${sum(days.values()) / len(days):+.2f} a day | 95% range ${lo:+.2f} to ${hi:+.2f}")
+    print(f"--- win rate minus price paid: {edge * 100:+.2f}c | net ${t.net:+.2f}, ${t.net / t.n:+.3f} a trade")
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["download"]:
         download(int(sys.argv[2]) if len(sys.argv) > 2 else 3000)
     elif sys.argv[1:2] == ["candidate"]:
         candidate()
+    elif sys.argv[1:2] == ["anytime"]:
+        anytime()
     else:
         report()

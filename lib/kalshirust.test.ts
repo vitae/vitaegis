@@ -10,6 +10,7 @@ import {
   summarizeBacktest,
   type HostConfig,
   type KalshirustEvent,
+  tradeSlot,
 } from './kalshirust';
 
 const base: KalshirustEvent = {
@@ -372,6 +373,15 @@ describe('summarize', () => {
     );
     const s = summarize(events, NOW);
     expect(s.errors.map((e) => e.message)).toEqual(['err6', 'err5', 'err4', 'err3', 'err2']);
+  });
+});
+
+describe('tradeSlot', () => {
+  it('reads the slot from the order id prefix', () => {
+    expect(tradeSlot('anytime-KXBTC15M-1')).toBe('anytime');
+    expect(tradeSlot('settle-KXBTC15M-1')).toBe('last90');
+    expect(tradeSlot('sniper-KXBTC-1')).toBe('other');
+    expect(tradeSlot(null)).toBe('other');
   });
 });
 

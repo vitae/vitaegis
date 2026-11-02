@@ -29,3 +29,4 @@ log = "0.4"
 ring = "0.17"
 base64 = "0.21"
 chrono = { version = "0.4", features = ["serde"] }
+statrs = "0.19.1"
