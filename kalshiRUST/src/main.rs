@@ -30,6 +30,8 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// A window's second trade must rest on this many published settlement prints: a
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
+/// At or below this price a $5 stake wins at least $3 (5 * (1 - p) / p >= 3).
+const BIG_WIN_MAX_PRICE: f64 = 0.625;
 
 /// Entry rules for one mode. NORMAL is the measured-edge default; RISK is the turbo mode
 /// the HUD's red button switches on.
@@ -609,7 +611,10 @@ async fn run_window(
                     let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
                     // Before 3 settlement prints exist the estimate is a projection, so the bar is
                     // higher: at least 90% and 3c of edge. With prints in hand the mode's floor applies.
-                    let projection = est.known_prints < 3;
+                    // Big-win trades (a $5 stake pays $3 or more, i.e. price <= 62.5c) are worth
+                    // taking at the mode's floor even on a projection: at 80% they clear +15c a
+                    // contract after fees.
+                    let projection = est.known_prints < 3 && edge.price > BIG_WIN_MAX_PRICE;
                     let (pwin_floor, known_floor) = if bets_settle == 0 {
                         (if projection { mode.settle_min_pwin.max(0.9) } else { mode.settle_min_pwin }, mode.settle_min_known)
                     } else {
