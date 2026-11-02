@@ -10,7 +10,7 @@ use tokio_tungstenite::tungstenite::handshake::client::Request;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use base64::Engine as _;
 
-use models::{best_edge, clamp_binding, clamp_prob, prob_above, taker_fee, tradable_price, Side};
+use models::{best_edge, clamp_binding, clamp_prob, prob_above, taker_fee, tradable_price, v2_fill_cost, v2_order_terms, Side};
 use paper::{Trade, TradeBook};
 use scanner::ScanConfig;
 use supa::Supa;
@@ -55,6 +55,9 @@ struct ModeParams {
     settle_second_min_known: usize,
     /// Stake as a multiple of Kelly on the bankroll; 0 means a flat stake.
     kelly_mult: f64,
+    /// The early engine trades before the settlement minute on a model blend, with no
+    /// probability floor. It is not settlement math, so NORMAL keeps it off.
+    early_engine: bool,
     /// Highest price the settlement engine will pay in this mode.
     max_price: f64,
     /// Minimum expected profit, in dollars, on the stake it would put down.
@@ -77,6 +80,7 @@ fn mode_params(name: &str) -> ModeParams {
             settle_second_min_pwin: f("RISK_SETTLE_SECOND_MIN_PWIN", 0.7),
             settle_second_min_known: f("RISK_SETTLE_SECOND_MIN_KNOWN", 0.0) as usize,
             kelly_mult: f("RISK_KELLY_MULT", 0.75),
+            early_engine: env::var("RISK_EARLY_ENGINE").map(|v| !v.eq_ignore_ascii_case("false")).unwrap_or(true),
             max_price: f("RISK_SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("RISK_MIN_EV_DOLLARS", 0.5),
         }
@@ -94,6 +98,7 @@ fn mode_params(name: &str) -> ModeParams {
             settle_second_min_pwin: f("SETTLE_SECOND_MIN_PWIN", 0.95),
             settle_second_min_known: SETTLE_SECOND_MIN_KNOWN,
             kelly_mult: 0.0,
+            early_engine: env::var("EARLY_ENGINE").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false),
             max_price: f("SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("MIN_EV_DOLLARS", 0.15),
         }
@@ -136,6 +141,16 @@ fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64) -> f64 
     (mode.kelly_mult * bankroll * f_star).max(5.0).min(mode.max_order_dollars)
 }
 
+/// This machine's name for the HUD. systemd services have no HOSTNAME variable.
+fn host_label() -> String {
+    env::var("COMPUTERNAME")
+        .or_else(|_| env::var("HOSTNAME"))
+        .ok()
+        .or_else(|| fs::read_to_string("/etc/hostname").ok().map(|h| h.trim().to_string()))
+        .filter(|h| !h.is_empty())
+        .unwrap_or_else(|| "bot".into())
+}
+
 /// Signed GET against the trade API; `path` is relative to the v2 base (e.g. "/portfolio/balance").
 async fn kalshi_get(client: &reqwest::Client, rest_base: &str, api_key_id: &str, pem_path: &str, path: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let ts = chrono::Utc::now().timestamp_millis().to_string();
@@ -158,15 +173,6 @@ async fn kalshi_get(client: &reqwest::Client, rest_base: &str, api_key_id: &str,
 async fn kalshi_balance(client: &reqwest::Client, rest_base: &str, api_key_id: &str, pem_path: &str) -> Result<f64, Box<dyn std::error::Error>> {
     let v = kalshi_get(client, rest_base, api_key_id, pem_path, "/portfolio/balance").await?;
     Ok(v["balance_dollars"].as_str().and_then(|s| s.parse::<f64>().ok()).or_else(|| v["balance"].as_f64().map(|c| c / 100.0)).unwrap_or(0.0))
-}
-
-/// Contracts actually filled on a live order, from its status.
-async fn filled_count(ctx: &Ctx, order_id: &str, count: u32) -> Result<(u32, String), Box<dyn std::error::Error>> {
-    let v = kalshi_get(&ctx.client, ctx.rest_base, &ctx.api_key_id, &ctx.pem_path, &format!("/portfolio/orders/{}", order_id)).await?;
-    let o = &v["order"];
-    let remaining = o["remaining_count_fp"].as_str().and_then(|s| s.parse::<f64>().ok()).or_else(|| o["remaining_count"].as_f64()).unwrap_or(count as f64);
-    let status = o["status"].as_str().unwrap_or("?").to_string();
-    Ok(((count as f64 - remaining).max(0.0).round() as u32, status))
 }
 
 impl Ctx {
@@ -216,7 +222,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    let bot_limit: usize = env::var("PAPER_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(8);
+    // The trade limit ends a paper run. A live bot stops on STOP or the daily loss limit.
+    let bot_limit: usize = if live { usize::MAX } else { env::var("PAPER_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(8) };
     let sniper_limit: usize = env::var("SNIPE_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(20);
     let initial_mode = env::var("MODE").unwrap_or_else(|_| "NORMAL".into()).to_uppercase();
     let supa = Supa::from_env(&client);
@@ -342,7 +349,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Startup stamp for the HUD's uptime and trades-since-start readout.
         s.patch_config(json!({
             "bot_started_at": chrono::Utc::now().to_rfc3339(),
-            "host_name": env::var("COMPUTERNAME").or_else(|_| env::var("HOSTNAME")).unwrap_or_else(|_| "bot".into()),
+            "host_name": host_label(),
             "host_status": "running",
             "host_seen_at": chrono::Utc::now().to_rfc3339(),
         }));
@@ -358,7 +365,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 // Heartbeat for the HUD's RUN / STOP control: this host, this bot, alive now.
                 s.patch_config(json!({
-                    "host_name": env::var("COMPUTERNAME").or_else(|_| env::var("HOSTNAME")).unwrap_or_else(|_| "bot".into()),
+                    "host_name": host_label(),
                     "host_status": "running",
                     "host_seen_at": chrono::Utc::now().to_rfc3339(),
                 }));
@@ -513,6 +520,7 @@ async fn run_window(
     let mut bets_early = 0usize;
     let mut bets_settle = 0usize;
     let mut last_settle_entry = 0i64;
+    let mut last_early_attempt = 0i64;
     let mut last_status = 0i64;
     let mut last_print = 0i64;
     let mut calib: Vec<(i64, f64, f64, f64)> = Vec::new();
@@ -635,10 +643,11 @@ async fn run_window(
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1 && allowed {
-                            bets_settle += 1;
                             last_settle_entry = now;
                             let note = format!("settlement engine | {}s left | {}/60 prints known | est {:.2} ± {:.2} vs strike {:.2}", rem as i64, est.known_prints, est.mean, est.sd, strike);
-                            enter(ctx, &ticker, strike, close_ts, spot, est.p_yes, est.p_yes, 0.0, edge, dollars, "BTC 15 min (last minute)", "settle", &note, 10).await;
+                            if enter(ctx, &ticker, strike, close_ts, spot, est.p_yes, est.p_yes, 0.0, edge, dollars, "BTC 15 min (last minute)", "settle", &note).await {
+                                bets_settle += 1;
+                            }
                         }
                     }
                 }
@@ -710,16 +719,18 @@ async fn run_window(
 
         let Some(edge) = edge else { continue };
         let in_window = rem >= mode.min_secs_left && rem <= mode.max_secs_left;
-        if bets_early >= mode.bets_per_window || !in_window || edge.cents < mode.min_edge_cents {
+        if !mode.early_engine || bets_early >= mode.bets_per_window || !in_window || edge.cents < mode.min_edge_cents || now - last_early_attempt < SETTLE_REENTRY_SECS {
             continue;
         }
         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
         if !allowed || (mode.max_order_dollars / edge.price).floor() < 1.0 {
             continue;
         }
-        bets_early += 1;
+        last_early_attempt = now;
         let note = format!("early engine | {}s left | gbm {:.1}% | momentum {:+.3}% | model weight {:.2}", rem as i64, p_gbm * 100.0, mom * 100.0, ctx.model_weight);
-        enter(ctx, &ticker, strike, close_ts, spot, p_yes, p_gbm, mom, edge, mode.max_order_dollars, "BTC 15 min", "vitaegis", &note, 30).await;
+        if enter(ctx, &ticker, strike, close_ts, spot, p_yes, p_gbm, mom, edge, mode.max_order_dollars, "BTC 15 min", "vitaegis", &note).await {
+            bets_early += 1;
+        }
     }
 
     // The window closed: read the settlement value off the feed and score the estimates.
@@ -754,7 +765,7 @@ async fn run_window(
     Ok(())
 }
 
-/// Record a trade (and place it when live).
+/// Record a trade, placing it first when live. True when a position now exists.
 #[allow(clippy::too_many_arguments)]
 async fn enter(
     ctx: &Arc<Ctx>,
@@ -770,55 +781,49 @@ async fn enter(
     title: &str,
     tag: &str,
     note: &str,
-    order_ttl_secs: i64,
-) {
+) -> bool {
     let now = chrono::Utc::now().timestamp();
     let mut count = (dollars / edge.price).floor() as u32;
-    let mut cost = count as f64 * edge.price;
+    let mut price = edge.price;
     let mut fee = taker_fee(edge.price) * count as f64;
-    let price_cents = (edge.price * 100.0).round() as u32;
     let client_order_id = format!("{}-{}-{}", tag, ticker, chrono::Utc::now().timestamp_millis());
     println!(
-        "[SIGNAL] {} | buy {} x{} @ {}c (${:.2}, fee ${:.2}) | P(win) {:.1}% | edge {:+.2}c | {} | {}",
-        ticker, edge.side.as_str().to_uppercase(), count, price_cents, cost, fee,
+        "[SIGNAL] {} | buy {} x{} @ {:.1}c (${:.2}, fee ${:.2}) | P(win) {:.1}% | edge {:+.2}c | {} | {}",
+        ticker, edge.side.as_str().to_uppercase(), count, price * 100.0, count as f64 * price, fee,
         match edge.side { Side::Yes => p_yes, Side::No => 1.0 - p_yes } * 100.0, edge.cents, note, ctx.mode_label()
     );
     let order_id = if ctx.live {
-        match place_order(ctx, ticker, edge.side, price_cents, count, &client_order_id, order_ttl_secs).await {
-            Ok(id) => {
-                println!("[LIVE ORDER] {} x{} @ {}c -> order {}", ticker, count, price_cents, id);
-                // Paper assumed full fills; live records only what filled.
-                sleep(Duration::from_millis(1500)).await;
-                match filled_count(ctx, &id, count).await {
-                    Ok((filled, status)) if filled == 0 => {
-                        println!("[LIVE] order {} unfilled (status {}): nothing recorded", id, status);
-                        if let Some(s) = &ctx.supa {
-                            s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": true, "ticker": ticker, "message": format!("order {} unfilled ({}) at {}c", id, status, price_cents) }));
-                        }
-                        return;
-                    }
-                    Ok((filled, status)) => {
-                        if filled < count {
-                            println!("[LIVE] order {} partially filled: {}/{} (status {})", id, filled, count, status);
-                        }
-                        count = filled;
-                        cost = count as f64 * edge.price;
-                        fee = taker_fee(edge.price) * count as f64;
-                    }
-                    Err(e) => eprintln!("[!] Could not confirm fill for {} ({}); recording the full order", id, e),
+        match place_order(ctx, ticker, edge.side, edge.price, count, &client_order_id).await {
+            Ok(fill) if fill.filled <= 0.0 => {
+                println!("[LIVE] order {} got no fill at {:.1}c: the book moved, nothing bought", fill.order_id, edge.price * 100.0);
+                if let Some(s) = &ctx.supa {
+                    s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": true, "ticker": ticker, "message": format!("no fill at {:.1}c (book moved), nothing bought", edge.price * 100.0) }));
                 }
-                Some(id)
+                return false;
+            }
+            Ok(fill) => {
+                // Whole contracts on the record; fills smaller than one still count as one.
+                count = (fill.filled.round() as u32).max(1);
+                if let Some(avg) = fill.average_price {
+                    price = v2_fill_cost(edge.side, avg, edge.price);
+                }
+                fee = match fill.fee_per_contract {
+                    Some(per) => per * fill.filled,
+                    None => taker_fee(price) * fill.filled,
+                };
+                println!("[LIVE ORDER] {} filled {:.2} @ {:.2}c, fee ${:.2} -> order {}", ticker, fill.filled, price * 100.0, fee, fill.order_id);
+                Some(fill.order_id)
             }
             Err(e) => {
                 eprintln!("[!] Order failed: {}", e);
                 if let Some(s) = &ctx.supa {
                     s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": true, "ticker": ticker, "message": format!("order: {}", e) }));
                 }
-                return;
+                return false;
             }
         }
     } else {
-        println!("[PAPER] would buy {} {} x{} @ {}c (LIVE_TRADING=false)", edge.side.as_str().to_uppercase(), ticker, count, price_cents);
+        println!("[PAPER] would buy {} {} x{} @ {:.1}c (LIVE_TRADING=false)", edge.side.as_str().to_uppercase(), ticker, count, price * 100.0);
         None
     };
     ctx.book.lock().await.record(
@@ -828,9 +833,9 @@ async fn enter(
             ticker: ticker.to_string(),
             title: title.to_string(),
             side: edge.side.as_str().into(),
-            price: edge.price,
+            price,
             count,
-            cost,
+            cost: count as f64 * price,
             fee,
             model_prob: p_yes,
             gbm_prob: p_gbm,
@@ -849,29 +854,36 @@ async fn enter(
         ctx.supa.as_ref(),
         note,
     );
+    true
 }
 
-async fn place_order(ctx: &Ctx, ticker: &str, side: Side, price_cents: u32, count: u32, client_order_id: &str, ttl_secs: i64) -> Result<String, Box<dyn std::error::Error>> {
-    let path = "/trade-api/v2/portfolio/orders";
+/// What an immediate-or-cancel order did, final as soon as the call returns.
+struct Fill {
+    order_id: String,
+    filled: f64,
+    average_price: Option<f64>,
+    fee_per_contract: Option<f64>,
+}
+
+/// Buy `side` through the V2 order API. Immediate-or-cancel: it takes what is available at
+/// `cost` or better and the rest is cancelled, so nothing can rest and fill unrecorded.
+async fn place_order(ctx: &Ctx, ticker: &str, side: Side, cost: f64, count: u32, client_order_id: &str) -> Result<Fill, Box<dyn std::error::Error>> {
+    let path = "/trade-api/v2/portfolio/events/orders";
     let ts = chrono::Utc::now().timestamp_millis().to_string();
     let signature = sign_message(&ctx.pem_path, &format!("{}POST{}", ts, path))?;
-    let now = chrono::Utc::now().timestamp();
-    let mut body = json!({
+    let (book_side, price) = v2_order_terms(side, cost);
+    let body = json!({
         "ticker": ticker,
-        "action": "buy",
-        "side": side.as_str(),
-        "type": "limit",
-        "count": count,
         "client_order_id": client_order_id,
-        "expiration_ts": now + ttl_secs,
+        "side": book_side,
+        "count": format!("{}.00", count),
+        "price": price,
+        "time_in_force": "immediate_or_cancel",
+        "self_trade_prevention_type": "taker_at_cross",
     });
-    match side {
-        Side::Yes => body["yes_price"] = json!(price_cents),
-        Side::No => body["no_price"] = json!(price_cents),
-    }
     let resp = ctx
         .client
-        .post(format!("{}/portfolio/orders", ctx.rest_base))
+        .post(format!("{}/portfolio/events/orders", ctx.rest_base))
         .header("KALSHI-ACCESS-KEY", &ctx.api_key_id)
         .header("KALSHI-ACCESS-SIGNATURE", &signature)
         .header("KALSHI-ACCESS-TIMESTAMP", &ts)
@@ -883,7 +895,13 @@ async fn place_order(ctx: &Ctx, ticker: &str, side: Side, price_cents: u32, coun
     if !status.is_success() {
         return Err(format!("{} {}", status, v).into());
     }
-    Ok(v["order"]["order_id"].as_str().unwrap_or("unknown").to_string())
+    let dollars = |k: &str| v[k].as_str().and_then(|x| x.parse::<f64>().ok());
+    Ok(Fill {
+        order_id: v["order_id"].as_str().unwrap_or("unknown").to_string(),
+        filled: dollars("fill_count").ok_or_else(|| format!("no fill_count in order response: {}", v))?,
+        average_price: dollars("average_fill_price"),
+        fee_per_contract: dollars("average_fee_paid"),
+    })
 }
 
 fn sign_message(pem_path: &str, msg: &str) -> Result<String, Box<dyn std::error::Error>> {

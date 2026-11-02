@@ -130,6 +130,32 @@ pub fn best_edge(p_yes: f64, yes_ask: Option<f64>, no_ask: Option<f64>) -> Optio
     best
 }
 
+/// V2 order terms for buying `side` at `cost` dollars per contract. V2 quotes everything on
+/// the YES book: buying YES is a bid at the YES price, buying NO is an ask at 1 - cost.
+pub fn v2_order_terms(side: Side, cost: f64) -> (&'static str, String) {
+    match side {
+        Side::Yes => ("bid", format!("{:.4}", cost)),
+        Side::No => ("ask", format!("{:.4}", 1.0 - cost)),
+    }
+}
+
+/// Cost per contract of a V2 fill. `average_fill_price` is on the YES book, so a NO fill
+/// costs 1 - price. If that would exceed the limit by more than a tick the response was
+/// already in NO terms, and the value is used as it came.
+pub fn v2_fill_cost(side: Side, average_fill_price: f64, limit: f64) -> f64 {
+    match side {
+        Side::Yes => average_fill_price,
+        Side::No => {
+            let cost = 1.0 - average_fill_price;
+            if cost > limit + 0.011 {
+                average_fill_price
+            } else {
+                cost
+            }
+        }
+    }
+}
+
 fn erf(x: f64) -> f64 {
     // Abramowitz & Stegun 7.1.26, |error| < 1.5e-7
     let a1 = 0.254829592;
@@ -177,6 +203,21 @@ mod tests {
     fn fair_price_has_negative_edge_after_fee() {
         let e = ev_cents(0.5, Side::Yes, 0.5);
         assert!((e + 1.75).abs() < 1e-9, "{e}");
+    }
+
+    #[test]
+    fn v2_terms_quote_the_yes_book() {
+        assert_eq!(v2_order_terms(Side::Yes, 0.91), ("bid", "0.9100".to_string()));
+        assert_eq!(v2_order_terms(Side::No, 0.30), ("ask", "0.7000".to_string()));
+        assert_eq!(v2_order_terms(Side::No, 0.905), ("ask", "0.0950".to_string()));
+    }
+
+    #[test]
+    fn v2_fill_cost_is_in_the_buyers_terms() {
+        assert!((v2_fill_cost(Side::Yes, 0.91, 0.91) - 0.91).abs() < 1e-9);
+        assert!((v2_fill_cost(Side::No, 0.70, 0.30) - 0.30).abs() < 1e-9);
+        assert!((v2_fill_cost(Side::No, 0.72, 0.30) - 0.28).abs() < 1e-9);
+        assert!((v2_fill_cost(Side::No, 0.30, 0.30) - 0.30).abs() < 1e-9);
     }
 
     #[test]

@@ -10,3 +10,4 @@ trades.archive-*.jsonl
 kalshirust.log
 kalshirust.err.log
 kalshirust.pid
+research/cache/

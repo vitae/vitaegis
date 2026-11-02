@@ -474,8 +474,9 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: $5 max, 2¢ min edge, 1 trade per window, enter 90s–5min before close. RISK: $20 max,
-        1¢ min edge, 2 trades per window, enter 30s–7min before close.
+        NORMAL: settlement math only, $5 a trade, 1 per window, 80%+ win chance, in the last 90 s.
+        RISK: up to $100 a trade, 2 per window, as low as 60% in the last 90 s, plus earlier trades
+        from 7 min out with no win-chance floor.
       </p>
     </div>
   );

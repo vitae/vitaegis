@@ -474,11 +474,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Same windows with the pure model (x1.00): {} trades | hit {:.0}% | risked ${:.2} | net ${:+.2} | ROI {:+.1}%",
         n1, if n1 > 0 { w1 as f64 / n1 as f64 * 100.0 } else { 0.0 }, risked1, p1, if risked1 > 0.0 { p1 / risked1 * 100.0 } else { 0.0 });
 
+    // Reversal scan: when the book is extreme with minutes left, how often does the window
+    // flip, and what does buying the cheap side at the ask return after fees?
+    println!();
+    println!("==================== REVERSAL SCAN (buy the cheap side when the book is extreme) ====================");
+    println!("{:<10} {:<12} {:>8} {:>9} {:>10} {:>12} {:>10}", "secs left", "extreme", "windows", "reversed", "rev %", "net $ ($5)", "ROI %");
+    for &secs in &[300i64, 240, 180, 120, 90] {
+        for &(label, lo, hi) in &[("YES>=90c", 0.90, 1.0), ("YES>=80c", 0.80, 0.90), ("YES<=10c", 0.0, 0.10), ("YES<=20c", 0.10, 0.20)] {
+            let mut n = 0usize;
+            let mut rev = 0usize;
+            let mut net = 0.0;
+            for w in &windows {
+                let t = w.close_ts - secs;
+                let Some(&(ask, bid)) = w.book.get(&t) else { continue };
+                let (Some(ask), Some(bid)) = (ask, bid) else { continue };
+                if !(ask >= lo && ask < hi) {
+                    continue;
+                }
+                let (cheap_side, cheap_price) = if ask >= 0.5 { ("no", 1.0 - bid) } else { ("yes", ask) };
+                if !(0.01..=0.99).contains(&cheap_price) {
+                    continue;
+                }
+                n += 1;
+                let reversed = w.result == cheap_side;
+                if reversed {
+                    rev += 1;
+                }
+                let count = (rules.dollars / cheap_price).floor();
+                let fee = taker_fee(cheap_price) * count;
+                net += if reversed { (1.0 - cheap_price) * count - fee } else { -cheap_price * count - fee };
+            }
+            if n > 0 {
+                println!("{:<10} {:<12} {:>8} {:>9} {:>9.1}% {:>+12.2} {:>+9.1}", secs, label, n, rev, rev as f64 / n as f64 * 100.0, net, net / (n as f64 * rules.dollars) * 100.0);
+            }
+        }
+    }
+
     let body: String = trades.iter().filter_map(|t| serde_json::to_string(t).ok()).map(|l| l + "\n").collect();
     std::fs::write("backtest.jsonl", body)?;
     println!("[+] Wrote backtest.jsonl ({} trades)", trades.len());
 
-    if let Some(s) = Supa::from_env(&client) {
+    // The HUD shows live data unless a backtest is explicitly published with BACKTEST_PUSH=true.
+    let publish = env::var("BACKTEST_PUSH").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
+    if let Some(s) = Supa::from_env(&client).filter(|_| publish) {
         match s.delete_source("backtest").await {
             Ok(()) => println!("[+] Cleared previous backtest on the HUD"),
             Err(e) => eprintln!("[!] Could not clear previous backtest: {}", e),
