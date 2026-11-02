@@ -21,6 +21,8 @@ pub struct ScanConfig {
     pub min_secs_left: i64,
     /// Paper-trade the candidates (off: the scan still feeds the HUD's snipe list).
     pub trade: bool,
+    /// Only candidates whose side has at least this win probability are listed or traded.
+    pub min_pwin: f64,
 }
 
 impl ScanConfig {
@@ -33,7 +35,15 @@ impl ScanConfig {
             max_horizon_secs: f("SNIPE_MAX_HORIZON_SECS", 86_400.0) as i64,
             min_secs_left: f("SNIPE_MIN_SECS_LEFT", 60.0) as i64,
             trade: std::env::var("SNIPE_TRADES").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false),
+            min_pwin: f("SNIPE_MIN_PWIN", 0.8),
         }
+    }
+}
+
+fn p_win(c: &Candidate) -> f64 {
+    match c.edge.side {
+        crate::models::Side::Yes => c.edge.p_yes,
+        crate::models::Side::No => 1.0 - c.edge.p_yes,
     }
 }
 
@@ -157,13 +167,16 @@ pub async fn scan(
     if spot <= 0.0 {
         return;
     }
-    let list = candidates(client, rest_base, vol, spot, cfg).await;
+    let priced = candidates(client, rest_base, vol, spot, cfg).await;
+    // Sure trades only: the bot's side must be a strong favorite by its own math and still
+    // clear the edge bar; the rest is noise for the list and lottery tickets for the book.
+    let list: Vec<Candidate> = priced.iter().filter(|c| p_win(c) >= cfg.min_pwin && c.edge.cents >= cfg.min_edge_cents).cloned().collect();
     if list.is_empty() {
-        println!("[SNIPER] no priceable markets this pass");
+        println!("[SNIPER] {} markets priced; none with P(win) >= {:.0}% and edge >= {:.0}c", priced.len(), cfg.min_pwin * 100.0, cfg.min_edge_cents);
         return;
     }
     let top: Vec<&Candidate> = list.iter().take(15).collect();
-    println!("[SNIPER] {} markets priced; top edges:", list.len());
+    println!("[SNIPER] {} markets priced; {} sure candidates (P(win) >= {:.0}%, edge >= {:.0}c):", priced.len(), list.len(), cfg.min_pwin * 100.0, cfg.min_edge_cents);
     for c in top.iter().take(5) {
         println!(
             "         {:+.1}c  {} {} | buy {} @ {}c | model {:.0}% | {}m left",
