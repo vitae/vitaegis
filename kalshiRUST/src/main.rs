@@ -81,7 +81,7 @@ fn mode_params(name: &str) -> ModeParams {
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.9),
-            settle_min_known: f("SETTLE_MIN_KNOWN", 3.0) as usize,
+            settle_min_known: f("SETTLE_MIN_KNOWN", 0.0) as usize,
             settle_min_edge_cents: f("SETTLE_MIN_EDGE_CENTS", 2.0),
             settle_second_min_pwin: f("SETTLE_SECOND_MIN_PWIN", 0.95),
             settle_second_min_known: SETTLE_SECOND_MIN_KNOWN,
@@ -557,7 +557,12 @@ async fn run_window(
             let (est, feed_fresh, sigma_1s, anchor) = {
                 let b = ctx.brti.lock().unwrap();
                 let fresh = b.fresh(now);
-                let s1 = b.sigma_1s().unwrap_or(0.00005);
+                // Per-second vol: the larger of the last ten minutes of prints and the 15-minute
+                // candle vol scaled to one second. The tick estimate alone is built from the calm
+                // minutes before close and understated a $40 final-minute move (z = -2.8).
+                let s_tick = b.sigma_1s().unwrap_or(0.00005);
+                let s_candle = ctx.vol.lock().unwrap().sigma_15m().map(|s| s / 30.0).unwrap_or(0.0);
+                let s1 = s_tick.max(s_candle);
                 let anchor = b.anchor(now_ms);
                 let lag = (now_ms as f64 / 1000.0 - b.as_of as f64).clamp(1.0, 10.0);
                 let est = match (fresh, anchor) {
@@ -602,8 +607,16 @@ async fn run_window(
                 }
                 if let Some(edge) = edge {
                     let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
-                    let (pwin_floor, known_floor) = if bets_settle == 0 { (mode.settle_min_pwin, mode.settle_min_known) } else { (mode.settle_second_min_pwin, mode.settle_second_min_known) };
-                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= mode.settle_min_edge_cents && p_win >= pwin_floor && est.known_prints >= known_floor {
+                    // Before 3 settlement prints exist the estimate is a projection, so the bar is
+                    // higher: at least 90% and 3c of edge. With prints in hand the mode's floor applies.
+                    let projection = est.known_prints < 3;
+                    let (pwin_floor, known_floor) = if bets_settle == 0 {
+                        (if projection { mode.settle_min_pwin.max(0.9) } else { mode.settle_min_pwin }, mode.settle_min_known)
+                    } else {
+                        (mode.settle_second_min_pwin, mode.settle_second_min_known)
+                    };
+                    let edge_floor = if projection { mode.settle_min_edge_cents.max(3.0) } else { mode.settle_min_edge_cents };
+                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && p_win >= pwin_floor && est.known_prints >= known_floor {
                         let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars);
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
