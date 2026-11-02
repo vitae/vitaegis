@@ -1,0 +1,23 @@
+/* The RISK ON button breathes red while the bot is in RISK mode. */
+
+.riskOn {
+  animation: riskPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes riskPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.6);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(255, 0, 0, 0.95);
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .riskOn {
+    animation: none;
+  }
+}
