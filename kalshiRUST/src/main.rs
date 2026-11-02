@@ -94,9 +94,8 @@ fn mode_params(name: &str) -> ModeParams {
             settle_second_min_pwin: f("SETTLE_SECOND_MIN_PWIN", 0.95),
             settle_second_min_known: SETTLE_SECOND_MIN_KNOWN,
             kelly_mult: 0.0,
-            // 62.5c is where a $5 stake pays at least $3.
-            max_price: f("SETTLE_MAX_PRICE", BIG_WIN_MAX_PRICE),
-            min_ev_dollars: f("MIN_EV_DOLLARS", 0.5),
+            max_price: f("SETTLE_MAX_PRICE", 0.97),
+            min_ev_dollars: f("MIN_EV_DOLLARS", 0.15),
         }
     }
 }
