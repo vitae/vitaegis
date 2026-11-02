@@ -34,16 +34,16 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// A window's second trade must rest on this many published settlement prints: a
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
-/// Sharp-rise slot: with 2 minutes and then 1 minute left, the side whose mid rose this much over the
-/// prior minute, if it costs 72c to 82c. On 2,958 windows: 136 trades, 86.8% wins against 79% needed to
-/// break even, $0.48 a trade after fees, positive in all three parts of the month, t=2.79. Starting
-/// earlier adds nothing: from 9 to 4 minutes left the same rule is near zero. The same prices while
-/// falling won 69% and lost money. Picked from many rules tried on the same data, so expect less.
-const SHARP_FIRST_MIN: i64 = 2;
+/// Sharp-rise slot: with 1 minute left, the side whose mid rose this much over the prior minute, if it
+/// costs 72c to 82c. On 2,958 windows: 57 trades, 91.2% wins against 79% needed to break even, $0.74 a
+/// trade after fees, positive in all three parts of the month, t=3.27. Starting with 2 minutes left adds
+/// about $0.69 a day but drops the average to $0.48 a trade. The same prices while falling won 69% and
+/// lost money. Picked from many rules tried on the same data, so expect less.
+const SHARP_FIRST_MIN: i64 = 1;
 const SHARP_LAST_MIN: i64 = 1;
 const SHARP_MIN_MOVE: f64 = 0.15;
 const SHARP_MAX_PRICE: f64 = 0.85;
-/// Win rate above price used for expected profit, below the 9.3c measured.
+/// Win rate above price used for expected profit, below the 13.6c measured.
 const SHARP_EDGE: f64 = 0.08;
 /// Every price here carries a 75%+ win chance: 72c plus the edge above.
 const SHARP_PRICE_BANDS: &[(f64, f64)] = &[(0.72, 0.82)];
@@ -558,7 +558,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("[+] Analytics engine: {}", if ctx.analytics_veto { "must agree before any settlement trade" } else { "logging only" });
     println!("[+] Every trade must win over ${:.2} after fees", mode_params("NORMAL").min_win_dollars);
     let ranges = |bands: &[(f64, f64)]| bands.iter().map(|(lo, hi)| format!("{:.0}-{:.0}c", lo * 100.0, hi * 100.0)).collect::<Vec<_>>().join(" and ");
-    println!("[+] Sharp-rise slot: {:.0}c+ rise over the prior minute, checked with {} and {} minutes left, at {}", SHARP_MIN_MOVE * 100.0, SHARP_FIRST_MIN, SHARP_LAST_MIN, ranges(SHARP_PRICE_BANDS));
+    println!("[+] Sharp-rise slot: {:.0}c+ rise over the prior minute, checked with {} minute left, at {}", SHARP_MIN_MOVE * 100.0, SHARP_FIRST_MIN, ranges(SHARP_PRICE_BANDS));
     println!("[+] Last-90-seconds slot: settlement math, at {}", ranges(NORMAL_PRICE_BANDS));
 
     // Coinbase spot: feeds both the watch channel and the tick-vol estimator.
@@ -1446,8 +1446,8 @@ mod tests {
     }
 
     #[test]
-    fn sharp_slot_checks_in_the_last_two_minutes() {
-        assert_eq!((SHARP_FIRST_MIN, SHARP_LAST_MIN), (2, 1));
+    fn sharp_slot_checks_inside_the_last_90_seconds() {
+        assert_eq!((SHARP_FIRST_MIN, SHARP_LAST_MIN), (1, 1));
     }
 
     #[test]

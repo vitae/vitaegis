@@ -25,7 +25,7 @@
    expected value: `EV = p_win·(1 − price) − (1 − p_win)·price − 0.07·price·(1 − price)`.
    NORMAL mode needs ≥ 2¢ per contract; RISK mode needs ≥ 1¢.
 2. **Prices both sides.** YES at the ask or NO at (1 − YES bid), whichever has the edge.
-3. **Enters late.** NORMAL: one trade a window, only in the last 2 minutes, at a 75%+ win chance. RISK: the last 90 s, plus the early engine from 7 minutes out.
+3. **Enters late.** NORMAL: one trade a window, only in the last 90 s, at a 75%+ win chance. RISK: the last 90 s, plus the early engine from 7 minutes out.
 4. **Caps size.** NORMAL $5 per trade, 1 per window, and live trading stops for the UTC day after a $30 loss. RISK up to $100, 2 per window.
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
@@ -43,32 +43,49 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | 2 | 2 |
-| Entry | one trade a window, only in the last 2 minutes | last 90 s, plus the early engine from 7 min out |
+| Entry | one trade a window, only in the last 90 s | last 90 s, plus the early engine from 7 min out |
 | Last-90 trade | 75%+ win chance; 90% and 3c of edge before 3 prints exist unless the price is 62.5c or less | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | 2c of edge, $0.15 expected profit, 97c top price | $0.50 expected profit, 97c top price |
 
 Every NORMAL trade needs a 75%+ win chance, and none buys a falling price. NORMAL makes one trade a
-window (`BETS_PER_WINDOW`), in the last 2 minutes, by whichever of two rules fires first:
+window (`BETS_PER_WINDOW`), in the last 90 s, by whichever of two rules fires first:
 
-- **Sharp rise.** With 2 minutes and then 1 minute left, the side whose mid rose 15c or more over the
-  prior minute, at 72c to 82c.
-- **Settlement math.** In the last 90 s, a 75%+ win chance from both engines, at 60c or less or at 72c
-  to 82c. It skips a side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price
-  history.
+- **Sharp rise.** With 1 minute left, the side whose mid rose 15c or more over the prior minute, at 72c
+  to 82c.
+- **Settlement math.** A 75%+ win chance from both engines, at 60c or less or at 72c to 82c. It skips a
+  side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price history.
 
-On the month of data the sharp-rise rule is 136 trades in 5% of windows, 86.8% wins against 79% needed
-to break even, +$0.48 a trade, about +$1.98 a day, worst drop $16.39. It is positive in all three parts
-of the month (+$0.20, +$1.13, +$0.18 a trade) and has t=2.79. Its edge appears only near the close:
+On the month of data the sharp-rise rule is 57 trades in 2% of windows, 91.2% wins against 79% needed
+to break even, +$0.74 a trade, about +$1.29 a day, worst drop $9.93. It is positive in all three parts
+of the month (+$0.72, +$1.24, +$0.22 a trade) and has t=3.27. Buyers paid about the quoted price in the
+first 3 s after signals. Its edge appears only near the close:
 
 | Minutes left, alone | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
 |---|---|---|---|---|---|---|---|---|---|
 | $ a trade | +0.11 | -0.02 | -0.12 | +0.03 | +0.12 | -0.14 | +0.21 | +0.32 | +0.74 |
 
-Starting at 3 minutes left turns the newest part of the month negative, so it stops at 2. The same
-prices while falling won 69% and lost $0.53 a trade. It was picked from well over a hundred rules
-tried on the same data, so expect less. Requiring the settlement model to agree made it worse.
+Also checking with 2 minutes left gives 136 trades, 86.8% wins, +$0.48 a trade, about +$1.98 a day, worst
+drop $16.39. The same prices while falling won 69% and lost $0.53 a trade. It was picked from well over a
+hundred rules tried on the same data, so expect less. Requiring the settlement model to agree made it
+worse.
+
+Quant methods tested against this rule, and why none changed it:
+
+- **Brier decomposition.** Kalshi's price is very well calibrated overall (reliability 0.0003 to 0.0014),
+  so edge can only come from narrow conditions.
+- **Isotonic calibration.** Walk-forward selection with a 75% floor earned under +$0.10 a trade, against
+  +$0.69 for the fixed rule on the same period.
+- **Kelly sizing.** $5 is 19% of full Kelly, and about half of full Kelly at the low end of the win rate.
+- **VPIN, Glosten-Milgrom, flow toxicity.** The most toxic third of signals won 82.6%, against 88.9%, with no
+  steady pattern across six ways of splitting 136 signals.
+- **Queue depth, market impact.** A median 5,751 contracts trade at the bid in 5 s, against about 6 for $5.
+- **Spread sweeps, adverse selection.** Resting 10 s at the bid, filled only when the price trades through,
+  earned +$0.58 a trade against +$0.48, about $5 a month, and most missed fills would have won.
+- **Multi-window ramping, repricing.** A second tranche earned +$0.19 an add and breaks the one-trade rule.
+  Stop losses lost money. Taking profit at 97c added $2.76 on 81 trades.
+- **Avellaneda-Stoikov, GLFT.** These quote both sides as a market maker, which a $5 buyer does not do.
 
 Removed after testing: buying underdogs at 30c or less (wins about 40%, +$2.52 a trade at best, flat
 to negative lately), buying the side that just fell (loses), and the earlier trade 5 to 2 minutes
@@ -168,7 +185,7 @@ older two thirds and scored on the newer third. Run `report` and `candidate` to 
   and 15 down. An earlier version of this test showed more because it picked each window's
   latest move, which live trading cannot know.
 
-No earlier rule clearly beats the market, so NORMAL trades only in the last 2 minutes. These results say nothing about
+No earlier rule clearly beats the market, so NORMAL trades only in the last 90 s. These results say nothing about
 the settlement engine itself, because Kalshi publishes only the last 60 BRTI prints: its
 evidence can only come from live windows and `settle_calib.jsonl`.
 
