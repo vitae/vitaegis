@@ -1,18 +1,23 @@
 'use client';
 
-// /kalshirust: the Rust bot's page. Polls /api/kalshirust every 5 s; the RISK button flips
-// kalshirust_config.mode through /api/kalshirust/mode with the admin key from localStorage.
+// /kalshirust: the Rust bot's page. Polls /api/kalshirust every 5 s. With the admin key from
+// localStorage, RUN / STOP writes kalshirust_config.desired_state through /api/kalshirust/control
+// (the host's supervisor does the rest) and RISK flips kalshirust_config.mode through /api/kalshirust/mode.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KEY_STORAGE } from '@/components/admin/AdminShell';
 import {
   dollars,
+  hostLabel,
+  hostState,
   kalshiUrl,
+  pendingCommand,
   signedDollars,
   WINDOW_SECS,
   WINDOWS_PER_DAY,
   type BacktestSummary,
   type BacktestTrade,
+  type HostConfig,
   type Prediction,
   type RustMode,
   type Summary,
@@ -24,10 +29,27 @@ import LineChart from '../kalshi/LineChart';
 import kalshiStyles from '../kalshi/kalshi.module.css';
 import styles from './kalshirust.module.css';
 
+type Config = HostConfig & {
+  mode: RustMode;
+  updatedAt: string | null;
+  commandAt: string | null;
+  hostName: string | null;
+};
+
 type Payload = Summary & {
-  config: { mode: RustMode; updatedAt: string | null };
+  config: Config;
   backtest: BacktestSummary;
   generatedAt: string;
+};
+
+const EMPTY_CONFIG: Config = {
+  mode: 'NORMAL',
+  updatedAt: null,
+  desiredState: 'stopped',
+  commandAt: null,
+  hostName: null,
+  hostStatus: null,
+  hostSeenAt: null,
 };
 
 const POLL_MS = 5_000;
@@ -124,9 +146,18 @@ export default function Board() {
     };
   }, [load]);
 
+  const onChanged = useCallback(
+    async (patch: Partial<Config>) => {
+      setData((d) => (d ? { ...d, config: { ...d.config, ...patch } } : d));
+      await load();
+    },
+    [load],
+  );
+
   const status = data?.status ?? null;
   const online = data?.online ?? false;
-  const mode = data?.config.mode ?? 'NORMAL';
+  const config = data?.config ?? EMPTY_CONFIG;
+  const mode = config.mode;
   const heartbeatAge =
     status && data ? Math.max(0, Math.round((now - Date.parse(status.created_at)) / 1000)) : null;
   const secondsLeft =
@@ -155,14 +186,15 @@ export default function Board() {
                       : `Offline · ${heartbeatAge < 3600 ? `${heartbeatAge}s` : hst(status?.created_at)}`
                 }
               />
-              <Pill on={mode === 'RISK'} red={mode === 'RISK'} label={mode} />
+              <Pill on={mode === 'RISK'} tone="red" label={mode} />
               <Pill
                 on={status?.live === true}
                 label={status ? (status.live ? 'Live' : 'Paper') : 'Paper / Live —'}
               />
+              <HostPill config={data ? data.config : null} now={now} />
             </div>
           </div>
-          <RiskButton mode={mode} onChanged={load} />
+          <Controls config={config} onChanged={onChanged} />
         </header>
 
         {error && <p className="mt-6 text-sm text-vitae-red">{error}</p>}
@@ -208,19 +240,27 @@ export default function Board() {
 // ---------------------------------------------------------------------------
 // Pieces
 // ---------------------------------------------------------------------------
+const PILL_TONES = {
+  green: { ring: 'border-vitae-green/50 text-white', dot: 'bg-vitae-green' },
+  red: { ring: 'border-vitae-red/60 text-white', dot: 'bg-vitae-red' },
+  amber: { ring: 'border-amber-400/60 text-white', dot: 'bg-amber-400' },
+};
+
 function Pill({
   on,
   label,
+  detail,
   pulse,
-  red,
+  tone = 'green',
 }: {
   on: boolean;
   label: string;
+  /** Muted text after the label. */
+  detail?: string;
   pulse?: boolean;
-  red?: boolean;
+  tone?: keyof typeof PILL_TONES;
 }) {
-  const ring = red ? 'border-vitae-red/60 text-white' : 'border-vitae-green/50 text-white';
-  const dot = red ? 'bg-vitae-red' : 'bg-vitae-green';
+  const { ring, dot } = PILL_TONES[tone];
   return (
     <span
       className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 ${on ? ring : 'border-white/15 text-white/50'}`}
@@ -230,13 +270,51 @@ function Pill({
         aria-hidden
       />
       {label}
+      {detail && <span className="text-white/40">{detail}</span>}
     </span>
   );
 }
 
-function RiskButton({ mode, onChanged }: { mode: RustMode; onChanged: () => Promise<void> }) {
+function HostPill({ config, now }: { config: Config | null; now: number }) {
+  if (!config) return <Pill on={false} label="VPS —" />;
+  const state = hostState(config, now);
+  const seenAgo = config.hostSeenAt
+    ? Math.max(0, Math.round((now - Date.parse(config.hostSeenAt)) / 1000))
+    : null;
+  const detail = [
+    config.hostName,
+    seenAgo == null ? null : `seen ${seenAgo < 3600 ? `${seenAgo}s ago` : hst(config.hostSeenAt)}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <Pill
+      on={state !== 'stopped'}
+      tone={
+        state === 'running'
+          ? 'green'
+          : state === 'starting' || state === 'stopping'
+            ? 'amber'
+            : 'red'
+      }
+      label={hostLabel(config, now)}
+      detail={detail || undefined}
+    />
+  );
+}
+
+type AdminCall = 'mode' | 'control';
+
+/** The RUN / STOP and RISK buttons, sharing one admin key and one inline prompt for it. */
+function Controls({
+  config,
+  onChanged,
+}: {
+  config: Config;
+  onChanged: (patch: Partial<Config>) => Promise<void>;
+}) {
   const [key, setKey] = useState<string | null>(null);
-  const [askKey, setAskKey] = useState(false);
+  const [armed, setArmed] = useState<AdminCall | null>(null);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -249,58 +327,101 @@ function RiskButton({ mode, onChanged }: { mode: RustMode; onChanged: () => Prom
     }
   }, []);
 
-  const send = async (k: string) => {
+  const risk = config.mode === 'RISK';
+  const running = config.desiredState === 'running';
+  const command = pendingCommand(config);
+  const calls: Record<AdminCall, { path: string; body: object; patch: Partial<Config> }> = {
+    mode: {
+      path: '/api/kalshirust/mode',
+      body: { mode: risk ? 'NORMAL' : 'RISK' },
+      patch: { mode: risk ? 'NORMAL' : 'RISK' },
+    },
+    control: {
+      path: '/api/kalshirust/control',
+      body: { action: running ? 'stop' : 'run' },
+      patch: { desiredState: running ? 'stopped' : 'running' },
+    },
+  };
+
+  const send = async (which: AdminCall, k: string) => {
+    const { path, body, patch } = calls[which];
     setBusy(true);
     setErr('');
     try {
-      const res = await fetch('/api/kalshirust/mode', {
+      const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-key': k },
-        body: JSON.stringify({ mode: mode === 'RISK' ? 'NORMAL' : 'RISK' }),
+        body: JSON.stringify(body),
       });
-      const body = (await res.json()) as { error?: string };
+      const reply = (await res.json()) as { error?: string };
       if (!res.ok) {
         if (res.status === 403) setKey(null);
-        throw new Error(body.error || `HTTP ${res.status}`);
+        throw new Error(
+          res.status === 403 ? 'Admin key rejected (403)' : reply.error || `HTTP ${res.status}`,
+        );
       }
       setKey(k);
-      setAskKey(false);
+      setArmed(null);
       setDraft('');
       try {
         localStorage.setItem(KEY_STORAGE, k);
       } catch {
         /* private mode */
       }
-      await onChanged();
+      await onChanged(patch);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Could not change mode.');
+      setErr(e instanceof Error ? e.message : 'Request failed.');
     } finally {
       setBusy(false);
     }
   };
+  const act = (which: AdminCall) => (key ? void send(which, key) : setArmed(which));
 
-  const on = mode === 'RISK';
+  const runLabel =
+    command === 'starting'
+      ? 'Starting…'
+      : command === 'stopping'
+        ? 'Stopping…'
+        : running
+          ? 'STOP'
+          : 'RUN';
   return (
-    <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => (key ? void send(key) : setAskKey(true))}
-        aria-pressed={on}
-        className={`rounded-2xl px-8 py-4 text-2xl font-bold uppercase tracking-[0.2em] transition disabled:opacity-60 ${
-          on
-            ? `bg-vitae-red text-white ${styles.riskOn}`
-            : 'border-2 border-vitae-red bg-vitae-red/10 text-vitae-red hover:bg-vitae-red hover:text-white'
-        }`}
-      >
-        {on ? 'RISK ON' : 'RISK'}
-      </button>
-      {askKey && !key && (
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => act('control')}
+          aria-busy={command != null}
+          className={`inline-flex items-center justify-center gap-3 rounded-2xl border-2 px-8 py-4 text-2xl font-bold transition disabled:opacity-60 ${
+            running
+              ? 'border-vitae-red bg-vitae-red/10 text-vitae-red hover:bg-vitae-red hover:text-white'
+              : 'border-green-600 bg-green-600 text-white hover:border-green-500 hover:bg-green-500'
+          } ${command ? styles.pending : 'tracking-[0.2em]'}`}
+        >
+          {command && <span className={styles.spinner} aria-hidden />}
+          {runLabel}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => act('mode')}
+          aria-pressed={risk}
+          className={`rounded-2xl px-8 py-4 text-2xl font-bold uppercase tracking-[0.2em] transition disabled:opacity-60 ${
+            risk
+              ? `bg-vitae-red text-white ${styles.riskOn}`
+              : 'border-2 border-vitae-red bg-vitae-red/10 text-vitae-red hover:bg-vitae-red hover:text-white'
+          }`}
+        >
+          {risk ? 'RISK ON' : 'RISK'}
+        </button>
+      </div>
+      {armed && !key && (
         <form
           className="flex gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            if (draft.trim()) void send(draft.trim());
+            if (draft.trim()) void send(armed, draft.trim());
           }}
         >
           <input
@@ -322,6 +443,9 @@ function RiskButton({ mode, onChanged }: { mode: RustMode; onChanged: () => Prom
         </form>
       )}
       {err && <p className="text-xs text-vitae-red">{err}</p>}
+      <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
+        RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
+      </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
         NORMAL: $5 max, 2¢ min edge, 1 trade per window, enter 90s–5min before close. RISK: $20 max,
         1¢ min edge, 2 trades per window, enter 30s–7min before close.
@@ -589,14 +713,15 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
     <section className="mt-10" aria-labelledby="snipe-heading">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2 id="snipe-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
-          Snipe list
+          Snipe list · sure trades only
         </h2>
         <p className="text-xs text-white/45">
-          Paper only. Candidates with ≥{SNIPE_EDGE_CENTS}¢ fee-adjusted edge get a $5 paper trade.
+          Only markets where the bot&apos;s side has at least an 80% win probability and a{' '}
+          {SNIPE_EDGE_CENTS}¢ fee-adjusted edge. The best one gets a $5 paper trade.
         </p>
       </div>
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
-        <table className="w-full min-w-[960px] text-left text-sm">
+        <table className="w-full min-w-[1040px] text-left text-sm">
           <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
               <Th>Market</Th>
@@ -606,13 +731,14 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
               <Th right>YES / NO ask</Th>
               <Th right>Model P(YES)</Th>
               <Th>Buy</Th>
+              <Th right>P(win)</Th>
               <Th right>Edge</Th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={9} className="px-4 py-6 text-center text-white/40">
                   No candidates in the last 10 minutes.
                 </td>
               </tr>
@@ -652,6 +778,9 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
                     {w.priceCents != null && (
                       <span className="ml-1 text-xs text-white/45">@ {cents(w.priceCents)}</span>
                     )}
+                  </Td>
+                  <Td right className="font-semibold">
+                    {pct(w.pWin, 1)}
                   </Td>
                   <Td right className={hot ? 'font-semibold text-vitae-green' : tone(w.edgeCents)}>
                     {cents(w.edgeCents, 2)}

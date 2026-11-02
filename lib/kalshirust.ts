@@ -6,11 +6,28 @@ export type RustSource = 'bot' | 'sniper';
 export type RustEventSource = RustSource | 'backtest';
 export type StrikeType = 'greater' | 'less' | 'between' | 'greater_or_equal';
 
+export type DesiredState = 'running' | 'stopped';
+
 export interface KalshirustConfig {
   id: number;
   mode: RustMode;
   updated_at: string;
+  desired_state: DesiredState;
+  command_at: string | null;
+  host_name: string | null;
+  host_status: string | null;
+  host_seen_at: string | null;
 }
+
+/** The slice of kalshirust_config the host pill and the RUN / STOP button read, as /api/kalshirust names it. */
+export interface HostConfig {
+  desiredState: DesiredState;
+  hostStatus: string | null;
+  hostSeenAt: string | null;
+}
+
+/** What the page says about the host: the supervisor's last report, read against desired_state. */
+export type HostState = 'offline' | 'running' | 'stopped' | 'starting' | 'stopping' | 'error';
 
 export interface KalshirustEvent {
   id: string;
@@ -106,6 +123,8 @@ export interface WatchRow {
   noAskCents: number | null;
   modelProb: number | null;
   side: RustSide | null;
+  /** Model probability that the bot's side wins. */
+  pWin: number | null;
   priceCents: number | null;
   edgeCents: number | null;
   at: string;
@@ -187,6 +206,8 @@ export interface BacktestSummary {
 }
 
 export const OFFLINE_AFTER_MS = 90_000;
+/** The supervisor and the bot each write host_seen_at every 10 s while they run. */
+export const HOST_OFFLINE_AFTER_MS = 45_000;
 export const HISTORY_POINTS = 120;
 export const WATCH_WINDOW_MS = 10 * 60_000;
 export const WATCH_LIMIT = 15;
@@ -226,6 +247,44 @@ export function kalshiUrl(ticker: string): string {
   return `https://kalshi.com/markets/${series.toLowerCase()}/x/${event.toLowerCase()}`;
 }
 
+export function hostOnline(hostSeenAt: string | null | undefined, now = Date.now()): boolean {
+  if (!hostSeenAt) return false;
+  const seen = Date.parse(hostSeenAt);
+  return Number.isFinite(seen) && now - seen < HOST_OFFLINE_AFTER_MS;
+}
+
+/** The command the host has not confirmed yet; the RUN / STOP button shows it as Starting… / Stopping…. */
+export function pendingCommand(config: HostConfig): 'starting' | 'stopping' | null {
+  const status = config.hostStatus;
+  if (config.desiredState === 'running') return status === 'running' ? null : 'starting';
+  return status === 'running' || status === 'starting' || status === 'stopping' ? 'stopping' : null;
+}
+
+export function hostState(config: HostConfig, now = Date.now()): HostState {
+  if (!hostOnline(config.hostSeenAt, now)) return 'offline';
+  const status = config.hostStatus ?? '';
+  if (status.startsWith('error')) return 'error';
+  if (status === 'starting' || status === 'stopping') return status;
+  return pendingCommand(config) ?? (status === 'running' ? 'running' : 'stopped');
+}
+
+const HOST_LABELS: Record<Exclude<HostState, 'error'>, string> = {
+  offline: 'VPS offline',
+  running: 'Bot running',
+  stopped: 'Bot stopped',
+  starting: 'Starting…',
+  stopping: 'Stopping…',
+};
+
+/** The host pill's text; an error is shown as the host reported it. */
+export function hostLabel(config: HostConfig, now = Date.now()): string {
+  const state = hostState(config, now);
+  return state === 'error' ? (config.hostStatus as string) : HOST_LABELS[state];
+}
+
+const sidePWin = (modelProb: number | null, side: RustSide | null) =>
+  modelProb == null ? null : side === 'yes' ? modelProb : side === 'no' ? 1 - modelProb : null;
+
 function prediction(e: KalshirustEvent): Prediction {
   const side = e.side;
   const priceCents = num(e.price_cents);
@@ -241,8 +300,7 @@ function prediction(e: KalshirustEvent): Prediction {
     feeCents,
     modelProb,
     edgeCents,
-    pWin:
-      modelProb == null ? null : side === 'yes' ? modelProb : side === 'no' ? 1 - modelProb : null,
+    pWin: sidePWin(modelProb, side),
     marketPWin: priceCents == null ? null : priceCents / 100,
     evCents: edgeCents == null || count == null ? null : edgeCents * count,
     maxWinCents:
@@ -317,6 +375,7 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
       noAskCents: num(e.no_ask_cents),
       modelProb: num(e.model_prob),
       side: e.side,
+      pWin: sidePWin(num(e.model_prob), e.side),
       priceCents: num(e.price_cents),
       edgeCents: num(e.edge_cents),
       at: e.created_at,

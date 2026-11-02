@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hostLabel,
+  hostOnline,
+  hostState,
   kalshiFeeCents,
   kalshiUrl,
+  pendingCommand,
   summarize,
   summarizeBacktest,
+  type HostConfig,
   type KalshirustEvent,
 } from './kalshirust';
 
@@ -303,11 +308,12 @@ describe('summarize', () => {
         watch(60, 'KXBTC-A', 1.5, {
           side: 'no',
           price_cents: 40,
+          model_prob: 0.25,
           title: 'BTC above 70k',
           strike_type: 'greater',
           strike: 70000,
         }),
-        watch(60, 'KXBTC15M-B', 4),
+        watch(60, 'KXBTC15M-B', 4, { side: 'yes', model_prob: 0.9 }),
         watch(60, 'KXBTCD-C', null as unknown as number),
         watch(900, 'BTCD-OLD', 20),
         ev({ kind: 'watch', source: 'sniper', created_at: at(10), ticker: null, edge_cents: 50 }),
@@ -327,6 +333,28 @@ describe('summarize', () => {
       strike: 70000,
       at: at(60),
     });
+    expect(s.watchlist.map((w) => w.pWin)).toEqual([0.9, 0.75, null]);
+  });
+
+  it('derives P(win) of the watched side: the model’s P(YES) for yes, its complement for no', () => {
+    const watch = (side: 'yes' | 'no' | null, modelProb: number | null) =>
+      ev({
+        kind: 'watch',
+        source: 'sniper',
+        created_at: at(30),
+        ticker: `T-${side}-${modelProb}`,
+        side,
+        model_prob: modelProb,
+      });
+    const s = summarize(
+      [watch('no', 0.12), watch('yes', 0.12), watch(null, 0.12), watch('no', null)],
+      NOW,
+    );
+    const byTicker = Object.fromEntries(s.watchlist.map((w) => [w.ticker, w.pWin]));
+    expect(byTicker['T-no-0.12']).toBeCloseTo(0.88);
+    expect(byTicker['T-yes-0.12']).toBe(0.12);
+    expect(byTicker['T-null-0.12']).toBeNull();
+    expect(byTicker['T-no-null']).toBeNull();
   });
 
   it('caps the watchlist at 15', () => {
@@ -344,6 +372,77 @@ describe('summarize', () => {
     );
     const s = summarize(events, NOW);
     expect(s.errors.map((e) => e.message)).toEqual(['err6', 'err5', 'err4', 'err3', 'err2']);
+  });
+});
+
+describe('hostOnline', () => {
+  it('is true only while host_seen_at is under 45 s old', () => {
+    expect(hostOnline(at(0), NOW)).toBe(true);
+    expect(hostOnline(at(44), NOW)).toBe(true);
+    expect(hostOnline(at(45), NOW)).toBe(false);
+    expect(hostOnline(at(3600), NOW)).toBe(false);
+  });
+
+  it('is false when the host never reported or the stamp is unreadable', () => {
+    expect(hostOnline(null, NOW)).toBe(false);
+    expect(hostOnline(undefined, NOW)).toBe(false);
+    expect(hostOnline('', NOW)).toBe(false);
+    expect(hostOnline('yesterday', NOW)).toBe(false);
+  });
+});
+
+describe('hostLabel', () => {
+  const cfg = (
+    desiredState: HostConfig['desiredState'],
+    hostStatus: string | null,
+    seenSecondsAgo: number | null = 5,
+  ): HostConfig => ({
+    desiredState,
+    hostStatus,
+    hostSeenAt: seenSecondsAgo == null ? null : at(seenSecondsAgo),
+  });
+
+  it('says the VPS is offline after 45 s without a report, whatever it last said', () => {
+    expect(hostLabel(cfg('running', 'running', 46), NOW)).toBe('VPS offline');
+    expect(hostLabel(cfg('running', 'error: boom', 300), NOW)).toBe('VPS offline');
+    expect(hostLabel(cfg('stopped', null, null), NOW)).toBe('VPS offline');
+    expect(hostState(cfg('stopped', 'stopped', null), NOW)).toBe('offline');
+  });
+
+  it('reports the bot’s state once the host agrees with the command', () => {
+    expect(hostLabel(cfg('running', 'running'), NOW)).toBe('Bot running');
+    expect(hostLabel(cfg('stopped', 'stopped'), NOW)).toBe('Bot stopped');
+    expect(hostLabel(cfg('stopped', null), NOW)).toBe('Bot stopped');
+    expect(hostState(cfg('running', 'running'), NOW)).toBe('running');
+  });
+
+  it('shows the transition the host reported, or the command it has not picked up yet', () => {
+    expect(hostLabel(cfg('running', 'starting'), NOW)).toBe('Starting…');
+    expect(hostLabel(cfg('stopped', 'stopping'), NOW)).toBe('Stopping…');
+    expect(hostLabel(cfg('running', 'stopped'), NOW)).toBe('Starting…');
+    expect(hostLabel(cfg('stopped', 'running'), NOW)).toBe('Stopping…');
+    expect(hostState(cfg('stopped', 'running'), NOW)).toBe('stopping');
+  });
+
+  it('passes an error through as the host wrote it', () => {
+    const error = 'error: bot exited at once (journalctl -u kalshi-bot)';
+    expect(hostLabel(cfg('running', error), NOW)).toBe(error);
+    expect(hostLabel(cfg('stopped', error), NOW)).toBe(error);
+    expect(hostState(cfg('running', error), NOW)).toBe('error');
+  });
+
+  it('names the command the host has not confirmed, for the RUN / STOP button', () => {
+    expect(pendingCommand(cfg('running', 'running'))).toBeNull();
+    expect(pendingCommand(cfg('running', 'stopped'))).toBe('starting');
+    expect(pendingCommand(cfg('running', 'starting'))).toBe('starting');
+    expect(pendingCommand(cfg('running', 'error: boom'))).toBe('starting');
+    expect(pendingCommand(cfg('running', null))).toBe('starting');
+    expect(pendingCommand(cfg('stopped', 'running'))).toBe('stopping');
+    expect(pendingCommand(cfg('stopped', 'starting'))).toBe('stopping');
+    expect(pendingCommand(cfg('stopped', 'stopping'))).toBe('stopping');
+    expect(pendingCommand(cfg('stopped', 'stopped'))).toBeNull();
+    expect(pendingCommand(cfg('stopped', 'error: boom'))).toBeNull();
+    expect(pendingCommand(cfg('stopped', null))).toBeNull();
   });
 });
 

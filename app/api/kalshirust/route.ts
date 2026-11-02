@@ -45,7 +45,15 @@ export async function GET() {
   for (const e of rows as KalshirustEvent[]) live.set(e.id, e);
   return NextResponse.json(
     {
-      config: { mode: cfg?.mode ?? 'NORMAL', updatedAt: cfg?.updated_at ?? null },
+      config: {
+        mode: cfg?.mode ?? 'NORMAL',
+        updatedAt: cfg?.updated_at ?? null,
+        desiredState: cfg?.desired_state ?? 'stopped',
+        commandAt: cfg?.command_at ?? null,
+        hostName: cfg?.host_name ?? null,
+        hostStatus: cfg?.host_status ?? null,
+        hostSeenAt: cfg?.host_seen_at ?? null,
+      },
       ...summarize([...live.values()]),
       backtest: summarizeBacktest(
         (btSignals.data ?? []) as KalshirustEvent[],
