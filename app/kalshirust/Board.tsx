@@ -474,9 +474,10 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: settlement math only, $5 a trade, 1 per window, 80%+ win chance, in the last 90 s.
-        RISK: up to $100 a trade, 2 per window, as low as 60% in the last 90 s, plus earlier trades
-        from 7 min out with no win-chance floor.
+        NORMAL: settlement math only, up to 2 trades a window in the last 90 s. $5 at an 80%+ win
+        chance, $10 when it reads 95%+ with 15 settlement prints in, and the second trade only at
+        that level. RISK: up to $100 a trade, 2 per window, as low as 60% in the last 90 s, plus
+        earlier trades from 7 min out with no win-chance floor.
       </p>
     </div>
   );

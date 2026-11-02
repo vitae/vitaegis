@@ -37,14 +37,19 @@
 
 ## Modes
 
+The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it every 10 s.
+
 | | NORMAL | RISK |
 |---|---|---|
-| Max per trade | $5 | $20 |
-| Min fee-adjusted edge | 2¢ | 1¢ |
-| Trades per window | 1 | 2 |
-| Entry window before close | 90 s – 5 min | 30 s – 7 min |
+| Trades a window | 2 | 2 |
+| Entry | last 90 s, settlement math only | last 90 s, plus the early engine from 7 min out |
+| First trade | 80%+ win chance; 90% and 3c of edge before 3 prints exist unless the price is 62.5c or less | 60%+ win chance, 5c of edge |
+| Second trade | 95%+ with 15 settlement prints in, same side, 10 s later | 70%+, same side, 10 s later |
+| Stake | $5, doubled to $10 at 95%+ with 15 prints | 0.75 Kelly on the bankroll, $5 to $100 |
+| Other floors | 2c of edge, $0.15 expected profit, 97c top price | $0.50 expected profit, 97c top price |
 
-The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it every 10 s.
+Orders are immediate-or-cancel through the V2 order API (`/portfolio/events/orders`), and
+each trade records its actual fill price and fee.
 
 ## Backtest, Nov 2 2026 (last 400 settled windows, Kalshi minute prices, Coinbase spot)
 
@@ -95,6 +100,27 @@ NORMAL buys certainty: small, frequent wins on 90–96¢ favorites, cents each. 
 the bigger edges that appear in the second before the book catches up to Coinbase, and
 accepts that one in five of those loses. The dollars-per-window line in the log and the
 HUD is the scorecard for both.
+
+## Month-long study, Nov 2 2026 (`research/window_study.py`, public data only)
+
+2,958 settled windows, Oct 1 to Nov 2, taker fills at the minute quote, rules found on the
+older two thirds and scored on the newer third. Run `report` and `candidate` to reproduce.
+
+- **No time and price beats the market after fees.** Of 192 minute-by-price cells, two passed
+  on older data where chance alone predicts about four. On newer data they made +2.8% over
+  32 trades, t = 0.48.
+- **Fading sharp moves loses.** Buying the side that just fell lost in 13 of 16 splits, and
+  -6.9% over 4,660 trades after moves of 15c or more.
+- **Buying the cheap side at extreme prices loses.** 1-10c entries ranged from -58% to +6%,
+  and every split turns negative without its single best trade.
+- **Following sharp moves is roughly break-even.** After moves of 25c or more with 1-5 minutes
+  left: 887 trades, 78% wins, +1.8% before slippage, negative at 2c of worse fills, 18 up days
+  and 15 down. An earlier version of this test showed more because it picked each window's
+  latest move, which live trading cannot know.
+
+So no rule trades before the settlement engine in NORMAL. These results say nothing about
+the settlement engine itself, because Kalshi publishes only the last 60 BRTI prints: its
+evidence can only come from live windows and `settle_calib.jsonl`.
 
 ## Honest expectations
 

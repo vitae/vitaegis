@@ -87,9 +87,9 @@ fn mode_params(name: &str) -> ModeParams {
     } else {
         ModeParams {
             name: "NORMAL".into(),
-            max_order_dollars: f("MAX_ORDER_DOLLARS", 25.0),
+            max_order_dollars: f("MAX_ORDER_DOLLARS", 5.0),
             min_edge_cents: f("MIN_EDGE_CENTS", 2.0),
-            bets_per_window: 1,
+            bets_per_window: 2,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.9),
@@ -131,11 +131,12 @@ struct Ctx {
 }
 
 /// Dollars for a settlement trade. A flat stake when the mode's Kelly multiple is 0
-/// (NORMAL); otherwise that multiple of Kelly on the bankroll, where Kelly for a binary at
-/// price p with win probability q is (q - p) / (1 - p), floored at $5 and capped by the mode.
-fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64) -> f64 {
+/// (NORMAL), doubled on a sure bet; otherwise that multiple of Kelly on the bankroll, where
+/// Kelly for a binary at price p with win probability q is (q - p) / (1 - p), floored at $5
+/// and capped by the mode.
+fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64, sure: bool) -> f64 {
     if mode.kelly_mult <= 0.0 {
-        return mode.max_order_dollars;
+        return if sure { mode.max_order_dollars * 2.0 } else { mode.max_order_dollars };
     }
     let f_star = ((p_win - price) / (1.0 - price)).max(0.0);
     (mode.kelly_mult * bankroll * f_star).max(5.0).min(mode.max_order_dollars)
@@ -254,9 +255,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let b = ctx.book.lock().await;
         let m = ctx.mode();
         println!(
-            "[+] {} | mode {} (${:.0} max, {:.1}c min edge, {} bet/window, early engine {}-{}s before close, settlement engine: first trade needs P(win) >= {:.0}% on >= {} known prints) | 15m trades {}/{} logged, sniper {}/{}, {} pending",
+            "[+] {} | mode {} (${:.0} max, {:.1}c min edge, {} bet/window, early engine {}, settlement engine: first trade needs P(win) >= {:.0}% on >= {} known prints) | 15m trades {}/{} logged, sniper {}/{}, {} pending",
             if live { "LIVE TRADING" } else { "PAPER (LIVE_TRADING=false)" },
-            m.name, m.max_order_dollars, m.min_edge_cents, m.bets_per_window, m.min_secs_left as i64, m.max_secs_left as i64, m.settle_min_pwin * 100.0, m.settle_min_known,
+            m.name, m.max_order_dollars, m.min_edge_cents, m.bets_per_window,
+            if m.early_engine { format!("{}-{}s before close", m.min_secs_left as i64, m.max_secs_left as i64) } else { "off".to_string() },
+            m.settle_min_pwin * 100.0, m.settle_min_known,
             b.count_source("bot"), bot_limit, b.count_source("sniper"), sniper_limit, b.pending()
         );
     }
@@ -520,6 +523,7 @@ async fn run_window(
     let mut bets_early = 0usize;
     let mut bets_settle = 0usize;
     let mut last_settle_entry = 0i64;
+    let mut window_side: Option<&'static str> = None;
     let mut last_early_attempt = 0i64;
     let mut last_status = 0i64;
     let mut last_print = 0i64;
@@ -635,18 +639,22 @@ async fn run_window(
                         (mode.settle_second_min_pwin, mode.settle_second_min_known)
                     };
                     let edge_floor = if projection { mode.settle_min_edge_cents.max(3.0) } else { mode.settle_min_edge_cents };
-                    let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars);
+                    // A sure bet: a near-certain call resting on published settlement prints. In the
+                    // live record every call at this level from 45 s down has been right.
+                    let sure = p_win >= mode.settle_second_min_pwin && est.known_prints >= mode.settle_second_min_known;
+                    let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, sure);
                     // Expected profit on the whole stake: what ranks trades, since a 5c edge on a
                     // 30c contract is worth five times a 5c edge on a 93c one.
                     let ev_dollars = (dollars / edge.price).floor() * edge.cents / 100.0;
-                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && ev_dollars >= mode.min_ev_dollars && p_win >= pwin_floor && est.known_prints >= known_floor {
+                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && ev_dollars >= mode.min_ev_dollars && p_win >= pwin_floor && est.known_prints >= known_floor && window_side.map_or(true, |w| w == edge.side.as_str()) {
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1 && allowed {
                             last_settle_entry = now;
-                            let note = format!("settlement engine | {}s left | {}/60 prints known | est {:.2} ± {:.2} vs strike {:.2}", rem as i64, est.known_prints, est.mean, est.sd, strike);
+                            let note = format!("settlement engine{} | {}s left | {}/60 prints known | est {:.2} ± {:.2} vs strike {:.2}", if sure && mode.kelly_mult <= 0.0 { " | sure bet, stake doubled" } else { "" }, rem as i64, est.known_prints, est.mean, est.sd, strike);
                             if enter(ctx, &ticker, strike, close_ts, spot, est.p_yes, est.p_yes, 0.0, edge, dollars, "BTC 15 min (last minute)", "settle", &note).await {
                                 bets_settle += 1;
+                                window_side = Some(edge.side.as_str());
                             }
                         }
                     }
@@ -723,12 +731,15 @@ async fn run_window(
             continue;
         }
         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
-        if !allowed || (mode.max_order_dollars / edge.price).floor() < 1.0 {
+        // Sized by the odds it just computed, never the mode's whole cap.
+        let early_p_win = match edge.side { Side::Yes => p_yes, Side::No => 1.0 - p_yes };
+        let early_dollars = settle_size(&mode, early_p_win, edge.price, ctx.bankroll_dollars, false);
+        if !allowed || (early_dollars / edge.price).floor() < 1.0 {
             continue;
         }
         last_early_attempt = now;
         let note = format!("early engine | {}s left | gbm {:.1}% | momentum {:+.3}% | model weight {:.2}", rem as i64, p_gbm * 100.0, mom * 100.0, ctx.model_weight);
-        if enter(ctx, &ticker, strike, close_ts, spot, p_yes, p_gbm, mom, edge, mode.max_order_dollars, "BTC 15 min", "vitaegis", &note).await {
+        if enter(ctx, &ticker, strike, close_ts, spot, p_yes, p_gbm, mom, edge, early_dollars, "BTC 15 min", "vitaegis", &note).await {
             bets_early += 1;
         }
     }
@@ -918,4 +929,29 @@ fn sign_message(pem_path: &str, msg: &str) -> Result<String, Box<dyn std::error:
     key.sign(&ring::signature::RSA_PSS_SHA256, &ring::rand::SystemRandom::new(), msg.as_bytes(), &mut sig)
         .map_err(|e| format!("{:?}", e))?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&sig))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normal_doubles_only_on_a_sure_bet() {
+        let m = mode_params("NORMAL");
+        assert_eq!(settle_size(&m, 0.85, 0.80, 100.0, false), m.max_order_dollars);
+        assert_eq!(settle_size(&m, 0.97, 0.90, 100.0, true), m.max_order_dollars * 2.0);
+    }
+
+    #[test]
+    fn risk_sizes_by_kelly_whatever_the_sure_flag_says() {
+        let m = mode_params("RISK");
+        assert_eq!(settle_size(&m, 0.97, 0.90, 100.0, true), settle_size(&m, 0.97, 0.90, 100.0, false));
+    }
+
+    #[test]
+    fn normal_allows_two_trades_and_keeps_the_early_engine_off() {
+        let m = mode_params("NORMAL");
+        assert_eq!(m.bets_per_window, 2);
+        assert!(!m.early_engine);
+    }
 }

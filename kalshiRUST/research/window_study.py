@@ -268,7 +268,8 @@ def report():
             follow = {"older": Tally(), "newer": Tally()}
             for name, part in (("older", train), ("newer", test)):
                 for w in part:
-                    for m in range(lo_m, hi_m + 1):
+                    # Earliest qualifying minute first: live trading cannot know a later one is coming.
+                    for m in range(hi_m, lo_m - 1, -1):
                         now, before = w["book"].get(str(m * 60)), w["book"].get(str((m + 1) * 60))
                         if not now or not before or None in now or None in before:
                             continue
@@ -289,8 +290,88 @@ def report():
             print(f"   follow NEW {follow['newer'].row()}")
 
 
+def momentum_trades(ws, thr, lo_m, hi_m, slip=0.0, lo_p=0.01, hi_p=0.99):
+    """One entry per window: the first whole minute where YES mid moved at least thr, buying the side that rose."""
+    out = []
+    for w in ws:
+        for m in range(hi_m, lo_m - 1, -1):
+            now, before = w["book"].get(str(m * 60)), w["book"].get(str((m + 1) * 60))
+            if not now or not before or None in now or None in before:
+                continue
+            move = sum(now) / 2 - sum(before) / 2
+            if abs(move) < thr:
+                continue
+            side = "yes" if move > 0 else "no"
+            p = now[1] if side == "yes" else 1 - now[0]
+            p += slip
+            if lo_p <= p <= hi_p:
+                out.append((w, m, side, p))
+            break
+    return out
+
+
+def tally(trades):
+    t = Tally()
+    for w, m, side, p in trades:
+        t.add(p, w["result"] == side)
+    return t
+
+
+def by_day(trades):
+    days = {}
+    for w, m, side, p in trades:
+        d = datetime.fromtimestamp(w["close"], timezone.utc).strftime("%Y-%m-%d")
+        x = pnl(p, w["result"] == side)
+        if x is not None:
+            days[d] = days.get(d, 0.0) + x
+    return days
+
+
+def day_bootstrap(days, n=4000, seed=7):
+    import random
+    rng = random.Random(seed)
+    vals = list(days.values())
+    means = sorted(sum(rng.choice(vals) for _ in vals) / len(vals) for _ in range(n))
+    return means[int(n * 0.025)], means[int(n * 0.975)]
+
+
+def candidate():
+    ws = load()
+    cut = int(len(ws) * TRAIN_SHARE)
+    train, test = ws[:cut], ws[cut:]
+    print(f"{len(ws)} windows | older {len(train)} | newer {len(test)}")
+    print("Rule: first whole minute with a sharp 60 s move in the YES mid, buy the side that rose, one trade a window, $5.\n")
+    print("=== A. MOVE SIZE AND TIME LEFT ===")
+    for thr in (0.15, 0.20, 0.25, 0.30):
+        for lo_m, hi_m in ((1, 2), (3, 5), (1, 5), (6, 9)):
+            print(f"move>={thr * 100:.0f}c {lo_m}-{hi_m}m OLD {tally(momentum_trades(train, thr, lo_m, hi_m)).row()}")
+            print(f"{'':>13} NEW {tally(momentum_trades(test, thr, lo_m, hi_m)).row()}")
+    print("\n=== B. PRICE PAID (move>=25c, 1-5m) ===")
+    for lo_p, hi_p in ((0.01, 0.60), (0.60, 0.70), (0.70, 0.80), (0.80, 0.85), (0.85, 0.90), (0.90, 0.95), (0.95, 0.99)):
+        print(f"{lo_p * 100:>2.0f}-{hi_p * 100:<3.0f}c OLD {tally(momentum_trades(train, 0.25, 1, 5, 0, lo_p, hi_p)).row()}")
+        print(f"{'':>7} NEW {tally(momentum_trades(test, 0.25, 1, 5, 0, lo_p, hi_p)).row()}")
+    print("\n=== C. WORSE FILLS (move>=25c, 1-5m, all data) ===")
+    for slip in (0.0, 0.01, 0.02, 0.03, 0.05):
+        print(f"paying {slip * 100:.0f}c more: {tally(momentum_trades(ws, 0.25, 1, 5, slip)).row()}")
+    print("\n=== D. DAY BY DAY (move>=25c, 1-5m) ===")
+    for name, thr, lo_m, hi_m, hi_p in (("all prices", 0.25, 1, 5, 0.99), ("price <= 90c", 0.25, 1, 5, 0.90)):
+        trades = momentum_trades(ws, thr, lo_m, hi_m, 0, 0.01, hi_p)
+        days = by_day(trades)
+        lo, hi = day_bootstrap(days)
+        up = sum(1 for v in days.values() if v > 0)
+        print(f"{name}: {len(trades)} trades over {len(days)} days | {up} up days, {len(days) - up} down | avg ${sum(days.values()) / len(days):+.2f} a day | 95% range for the daily average ${lo:+.2f} to ${hi:+.2f}")
+    print("\n=== E. ROUGHLY WHAT THE LIVE RULE WOULD BE ===")
+    for name, part in (("OLD", train), ("NEW", test)):
+        early = momentum_trades(part, 0.25, 3, 5, 0, 0.01, 0.90)
+        late = momentum_trades(part, 0.25, 1, 2, 0, 0.01, 0.90)
+        print(f"{name} 3-5m left, <=90c {tally(early).row()}")
+        print(f"{name} 1-2m left, <=90c {tally(late).row()}")
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["download"]:
         download(int(sys.argv[2]) if len(sys.argv) > 2 else 3000)
+    elif sys.argv[1:2] == ["candidate"]:
+        candidate()
     else:
         report()
