@@ -24,6 +24,8 @@ import {
   type Trade,
   type WatchRow,
   type Windows,
+  tradesSince,
+  uptimeLabel,
 } from '@/lib/kalshirust';
 import LineChart from '../kalshi/LineChart';
 import kalshiStyles from '../kalshi/kalshi.module.css';
@@ -34,6 +36,7 @@ type Config = HostConfig & {
   updatedAt: string | null;
   commandAt: string | null;
   hostName: string | null;
+  botStartedAt: string | null;
 };
 
 type Payload = Summary & {
@@ -50,6 +53,7 @@ const EMPTY_CONFIG: Config = {
   hostName: null,
   hostStatus: null,
   hostSeenAt: null,
+  botStartedAt: null,
 };
 
 const POLL_MS = 5_000;
@@ -197,7 +201,11 @@ export default function Board() {
                 on={status?.live === true}
                 label={status ? (status.live ? 'Live' : 'Paper') : 'Paper / Live —'}
               />
-              <HostPill config={data ? data.config : null} now={now} />
+              <HostPill
+                config={data ? data.config : null}
+                now={now}
+                trades={data ? data.trades : []}
+              />
             </div>
           </div>
           <Controls config={config} onChanged={onChanged} />
@@ -281,14 +289,27 @@ function Pill({
   );
 }
 
-function HostPill({ config, now }: { config: Config | null; now: number }) {
+function HostPill({
+  config,
+  now,
+  trades,
+}: {
+  config: Config | null;
+  now: number;
+  trades: { at: string; source: string }[];
+}) {
   if (!config) return <Pill on={false} label="VPS —" />;
   const state = hostState(config, now);
+  const running = state === 'running';
+  const uptime = running ? uptimeLabel(config.botStartedAt, now) : null;
+  const made = running ? tradesSince(trades, config.botStartedAt) : null;
   const seenAgo = config.hostSeenAt
     ? Math.max(0, Math.round((now - Date.parse(config.hostSeenAt)) / 1000))
     : null;
   const detail = [
     config.hostName,
+    uptime,
+    made == null ? null : `${made} trade${made === 1 ? '' : 's'}`,
     seenAgo == null ? null : `seen ${seenAgo < 3600 ? `${seenAgo}s ago` : hst(config.hostSeenAt)}`,
   ]
     .filter(Boolean)

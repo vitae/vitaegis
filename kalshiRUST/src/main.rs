@@ -331,6 +331,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Mode: the HUD's RISK button writes kalshirust_config; poll it every 10 s.
     if let Some(s) = ctx.supa.clone() {
         let c = ctx.clone();
+        // Startup stamp for the HUD's uptime and trades-since-start readout.
+        s.patch_config(json!({
+            "bot_started_at": chrono::Utc::now().to_rfc3339(),
+            "host_name": env::var("COMPUTERNAME").or_else(|_| env::var("HOSTNAME")).unwrap_or_else(|_| "bot".into()),
+            "host_status": "running",
+            "host_seen_at": chrono::Utc::now().to_rfc3339(),
+        }));
         tokio::spawn(async move {
             loop {
                 if let Some(m) = s.mode().await {

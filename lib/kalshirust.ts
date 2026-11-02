@@ -554,3 +554,28 @@ export function summarizeBacktest(
     ranAt,
   };
 }
+
+/** "up 1h 12m" style label for the running bot, or null without a start time. */
+export function uptimeLabel(startedAt: string | null | undefined, now = Date.now()): string | null {
+  if (!startedAt) return null;
+  const started = Date.parse(startedAt);
+  if (Number.isNaN(started) || started > now) return null;
+  const s = Math.floor((now - started) / 1000);
+  const d = Math.floor(s / 86_400);
+  const h = Math.floor((s % 86_400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (d > 0) return `up ${d}d ${h}h`;
+  if (h > 0) return `up ${h}h ${m}m`;
+  return `up ${m}m ${s % 60}s`;
+}
+
+/** Bot trades entered at or after the bot's start time. */
+export function tradesSince(
+  trades: { at: string; source: string }[],
+  startedAt: string | null | undefined,
+): number {
+  if (!startedAt) return 0;
+  const started = Date.parse(startedAt);
+  if (Number.isNaN(started)) return 0;
+  return trades.filter((t) => t.source === 'bot' && Date.parse(t.at) >= started).length;
+}

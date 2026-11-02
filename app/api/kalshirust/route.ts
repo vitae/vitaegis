@@ -53,6 +53,7 @@ export async function GET() {
         hostName: cfg?.host_name ?? null,
         hostStatus: cfg?.host_status ?? null,
         hostSeenAt: cfg?.host_seen_at ?? null,
+        botStartedAt: cfg?.bot_started_at ?? null,
       },
       ...summarize([...live.values()]),
       backtest: summarizeBacktest(
