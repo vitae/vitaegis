@@ -25,7 +25,7 @@
    expected value: `EV = p_win·(1 − price) − (1 − p_win)·price − 0.07·price·(1 − price)`.
    NORMAL mode needs ≥ 2¢ per contract; RISK mode needs ≥ 1¢.
 2. **Prices both sides.** YES at the ask or NO at (1 − YES bid), whichever has the edge.
-3. **Enters late.** NORMAL: one trade a window, only in the last 2 minutes, at a 75%+ win chance. RISK: the last 90 s, plus the early engine from 7 minutes out.
+3. **Enters late.** NORMAL: one trade a window, checked once with 90 s left. RISK: the last 90 s, plus the early engine from 7 minutes out.
 4. **Caps size.** NORMAL $5 per trade, 1 per window, and live trading stops for the UTC day after a $30 loss. RISK up to $100, 2 per window.
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
@@ -42,28 +42,20 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 
 | | NORMAL | RISK |
 |---|---|---|
-| Trades a window | 2 | 2 |
-| Entry | one trade a window, only in the last 2 minutes | last 90 s, plus the early engine from 7 min out |
-| Last-90 trade | 75%+ win chance; 90% and 3c of edge before 3 prints exist unless the price is 62.5c or less | 60%+ win chance, 5c of edge |
+| Trades a window | 1 | 2 |
+| Entry | one check with 90 s left | last 90 s, plus the early engine from 7 min out |
+| Last-90 trade | none, settlement math only logs | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
-| Other floors | 2c of edge, $0.15 expected profit, 97c top price | $0.50 expected profit, 97c top price |
+| Other floors | 70c to 82c | $0.50 expected profit, 97c top price |
 
-Every NORMAL trade needs a 75%+ win chance, and none buys a falling price. NORMAL makes one trade a
-window (`BETS_PER_WINDOW`), in the last 2 minutes, by whichever of two rules fires first:
+NORMAL makes one $5 trade a window (`BETS_PER_WINDOW`) by one rule, checked once with 90 s left: the side
+whose mid rose 10c or more over the prior 60 s, at 70c to 82c. It skips a side whose mid fell 1c or more over
+the last 30 s. Settlement math still runs and logs in NORMAL, but places no trades.
 
-- **Sharp rise.** With 2 minutes and then 1 minute left, the side whose mid rose 12c or more over the
-  prior minute, at 72c to 82c.
-- **Settlement math.** In the last 90 s, a 75%+ win chance from both engines, at 60c or less or at 72c to
-  82c. It skips a side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price history.
-
-On the month of data the sharp-rise rule is 155 trades, 87.1% wins against 79% needed to break even, +$0.51 a
-trade, about +$2.38 a day, worst drop $16.39. It is positive in all three parts of the month (+$0.15, +$1.17,
-+$0.23 a trade), has t=3.16, and stays positive at 2c of worse fills (+$0.23). Buyers paid about the quoted
-price in the first 3 s after signals. It was the most profitable of 72 combinations of timing, move size and
-price that won 75%+, stayed positive in every part of the month and at worse fills, with no small wins. Starting at 3
-minutes made more in total but about nothing in the newest part of the month, with a worst drop of $33.
-These rules were picked from well over a hundred tried on the same data, so expect less.
+The month of data holds whole minutes only. The same move and prices at 2 and 1 minutes left: 187 trades,
+5.7 a day, 82.4% wins, +$0.27 a trade, about +$1.55 a day. The earlier 12c rise into 72c to 82c at those
+minutes made +$0.51 a trade and about +$2.38 a day on the same data.
 
 Rejected for winning too little: favorites at 90c to under 94c, which earned +$0.10 a trade but win about
 $0.37 against a loss of about $4.63.
@@ -107,7 +99,7 @@ A $1 win is not a $1 average. An average of $1 a trade on $5 needs 61.7% wins at
 Orders are immediate-or-cancel through the V2 order API (`/portfolio/events/orders`), and
 each trade records its actual fill price and fee.
 
-Both modes also need the analytics engine (`src/analytics.rs`) to agree in the last 90 s. It
+RISK also needs the analytics engine (`src/analytics.rs`) to agree in the last 90 s. It
 must signal the same side with its own 2c of net edge, and the lower of the two engines' win
 chances is the one held against the floors and used to call a sure bet. The stake stays the
 mode's: the file's own sizing of 10 to 150 contracts is logged on each trade, not used. Its
@@ -182,7 +174,7 @@ older two thirds and scored on the newer third. Run `report` and `candidate` to 
   and 15 down. An earlier version of this test showed more because it picked each window's
   latest move, which live trading cannot know.
 
-No earlier rule clearly beats the market, so NORMAL trades only in the last 2 minutes. These results say nothing about
+No earlier rule clearly beats the market, so NORMAL trades only with 90 s left. These results say nothing about
 the settlement engine itself, because Kalshi publishes only the last 60 BRTI prints: its
 evidence can only come from live windows and `settle_calib.jsonl`.
 

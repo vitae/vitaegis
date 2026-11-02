@@ -369,7 +369,7 @@ def candidate():
 
 
 NORMAL_BANDS = ((0.05, 0.60), (0.72, 0.82))
-SHARP_BANDS = ((0.72, 0.82),)
+SHARP_BANDS = ((0.70, 0.82),)
 
 
 def anytime_trades(ws, thr=0.25, first_m=9, last_m=2, lo_p=0.05, hi_p=0.85, slip=0.0, bands=None, keep_looking=False):
@@ -403,8 +403,8 @@ def anytime():
         print(f"--- move>={thr * 100:.0f}c, price<={hi_p * 100:.0f}c")
         print(f"OLD {tally(anytime_trades(train, thr, 9, 2, 0.05, hi_p)).row()}")
         print(f"NEW {tally(anytime_trades(test, thr, 9, 2, 0.05, hi_p)).row()}")
-    print("--- the bot's sharp-rise slot: 12c rise, 2 to 1 minutes left, 72-82c")
-    rule = dict(thr=0.12, first_m=2, last_m=1, bands=SHARP_BANDS, keep_looking=True)
+    print("--- the bot's sharp-rise slot: 10c rise, 70-82c, with 2 to 1 minutes left standing in for its 90 s check")
+    rule = dict(thr=0.10, first_m=2, last_m=1, bands=SHARP_BANDS, keep_looking=True)
     print(f"OLD {tally(anytime_trades(train, **rule)).row()}")
     print(f"NEW {tally(anytime_trades(test, **rule)).row()}")
     print("--- chosen rule by time left, all data")

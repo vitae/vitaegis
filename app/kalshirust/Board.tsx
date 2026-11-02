@@ -477,11 +477,10 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: 1 trade a window at $5 in the last 2 min, never while its price is falling. With 2
-        min and 1 min left: a sharp 12¢+ rise over the prior minute into 72–82¢. In the last 90 s:
-        settlement math at a 75%+ win chance, at 60¢ or less or at 72–82¢, with the analytics engine
-        agreeing. Live trading stops for the UTC day after a $30 loss. RISK: up to $100 a trade, as
-        low as 60% in the last 90 s, plus earlier trades from 7 min out with no win-chance floor.
+        NORMAL: 1 $5 trade a window with 90 s left: a 10¢+ rise over the prior minute into 70–82¢,
+        never while its price is falling. Live trading stops for the UTC day after a $30 loss. RISK:
+        up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from 7 min out with
+        no win-chance floor.
       </p>
     </div>
   );
