@@ -72,6 +72,10 @@ export interface Trade extends Prediction {
   mode: string | null;
   live: boolean;
   closeTime: string | null;
+  /** The signal row's seconds before close when the order was placed. */
+  secondsToClose: number | null;
+  /** Seconds after the 15-minute window opened when the bot entered; null for the sniper or other series. */
+  enteredAfterOpenSecs: number | null;
   result: RustSide | null;
   pnlCents: number | null;
   settledAt: string | null;
@@ -116,11 +120,38 @@ export interface HistoryPoint {
   secondsToClose: number | null;
 }
 
+export interface WindowRow {
+  ticker: string;
+  closedAt: string;
+  settled: number | null;
+  strike: number | null;
+  outcome: 'YES' | 'NO' | null;
+  trades: number;
+  /** When each bot trade on the window was placed, seconds after it opened, oldest first. */
+  enteredAfterOpenSecs: number[];
+  /** Settled bot P&L on the window; null while any of its trades is pending. */
+  pnlCents: number | null;
+  /** true when every trade settled and won, false when any lost, null when none or still pending. */
+  hit: boolean | null;
+}
+
+/** Every 15-minute window the bot watched to its close, traded or not. */
+export interface Windows {
+  observed: number;
+  traded: number;
+  settledPnlCents: number;
+  perWindowCents: number | null;
+  projectedDayCents: number | null;
+  target: { normalCents: number; riskCents: number };
+  rows: WindowRow[];
+}
+
 export interface Summary {
   status: KalshirustEvent | null;
   online: boolean;
   trades: Trade[];
   totals: Totals & { bySource: Record<RustSource, Totals> };
+  windows: Windows;
   watchlist: WatchRow[];
   history: HistoryPoint[];
   errors: { at: string; message: string }[];
@@ -159,6 +190,10 @@ export const OFFLINE_AFTER_MS = 90_000;
 export const HISTORY_POINTS = 120;
 export const WATCH_WINDOW_MS = 10 * 60_000;
 export const WATCH_LIMIT = 15;
+export const WINDOW_SECS = 15 * 60;
+export const WINDOWS_PER_DAY = 96;
+/** The goal: at least $1 per window in NORMAL, $3 in RISK. */
+export const WINDOW_TARGET_CENTS = { normalCents: 100, riskCents: 300 };
 export const PRICE_BUCKETS: { bucket: PriceBucket; below: number }[] = [
   { bucket: '15–30¢', below: 30 },
   { bucket: '30–50¢', below: 50 },
@@ -230,14 +265,21 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
     .filter((e) => e.kind === 'signal')
     .map((e) => {
       const s = e.client_order_id ? settles.get(e.client_order_id) : undefined;
+      const source: RustSource = e.source === 'sniper' ? 'sniper' : 'bot';
+      const secondsToClose = num(e.seconds_to_close);
       return {
         id: e.id,
         at: e.created_at,
         ticker: e.ticker,
-        source: (e.source === 'sniper' ? 'sniper' : 'bot') as RustSource,
+        source,
         mode: e.mode,
         live: e.live,
         closeTime: e.close_time,
+        secondsToClose,
+        enteredAfterOpenSecs:
+          source === 'bot' && e.ticker?.startsWith('KXBTC15M') && secondsToClose != null
+            ? WINDOW_SECS - secondsToClose
+            : null,
         ...prediction(e),
         result: s?.result ?? null,
         pnlCents: s ? num(s.pnl_cents) : null,
@@ -297,7 +339,9 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
     .reverse()
     .map((e) => ({ at: e.created_at, message: e.message ?? 'error' }));
 
-  return { status, online, trades, totals, watchlist, history, errors };
+  const windows = windowStats(byTime, trades);
+
+  return { status, online, trades, totals, windows, watchlist, history, errors };
 }
 
 function tally(trades: Trade[]): Totals {
@@ -314,6 +358,65 @@ function tally(trades: Trade[]): Totals {
     riskedCents,
     pnlCents,
     roi: riskedCents > 0 ? pnlCents / riskedCents : null,
+  };
+}
+
+/** The bot ends every 15-minute window with a zero-second status row whose message starts "settled ". */
+const isWindowClose = (e: KalshirustEvent) =>
+  e.kind === 'status' &&
+  e.source === 'bot' &&
+  e.ticker != null &&
+  num(e.seconds_to_close) === 0 &&
+  (e.message ?? '').startsWith('settled ');
+
+function windowStats(byTime: KalshirustEvent[], trades: Trade[]): Windows {
+  const closes = new Map<string, KalshirustEvent>();
+  for (const e of byTime) {
+    if (isWindowClose(e)) closes.set(e.ticker as string, e);
+  }
+  const onWindow = (t: Trade) => t.source === 'bot' && t.ticker != null && closes.has(t.ticker);
+  const byTicker = new Map<string, Trade[]>();
+  for (const t of [...trades].reverse()) {
+    if (!onWindow(t)) continue;
+    const ticker = t.ticker as string;
+    byTicker.set(ticker, [...(byTicker.get(ticker) ?? []), t]);
+  }
+  const rows = [...closes.values()]
+    .map((e): WindowRow => {
+      const ticker = e.ticker as string;
+      const ts = byTicker.get(ticker) ?? [];
+      const settled = num(e.spot);
+      const strike = num(e.strike);
+      const pending = ts.some((t) => t.result == null);
+      const lost = ts.some((t) => t.result != null && t.result !== t.side);
+      return {
+        ticker,
+        closedAt: e.created_at,
+        settled,
+        strike,
+        outcome: settled == null || strike == null ? null : settled >= strike ? 'YES' : 'NO',
+        trades: ts.length,
+        enteredAfterOpenSecs: ts
+          .map((t) => t.enteredAfterOpenSecs)
+          .filter((s): s is number => s != null),
+        pnlCents: pending ? null : ts.reduce((a, t) => a + (t.pnlCents ?? 0), 0),
+        hit: ts.length === 0 ? null : lost ? false : pending ? null : true,
+      };
+    })
+    .sort((a, b) => Date.parse(b.closedAt) - Date.parse(a.closedAt));
+  const settledPnlCents = trades
+    .filter((t) => onWindow(t) && t.result != null)
+    .reduce((a, t) => a + (t.pnlCents ?? 0), 0);
+  const observed = closes.size;
+  const perWindowCents = observed ? settledPnlCents / observed : null;
+  return {
+    observed,
+    traded: rows.filter((r) => r.trades > 0).length,
+    settledPnlCents,
+    perWindowCents,
+    projectedDayCents: perWindowCents == null ? null : perWindowCents * WINDOWS_PER_DAY,
+    target: WINDOW_TARGET_CENTS,
+    rows,
   };
 }
 

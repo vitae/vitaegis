@@ -129,6 +129,16 @@ impl TradeBook {
         (ts.len(), Some(ts.iter().map(|t| t.pnl.unwrap_or(0.0)).sum()))
     }
 
+    /// Realized P&L of live bot trades placed since 00:00 UTC today.
+    pub fn live_pnl_today(&self) -> f64 {
+        let day_start = chrono::Utc::now().date_naive().and_hms_opt(0, 0, 0).map(|d| d.and_utc().timestamp()).unwrap_or(0);
+        self.trades.iter().filter(|t| t.source == "bot" && t.live() && t.placed_ts >= day_start).filter_map(|t| t.pnl).sum()
+    }
+
+    pub fn daily_stopped(&self, limit: f64) -> bool {
+        limit > 0.0 && self.live_pnl_today() <= -limit
+    }
+
     pub fn settled_bot_count(&self) -> usize {
         self.trades.iter().filter(|t| t.source == "bot" && t.pnl.is_some()).count()
     }

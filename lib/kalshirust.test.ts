@@ -347,6 +347,198 @@ describe('summarize', () => {
   });
 });
 
+describe('summarize windows', () => {
+  const close = (secondsAgo: number, ticker: string, spot: number, strike: number) =>
+    ev({
+      kind: 'status',
+      created_at: at(secondsAgo),
+      ticker,
+      spot,
+      strike,
+      seconds_to_close: 0,
+      message: `settled ${spot.toFixed(2)} (${spot >= strike ? 'YES' : 'NO'}) | 60s: est …`,
+    });
+  const signal = (
+    secondsAgo: number,
+    ticker: string,
+    order: string,
+    over: Partial<KalshirustEvent> = {},
+  ) =>
+    ev({
+      kind: 'signal',
+      created_at: at(secondsAgo),
+      ticker,
+      client_order_id: order,
+      side: 'yes',
+      cost_cents: 500,
+      fee_cents: 10,
+      seconds_to_close: 120,
+      ...over,
+    });
+  const settleRow = (secondsAgo: number, order: string, result: 'yes' | 'no', pnl: number) =>
+    ev({
+      kind: 'settle',
+      created_at: at(secondsAgo),
+      client_order_id: order,
+      result,
+      pnl_cents: pnl,
+    });
+
+  it('counts each closed window once, only from the bot’s zero-second settled rows', () => {
+    const s = summarize(
+      [
+        close(3000, 'KXBTC15M-26NOV011900-00', 78010, 78000),
+        close(2990, 'KXBTC15M-26NOV011900-00', 78010, 78000),
+        close(2100, 'KXBTC15M-26NOV011915-00', 77990.5, 78000),
+        ev({
+          kind: 'status',
+          created_at: at(1200),
+          ticker: 'KXBTC15M-26NOV011930-00',
+          seconds_to_close: 0,
+          spot: 1,
+          strike: 2,
+        }),
+        ev({
+          kind: 'status',
+          source: 'sniper',
+          created_at: at(1100),
+          ticker: 'KXBTCD-26NOV0120-T78399.99',
+          seconds_to_close: 0,
+          spot: 1,
+          strike: 2,
+          message: 'settled 1.00 (NO)',
+        }),
+        ev({
+          kind: 'status',
+          created_at: at(10),
+          ticker: 'KXBTC15M-26NOV011945-00',
+          seconds_to_close: 600,
+          spot: 78001,
+          strike: 78000,
+        }),
+      ],
+      NOW,
+    );
+    expect(s.windows.observed).toBe(2);
+    expect(s.windows.rows.map((r) => [r.ticker, r.outcome])).toEqual([
+      ['KXBTC15M-26NOV011915-00', 'NO'],
+      ['KXBTC15M-26NOV011900-00', 'YES'],
+    ]);
+    expect(s.windows.rows[1]).toEqual({
+      ticker: 'KXBTC15M-26NOV011900-00',
+      closedAt: at(2990),
+      settled: 78010,
+      strike: 78000,
+      outcome: 'YES',
+      trades: 0,
+      enteredAfterOpenSecs: [],
+      pnlCents: 0,
+      hit: null,
+    });
+    expect(s.windows).toMatchObject({
+      traded: 0,
+      settledPnlCents: 0,
+      perWindowCents: 0,
+      projectedDayCents: 0,
+    });
+  });
+
+  it('scores each window by the bot’s trades on it and leaves a pending window open', () => {
+    const A = 'KXBTC15M-26NOV011900-00';
+    const B = 'KXBTC15M-26NOV011915-00';
+    const C = 'KXBTC15M-26NOV011930-00';
+    const s = summarize(
+      [
+        close(2000, A, 78010, 78000),
+        signal(2300, A, 'a2', { seconds_to_close: 300, side: 'no' }),
+        settleRow(1990, 'a2', 'yes', -102),
+        signal(2059, A, 'a1', { seconds_to_close: 59 }),
+        settleRow(1990, 'a1', 'yes', 583),
+        signal(2100, A, 'sn', { source: 'sniper' }),
+        settleRow(1990, 'sn', 'yes', 1000),
+        close(1100, B, 77990, 78000),
+        signal(1200, B, 'b1', { side: 'no' }),
+        settleRow(1090, 'b1', 'no', 295),
+        close(200, C, 78000, 78000),
+        signal(400, C, 'c1'),
+        settleRow(190, 'c1', 'yes', 100),
+        signal(300, C, 'c2', { seconds_to_close: 100 }),
+        signal(3000, 'KXBTC15M-26NOV011845-00', 'orphan'),
+        settleRow(2900, 'orphan', 'yes', 999),
+      ],
+      NOW,
+    );
+    expect(s.windows).toMatchObject({
+      observed: 3,
+      traded: 3,
+      settledPnlCents: 876,
+      perWindowCents: 292,
+      projectedDayCents: 292 * 96,
+      target: { normalCents: 100, riskCents: 300 },
+    });
+    expect(s.windows.rows.map((r) => r.ticker)).toEqual([C, B, A]);
+    expect(s.windows.rows[0]).toMatchObject({
+      outcome: 'YES',
+      trades: 2,
+      enteredAfterOpenSecs: [780, 800],
+      pnlCents: null,
+      hit: null,
+    });
+    expect(s.windows.rows[1]).toMatchObject({
+      outcome: 'NO',
+      trades: 1,
+      enteredAfterOpenSecs: [780],
+      pnlCents: 295,
+      hit: true,
+    });
+    expect(s.windows.rows[2]).toMatchObject({
+      trades: 2,
+      enteredAfterOpenSecs: [600, 841],
+      pnlCents: 481,
+      hit: false,
+    });
+  });
+
+  it('derives the entry time of 15-minute bot trades from the signal’s seconds to close', () => {
+    const s = summarize(
+      [
+        signal(400, 'KXBTC15M-26NOV012000-00', 'a', { seconds_to_close: 59 }),
+        signal(300, 'KXBTC15M-26NOV012000-00', 'b', {
+          seconds_to_close: '241' as unknown as number,
+        }),
+        signal(200, 'KXBTC15M-26NOV012000-00', 'c', { source: 'sniper', seconds_to_close: 59 }),
+        signal(100, 'KXBTCD-26NOV0120-T78399.99', 'd', { seconds_to_close: 3600 }),
+        signal(50, 'KXBTC15M-26NOV012015-00', 'e', { seconds_to_close: null }),
+      ],
+      NOW,
+    );
+    expect(s.trades.map((t) => [t.secondsToClose, t.enteredAfterOpenSecs])).toEqual([
+      [null, null],
+      [3600, null],
+      [59, null],
+      [241, 659],
+      [59, 841],
+    ]);
+  });
+
+  it('is empty until a window closes, even with settled trades', () => {
+    const empty = {
+      observed: 0,
+      traded: 0,
+      settledPnlCents: 0,
+      perWindowCents: null,
+      projectedDayCents: null,
+      target: { normalCents: 100, riskCents: 300 },
+      rows: [],
+    };
+    expect(summarize([], NOW).windows).toEqual(empty);
+    expect(
+      summarize([signal(100, 'KXBTC15M-26NOV012000-00', 'a'), settleRow(10, 'a', 'yes', 50)], NOW)
+        .windows,
+    ).toEqual(empty);
+  });
+});
+
 describe('summarizeBacktest', () => {
   const bt = (over: Partial<KalshirustEvent>) => ev({ source: 'backtest', ...over });
   const signal = (order: string, closeSecondsAgo: number, over: Partial<KalshirustEvent> = {}) =>

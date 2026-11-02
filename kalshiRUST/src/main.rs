@@ -46,6 +46,13 @@ struct ModeParams {
     /// calculation); RISK may act on the projection before the settlement minute begins.
     settle_min_pwin: f64,
     settle_min_known: usize,
+    /// Minimum fee-adjusted edge, in cents per contract, for a settlement trade.
+    settle_min_edge_cents: f64,
+    /// Second trade of the window.
+    settle_second_min_pwin: f64,
+    settle_second_min_known: usize,
+    /// Stake as a multiple of Kelly on the bankroll; 0 means a flat stake.
+    kelly_mult: f64,
 }
 
 fn mode_params(name: &str) -> ModeParams {
@@ -58,8 +65,12 @@ fn mode_params(name: &str) -> ModeParams {
             bets_per_window: 2,
             min_secs_left: f("RISK_MIN_SECS_LEFT", 30.0),
             max_secs_left: f("RISK_MAX_SECS_LEFT", 420.0),
-            settle_min_pwin: f("RISK_SETTLE_MIN_PWIN", 0.8),
+            settle_min_pwin: f("RISK_SETTLE_MIN_PWIN", 0.6),
             settle_min_known: f("RISK_SETTLE_MIN_KNOWN", 0.0) as usize,
+            settle_min_edge_cents: f("RISK_SETTLE_MIN_EDGE_CENTS", 5.0),
+            settle_second_min_pwin: f("RISK_SETTLE_SECOND_MIN_PWIN", 0.7),
+            settle_second_min_known: f("RISK_SETTLE_SECOND_MIN_KNOWN", 0.0) as usize,
+            kelly_mult: f("RISK_KELLY_MULT", 0.75),
         }
     } else {
         ModeParams {
@@ -71,6 +82,10 @@ fn mode_params(name: &str) -> ModeParams {
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.9),
             settle_min_known: f("SETTLE_MIN_KNOWN", 3.0) as usize,
+            settle_min_edge_cents: f("SETTLE_MIN_EDGE_CENTS", 2.0),
+            settle_second_min_pwin: f("SETTLE_SECOND_MIN_PWIN", 0.95),
+            settle_second_min_known: SETTLE_SECOND_MIN_KNOWN,
+            kelly_mult: 0.0,
         }
     }
 }
@@ -92,31 +107,57 @@ struct Ctx {
     model_weight: f64,
     /// Published 1-second BRTI prints plus the Coinbase anchor for the settlement engine.
     brti: settle::SharedBrti,
-    settle_min_edge_cents: f64,
-    /// The second trade in a window is only taken as a near-certainty.
-    settle_second_min_pwin: f64,
     settle_max_price: f64,
     /// Dollar floor on the settlement estimate's spread (feed timing + basis error).
     settle_noise_dollars: f64,
-    /// RISK mode sizes settlement trades by fractional Kelly on this bankroll.
+    /// Bankroll for Kelly sizing: the env value, capped by the live balance when live.
     bankroll_dollars: f64,
-    kelly_fraction: f64,
-    /// RISK mode sizes each settlement trade so a win pays about this much.
-    risk_target_profit: f64,
+    /// Stop opening live trades once today's realized loss reaches this many dollars.
+    daily_loss_limit: f64,
 }
 
-/// Dollars for a settlement trade. NORMAL is a flat stake. RISK stakes enough that a win
-/// pays the target profit (stake = target * p / (1 - p)), but never more than half-Kelly
-/// on the bankroll (Kelly for a binary at price p with win probability q is
-/// (q - p) / (1 - p)) and never more than the mode's cap.
-fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64, kelly_fraction: f64, target_profit: f64) -> f64 {
-    if mode.name != "RISK" {
+/// Dollars for a settlement trade. A flat stake when the mode's Kelly multiple is 0
+/// (NORMAL); otherwise that multiple of Kelly on the bankroll, where Kelly for a binary at
+/// price p with win probability q is (q - p) / (1 - p), floored at $5 and capped by the mode.
+fn settle_size(mode: &ModeParams, p_win: f64, price: f64, bankroll: f64) -> f64 {
+    if mode.kelly_mult <= 0.0 {
         return mode.max_order_dollars;
     }
     let f_star = ((p_win - price) / (1.0 - price)).max(0.0);
-    let half_kelly = kelly_fraction * 2.0 * bankroll * f_star;
-    let for_target = target_profit * price / (1.0 - price);
-    for_target.min(half_kelly).max(1.0).min(mode.max_order_dollars)
+    (mode.kelly_mult * bankroll * f_star).max(5.0).min(mode.max_order_dollars)
+}
+
+/// Signed GET against the trade API; `path` is relative to the v2 base (e.g. "/portfolio/balance").
+async fn kalshi_get(client: &reqwest::Client, rest_base: &str, api_key_id: &str, pem_path: &str, path: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let ts = chrono::Utc::now().timestamp_millis().to_string();
+    let signature = sign_message(pem_path, &format!("{}GET/trade-api/v2{}", ts, path))?;
+    let resp = client
+        .get(format!("{}{}", rest_base, path))
+        .header("KALSHI-ACCESS-KEY", api_key_id)
+        .header("KALSHI-ACCESS-SIGNATURE", &signature)
+        .header("KALSHI-ACCESS-TIMESTAMP", &ts)
+        .send()
+        .await?;
+    let status = resp.status();
+    let v: serde_json::Value = resp.json().await.unwrap_or(json!({}));
+    if !status.is_success() {
+        return Err(format!("{} {}", status, v).into());
+    }
+    Ok(v)
+}
+
+async fn kalshi_balance(client: &reqwest::Client, rest_base: &str, api_key_id: &str, pem_path: &str) -> Result<f64, Box<dyn std::error::Error>> {
+    let v = kalshi_get(client, rest_base, api_key_id, pem_path, "/portfolio/balance").await?;
+    Ok(v["balance_dollars"].as_str().and_then(|s| s.parse::<f64>().ok()).or_else(|| v["balance"].as_f64().map(|c| c / 100.0)).unwrap_or(0.0))
+}
+
+/// Contracts actually filled on a live order, from its status.
+async fn filled_count(ctx: &Ctx, order_id: &str, count: u32) -> Result<(u32, String), Box<dyn std::error::Error>> {
+    let v = kalshi_get(&ctx.client, ctx.rest_base, &ctx.api_key_id, &ctx.pem_path, &format!("/portfolio/orders/{}", order_id)).await?;
+    let o = &v["order"];
+    let remaining = o["remaining_count_fp"].as_str().and_then(|s| s.parse::<f64>().ok()).or_else(|| o["remaining_count"].as_f64()).unwrap_or(count as f64);
+    let status = o["status"].as_str().unwrap_or("?").to_string();
+    Ok(((count as f64 - remaining).max(0.0).round() as u32, status))
 }
 
 impl Ctx {
@@ -144,7 +185,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("[+] Kalshi environment: {}", env_type);
 
     let client = reqwest::Client::builder().timeout(Duration::from_secs(20)).build()?;
-    let live = env::var("LIVE_TRADING").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
+    let api_key_id = env::var("KALSHI_API_KEY_ID")?;
+    let pem_path = env::var("KALSHI_PRIVATE_KEY_PATH")?;
+    let mut live = env::var("LIVE_TRADING").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
+    let mut bankroll: f64 = env::var("BANKROLL_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0);
+    let daily_loss_limit: f64 = env::var("DAILY_LOSS_LIMIT_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0);
+    if live {
+        match kalshi_balance(&client, rest_base, &api_key_id, &pem_path).await {
+            Ok(bal) => {
+                println!("[LIVE] Kalshi balance ${:.2} | daily loss stop ${:.0}", bal, daily_loss_limit);
+                if bal < 5.0 {
+                    eprintln!("[!] Balance is under $5: running PAPER until the account is funded. Restart after funding.");
+                    live = false;
+                } else {
+                    bankroll = bankroll.min(bal);
+                }
+            }
+            Err(e) => {
+                eprintln!("[!] Could not read the Kalshi balance ({}): running PAPER.", e);
+                live = false;
+            }
+        }
+    }
     let bot_limit: usize = env::var("PAPER_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(8);
     let sniper_limit: usize = env::var("SNIPE_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(20);
     let initial_mode = env::var("MODE").unwrap_or_else(|_| "NORMAL".into()).to_uppercase();
@@ -158,8 +220,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         rest_base,
         ws_host,
         live,
-        api_key_id: env::var("KALSHI_API_KEY_ID")?,
-        pem_path: env::var("KALSHI_PRIVATE_KEY_PATH")?,
+        api_key_id,
+        pem_path,
         supa,
         vol: vol::shared(),
         mode: Arc::new(std::sync::Mutex::new(initial_mode)),
@@ -167,13 +229,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         momentum_weight: env::var("MOMENTUM_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.3),
         model_weight: env::var("MODEL_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.15),
         brti: settle::shared(),
-        settle_min_edge_cents: env::var("SETTLE_MIN_EDGE_CENTS").ok().and_then(|v| v.parse().ok()).unwrap_or(2.0),
-        settle_second_min_pwin: env::var("SETTLE_SECOND_MIN_PWIN").ok().and_then(|v| v.parse().ok()).unwrap_or(0.95),
         settle_max_price: env::var("SETTLE_MAX_PRICE").ok().and_then(|v| v.parse().ok()).unwrap_or(0.97),
         settle_noise_dollars: env::var("SETTLE_NOISE_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(4.0),
-        bankroll_dollars: env::var("BANKROLL_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0),
-        kelly_fraction: env::var("SETTLE_KELLY_FRACTION").ok().and_then(|v| v.parse().ok()).unwrap_or(0.25),
-        risk_target_profit: env::var("RISK_TARGET_PROFIT_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(3.0),
+        bankroll_dollars: bankroll,
+        daily_loss_limit,
     });
 
     {
@@ -330,7 +389,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!(
                     "[WINDOWS] {} observed | {} traded | {} with trades pending | net ${:+.2} | ${:+.2} per window | ${:+.2} per day at 96 windows | target ${:.0}/window ({})",
                     windows_seen.len(), traded, pending, net, per, per * 96.0,
-                    if ctx.mode().name == "RISK" { ctx.risk_target_profit } else { 1.0 }, ctx.mode().name
+                    if ctx.mode().name == "RISK" { 3.0 } else { 1.0 }, ctx.mode().name
                 );
             }
             if b.is_done() {
@@ -351,6 +410,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("[+] Active 15m contract: {} | strike ${:.2} | closes in {}s", ticker, strike, close_ts - chrono::Utc::now().timestamp());
                 if !windows_seen.contains(&ticker) && close_ts > chrono::Utc::now().timestamp() {
                     windows_seen.push(ticker.clone());
+                }
+                if ctx.live {
+                    let b = ctx.book.lock().await;
+                    if b.daily_stopped(ctx.daily_loss_limit) {
+                        println!("[STOP] Daily loss limit ${:.0} reached (${:+.2} realized today). No new live trades until 00:00 UTC.", ctx.daily_loss_limit, b.live_pnl_today());
+                    }
                 }
                 if let Err(e) = run_window(&ctx, ticker, strike, close_ts, &mut spot_rx).await {
                     eprintln!("[!] WebSocket stream error: {}. Reconnecting in 3s...", e);
@@ -524,11 +589,11 @@ async fn run_window(
                 }
                 if let Some(edge) = edge {
                     let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
-                    let (pwin_floor, known_floor) = if bets_settle == 0 { (mode.settle_min_pwin, mode.settle_min_known) } else { (ctx.settle_second_min_pwin, SETTLE_SECOND_MIN_KNOWN) };
-                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= ctx.settle_min_edge_cents && p_win >= pwin_floor && est.known_prints >= known_floor {
-                        let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, ctx.kelly_fraction, ctx.risk_target_profit);
+                    let (pwin_floor, known_floor) = if bets_settle == 0 { (mode.settle_min_pwin, mode.settle_min_known) } else { (mode.settle_second_min_pwin, mode.settle_second_min_known) };
+                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= mode.settle_min_edge_cents && p_win >= pwin_floor && est.known_prints >= known_floor {
+                        let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars);
                         let count = (dollars / edge.price).floor() as u32;
-                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window };
+                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1 && allowed {
                             bets_settle += 1;
                             last_settle_entry = now;
@@ -608,7 +673,7 @@ async fn run_window(
         if bets_early >= mode.bets_per_window || !in_window || edge.cents < mode.min_edge_cents {
             continue;
         }
-        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window };
+        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
         if !allowed || (mode.max_order_dollars / edge.price).floor() < 1.0 {
             continue;
         }
@@ -668,9 +733,9 @@ async fn enter(
     order_ttl_secs: i64,
 ) {
     let now = chrono::Utc::now().timestamp();
-    let count = (dollars / edge.price).floor() as u32;
-    let cost = count as f64 * edge.price;
-    let fee = taker_fee(edge.price) * count as f64;
+    let mut count = (dollars / edge.price).floor() as u32;
+    let mut cost = count as f64 * edge.price;
+    let mut fee = taker_fee(edge.price) * count as f64;
     let price_cents = (edge.price * 100.0).round() as u32;
     let client_order_id = format!("{}-{}-{}", tag, ticker, chrono::Utc::now().timestamp_millis());
     println!(
@@ -682,6 +747,26 @@ async fn enter(
         match place_order(ctx, ticker, edge.side, price_cents, count, &client_order_id, order_ttl_secs).await {
             Ok(id) => {
                 println!("[LIVE ORDER] {} x{} @ {}c -> order {}", ticker, count, price_cents, id);
+                // Paper assumed full fills; live records only what filled.
+                sleep(Duration::from_millis(1500)).await;
+                match filled_count(ctx, &id, count).await {
+                    Ok((filled, status)) if filled == 0 => {
+                        println!("[LIVE] order {} unfilled (status {}): nothing recorded", id, status);
+                        if let Some(s) = &ctx.supa {
+                            s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": true, "ticker": ticker, "message": format!("order {} unfilled ({}) at {}c", id, status, price_cents) }));
+                        }
+                        return;
+                    }
+                    Ok((filled, status)) => {
+                        if filled < count {
+                            println!("[LIVE] order {} partially filled: {}/{} (status {})", id, filled, count, status);
+                        }
+                        count = filled;
+                        cost = count as f64 * edge.price;
+                        fee = taker_fee(edge.price) * count as f64;
+                    }
+                    Err(e) => eprintln!("[!] Could not confirm fill for {} ({}); recording the full order", id, e),
+                }
                 Some(id)
             }
             Err(e) => {

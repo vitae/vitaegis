@@ -9,6 +9,8 @@ import {
   dollars,
   kalshiUrl,
   signedDollars,
+  WINDOW_SECS,
+  WINDOWS_PER_DAY,
   type BacktestSummary,
   type BacktestTrade,
   type Prediction,
@@ -16,6 +18,7 @@ import {
   type Summary,
   type Trade,
   type WatchRow,
+  type Windows,
 } from '@/lib/kalshirust';
 import LineChart from '../kalshi/LineChart';
 import kalshiStyles from '../kalshi/kalshi.module.css';
@@ -28,6 +31,8 @@ type Payload = Summary & {
 };
 
 const POLL_MS = 5_000;
+const TRADE_ROWS = 16;
+const WINDOW_ROWS = 12;
 
 const hst = (iso: string | number | null | undefined, seconds = false) =>
   iso == null
@@ -46,7 +51,18 @@ const clock = (ms: number) =>
     hour: 'numeric',
     minute: '2-digit',
   });
+const clockSeconds = (ms: number) =>
+  new Date(ms).toLocaleTimeString('en-US', {
+    timeZone: 'Pacific/Honolulu',
+    hourCycle: 'h23',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const plusMmss = (s: number) => `+${mmss(s)}`;
+const intoWindow = (secondsLeft: number) =>
+  Math.min(WINDOW_SECS, Math.max(0, WINDOW_SECS - secondsLeft));
 const countdown = (s: number) =>
   s >= 3600
     ? `${Math.floor(s / 3600)}h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}m`
@@ -151,6 +167,7 @@ export default function Board() {
 
         {error && <p className="mt-6 text-sm text-vitae-red">{error}</p>}
 
+        {data && <PerWindow windows={data.windows} mode={mode} />}
         <NowPanel status={online ? status : null} secondsLeft={secondsLeft} />
 
         {data && (
@@ -327,12 +344,16 @@ function NowPanel({
   const prob = status?.model_prob ?? null;
   const distText =
     dist == null ? '' : `${dist >= 0 ? '+' : '−'}${(Math.abs(dist) * 100).toFixed(3)}% vs strike`;
+  const closeMs = status?.close_time ? Date.parse(status.close_time) : NaN;
   const tiles: { label: string; value: string; sub?: string; toneClass?: string; href?: string }[] =
     [
       {
         label: 'Market',
         value: status?.ticker ?? '—',
-        sub: secondsLeft == null ? undefined : `closes in ${mmss(secondsLeft)}`,
+        sub:
+          secondsLeft == null
+            ? undefined
+            : `closes in ${mmss(secondsLeft)} · ${plusMmss(intoWindow(secondsLeft))} into window`,
         href: status?.ticker ? kalshiUrl(status.ticker) : undefined,
       },
       { label: 'BTC spot', value: usd(spot), sub: distText || undefined, toneClass: tone(dist) },
@@ -352,13 +373,141 @@ function NowPanel({
     ];
   return (
     <section className="mt-8" aria-labelledby="now-heading">
-      <h2 id="now-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
-        Now
-      </h2>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h2 id="now-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+          Now
+        </h2>
+        {Number.isFinite(closeMs) && (
+          <p className="text-xs text-white/45">
+            Window opens {clockSeconds(closeMs - WINDOW_SECS * 1000)} HST · closes{' '}
+            {clockSeconds(closeMs)} HST · settlement engine arms at +13:30
+          </p>
+        )}
+      </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-7">
         {tiles.map((t) => (
           <Stat key={t.label} {...t} />
         ))}
+      </div>
+    </section>
+  );
+}
+
+function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
+  const targetCents = mode === 'RISK' ? windows.target.riskCents : windows.target.normalCents;
+  const met = windows.perWindowCents != null && windows.perWindowCents >= targetCents;
+  const rows = windows.rows.slice(0, WINDOW_ROWS);
+  return (
+    <section className="mt-8" aria-labelledby="window-heading">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h2 id="window-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+          Per window
+        </h2>
+        <p className="text-xs text-white/45">
+          Every 15-minute window the bot watched to its close, traded or not. P&amp;L is its settled
+          trades on that window, after fees.
+        </p>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <Stat label="Windows observed" value={String(windows.observed)} />
+        <Stat label="Windows traded" value={String(windows.traded)} />
+        <Stat
+          label="Net P&L"
+          value={windows.observed ? signedDollars(windows.settledPnlCents) : '—'}
+          sub="settled"
+          toneClass={tone(windows.observed ? windows.settledPnlCents : null)}
+        />
+        <Stat
+          label="Avg per window"
+          value={signedDollars(windows.perWindowCents)}
+          toneClass={tone(windows.perWindowCents)}
+        />
+        <Stat
+          label="Projected per day"
+          value={signedDollars(windows.projectedDayCents)}
+          sub={`${WINDOWS_PER_DAY} windows a day`}
+          toneClass={tone(windows.projectedDayCents)}
+        />
+        <Stat
+          label="Target"
+          value={`${dollars(targetCents)} / window`}
+          sub={`${mode} goal`}
+          badge={
+            met && (
+              <span className="ml-2 text-base text-vitae-green" aria-label="target met">
+                ✓
+              </span>
+            )
+          }
+        />
+      </div>
+      <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
+        <table className="w-full min-w-[860px] text-left text-sm">
+          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+            <tr>
+              <Th>Closed</Th>
+              <Th>Ticker</Th>
+              <Th right>Settled vs strike</Th>
+              <Th>Outcome</Th>
+              <Th right>Trades</Th>
+              <Th>Entered</Th>
+              <Th right>P&amp;L</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-6 text-center text-white/40">
+                  No windows closed yet.
+                </td>
+              </tr>
+            )}
+            {rows.map((w) => (
+              <tr key={w.ticker} className="border-t border-white/10 text-white/80">
+                <Td>
+                  <span className="text-white/50">{hst(w.closedAt, true)}</span>
+                </Td>
+                <Td>
+                  <TickerLink ticker={w.ticker} />
+                </Td>
+                <Td right>
+                  {usd(w.settled)} <span className="text-white/40">vs</span> {usd(w.strike)}
+                </Td>
+                <Td>
+                  <span
+                    className={
+                      w.outcome === 'YES'
+                        ? 'text-vitae-green'
+                        : w.outcome === 'NO'
+                          ? 'text-vitae-red'
+                          : 'text-white/40'
+                    }
+                  >
+                    {w.outcome ?? '—'}
+                  </span>
+                </Td>
+                <Td right>{w.trades}</Td>
+                <Td>
+                  {w.enteredAfterOpenSecs.length
+                    ? w.enteredAfterOpenSecs.map(plusMmss).join(', ')
+                    : '—'}
+                </Td>
+                <Td
+                  right
+                  className={
+                    w.trades === 0 || w.pnlCents == null ? 'text-white/40' : tone(w.pnlCents)
+                  }
+                >
+                  {w.trades === 0
+                    ? '—'
+                    : w.pnlCents == null
+                      ? 'pending'
+                      : signedDollars(w.pnlCents)}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </section>
   );
@@ -370,12 +519,14 @@ function Stat({
   sub,
   toneClass = 'text-white',
   href,
+  badge,
 }: {
   label: string;
   value: string;
   sub?: string;
   toneClass?: string;
   href?: string;
+  badge?: React.ReactNode;
 }) {
   return (
     <div className="glass-panel rounded-xl p-4">
@@ -386,6 +537,7 @@ function Stat({
         title={value}
       >
         {href ? <ExternalLink href={href}>{value}</ExternalLink> : value}
+        {badge}
       </p>
       {sub && <p className="mt-1 text-xs text-white/40">{sub}</p>}
     </div>
@@ -589,10 +741,11 @@ function Trades({
 }) {
   const allPaper = trades.length > 0 && trades.every((t) => !t.live);
   const sniper = totals.bySource.sniper;
+  const rows = trades.slice(0, TRADE_ROWS);
   return (
     <section className="mt-10" aria-labelledby="trades-heading">
       <h2 id="trades-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
-        {allPaper ? '8-trade paper run' : 'Trades'}
+        {allPaper ? `${TRADE_ROWS} TRADE PAPER RUN` : `${TRADE_ROWS} TRADE RUN`}
       </h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-4 lg:grid-cols-7">
         <Stat label="Trades" value={String(totals.trades)} />
@@ -625,26 +778,27 @@ function Trades({
         </p>
       )}
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
-        <table className="w-full min-w-[1280px] text-left text-sm">
+        <table className="w-full min-w-[1360px] text-left text-sm">
           <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
               <Th>Time</Th>
               <Th>Source</Th>
               <Th>Ticker</Th>
+              <Th>Entered</Th>
               <PredictionHeads />
               <Th>Result</Th>
               <Th right>P&amp;L</Th>
             </tr>
           </thead>
           <tbody>
-            {trades.length === 0 && (
+            {rows.length === 0 && (
               <tr>
-                <td colSpan={15} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={16} className="px-4 py-6 text-center text-white/40">
                   No trades yet.
                 </td>
               </tr>
             )}
-            {trades.map((t) => (
+            {rows.map((t) => (
               <tr key={t.id} className="border-t border-white/10 text-white/80">
                 <Td>
                   <span className="text-white/50">{hst(t.at, true)}</span>
@@ -663,6 +817,16 @@ function Trades({
                 </Td>
                 <Td>
                   <TickerLink ticker={t.ticker} />
+                </Td>
+                <Td>
+                  {t.enteredAfterOpenSecs == null ? (
+                    <span className="text-white/40">—</span>
+                  ) : (
+                    <>
+                      {plusMmss(t.enteredAfterOpenSecs)}
+                      <span className="ml-1 text-xs text-white/40">· {t.secondsToClose}s left</span>
+                    </>
+                  )}
                 </Td>
                 <PredictionCells t={t} />
                 <Td>
