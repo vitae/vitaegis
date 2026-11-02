@@ -45,6 +45,41 @@ impl Supa {
         });
     }
 
+    /// Insert many rows in one request and wait for the result.
+    pub async fn insert_many(&self, rows: &[Value]) -> Result<(), String> {
+        if rows.is_empty() {
+            return Ok(());
+        }
+        let r = self
+            .req(reqwest::Method::POST, "kalshirust_events")
+            .header("Prefer", "return=minimal")
+            .json(rows)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+        if r.status().is_success() {
+            Ok(())
+        } else {
+            let status = r.status();
+            Err(format!("{} {}", status, r.text().await.unwrap_or_default().chars().take(200).collect::<String>()))
+        }
+    }
+
+    /// Delete every row with the given source (used to replace a previous backtest).
+    pub async fn delete_source(&self, source: &str) -> Result<(), String> {
+        let r = self
+            .req(reqwest::Method::DELETE, &format!("kalshirust_events?source=eq.{}", source))
+            .header("Prefer", "return=minimal")
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+        if r.status().is_success() {
+            Ok(())
+        } else {
+            Err(format!("{}", r.status()))
+        }
+    }
+
     /// Current mode from kalshirust_config, or None on any failure.
     pub async fn mode(&self) -> Option<String> {
         let v: Value = self

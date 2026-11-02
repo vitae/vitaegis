@@ -1,8 +1,4 @@
-﻿mod models;
-mod paper;
-mod scanner;
-mod supa;
-mod vol;
+﻿use kalshi_btc_bot::{models, paper, scanner, supa, vol};
 
 use futures_util::{SinkExt, StreamExt};
 use serde_json::json;
@@ -53,7 +49,7 @@ fn mode_params(name: &str) -> ModeParams {
             name: "NORMAL".into(),
             max_order_dollars: f("MAX_ORDER_DOLLARS", 5.0),
             min_edge_cents: f("MIN_EDGE_CENTS", 2.0),
-            bets_per_window: 1,
+            bets_per_window: 2,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
         }
@@ -73,6 +69,8 @@ struct Ctx {
     book: Arc<Mutex<TradeBook>>,
     /// Fraction of the last two minutes' move carried into the forecast (0 = pure GBM).
     momentum_weight: f64,
+    /// How far the forecast moves from the market mid toward the model (1 = pure model).
+    model_weight: f64,
 }
 
 impl Ctx {
@@ -121,6 +119,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         mode: Arc::new(std::sync::Mutex::new(initial_mode)),
         book: Arc::new(Mutex::new(TradeBook::load("trades.jsonl", bot_limit, sniper_limit))),
         momentum_weight: env::var("MOMENTUM_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.3),
+        model_weight: env::var("MODEL_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.15),
     });
 
     {
@@ -341,7 +340,16 @@ async fn run_window(
         // those tests were out of sample, so the weight is small and both numbers are logged.
         let mom = momentum.unwrap_or(0.0);
         let p_raw = prob_above(spot * (ctx.momentum_weight * mom).exp(), strike, sigma);
-        let p_yes = clamp_prob(p_raw);
+        // The market's own mid, pulled toward the model by MODEL_WEIGHT (calibrated by the
+        // backtest's walk-forward step). 1.0 trusts the model fully; 0 never disagrees.
+        let market_mid = match (yes_ask, yes_bid) {
+            (Some(a), Some(b)) => Some((a + b) / 2.0),
+            (a, b) => a.or(b),
+        };
+        let p_yes = clamp_prob(match market_mid {
+            Some(m) => m + ctx.model_weight * (clamp_prob(p_raw) - m),
+            None => p_raw,
+        });
         let edge = best_edge(p_yes, yes_ask, no_ask).filter(|e| tradable_price(e.price) && !clamp_binding(p_raw));
         let mode = ctx.mode();
 

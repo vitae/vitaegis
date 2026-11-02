@@ -1,7 +1,20 @@
-﻿[package]
+[package]
 name = "kalshi_btc_bot"
 version = "0.1.0"
 edition = "2021"
+default-run = "kalshi_btc_bot"
+
+[lib]
+name = "kalshi_btc_bot"
+path = "src/lib.rs"
+
+[[bin]]
+name = "kalshi_btc_bot"
+path = "src/main.rs"
+
+[[bin]]
+name = "backtest"
+path = "src/bin/backtest.rs"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }

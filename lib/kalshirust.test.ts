@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { kalshiFeeCents, summarize, type KalshirustEvent } from './kalshirust';
+import {
+  kalshiFeeCents,
+  kalshiUrl,
+  summarize,
+  summarizeBacktest,
+  type KalshirustEvent,
+} from './kalshirust';
 
 const base: KalshirustEvent = {
   id: '',
@@ -51,7 +57,51 @@ describe('kalshiFeeCents', () => {
   });
 });
 
+describe('kalshiUrl', () => {
+  it('links the series and the event, dropping the strike segment', () => {
+    expect(kalshiUrl('KXBTC15M-26NOV011930-30')).toBe(
+      'https://kalshi.com/markets/kxbtc15m/x/kxbtc15m-26nov011930',
+    );
+    expect(kalshiUrl('KXBTCD-26NOV0120-T78399.99')).toBe(
+      'https://kalshi.com/markets/kxbtcd/x/kxbtcd-26nov0120',
+    );
+  });
+});
+
 describe('summarize', () => {
+  it('derives P(win), the market’s implied P(win), EV and max win per trade', () => {
+    const s = summarize(
+      [
+        ev({
+          kind: 'signal',
+          created_at: at(100),
+          side: 'no',
+          price_cents: 44,
+          count: 10,
+          fee_cents: 17,
+          model_prob: 0.43,
+          edge_cents: 3.2,
+          close_time: at(-120),
+        }),
+        ev({ kind: 'signal', created_at: at(50), side: 'yes', price_cents: 60, model_prob: 0.7 }),
+      ],
+      NOW,
+    );
+    expect(s.trades[1].pWin).toBeCloseTo(0.57);
+    expect(s.trades[1]).toMatchObject({
+      marketPWin: 0.44,
+      evCents: 32,
+      maxWinCents: 10 * 56 - 17,
+      closeTime: at(-120),
+    });
+    expect(s.trades[0]).toMatchObject({
+      pWin: 0.7,
+      marketPWin: 0.6,
+      evCents: null,
+      maxWinCents: null,
+    });
+  });
+
   it('joins signals to settles by client_order_id and totals them', () => {
     const events = [
       ev({ kind: 'status', created_at: at(300), model_prob: 0.4, yes_ask_cents: 45 }),
@@ -294,5 +344,96 @@ describe('summarize', () => {
     );
     const s = summarize(events, NOW);
     expect(s.errors.map((e) => e.message)).toEqual(['err6', 'err5', 'err4', 'err3', 'err2']);
+  });
+});
+
+describe('summarizeBacktest', () => {
+  const bt = (over: Partial<KalshirustEvent>) => ev({ source: 'backtest', ...over });
+  const signal = (order: string, closeSecondsAgo: number, over: Partial<KalshirustEvent> = {}) =>
+    bt({
+      kind: 'signal',
+      created_at: at(5),
+      close_time: at(closeSecondsAgo),
+      ticker: `KXBTC15M-${order}`,
+      client_order_id: order,
+      side: 'yes',
+      price_cents: 55,
+      count: 9,
+      cost_cents: 495,
+      fee_cents: 16,
+      model_prob: 0.61,
+      edge_cents: 4,
+      message: 'entered 212s before close | gbm 61.0% | momentum +0.12%',
+      ...over,
+    });
+  const settle = (order: string, result: 'yes' | 'no', pnl: number) =>
+    bt({ kind: 'settle', created_at: at(3), client_order_id: order, result, pnl_cents: pnl });
+
+  it('joins by client_order_id, oldest close first, and drops unsettled signals', () => {
+    const b = summarizeBacktest(
+      [signal('b', 900), signal('a', 1800), signal('orphan', 60)],
+      [settle('a', 'yes', 389), settle('b', 'no', -511), settle('ghost', 'yes', 1)],
+    );
+    expect(b.trades.map((t) => t.ticker)).toEqual(['KXBTC15M-a', 'KXBTC15M-b']);
+    expect(b.trades[0]).toMatchObject({
+      at: at(1800),
+      side: 'yes',
+      priceCents: 55,
+      count: 9,
+      pWin: 0.61,
+      marketPWin: 0.55,
+      edgeCents: 4,
+      evCents: 36,
+      maxWinCents: 9 * 45 - 16,
+      result: 'yes',
+      pnlCents: 389,
+      note: 'entered 212s before close | gbm 61.0% | momentum +0.12%',
+    });
+    expect(b.trades[1]).toMatchObject({ result: 'no', pnlCents: -511 });
+    expect(b.ranAt).toBe(at(3));
+  });
+
+  it('totals, equity curve and price buckets', () => {
+    const b = summarizeBacktest(
+      [
+        signal('a', 4000, { price_cents: 20, edge_cents: 2 }),
+        signal('b', 3000, { price_cents: 45, edge_cents: 4 }),
+        signal('c', 2000, { price_cents: 55, edge_cents: 6 }),
+        signal('d', 1000, { price_cents: 80, side: 'no', edge_cents: 8 }),
+      ],
+      [
+        settle('a', 'yes', 100),
+        settle('b', 'no', -200),
+        settle('c', 'yes', 50),
+        settle('d', 'no', 25),
+      ],
+    );
+    expect(b.totals).toEqual({
+      trades: 4,
+      wins: 3,
+      losses: 1,
+      hitRate: 0.75,
+      riskedCents: 4 * 511,
+      pnlCents: -25,
+      roi: -25 / (4 * 511),
+      avgEdgeCents: 5,
+      avgPnlCents: -6.25,
+    });
+    expect(b.equity).toEqual([100, -100, -50, -25]);
+    expect(b.byPriceBucket).toEqual([
+      { bucket: '15–30¢', trades: 1, wins: 1, pnlCents: 100 },
+      { bucket: '30–50¢', trades: 1, wins: 0, pnlCents: -200 },
+      { bucket: '50–70¢', trades: 1, wins: 1, pnlCents: 50 },
+      { bucket: '70–85¢', trades: 1, wins: 1, pnlCents: 25 },
+    ]);
+  });
+
+  it('is empty without rows', () => {
+    const b = summarizeBacktest([], []);
+    expect(b.trades).toEqual([]);
+    expect(b.equity).toEqual([]);
+    expect(b.ranAt).toBeNull();
+    expect(b.totals).toMatchObject({ trades: 0, hitRate: null, roi: null, avgEdgeCents: null });
+    expect(b.byPriceBucket.map((r) => r.trades)).toEqual([0, 0, 0, 0]);
   });
 });

@@ -46,6 +46,32 @@
 
 The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it every 10 s.
 
+## Backtest, Nov 2 2026 (last 400 settled windows, Kalshi minute prices, Coinbase spot)
+
+`cargo run --release --bin backtest` replays the engine's rules over history and pushes
+the trades to the HUD. First run, pure model (MODEL_WEIGHT=1), 2c min edge, 90–300 s entry,
+up to 2 trades per window:
+
+| | |
+|---|---|
+| Trades | 338 |
+| Hit rate | 36.7% |
+| Net after fees | −$267.73 on $1,692.73 risked (−15.8%) |
+| Avg predicted edge | +10.6¢ per contract |
+| 15–30¢ entries | 124 trades, 19% hit, −$143 |
+| 70–85¢ entries | 33 trades, 85% hit, +$13 |
+
+Calibration over 844 in-window readings (Brier score, lower is better, 0.25 = coin flip):
+market mid 0.160, pure model 0.186, model×0.5 0.168, model×0.25 0.163. Where the model
+disagreed with the market by more than 15 points the market was right almost every time
+(model higher: realized 12.8% vs model 40.7%; model lower: realized 75.7% vs market 75.8%).
+
+**Conclusion:** the market's own price is a better forecast than the model. The model's
+"edge" was its error. Walk-forward (weight chosen on the older half by Brier, scored on the
+newer half) picked MODEL_WEIGHT=0.15: 20 trades, 30% hit, +$9.92. That is a sample of 20,
+not evidence of an edge. The bot now runs at 0.15 so it only acts when model and market
+disagree sharply, and the live paper run is the out-of-sample test.
+
 ## Honest expectations
 
 On a 45¢ contract with $5, the most you can win is about $6, not $10. A "slight edge" at

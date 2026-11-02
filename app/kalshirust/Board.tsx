@@ -7,7 +7,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KEY_STORAGE } from '@/components/admin/AdminShell';
 import {
   dollars,
+  kalshiUrl,
   signedDollars,
+  type BacktestSummary,
+  type BacktestTrade,
+  type Prediction,
   type RustMode,
   type Summary,
   type Trade,
@@ -19,6 +23,7 @@ import styles from './kalshirust.module.css';
 
 type Payload = Summary & {
   config: { mode: RustMode; updatedAt: string | null };
+  backtest: BacktestSummary;
   generatedAt: string;
 };
 
@@ -152,7 +157,8 @@ export default function Board() {
           <>
             <SnipeList rows={data.watchlist} now={now} />
             <Charts history={data.history} />
-            <Trades trades={data.trades} totals={data.totals} />
+            <Trades trades={data.trades} totals={data.totals} now={now} />
+            <Backtest backtest={data.backtest} />
             <Research />
             {data.errors.length > 0 && (
               <section className="mt-10">
@@ -321,27 +327,29 @@ function NowPanel({
   const prob = status?.model_prob ?? null;
   const distText =
     dist == null ? '' : `${dist >= 0 ? '+' : '−'}${(Math.abs(dist) * 100).toFixed(3)}% vs strike`;
-  const tiles: { label: string; value: string; sub?: string; toneClass?: string }[] = [
-    {
-      label: 'Market',
-      value: status?.ticker ?? '—',
-      sub: secondsLeft == null ? undefined : `closes in ${mmss(secondsLeft)}`,
-    },
-    { label: 'BTC spot', value: usd(spot), sub: distText || undefined, toneClass: tone(dist) },
-    { label: 'Strike', value: usd(strike) },
-    { label: 'Model P(UP)', value: pct(prob, 1) },
-    { label: 'YES ask', value: cents(yesAsk), sub: 'market P(UP)' },
-    {
-      label: 'Edge',
-      value:
-        status?.edge_cents == null
-          ? '—'
-          : `${status.edge_cents >= 0 ? '+' : '−'}${Math.abs(status.edge_cents).toFixed(2)}¢`,
-      sub: 'best side, after fee',
-      toneClass: tone(status?.edge_cents),
-    },
-    { label: 'Realized vol', value: pct(status?.vol_window, 3), sub: 'over the window' },
-  ];
+  const tiles: { label: string; value: string; sub?: string; toneClass?: string; href?: string }[] =
+    [
+      {
+        label: 'Market',
+        value: status?.ticker ?? '—',
+        sub: secondsLeft == null ? undefined : `closes in ${mmss(secondsLeft)}`,
+        href: status?.ticker ? kalshiUrl(status.ticker) : undefined,
+      },
+      { label: 'BTC spot', value: usd(spot), sub: distText || undefined, toneClass: tone(dist) },
+      { label: 'Strike', value: usd(strike) },
+      { label: 'Model P(UP)', value: pct(prob, 1) },
+      { label: 'YES ask', value: cents(yesAsk), sub: 'market P(UP)' },
+      {
+        label: 'Edge',
+        value:
+          status?.edge_cents == null
+            ? '—'
+            : `${status.edge_cents >= 0 ? '+' : '−'}${Math.abs(status.edge_cents).toFixed(2)}¢`,
+        sub: 'best side, after fee',
+        toneClass: tone(status?.edge_cents),
+      },
+      { label: 'Realized vol', value: pct(status?.vol_window, 3), sub: 'over the window' },
+    ];
   return (
     <section className="mt-8" aria-labelledby="now-heading">
       <h2 id="now-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
@@ -361,11 +369,13 @@ function Stat({
   value,
   sub,
   toneClass = 'text-white',
+  href,
 }: {
   label: string;
   value: string;
   sub?: string;
   toneClass?: string;
+  href?: string;
 }) {
   return (
     <div className="glass-panel rounded-xl p-4">
@@ -375,12 +385,35 @@ function Stat({
         style={{ fontVariantNumeric: 'normal' }}
         title={value}
       >
-        {value}
+        {href ? <ExternalLink href={href}>{value}</ExternalLink> : value}
       </p>
       {sub && <p className="mt-1 text-xs text-white/40">{sub}</p>}
     </div>
   );
 }
+
+const ExternalLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="underline decoration-white/25 underline-offset-4 hover:decoration-vitae-green"
+  >
+    {children}
+    <span className="ml-1 text-[0.7em] text-white/45" aria-hidden>
+      ↗
+    </span>
+  </a>
+);
+
+const TickerLink = ({ ticker, className = '' }: { ticker: string | null; className?: string }) =>
+  ticker ? (
+    <span className={className}>
+      <ExternalLink href={kalshiUrl(ticker)}>{ticker}</ExternalLink>
+    </span>
+  ) : (
+    <span className={className}>—</span>
+  );
 
 const strikeRange = (w: WatchRow) => {
   const lo = w.strike == null ? null : usd(w.strike);
@@ -442,7 +475,7 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
                   <Td>
                     <span className="text-white">{w.title ?? w.ticker}</span>
                     {w.subtitle && <span className="ml-2 text-xs text-white/45">{w.subtitle}</span>}
-                    <span className="ml-2 text-[10px] text-white/30">{w.ticker}</span>
+                    <TickerLink ticker={w.ticker} className="ml-2 text-[10px] text-white/50" />
                   </Td>
                   <Td right>{left == null ? '—' : countdown(left)}</Td>
                   <Td>{strikeRange(w)}</Td>
@@ -545,7 +578,15 @@ function Charts({ history }: { history: Summary['history'] }) {
   );
 }
 
-function Trades({ trades, totals }: { trades: Trade[]; totals: Summary['totals'] }) {
+function Trades({
+  trades,
+  totals,
+  now,
+}: {
+  trades: Trade[];
+  totals: Summary['totals'];
+  now: number;
+}) {
   const allPaper = trades.length > 0 && trades.every((t) => !t.live);
   const sniper = totals.bySource.sniper;
   return (
@@ -584,19 +625,13 @@ function Trades({ trades, totals }: { trades: Trade[]; totals: Summary['totals']
         </p>
       )}
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
-        <table className="w-full min-w-[1000px] text-left text-sm">
+        <table className="w-full min-w-[1280px] text-left text-sm">
           <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
               <Th>Time</Th>
               <Th>Source</Th>
               <Th>Ticker</Th>
-              <Th>Side</Th>
-              <Th right>Price</Th>
-              <Th right>Count</Th>
-              <Th right>Cost</Th>
-              <Th right>Fee</Th>
-              <Th right>Model</Th>
-              <Th right>Edge</Th>
+              <PredictionHeads />
               <Th>Result</Th>
               <Th right>P&amp;L</Th>
             </tr>
@@ -604,7 +639,7 @@ function Trades({ trades, totals }: { trades: Trade[]; totals: Summary['totals']
           <tbody>
             {trades.length === 0 && (
               <tr>
-                <td colSpan={12} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={15} className="px-4 py-6 text-center text-white/40">
                   No trades yet.
                 </td>
               </tr>
@@ -626,27 +661,15 @@ function Trades({ trades, totals }: { trades: Trade[]; totals: Summary['totals']
                     {t.source}
                   </span>
                 </Td>
-                <Td>{t.ticker ?? '—'}</Td>
                 <Td>
-                  <span className={t.side === 'yes' ? 'text-vitae-green' : 'text-vitae-red'}>
-                    {t.side?.toUpperCase() ?? '—'}
-                  </span>
+                  <TickerLink ticker={t.ticker} />
                 </Td>
-                <Td right>{cents(t.priceCents)}</Td>
-                <Td right>{t.count ?? '—'}</Td>
-                <Td right>{dollars(t.costCents)}</Td>
-                <Td right>{dollars(t.feeCents)}</Td>
-                <Td right>{pct(t.modelProb, 1)}</Td>
-                <Td right>{cents(t.edgeCents, 2)}</Td>
+                <PredictionCells t={t} />
                 <Td>
                   {t.result ? (
-                    <span
-                      className={`rounded-full border px-2 py-0.5 text-[11px] ${t.result === t.side ? 'border-vitae-green/50 text-vitae-green' : 'border-vitae-red/50 text-vitae-red'}`}
-                    >
-                      {t.result.toUpperCase()}
-                    </span>
+                    <ResultPill result={t.result} side={t.side} />
                   ) : (
-                    <span className="text-white/40">pending</span>
+                    <span className="text-white/40">{pendingText(t.closeTime, now)}</span>
                   )}
                 </Td>
                 <Td right className={tone(t.pnlCents)}>
@@ -657,6 +680,206 @@ function Trades({ trades, totals }: { trades: Trade[]; totals: Summary['totals']
           </tbody>
         </table>
       </div>
+    </section>
+  );
+}
+
+const pendingText = (closeTime: string | null, now: number) => {
+  const left = closeTime ? Math.round((Date.parse(closeTime) - now) / 1000) : null;
+  return left != null && left > 0 ? `pending · closes in ${countdown(left)}` : 'settling…';
+};
+
+const PredictionHeads = () => (
+  <>
+    <Th>Side</Th>
+    <Th right>Price</Th>
+    <Th right>Count</Th>
+    <Th right>Cost</Th>
+    <Th right>Fee</Th>
+    <Th right>Model</Th>
+    <Th right>P(win)</Th>
+    <Th right>Edge</Th>
+    <Th right>EV</Th>
+    <Th right>Max win</Th>
+  </>
+);
+
+const PredictionCells = ({ t }: { t: Prediction }) => (
+  <>
+    <Td>
+      <span className={t.side === 'yes' ? 'text-vitae-green' : 'text-vitae-red'}>
+        {t.side?.toUpperCase() ?? '—'}
+      </span>
+    </Td>
+    <Td right>{cents(t.priceCents)}</Td>
+    <Td right>{t.count ?? '—'}</Td>
+    <Td right>{dollars(t.costCents)}</Td>
+    <Td right>{dollars(t.feeCents)}</Td>
+    <Td right>{pct(t.modelProb, 1)}</Td>
+    <Td right>
+      {pct(t.pWin)}
+      <span className="ml-1 text-xs text-white/40">vs {pct(t.marketPWin)}</span>
+    </Td>
+    <Td right>{cents(t.edgeCents, 2)}</Td>
+    <Td right className={tone(t.evCents)}>
+      {signedDollars(t.evCents)}
+    </Td>
+    <Td right>{dollars(t.maxWinCents)}</Td>
+  </>
+);
+
+const ResultPill = ({ result, side }: { result: 'yes' | 'no'; side: 'yes' | 'no' | null }) => (
+  <span
+    className={`rounded-full border px-2 py-0.5 text-[11px] ${result === side ? 'border-vitae-green/50 text-vitae-green' : 'border-vitae-red/50 text-vitae-red'}`}
+  >
+    {result.toUpperCase()}
+  </span>
+);
+
+function Backtest({ backtest }: { backtest: BacktestSummary }) {
+  const { trades, totals, equity, byPriceBucket, ranAt } = backtest;
+  const points = useMemo(() => equity.map((c, i) => ({ x: i + 1, y: c / 100 })), [equity]);
+  const newestFirst = useMemo(() => [...trades].reverse(), [trades]);
+  const signedCents = (n: number | null) =>
+    n == null ? '—' : `${n < 0 ? '−' : '+'}${Math.abs(n).toFixed(2)}¢`;
+  return (
+    <section className="mt-10" aria-labelledby="backtest-heading">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h2 id="backtest-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+          Backtest{trades.length > 0 && `: last ${totals.trades} settled windows`}
+        </h2>
+        {ranAt && <p className="text-xs text-white/45">Ran {hst(ranAt, true)}. Fees included.</p>}
+      </div>
+      {trades.length === 0 ? (
+        <p className="mt-3 text-sm text-white/50">
+          No backtest yet. Run{' '}
+          <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs">
+            cargo run --release --bin backtest
+          </code>{' '}
+          in kalshiRUST.
+        </p>
+      ) : (
+        <>
+          <div className="mt-3 grid gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            <Stat label="Trades" value={String(totals.trades)} />
+            <Stat label="Wins / losses" value={`${totals.wins} / ${totals.losses}`} />
+            <Stat label="Hit rate" value={pct(totals.hitRate)} />
+            <Stat label="Risked" value={dollars(totals.riskedCents)} />
+            <Stat
+              label="Net P&L"
+              value={signedDollars(totals.pnlCents)}
+              toneClass={tone(totals.pnlCents)}
+            />
+            <Stat
+              label="ROI"
+              value={
+                totals.roi == null
+                  ? '—'
+                  : `${totals.roi >= 0 ? '+' : '−'}${pct(Math.abs(totals.roi), 1)}`
+              }
+              toneClass={tone(totals.roi)}
+            />
+            <Stat
+              label="Avg edge"
+              value={signedCents(totals.avgEdgeCents)}
+              sub="predicted, per contract"
+              toneClass={tone(totals.avgEdgeCents)}
+            />
+            <Stat
+              label="Avg P&L / trade"
+              value={signedCents(totals.avgPnlCents)}
+              sub="realized"
+              toneClass={tone(totals.avgPnlCents)}
+            />
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
+            <div className="glass-panel rounded-2xl p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/50">Equity curve</p>
+              <div className="mt-3">
+                <LineChart
+                  points={points}
+                  baseline={0}
+                  height={220}
+                  markers={trades.length <= 60}
+                  ariaLabel="Backtest cumulative P&L per trade"
+                  formatX={(x) => `#${x}`}
+                  formatY={(y) => `${y < 0 ? '−' : ''}$${Math.abs(y).toFixed(2)}`}
+                  tooltip={(i) => ({
+                    title: `#${i + 1} · ${hst(trades[i].at, true)}`,
+                    rows: [
+                      { label: 'cumulative', value: signedDollars(equity[i]) },
+                      { label: 'this trade', value: signedDollars(trades[i].pnlCents) },
+                      { label: 'ticker', value: trades[i].ticker ?? '—' },
+                    ],
+                  })}
+                />
+              </div>
+            </div>
+            <div className="glass-panel overflow-x-auto rounded-2xl">
+              <table className="w-full text-left text-sm">
+                <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                  <tr>
+                    <Th>Entry price</Th>
+                    <Th right>Trades</Th>
+                    <Th right>Hit rate</Th>
+                    <Th right>P&amp;L</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {byPriceBucket.map((b) => (
+                    <tr key={b.bucket} className="border-t border-white/10 text-white/80">
+                      <Td>{b.bucket}</Td>
+                      <Td right>{b.trades}</Td>
+                      <Td right>{b.trades ? pct(b.wins / b.trades) : '—'}</Td>
+                      <Td right className={tone(b.trades ? b.pnlCents : null)}>
+                        {b.trades ? signedDollars(b.pnlCents) : '—'}
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
+            <table className="w-full min-w-[1400px] text-left text-sm">
+              <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                <tr>
+                  <Th>Close</Th>
+                  <Th>Ticker</Th>
+                  <PredictionHeads />
+                  <Th>Result</Th>
+                  <Th right>P&amp;L</Th>
+                  <Th>Note</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {newestFirst.map((t: BacktestTrade) => (
+                  <tr key={t.id} className="border-t border-white/10 text-white/80">
+                    <Td>
+                      <span className="text-white/50">{hst(t.at, true)}</span>
+                    </Td>
+                    <Td>
+                      <TickerLink ticker={t.ticker} />
+                    </Td>
+                    <PredictionCells t={t} />
+                    <Td>
+                      {t.result ? (
+                        <ResultPill result={t.result} side={t.side} />
+                      ) : (
+                        <span className="text-white/40">—</span>
+                      )}
+                    </Td>
+                    <Td right className={tone(t.pnlCents)}>
+                      {t.pnlCents == null ? '—' : signedDollars(t.pnlCents)}
+                    </Td>
+                    <Td className="text-xs text-white/50">{t.note ?? ''}</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   );
 }

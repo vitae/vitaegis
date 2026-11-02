@@ -3,6 +3,7 @@
 export type RustMode = 'NORMAL' | 'RISK';
 export type RustSide = 'yes' | 'no';
 export type RustSource = 'bot' | 'sniper';
+export type RustEventSource = RustSource | 'backtest';
 export type StrikeType = 'greater' | 'less' | 'between' | 'greater_or_equal';
 
 export interface KalshirustConfig {
@@ -15,7 +16,7 @@ export interface KalshirustEvent {
   id: string;
   created_at: string;
   kind: 'status' | 'signal' | 'settle' | 'error' | 'watch';
-  source: RustSource;
+  source: RustEventSource;
   mode: string | null;
   live: boolean;
   ticker: string | null;
@@ -45,13 +46,7 @@ export interface KalshirustEvent {
   message: string | null;
 }
 
-export interface Trade {
-  id: string;
-  at: string;
-  ticker: string | null;
-  source: RustSource;
-  mode: string | null;
-  live: boolean;
+export interface Prediction {
   side: RustSide | null;
   priceCents: number | null;
   count: number | null;
@@ -59,6 +54,24 @@ export interface Trade {
   feeCents: number | null;
   modelProb: number | null;
   edgeCents: number | null;
+  /** Model probability that the entered side wins. */
+  pWin: number | null;
+  /** The market's implied probability of the entered side: price / 100. */
+  marketPWin: number | null;
+  /** Expected profit for the whole position after fee: edge × count. */
+  evCents: number | null;
+  /** Payout if the side wins, after fee. */
+  maxWinCents: number | null;
+}
+
+export interface Trade extends Prediction {
+  id: string;
+  at: string;
+  ticker: string | null;
+  source: RustSource;
+  mode: string | null;
+  live: boolean;
+  closeTime: string | null;
   result: RustSide | null;
   pnlCents: number | null;
   settledAt: string | null;
@@ -113,10 +126,45 @@ export interface Summary {
   errors: { at: string; message: string }[];
 }
 
+export interface BacktestTrade extends Prediction {
+  id: string;
+  at: string;
+  ticker: string | null;
+  result: RustSide | null;
+  pnlCents: number | null;
+  note: string | null;
+}
+
+export type PriceBucket = '15–30¢' | '30–50¢' | '50–70¢' | '70–85¢';
+
+export interface BacktestSummary {
+  trades: BacktestTrade[];
+  totals: {
+    trades: number;
+    wins: number;
+    losses: number;
+    hitRate: number | null;
+    riskedCents: number;
+    pnlCents: number;
+    roi: number | null;
+    avgEdgeCents: number | null;
+    avgPnlCents: number | null;
+  };
+  equity: number[];
+  byPriceBucket: { bucket: PriceBucket; trades: number; wins: number; pnlCents: number }[];
+  ranAt: string | null;
+}
+
 export const OFFLINE_AFTER_MS = 90_000;
 export const HISTORY_POINTS = 120;
 export const WATCH_WINDOW_MS = 10 * 60_000;
 export const WATCH_LIMIT = 15;
+export const PRICE_BUCKETS: { bucket: PriceBucket; below: number }[] = [
+  { bucket: '15–30¢', below: 30 },
+  { bucket: '30–50¢', below: 50 },
+  { bucket: '50–70¢', below: 70 },
+  { bucket: '70–85¢', below: Infinity },
+];
 
 const num = (v: unknown): number | null => {
   if (v == null) return null;
@@ -133,6 +181,38 @@ export const signedDollars = (cents: number | null | undefined) =>
 export function kalshiFeeCents(count: number, priceCents: number): number {
   const p = priceCents / 100;
   return Math.ceil(7 * count * p * (1 - p) - 1e-9);
+}
+
+/** Kalshi's market page: series = ticker up to the first '-', event = ticker minus its last '-segment'. */
+export function kalshiUrl(ticker: string): string {
+  const series = ticker.split('-')[0];
+  const cut = ticker.lastIndexOf('-');
+  const event = cut > 0 ? ticker.slice(0, cut) : ticker;
+  return `https://kalshi.com/markets/${series.toLowerCase()}/x/${event.toLowerCase()}`;
+}
+
+function prediction(e: KalshirustEvent): Prediction {
+  const side = e.side;
+  const priceCents = num(e.price_cents);
+  const count = num(e.count);
+  const feeCents = num(e.fee_cents);
+  const modelProb = num(e.model_prob);
+  const edgeCents = num(e.edge_cents);
+  return {
+    side,
+    priceCents,
+    count,
+    costCents: num(e.cost_cents),
+    feeCents,
+    modelProb,
+    edgeCents,
+    pWin:
+      modelProb == null ? null : side === 'yes' ? modelProb : side === 'no' ? 1 - modelProb : null,
+    marketPWin: priceCents == null ? null : priceCents / 100,
+    evCents: edgeCents == null || count == null ? null : edgeCents * count,
+    maxWinCents:
+      count == null || priceCents == null ? null : count * (100 - priceCents) - (feeCents ?? 0),
+  };
 }
 
 /** Reduces events (any order) to what /kalshirust shows. `now` is injectable for tests. */
@@ -157,13 +237,8 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
         source: (e.source === 'sniper' ? 'sniper' : 'bot') as RustSource,
         mode: e.mode,
         live: e.live,
-        side: e.side,
-        priceCents: num(e.price_cents),
-        count: num(e.count),
-        costCents: num(e.cost_cents),
-        feeCents: num(e.fee_cents),
-        modelProb: num(e.model_prob),
-        edgeCents: num(e.edge_cents),
+        closeTime: e.close_time,
+        ...prediction(e),
         result: s?.result ?? null,
         pnlCents: s ? num(s.pnl_cents) : null,
         settledAt: s?.created_at ?? null,
@@ -239,5 +314,81 @@ function tally(trades: Trade[]): Totals {
     riskedCents,
     pnlCents,
     roi: riskedCents > 0 ? pnlCents / riskedCents : null,
+  };
+}
+
+/** Joins the backtester's signal and settle rows (source 'backtest') into one settled run, oldest first. */
+export function summarizeBacktest(
+  signals: KalshirustEvent[],
+  settles: KalshirustEvent[],
+): BacktestSummary {
+  const settleByOrder = new Map<string, KalshirustEvent>();
+  for (const s of settles) {
+    if (s.kind === 'settle' && s.client_order_id) settleByOrder.set(s.client_order_id, s);
+  }
+  const trades: BacktestTrade[] = signals
+    .filter((e) => e.kind === 'signal' && e.client_order_id && settleByOrder.has(e.client_order_id))
+    .map((e) => {
+      const s = settleByOrder.get(e.client_order_id as string) as KalshirustEvent;
+      return {
+        id: e.id,
+        at: e.close_time ?? e.created_at,
+        ticker: e.ticker,
+        ...prediction(e),
+        result: s.result,
+        pnlCents: num(s.pnl_cents),
+        note: e.message,
+      };
+    })
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+
+  const isWin = (t: BacktestTrade) => t.result != null && t.result === t.side;
+  const wins = trades.filter(isWin).length;
+  const riskedCents = trades.reduce((a, t) => a + (t.costCents ?? 0) + (t.feeCents ?? 0), 0);
+  const pnlCents = trades.reduce((a, t) => a + (t.pnlCents ?? 0), 0);
+  const edges = trades.map((t) => t.edgeCents).filter((e): e is number => e != null);
+
+  const equity: number[] = [];
+  let running = 0;
+  for (const t of trades) {
+    running += t.pnlCents ?? 0;
+    equity.push(running);
+  }
+
+  const byPriceBucket = PRICE_BUCKETS.map(({ bucket, below }, i) => {
+    const floor = i === 0 ? -Infinity : PRICE_BUCKETS[i - 1].below;
+    const rows = trades.filter(
+      (t) => t.priceCents != null && t.priceCents >= floor && t.priceCents < below,
+    );
+    return {
+      bucket,
+      trades: rows.length,
+      wins: rows.filter(isWin).length,
+      pnlCents: rows.reduce((a, t) => a + (t.pnlCents ?? 0), 0),
+    };
+  });
+
+  const ranAt = [...signals, ...settles].reduce<string | null>(
+    (best, e) =>
+      best == null || Date.parse(e.created_at) > Date.parse(best) ? e.created_at : best,
+    null,
+  );
+
+  return {
+    trades,
+    totals: {
+      trades: trades.length,
+      wins,
+      losses: trades.length - wins,
+      hitRate: trades.length ? wins / trades.length : null,
+      riskedCents,
+      pnlCents,
+      roi: riskedCents > 0 ? pnlCents / riskedCents : null,
+      avgEdgeCents: edges.length ? edges.reduce((a, e) => a + e, 0) / edges.length : null,
+      avgPnlCents: trades.length ? pnlCents / trades.length : null,
+    },
+    equity,
+    byPriceBucket,
+    ranAt,
   };
 }
