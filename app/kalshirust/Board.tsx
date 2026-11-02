@@ -475,12 +475,12 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: 1 trade a window at $5, needing a 75%+ win chance. First choice, after the first 9
-        min, from 5 to 2 min before close: after a 15¢+ move in a minute, buying the side that rose
-        at 72–82¢. If none qualifies, the last 90 s: settlement math at 75%+, at 60¢ or less or at
-        72–82¢, with the analytics engine agreeing. No trade unless expected profit after fees is
-        positive. Live trading stops for the UTC day after a $30 loss. RISK: up to $100 a trade, as
-        low as 60% in the last 90 s, plus earlier trades from 7 min out with no win-chance floor.
+        NORMAL: 1 trade a window at $5 in the last 2 min, never while its price is falling. With 2
+        min and 1 min left: a sharp 15¢+ rise over the prior minute into 72–82¢. In the last 90 s:
+        settlement math at a 75%+ win chance, at 60¢ or less or at 72–82¢, with the analytics engine
+        agreeing. No trade unless expected profit after fees is positive. Live trading stops for the
+        UTC day after a $30 loss. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus
+        earlier trades from 7 min out with no win-chance floor.
       </p>
     </div>
   );
@@ -751,10 +751,10 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
         </h2>
         <p className="max-w-2xl text-xs text-white/45">
           Every open Kalshi Bitcoin price market, scanned each minute. Listed only if YES keeps a
-          75%+ win chance and {SNIPE_EDGE_CENTS}¢ of edge after fees at low, normal and high
-          volatility, most expected profit first. These are model estimates, not guarantees. A
-          projected entry assumes the recent BTC trend continues, which often fails. Paper trades
-          only.
+          75%+ win chance and {SNIPE_EDGE_CENTS}¢ of edge after fees, with the BTC trend not against
+          it, at low, normal and high volatility, most expected profit first. These are model
+          estimates, not guarantees. A projected entry assumes the recent BTC trend continues, which
+          often fails. Paper trades only.
         </p>
       </div>
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
@@ -947,9 +947,14 @@ function Trades({
           net, {pct(sniper.hitRate)} hit rate
         </p>
       )}
-      {(totals.bySlot.anytime.trades > 0 || totals.bySlot.last90.trades > 0) && (
+      {(totals.bySlot.anytime.trades > 0 ||
+        totals.bySlot.sharp.trades > 0 ||
+        totals.bySlot.last90.trades > 0) && (
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/60">
-          <SlotSummary label="After 9 min" totals={totals.bySlot.anytime} />
+          {totals.bySlot.anytime.trades > 0 && (
+            <SlotSummary label="After 9 min" totals={totals.bySlot.anytime} />
+          )}
+          <SlotSummary label="Sharp rise" totals={totals.bySlot.sharp} />
           <SlotSummary label="Last 90 s" totals={totals.bySlot.last90} />
         </div>
       )}
@@ -988,11 +993,13 @@ function Trades({
                   <span
                     className={`text-[11px] uppercase tracking-[0.15em] ${t.source === 'sniper' ? 'text-vitae-cyan' : 'text-white/60'}`}
                   >
-                    {t.slot === 'anytime'
-                      ? 'after 9 min'
-                      : t.slot === 'last90'
-                        ? 'last 90 s'
-                        : t.source}
+                    {t.slot === 'sharp'
+                      ? 'sharp rise'
+                      : t.slot === 'anytime'
+                        ? 'after 9 min'
+                        : t.slot === 'last90'
+                          ? 'last 90 s'
+                          : t.source}
                   </span>
                 </Td>
                 <Td>

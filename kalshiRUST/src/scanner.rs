@@ -28,6 +28,7 @@ const VOL_STRESS: [f64; 3] = [0.75, 1.0, 1.5];
 const LONG_VOL_FLOOR_15M: f64 = 0.0024;
 const TREND_SECS: i64 = 900;
 const PROJECTION_SECS: i64 = 60;
+const FALLING_VALUE: f64 = 0.002;
 
 pub struct ScanConfig {
     pub min_edge_cents: f64,
@@ -272,9 +273,12 @@ pub async fn candidates(client: &reqwest::Client, rest_base: &str, vol: &SharedV
                 continue;
             }
             let max_buy = max_buy_price(p, cfg.min_edge_cents);
-            let projected = projected_spot
-                .and_then(|sp| worst_yes_prob(kind, touch, sp, floor, cap, sigma_15m, secs_left - PROJECTION_SECS))
-                .and_then(|p2| max_buy_price(p2.min(MAX_PWIN), cfg.min_edge_cents));
+            let projected_p = projected_spot.and_then(|sp| worst_yes_prob(kind, touch, sp, floor, cap, sigma_15m, secs_left - PROJECTION_SECS));
+            // Never list a pick while the recent BTC trend is pushing its YES value down.
+            if projected_p.map_or(false, |p2| p2 < p - FALLING_VALUE) {
+                continue;
+            }
+            let projected = projected_p.and_then(|p2| max_buy_price(p2.min(MAX_PWIN), cfg.min_edge_cents));
             let no_ask = dollars(&m, "no_ask_dollars").filter(|p| *p < 1.0);
             out.push(Candidate {
                 ticker: m["ticker"].as_str().unwrap_or("").to_string(),

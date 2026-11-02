@@ -25,8 +25,7 @@
    expected value: `EV = p_win·(1 − price) − (1 − p_win)·price − 0.07·price·(1 − price)`.
    NORMAL mode needs ≥ 2¢ per contract; RISK mode needs ≥ 1¢.
 2. **Prices both sides.** YES at the ask or NO at (1 − YES bid), whichever has the edge.
-3. **Enters at set points.** NORMAL: one trade a window at a 75%+ win chance, 5 to 2 minutes
-   before close if one qualifies, otherwise in the last 90 s. RISK: the last 90 s, plus the early engine from 7 minutes out.
+3. **Enters late.** NORMAL: one trade a window, only in the last 2 minutes, at a 75%+ win chance. RISK: the last 90 s, plus the early engine from 7 minutes out.
 4. **Caps size.** NORMAL $5 per trade, 1 per window, and live trading stops for the UTC day after a $30 loss. RISK up to $100, 2 per window.
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
@@ -44,26 +43,38 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | 2 | 2 |
-| Entry | one trade a window: after the first 9 minutes if one qualifies, otherwise the last 90 s | last 90 s, plus the early engine from 7 min out |
+| Entry | one trade a window, only in the last 2 minutes | last 90 s, plus the early engine from 7 min out |
 | Last-90 trade | 75%+ win chance; 90% and 3c of edge before 3 prints exist unless the price is 62.5c or less | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | 2c of edge, $0.15 expected profit, 97c top price | $0.50 expected profit, 97c top price |
 
-Every NORMAL trade needs a 75%+ win chance. NORMAL makes one trade a window (`BETS_PER_WINDOW`), so
-a qualifying after-9-minutes trade uses it and the last-90 slot sits that window out.
-The after-9-minutes slot takes the first minute from 5 to 2 minutes before close in which the YES
-mid moved 15c or more, buying the side that rose at 72c to 82c. The last-90 slot needs settlement
-math at 75%+ and buys at 60c or less or at 72c to 82c. Both keep a win above $1 after fees
-(`MIN_WIN_DOLLARS`), and most windows still have no trade.
+Every NORMAL trade needs a 75%+ win chance, and none buys a falling price. NORMAL makes one trade a
+window (`BETS_PER_WINDOW`), in the last 2 minutes, by whichever of two rules fires first:
 
-On the month of data the after-9-minutes slot is 356 trades in 12% of windows, 80.3% wins, +$0.12
-a trade, about +$1.27 a day: +$0.15 a trade in the older part and +$0.06 in the newer. It is not
-statistically distinct from zero (t=0.94), and at 2c of worse fills it is about even. These settings
-were picked from well over a hundred tried on the same data, so expect less. Adding contracts at 30c
-or less raised the month's result to +$7.64 a day, but those win about 40% of the time, below the
-75% floor. A live BTC model did not help before the last 90 s: alone it lost money, and its most
-confident calls did no better. The HUD reports each slot's P&L apart so the paper run can judge it.
+- **Sharp rise.** With 2 minutes and then 1 minute left, the side whose mid rose 15c or more over the
+  prior minute, at 72c to 82c.
+- **Settlement math.** In the last 90 s, a 75%+ win chance from both engines, at 60c or less or at 72c
+  to 82c. It skips a side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price
+  history.
+
+On the month of data the sharp-rise rule is 136 trades in 5% of windows, 86.8% wins against 79% needed
+to break even, +$0.48 a trade, about +$1.98 a day, worst drop $16.39. It is positive in all three parts
+of the month (+$0.20, +$1.13, +$0.18 a trade) and has t=2.79. Its edge appears only near the close:
+
+| Minutes left, alone | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
+|---|---|---|---|---|---|---|---|---|---|
+| $ a trade | +0.11 | -0.02 | -0.12 | +0.03 | +0.12 | -0.14 | +0.21 | +0.32 | +0.74 |
+
+Starting at 3 minutes left turns the newest part of the month negative, so it stops at 2. The same
+prices while falling won 69% and lost $0.53 a trade. It was picked from well over a hundred rules
+tried on the same data, so expect less. Requiring the settlement model to agree made it worse.
+
+Removed after testing: buying underdogs at 30c or less (wins about 40%, +$2.52 a trade at best, flat
+to negative lately), buying the side that just fell (loses), and the earlier trade 5 to 2 minutes
+before close (+$0.12 a trade, not statistically distinct from zero). A live BTC model alone lost money
+before the last 90 s, and a trained LightGBM model predicted outcomes worse than the market's own price
+in 4 of 5 walk-forward periods. The HUD reports each slot's P&L apart.
 
 A $1 win is not a $1 average. An average of $1 a trade on $5 needs 61.7% wins at 50c, 85.5% at
 70c and 97.1% at 80c.
@@ -146,7 +157,7 @@ older two thirds and scored on the newer third. Run `report` and `candidate` to 
   and 15 down. An earlier version of this test showed more because it picked each window's
   latest move, which live trading cannot know.
 
-No earlier rule clearly beats the market, so the any-time slot runs on the best one found. These results say nothing about
+No earlier rule clearly beats the market, so NORMAL trades only in the last 2 minutes. These results say nothing about
 the settlement engine itself, because Kalshi publishes only the last 60 BRTI prints: its
 evidence can only come from live windows and `settle_calib.jsonl`.
 

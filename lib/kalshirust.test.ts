@@ -400,6 +400,7 @@ describe('summarize', () => {
 describe('tradeSlot', () => {
   it('reads the slot from the order id prefix', () => {
     expect(tradeSlot('anytime-KXBTC15M-1')).toBe('anytime');
+    expect(tradeSlot('sharp-KXBTC15M-1')).toBe('sharp');
     expect(tradeSlot('settle-KXBTC15M-1')).toBe('last90');
     expect(tradeSlot('sniper-KXBTC-1')).toBe('other');
     expect(tradeSlot(null)).toBe('other');

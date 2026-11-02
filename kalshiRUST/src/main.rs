@@ -15,6 +15,7 @@ use analytics::{ExecutionSignal, KalshiBookTop, KxBtc15mEngine};
 use models::{best_edge, clamp_binding, clamp_prob, prob_above, taker_fee, tradable_price, v2_fill_cost, v2_order_terms, Side};
 use paper::{Trade, TradeBook};
 use scanner::ScanConfig;
+use std::collections::VecDeque;
 use supa::Supa;
 use vol::SharedVol;
 
@@ -32,18 +33,24 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// A window's second trade must rest on this many published settlement prints: a
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
-/// After-9-minutes slot: the first minute from 5 to 2 minutes before close in which the YES mid
-/// moved this much and the side that rose costs 72c to 82c. On 2,958 windows: 356 trades, 80.3% wins,
-/// $0.12 a trade after fees, positive in the older and newer parts but not statistically distinct
-/// from zero (t=0.94). These settings were picked from many tried on the same data.
-const ANYTIME_FIRST_MIN: i64 = 5;
-const ANYTIME_LAST_MIN: i64 = 2;
-const ANYTIME_MIN_MOVE: f64 = 0.15;
-const ANYTIME_MAX_PRICE: f64 = 0.85;
-/// Win rate above price in the weakest part of the range, 72c to 75c.
-const ANYTIME_EDGE: f64 = 0.03;
+/// Sharp-rise slot: with 2 minutes and then 1 minute left, the side whose mid rose this much over the
+/// prior minute, if it costs 72c to 82c. On 2,958 windows: 136 trades, 86.8% wins against 79% needed to
+/// break even, $0.48 a trade after fees, positive in all three parts of the month, t=2.79. Starting
+/// earlier adds nothing: from 9 to 4 minutes left the same rule is near zero. The same prices while
+/// falling won 69% and lost money. Picked from many rules tried on the same data, so expect less.
+const SHARP_FIRST_MIN: i64 = 2;
+const SHARP_LAST_MIN: i64 = 1;
+const SHARP_MIN_MOVE: f64 = 0.15;
+const SHARP_MAX_PRICE: f64 = 0.85;
+/// Win rate above price used for expected profit, below the 9.3c measured.
+const SHARP_EDGE: f64 = 0.08;
 /// Every price here carries a 75%+ win chance: 72c plus the edge above.
-const ANYTIME_PRICE_BANDS: &[(f64, f64)] = &[(0.72, 0.82)];
+const SHARP_PRICE_BANDS: &[(f64, f64)] = &[(0.72, 0.82)];
+/// The last-90 slot never buys a side whose mid fell by this much over the lookback.
+const FALLING_LOOKBACK_SECS: i64 = 30;
+const FALLING_MOVE: f64 = 0.01;
+/// Too little history to rule out a fall counts as falling.
+const FALLING_MIN_HISTORY_SECS: i64 = 15;
 /// The prices NORMAL buys at in the last 90 s.
 const NORMAL_PRICE_BANDS: &[(f64, f64)] = &[(0.05, 0.60), (0.72, 0.82)];
 const ALL_PRICES: &[(f64, f64)] = &[(0.0, 1.0)];
@@ -85,12 +92,12 @@ struct ModeParams {
     min_ev_dollars: f64,
     /// A win must pay more than this, in dollars after the fee, or the trade is skipped.
     min_win_dollars: f64,
-    /// Whether the any-time slot trades in this mode.
-    anytime_slot: bool,
+    /// Whether the sharp-rise slot trades in this mode.
+    sharp_slot: bool,
     /// The prices this mode will buy at in the settlement slot.
     price_bands: &'static [(f64, f64)],
-    /// The prices the after-9-minutes slot will buy at.
-    anytime_bands: &'static [(f64, f64)],
+    /// The prices the sharp-rise slot will buy at.
+    sharp_bands: &'static [(f64, f64)],
 }
 
 fn mode_params(name: &str) -> ModeParams {
@@ -115,9 +122,9 @@ fn mode_params(name: &str) -> ModeParams {
             max_price: f("RISK_SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("RISK_MIN_EV_DOLLARS", 0.5),
             min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
-            anytime_slot: false,
+            sharp_slot: false,
             price_bands: ALL_PRICES,
-            anytime_bands: ALL_PRICES,
+            sharp_bands: ALL_PRICES,
         }
     } else {
         ModeParams {
@@ -139,9 +146,9 @@ fn mode_params(name: &str) -> ModeParams {
             max_price: f("SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("MIN_EV_DOLLARS", 0.15),
             min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
-            anytime_slot: true,
+            sharp_slot: true,
             price_bands: NORMAL_PRICE_BANDS,
-            anytime_bands: ANYTIME_PRICE_BANDS,
+            sharp_bands: SHARP_PRICE_BANDS,
         }
     }
 }
@@ -189,15 +196,29 @@ fn in_price_band(bands: &[(f64, f64)], price: f64) -> bool {
     bands.iter().any(|(lo, hi)| price >= lo - 1e-9 && price <= hi + 1e-9)
 }
 
+/// Whether `side`'s mid is falling, from (time, YES mid) samples, oldest first.
+fn side_is_falling(samples: &VecDeque<(i64, f64)>, side: Side, now: i64) -> bool {
+    let Some(&(_, latest)) = samples.back() else { return true };
+    let Some(&(then_ts, then)) = samples.iter().find(|(t, _)| *t >= now - FALLING_LOOKBACK_SECS) else { return true };
+    if now - then_ts < FALLING_MIN_HISTORY_SECS {
+        return true;
+    }
+    let change = match side {
+        Side::Yes => latest - then,
+        Side::No => then - latest,
+    };
+    change <= -FALLING_MOVE
+}
+
 /// What a win pays on this stake, in dollars after the taker fee, in whole contracts.
 fn win_dollars(stake: f64, price: f64) -> f64 {
     (stake / price).floor() * (1.0 - price - models::taker_fee(price))
 }
 
-/// What the any-time slot would buy after a 60 s move in the YES mid, or None when the move is
+/// What the sharp-rise slot would buy after a 60 s move in the YES mid, or None when the move is
 /// too small, the price is out of range, or expected profit after fees is not positive.
-fn anytime_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
-    if moved.abs() < ANYTIME_MIN_MOVE {
+fn sharp_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
+    if moved.abs() < SHARP_MIN_MOVE {
         return None;
     }
     let side = if moved > 0.0 { Side::Yes } else { Side::No };
@@ -205,10 +226,10 @@ fn anytime_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge>
         Side::Yes => yes_ask,
         Side::No => 1.0 - yes_bid,
     };
-    if !(0.05..=ANYTIME_MAX_PRICE).contains(&price) {
+    if !(0.05..=SHARP_MAX_PRICE).contains(&price) {
         return None;
     }
-    let p_win = (price + ANYTIME_EDGE).min(1.0);
+    let p_win = (price + SHARP_EDGE).min(1.0);
     let p_yes = match side {
         Side::Yes => p_win,
         Side::No => 1.0 - p_win,
@@ -343,7 +364,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("[+] Analytics engine: {}", if ctx.analytics_veto { "must agree before any settlement trade" } else { "logging only" });
     println!("[+] Every trade must win over ${:.2} after fees", mode_params("NORMAL").min_win_dollars);
     let ranges = |bands: &[(f64, f64)]| bands.iter().map(|(lo, hi)| format!("{:.0}-{:.0}c", lo * 100.0, hi * 100.0)).collect::<Vec<_>>().join(" and ");
-    println!("[+] After-9-minutes slot: first {:.0}c+ move in a minute from {} to {} minutes before close, at {}", ANYTIME_MIN_MOVE * 100.0, ANYTIME_FIRST_MIN, ANYTIME_LAST_MIN, ranges(ANYTIME_PRICE_BANDS));
+    println!("[+] Sharp-rise slot: {:.0}c+ rise over the prior minute, checked with {} and {} minutes left, at {}", SHARP_MIN_MOVE * 100.0, SHARP_FIRST_MIN, SHARP_LAST_MIN, ranges(SHARP_PRICE_BANDS));
     println!("[+] Last-90-seconds slot: settlement math, at {}", ranges(NORMAL_PRICE_BANDS));
 
     // Coinbase spot: feeds both the watch channel and the tick-vol estimator.
@@ -617,7 +638,9 @@ async fn run_window(
     let mut veto_logged = false;
     let mut mark: Option<(i64, f64)> = None;
     let mut mark_minute = 0i64;
-    let mut anytime_done = false;
+    let mut sharp_done = false;
+    let mut mid_samples: VecDeque<(i64, f64)> = VecDeque::new();
+    let mut falling_logged = false;
     let mut maker_logged = false;
     let mut calib_marks: Vec<i64> = vec![60, 45, 30, 15, 5];
     let mut tick = tokio::time::interval(Duration::from_secs(1));
@@ -673,9 +696,15 @@ async fn run_window(
             }
         }
 
-        // ---- after-9-minutes slot -----------------------------------------------------
-        // Compares the YES mid at whole minutes, the way the rule was measured, and keeps looking
-        // until a sharp minute's price qualifies or the slot ends.
+        if let (Some(bid), Some(ask)) = (yes_bid, yes_ask) {
+            mid_samples.push_back((now, (bid + ask) / 2.0));
+            while mid_samples.front().map_or(false, |(t, _)| *t < now - FALLING_LOOKBACK_SECS - 5) {
+                mid_samples.pop_front();
+            }
+        }
+
+        // ---- sharp-rise slot ----------------------------------------------------------
+        // Compares the YES mid at whole minutes, the way the rule was measured.
         let minute = (rem / 60.0).ceil() as i64;
         if minute != mark_minute {
             let on_a_boundary = mark_minute != 0;
@@ -685,24 +714,24 @@ async fn run_window(
                     let mid = (bid + ask) / 2.0;
                     if let Some((m0, mid0)) = mark {
                         let moved = mid - mid0;
-                        if mode.anytime_slot && m0 == minute + 1 && !anytime_done && (ANYTIME_LAST_MIN..=ANYTIME_FIRST_MIN).contains(&minute) && moved.abs() >= ANYTIME_MIN_MOVE {
-                            match anytime_entry(moved, bid, ask) {
+                        if mode.sharp_slot && m0 == minute + 1 && !sharp_done && (SHARP_LAST_MIN..=SHARP_FIRST_MIN).contains(&minute) && moved.abs() >= SHARP_MIN_MOVE {
+                            match sharp_entry(moved, bid, ask) {
                                 Some(edge) => {
                                     let p_win = match edge.side { Side::Yes => edge.p_yes, Side::No => 1.0 - edge.p_yes };
                                     let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, false);
                                     let count = (dollars / edge.price).floor();
                                     let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
                                     let pays = win_dollars(dollars, edge.price);
-                                    if !in_price_band(mode.anytime_bands, edge.price) {
-                                        println!("[ANY-TIME] {} | {}m left | {} @ {:.1}c is outside the price ranges, skipped", ticker, minute, edge.side.as_str().to_uppercase(), edge.price * 100.0);
+                                    if !in_price_band(mode.sharp_bands, edge.price) {
+                                        println!("[SHARP] {} | {}m left | {} @ {:.1}c is outside the price ranges, skipped", ticker, minute, edge.side.as_str().to_uppercase(), edge.price * 100.0);
                                     } else if pays <= mode.min_win_dollars {
-                                        println!("[ANY-TIME] {} | {}m left | {} @ {:.1}c would win only ${:.2}, skipped", ticker, minute, edge.side.as_str().to_uppercase(), edge.price * 100.0, pays);
+                                        println!("[SHARP] {} | {}m left | {} @ {:.1}c would win only ${:.2}, skipped", ticker, minute, edge.side.as_str().to_uppercase(), edge.price * 100.0, pays);
                                     } else if count >= 1.0 && allowed {
-                                        let note = format!("after-9-minutes slot | {}m left | YES mid {:+.1}c in 60 s | measured edge {:.2}c", minute, moved * 100.0, ANYTIME_EDGE * 100.0);
-                                        anytime_done = enter(ctx, &ticker, strike, close_ts, spot, edge.p_yes, edge.p_yes, moved, edge, dollars, "BTC 15 min (after 9 min)", "anytime", &note).await;
+                                        let note = format!("sharp-rise slot | {}m left | YES mid {:+.1}c in 60 s | measured edge {:.2}c", minute, moved * 100.0, SHARP_EDGE * 100.0);
+                                        sharp_done = enter(ctx, &ticker, strike, close_ts, spot, edge.p_yes, edge.p_yes, moved, edge, dollars, "BTC 15 min (sharp rise)", "sharp", &note).await;
                                     }
                                 }
-                                None => println!("[ANY-TIME] {} | {}m left | YES mid {:+.1}c in 60 s | price out of range, skipped", ticker, minute, moved * 100.0),
+                                None => println!("[SHARP] {} | {}m left | YES mid {:+.1}c in 60 s | price out of range, skipped", ticker, minute, moved * 100.0),
                             }
                         }
                     }
@@ -828,7 +857,12 @@ async fn run_window(
                         println!("[VETO] {} | settlement math: buy {} @ {:.1}c at {:.1}% | {} | no trade", ticker, edge.side.as_str().to_uppercase(), edge.price * 100.0, settle_p_win * 100.0, a_label);
                         veto_logged = true;
                     }
-                    if settle_ok && analytics_ok {
+                    let falling = settle_ok && analytics_ok && mode.sharp_slot && side_is_falling(&mid_samples, edge.side, now);
+                    if falling && !falling_logged {
+                        println!("[FALLING] {} | {} @ {:.1}c has a falling price, no trade", ticker, edge.side.as_str().to_uppercase(), edge.price * 100.0);
+                        falling_logged = true;
+                    }
+                    if settle_ok && analytics_ok && !falling {
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1 && allowed {
@@ -1138,27 +1172,27 @@ mod tests {
     }
 
     #[test]
-    fn any_time_slot_buys_the_side_that_rose() {
-        let up = anytime_entry(0.30, 0.59, 0.60).unwrap();
+    fn sharp_slot_buys_the_side_that_rose() {
+        let up = sharp_entry(0.30, 0.59, 0.60).unwrap();
         assert!(matches!(up.side, Side::Yes));
         assert!((up.price - 0.60).abs() < 1e-9);
-        let down = anytime_entry(-0.30, 0.39, 0.40).unwrap();
+        let down = sharp_entry(-0.30, 0.39, 0.40).unwrap();
         assert!(matches!(down.side, Side::No));
         assert!((down.price - 0.61).abs() < 1e-9);
-        assert!((down.p_yes - (1.0 - 0.61 - ANYTIME_EDGE)).abs() < 1e-9);
+        assert!((down.p_yes - (1.0 - 0.61 - SHARP_EDGE)).abs() < 1e-9);
     }
 
     #[test]
-    fn any_time_slot_skips_small_moves_and_high_prices() {
-        assert!(anytime_entry(0.14, 0.59, 0.60).is_none());
-        assert!(anytime_entry(0.30, 0.89, 0.90).is_none());
-        assert!(anytime_entry(-0.30, 0.10, 0.11).is_none());
+    fn sharp_slot_skips_small_moves_and_high_prices() {
+        assert!(sharp_entry(0.14, 0.59, 0.60).is_none());
+        assert!(sharp_entry(0.30, 0.89, 0.90).is_none());
+        assert!(sharp_entry(-0.30, 0.10, 0.11).is_none());
     }
 
     #[test]
-    fn any_time_slot_only_trades_with_positive_expected_profit() {
-        let e = anytime_entry(0.30, 0.49, 0.50).unwrap();
-        assert!(e.cents > 0.0 && e.cents < ANYTIME_EDGE * 100.0);
+    fn sharp_slot_only_trades_with_positive_expected_profit() {
+        let e = sharp_entry(0.30, 0.49, 0.50).unwrap();
+        assert!(e.cents > 0.0 && e.cents < SHARP_EDGE * 100.0);
     }
 
     #[test]
@@ -1188,8 +1222,8 @@ mod tests {
     }
 
     #[test]
-    fn after_nine_slot_buys_only_at_72_to_82c() {
-        let bands = mode_params("NORMAL").anytime_bands;
+    fn sharp_slot_buys_only_at_72_to_82c() {
+        let bands = mode_params("NORMAL").sharp_bands;
         for inside in [0.72, 1.0 - 0.28, 0.75, 0.78, 1.0 - 0.22, 0.82, 1.0 - 0.18] {
             assert!(in_price_band(bands, inside), "{inside}");
         }
@@ -1199,16 +1233,15 @@ mod tests {
     }
 
     #[test]
-    fn every_after_nine_price_carries_a_75_percent_win_chance() {
-        for (lo, _) in ANYTIME_PRICE_BANDS {
-            assert!(lo + ANYTIME_EDGE >= 0.75 - 1e-9);
+    fn every_sharp_price_carries_a_75_percent_win_chance() {
+        for (lo, _) in SHARP_PRICE_BANDS {
+            assert!(lo + SHARP_EDGE >= 0.75 - 1e-9);
         }
     }
 
     #[test]
-    fn after_nine_slot_runs_only_after_the_first_nine_minutes() {
-        assert!(15 - ANYTIME_FIRST_MIN > 9);
-        assert!(ANYTIME_LAST_MIN as f64 * 60.0 > 90.0);
+    fn sharp_slot_checks_in_the_last_two_minutes() {
+        assert_eq!((SHARP_FIRST_MIN, SHARP_LAST_MIN), (2, 1));
     }
 
     #[test]
@@ -1218,15 +1251,36 @@ mod tests {
     }
 
     #[test]
+    fn never_buys_a_side_with_a_falling_price() {
+        let now = 1_000;
+        let down: VecDeque<(i64, f64)> = vec![(now - 25, 0.60), (now - 10, 0.56), (now, 0.54)].into();
+        assert!(side_is_falling(&down, Side::Yes, now));
+        assert!(!side_is_falling(&down, Side::No, now));
+        let up: VecDeque<(i64, f64)> = vec![(now - 25, 0.54), (now, 0.60)].into();
+        assert!(!side_is_falling(&up, Side::Yes, now));
+        assert!(side_is_falling(&up, Side::No, now));
+        let flat: VecDeque<(i64, f64)> = vec![(now - 25, 0.60), (now, 0.60)].into();
+        assert!(!side_is_falling(&flat, Side::Yes, now));
+    }
+
+    #[test]
+    fn too_little_price_history_counts_as_falling() {
+        let now = 1_000;
+        let short: VecDeque<(i64, f64)> = vec![(now - 5, 0.54), (now, 0.60)].into();
+        assert!(side_is_falling(&short, Side::Yes, now));
+        assert!(side_is_falling(&VecDeque::new(), Side::Yes, now));
+    }
+
+    #[test]
     fn risk_has_no_price_ranges() {
         let bands = mode_params("RISK").price_bands;
         assert!(in_price_band(bands, 0.65) && in_price_band(bands, 0.95));
     }
 
     #[test]
-    fn only_normal_runs_the_any_time_slot() {
-        assert!(mode_params("NORMAL").anytime_slot);
-        assert!(!mode_params("RISK").anytime_slot);
+    fn only_normal_runs_the_sharp_slot() {
+        assert!(mode_params("NORMAL").sharp_slot);
+        assert!(!mode_params("RISK").sharp_slot);
     }
 
     #[test]
