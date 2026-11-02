@@ -19,6 +19,13 @@ fi
 export PATH="$HOME/.cargo/bin:$PATH"
 cargo --version
 
+# A 1 GB instance cannot link a release build without swap.
+if [ "$(free -m | awk '/Swap/ {print $2}')" -lt 1024 ]; then
+  echo "[2b] adding 2 GB swap"
+  sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile >/dev/null && sudo swapon /swapfile
+  grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+fi
+
 echo "[3/6] code -> /opt/kalshirust"
 sudo mkdir -p /opt/kalshirust
 sudo chown "$USER":"$USER" /opt/kalshirust

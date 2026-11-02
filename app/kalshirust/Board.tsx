@@ -186,7 +186,13 @@ export default function Board() {
                       : `Offline · ${heartbeatAge < 3600 ? `${heartbeatAge}s` : hst(status?.created_at)}`
                 }
               />
-              <Pill on={mode === 'RISK'} tone="red" label={mode} />
+              <Pill
+                on={online}
+                pulse={online && status?.live === true}
+                tone={mode === 'RISK' ? 'red' : 'green'}
+                label={mode}
+                detail={online ? (status?.live ? 'trading' : 'paper') : undefined}
+              />
               <Pill
                 on={status?.live === true}
                 label={status ? (status.live ? 'Live' : 'Paper') : 'Paper / Live —'}
