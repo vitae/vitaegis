@@ -341,6 +341,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         *cur = m;
                     }
                 }
+                // Heartbeat for the HUD's RUN / STOP control: this host, this bot, alive now.
+                s.patch_config(json!({
+                    "host_name": env::var("COMPUTERNAME").or_else(|_| env::var("HOSTNAME")).unwrap_or_else(|_| "bot".into()),
+                    "host_status": "running",
+                    "host_seen_at": chrono::Utc::now().to_rfc3339(),
+                }));
                 sleep(Duration::from_secs(10)).await;
             }
         });

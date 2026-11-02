@@ -6,3 +6,7 @@ btc_history.json
 b.json
 h.txt
 backtest.log
+trades.archive-*.jsonl
+kalshirust.log
+kalshirust.err.log
+kalshirust.pid

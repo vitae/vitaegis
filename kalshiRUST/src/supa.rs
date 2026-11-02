@@ -80,6 +80,14 @@ impl Supa {
         }
     }
 
+    /// Fire-and-forget update of kalshirust_config row 1 (host heartbeat).
+    pub fn patch_config(&self, row: Value) {
+        let me = self.clone();
+        tokio::spawn(async move {
+            let _ = me.req(reqwest::Method::PATCH, "kalshirust_config?id=eq.1").header("Prefer", "return=minimal").json(&row).send().await;
+        });
+    }
+
     /// Current mode from kalshirust_config, or None on any failure.
     pub async fn mode(&self) -> Option<String> {
         let v: Value = self

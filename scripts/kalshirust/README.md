@@ -92,3 +92,27 @@ curl -s https://www.vitaegis.com/api/bot-status
 
 The second should show `"vps": {"configured": true, "ok": true, "latencyMs": …}` and the
 header pill on `/kalshi` flips to `[LIGHTSAIL VPS: ONLINE 40ms]`.
+
+## RUN / STOP from the HUD
+
+vitaegis.com/kalshirust has RUN and STOP buttons (admin key required). They write
+`kalshirust_config.desired_state`; a supervisor on the bot's host polls it every 10 s,
+starts or stops the bot, and reports `host_status` back, which the page shows as the host
+pill. The bot also heartbeats while it runs. Outbound HTTPS only; no ports to open.
+
+Windows host (AWS Windows instance or the PC running the bot), once, as the user who owns
+the bot folder:
+
+    powershell -ExecutionPolicy Bypass -File scripts\kalshirust\supervisor.ps1 -Install
+
+That registers a scheduled task that starts at boot and restarts itself. It reads the
+Supabase URL and service role key from `kalshiRUST\.env` and starts
+`target\release\kalshi_btc_bot.exe` with its output in `kalshirust.log`.
+
+Linux host (the Lightsail VPS), with `kalshi-bot.service` installed and
+`/etc/kalshi-bot.env` holding `SUPABASE_URL` (or `NEXT_PUBLIC_SUPABASE_URL`) and
+`SUPABASE_SERVICE_ROLE_KEY`:
+
+    sudo cp scripts/kalshirust/supervisor.sh /opt/kalshirust/supervisor.sh && sudo chmod +x /opt/kalshirust/supervisor.sh
+    sudo cp scripts/kalshirust/kalshirust-supervisor.service /etc/systemd/system/
+    sudo systemctl daemon-reload && sudo systemctl enable --now kalshirust-supervisor

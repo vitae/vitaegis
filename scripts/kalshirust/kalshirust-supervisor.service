@@ -1,0 +1,18 @@
+# systemd unit for the RUN / STOP supervisor (see supervisor.sh). Install:
+#   sudo cp scripts/kalshirust/kalshirust-supervisor.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now kalshirust-supervisor
+[Unit]
+Description=KALSHIRUST supervisor: starts/stops kalshi-bot from the HUD's RUN button
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=ENV_FILE=/etc/kalshi-bot.env
+Environment=SERVICE=kalshi-bot
+ExecStart=/opt/kalshirust/supervisor.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
