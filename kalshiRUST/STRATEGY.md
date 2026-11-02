@@ -72,6 +72,30 @@ newer half) picked MODEL_WEIGHT=0.15: 20 trades, 30% hit, +$9.92. That is a samp
 not evidence of an edge. The bot now runs at 0.15 so it only acts when model and market
 disagree sharply, and the live paper run is the out-of-sample test.
 
+## Settlement engine (the part that works)
+
+KXBTC15M settles on the average of the 60 one-second BRTI prints before close, and Kalshi
+republishes those prints every second at a public URL. Inside the final minute part of the
+settlement value is therefore known. The engine (`src/settle.rs`) anchors the unknown
+remainder on Coinbase's real-time mid plus the measured BRTI basis, computes the
+settlement mean and spread exactly, and trades the fee-adjusted edge on either side.
+
+First live window (Nov 2, 01:45–02:00 UTC): two paper trades, both won, +$2.65 on $9.35.
+Self-check: the 60-second estimate (no prints known yet) called the wrong side; every
+estimate from 45 seconds down was right. That split is the rule:
+
+| | NORMAL | RISK |
+|---|---|---|
+| First trade | P(win) ≥ 90% on ≥ 5 known prints (from ~52 s out) | P(win) ≥ 80%, projection allowed (from 90 s out) |
+| Second trade | P(win) ≥ 95% on ≥ 15 known prints, ≥ 10 s after the first | same |
+| Stake | flat $5 | enough for a $3 win, capped by half-Kelly on the bankroll and $100 |
+| Price paid | 5–97¢, fee-adjusted edge ≥ 2¢ | same |
+
+NORMAL buys certainty: small, frequent wins on 90–96¢ favorites, cents each. RISK buys
+the bigger edges that appear in the second before the book catches up to Coinbase, and
+accepts that one in five of those loses. The dollars-per-window line in the log and the
+HUD is the scorecard for both.
+
 ## Honest expectations
 
 On a 45¢ contract with $5, the most you can win is about $6, not $10. A "slight edge" at

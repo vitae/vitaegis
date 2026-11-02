@@ -41,6 +41,11 @@ struct ModeParams {
     bets_per_window: usize,
     min_secs_left: f64,
     max_secs_left: f64,
+    /// Settlement engine, first trade of the window: minimum win probability and minimum
+    /// number of published settlement prints behind it. NORMAL waits for prints (a
+    /// calculation); RISK may act on the projection before the settlement minute begins.
+    settle_min_pwin: f64,
+    settle_min_known: usize,
 }
 
 fn mode_params(name: &str) -> ModeParams {
@@ -53,6 +58,8 @@ fn mode_params(name: &str) -> ModeParams {
             bets_per_window: 2,
             min_secs_left: f("RISK_MIN_SECS_LEFT", 30.0),
             max_secs_left: f("RISK_MAX_SECS_LEFT", 420.0),
+            settle_min_pwin: f("RISK_SETTLE_MIN_PWIN", 0.8),
+            settle_min_known: f("RISK_SETTLE_MIN_KNOWN", 0.0) as usize,
         }
     } else {
         ModeParams {
@@ -62,6 +69,8 @@ fn mode_params(name: &str) -> ModeParams {
             bets_per_window: 2,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
+            settle_min_pwin: f("SETTLE_MIN_PWIN", 0.9),
+            settle_min_known: f("SETTLE_MIN_KNOWN", 5.0) as usize,
         }
     }
 }
@@ -84,7 +93,6 @@ struct Ctx {
     /// Published 1-second BRTI prints plus the Coinbase anchor for the settlement engine.
     brti: settle::SharedBrti,
     settle_min_edge_cents: f64,
-    settle_min_pwin: f64,
     /// The second trade in a window is only taken as a near-certainty.
     settle_second_min_pwin: f64,
     settle_max_price: f64,
@@ -160,7 +168,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         model_weight: env::var("MODEL_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.15),
         brti: settle::shared(),
         settle_min_edge_cents: env::var("SETTLE_MIN_EDGE_CENTS").ok().and_then(|v| v.parse().ok()).unwrap_or(2.0),
-        settle_min_pwin: env::var("SETTLE_MIN_PWIN").ok().and_then(|v| v.parse().ok()).unwrap_or(0.8),
         settle_second_min_pwin: env::var("SETTLE_SECOND_MIN_PWIN").ok().and_then(|v| v.parse().ok()).unwrap_or(0.95),
         settle_max_price: env::var("SETTLE_MAX_PRICE").ok().and_then(|v| v.parse().ok()).unwrap_or(0.97),
         settle_noise_dollars: env::var("SETTLE_NOISE_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(4.0),
@@ -173,9 +180,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let b = ctx.book.lock().await;
         let m = ctx.mode();
         println!(
-            "[+] {} | mode {} (${:.0} max, {:.1}c min edge, {} bet/window, enter {}-{}s before close) | 15m trades {}/{} logged, sniper {}/{}, {} pending",
+            "[+] {} | mode {} (${:.0} max, {:.1}c min edge, {} bet/window, early engine {}-{}s before close, settlement engine: first trade needs P(win) >= {:.0}% on >= {} known prints) | 15m trades {}/{} logged, sniper {}/{}, {} pending",
             if live { "LIVE TRADING" } else { "PAPER (LIVE_TRADING=false)" },
-            m.name, m.max_order_dollars, m.min_edge_cents, m.bets_per_window, m.min_secs_left as i64, m.max_secs_left as i64,
+            m.name, m.max_order_dollars, m.min_edge_cents, m.bets_per_window, m.min_secs_left as i64, m.max_secs_left as i64, m.settle_min_pwin * 100.0, m.settle_min_known,
             b.count_source("bot"), bot_limit, b.count_source("sniper"), sniper_limit, b.pending()
         );
     }
@@ -512,7 +519,7 @@ async fn run_window(
                 }
                 if let Some(edge) = edge {
                     let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
-                    let (pwin_floor, known_floor) = if bets_settle == 0 { (ctx.settle_min_pwin, 0) } else { (ctx.settle_second_min_pwin, SETTLE_SECOND_MIN_KNOWN) };
+                    let (pwin_floor, known_floor) = if bets_settle == 0 { (mode.settle_min_pwin, mode.settle_min_known) } else { (ctx.settle_second_min_pwin, SETTLE_SECOND_MIN_KNOWN) };
                     if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= ctx.settle_min_edge_cents && p_win >= pwin_floor && est.known_prints >= known_floor {
                         let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, ctx.kelly_fraction, ctx.risk_target_profit);
                         let count = (dollars / edge.price).floor() as u32;
