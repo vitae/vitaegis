@@ -93,8 +93,6 @@ struct ModeParams {
     max_price: f64,
     /// Minimum expected profit, in dollars, on the stake it would put down.
     min_ev_dollars: f64,
-    /// A win must pay more than this, in dollars after the fee, or the trade is skipped.
-    min_win_dollars: f64,
     /// Whether the sharp-rise slot trades in this mode.
     sharp_slot: bool,
     /// The prices this mode will buy at in the settlement slot.
@@ -124,7 +122,6 @@ fn mode_params(name: &str) -> ModeParams {
             early_engine: env::var("RISK_EARLY_ENGINE").map(|v| !v.eq_ignore_ascii_case("false")).unwrap_or(true),
             max_price: f("RISK_SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("RISK_MIN_EV_DOLLARS", 0.5),
-            min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
             sharp_slot: false,
             price_bands: ALL_PRICES,
             sharp_bands: ALL_PRICES,
@@ -148,7 +145,6 @@ fn mode_params(name: &str) -> ModeParams {
             early_engine: env::var("EARLY_ENGINE").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false),
             max_price: f("SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("MIN_EV_DOLLARS", 0.15),
-            min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
             sharp_slot: true,
             price_bands: NORMAL_PRICE_BANDS,
             sharp_bands: SHARP_PRICE_BANDS,
@@ -211,11 +207,6 @@ fn side_is_falling(samples: &VecDeque<(i64, f64)>, side: Side, now: i64) -> bool
         Side::No => then - latest,
     };
     change <= -FALLING_MOVE
-}
-
-/// What a win pays on this stake, in dollars after the taker fee, in whole contracts.
-fn win_dollars(stake: f64, price: f64) -> f64 {
-    (stake / price).floor() * (1.0 - price - models::taker_fee(price))
 }
 
 /// What the sharp-rise slot would buy after a 60 s move in the YES mid, or None when the move is
@@ -556,7 +547,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("[+] Analytics engine: {}", if ctx.analytics_veto { "must agree before any settlement trade" } else { "logging only" });
-    println!("[+] Every trade must win over ${:.2} after fees", mode_params("NORMAL").min_win_dollars);
     let ranges = |bands: &[(f64, f64)]| bands.iter().map(|(lo, hi)| format!("{:.0}-{:.0}c", lo * 100.0, hi * 100.0)).collect::<Vec<_>>().join(" and ");
     println!("[+] Sharp-rise slot: {:.0}c+ rise over the prior minute, checked with {} and {} minutes left, at {}", SHARP_MIN_MOVE * 100.0, SHARP_FIRST_MIN, SHARP_LAST_MIN, ranges(SHARP_PRICE_BANDS));
     println!("[+] Last-90-seconds slot: settlement math, at {}", ranges(NORMAL_PRICE_BANDS));
@@ -927,11 +917,8 @@ async fn run_window(
                                     let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, false);
                                     let count = (dollars / edge.price).floor();
                                     let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
-                                    let pays = win_dollars(dollars, edge.price);
                                     if !in_price_band(mode.sharp_bands, edge.price) {
                                         println!("[SHARP] {} | {}m left | {} @ {:.1}c is outside the price ranges, skipped", ticker, minute, edge.side.as_str().to_uppercase(), edge.price * 100.0);
-                                    } else if pays <= mode.min_win_dollars {
-                                        println!("[SHARP] {} | {}m left | {} @ {:.1}c would win only ${:.2}, skipped", ticker, minute, edge.side.as_str().to_uppercase(), edge.price * 100.0, pays);
                                     } else if count >= 1.0 && allowed {
                                         let note = format!("sharp-rise slot | {}m left | YES mid {:+.1}c in 60 s | measured edge {:.2}c", minute, moved * 100.0, SHARP_EDGE * 100.0);
                                         sharp_done = enter(ctx, &ticker, strike, close_ts, spot, edge.p_yes, edge.p_yes, moved, edge, dollars, "BTC 15 min (sharp rise)", "sharp", &note).await;
@@ -1057,7 +1044,7 @@ async fn run_window(
                     // Expected profit on the whole stake: what ranks trades, since a 5c edge on a
                     // 30c contract is worth five times a 5c edge on a 93c one.
                     let ev_dollars = (dollars / edge.price).floor() * edge.cents / 100.0;
-                    let settle_ok = in_price_band(mode.price_bands, edge.price) && win_dollars(dollars, edge.price) > mode.min_win_dollars && bets_settle < mode.settle_trades && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && ev_dollars >= mode.min_ev_dollars && settle_p_win >= pwin_floor && est.known_prints >= known_floor && window_side.map_or(true, |w| w == edge.side.as_str());
+                    let settle_ok = in_price_band(mode.price_bands, edge.price) && bets_settle < mode.settle_trades && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= edge_floor && ev_dollars >= mode.min_ev_dollars && settle_p_win >= pwin_floor && est.known_prints >= known_floor && window_side.map_or(true, |w| w == edge.side.as_str());
                     let analytics_ok = !ctx.analytics_veto || (a_agrees && p_win >= pwin_floor);
                     if settle_ok && !analytics_ok && !veto_logged {
                         println!("[VETO] {} | settlement math: buy {} @ {:.1}c at {:.1}% | {} | no trade", ticker, edge.side.as_str().to_uppercase(), edge.price * 100.0, settle_p_win * 100.0, a_label);
@@ -1158,7 +1145,7 @@ async fn run_window(
         // Sized by the odds it just computed, never the mode's whole cap.
         let early_p_win = match edge.side { Side::Yes => p_yes, Side::No => 1.0 - p_yes };
         let early_dollars = settle_size(&mode, early_p_win, edge.price, ctx.bankroll_dollars, false);
-        if !allowed || (early_dollars / edge.price).floor() < 1.0 || !in_price_band(mode.price_bands, edge.price) || win_dollars(early_dollars, edge.price) <= mode.min_win_dollars {
+        if !allowed || (early_dollars / edge.price).floor() < 1.0 || !in_price_band(mode.price_bands, edge.price) {
             continue;
         }
         last_early_attempt = now;
@@ -1406,15 +1393,6 @@ mod tests {
     fn risk_sizes_by_kelly_whatever_the_sure_flag_says() {
         let m = mode_params("RISK");
         assert_eq!(settle_size(&m, 0.97, 0.90, 100.0, true), settle_size(&m, 0.97, 0.90, 100.0, false));
-    }
-
-    #[test]
-    fn a_five_dollar_win_pays_over_a_dollar_only_at_82c_or_less() {
-        let floor = mode_params("NORMAL").min_win_dollars;
-        assert!(win_dollars(5.0, 0.82) > floor);
-        assert!(win_dollars(5.0, 0.83) < floor);
-        assert!(win_dollars(5.0, 0.95) < floor);
-        assert!(win_dollars(5.0, 0.50) > floor);
     }
 
     #[test]

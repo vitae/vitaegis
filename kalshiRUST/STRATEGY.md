@@ -57,8 +57,6 @@ window (`BETS_PER_WINDOW`), in the last 2 minutes, by whichever of two rules fir
 - **Settlement math.** In the last 90 s, a 75%+ win chance from both engines, at 60c or less or at 72c to
   82c. It skips a side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price history.
 
-A win must pay over $1 after fees, because a small win cannot make up for a loss of about $4.75.
-
 On the month of data the sharp-rise rule is 155 trades, 87.1% wins against 79% needed to break even, +$0.51 a
 trade, about +$2.38 a day, worst drop $16.39. It is positive in all three parts of the month (+$0.15, +$1.17,
 +$0.23 a trade), has t=3.16, and stays positive at 2c of worse fills (+$0.23). Buyers paid about the quoted
