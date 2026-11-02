@@ -62,6 +62,17 @@ impl VolState {
     pub fn sigma_for(&self, secs: f64) -> Option<f64> {
         self.sigma_15m().map(|s| s * (secs.max(1.0) / 900.0).sqrt())
     }
+
+    /// Log return of spot over the last `secs` seconds, from the tick bars.
+    pub fn momentum(&self, secs: i64) -> Option<f64> {
+        let (now_bar, now_price) = self.last_bar?;
+        let cutoff = now_bar - secs;
+        let (_, then_price) = self.ticks.iter().find(|(t, _)| *t >= cutoff).copied()?;
+        if then_price <= 0.0 {
+            return None;
+        }
+        Some((now_price / then_price).ln())
+    }
 }
 
 fn stdev(xs: &[f64]) -> f64 {

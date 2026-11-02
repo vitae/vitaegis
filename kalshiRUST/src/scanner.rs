@@ -206,6 +206,8 @@ pub async fn scan(
                 cost,
                 fee,
                 model_prob: c.edge.p_yes,
+                gbm_prob: c.edge.p_yes,
+                momentum: 0.0,
                 edge_cents: c.edge.cents,
                 spot,
                 strike: c.floor.or(c.cap).unwrap_or(0.0),

@@ -20,6 +20,11 @@ use scanner::ScanConfig;
 use supa::Supa;
 use vol::SharedVol;
 
+/// KXBTC15M settles on the 60-second BRTI average before close; its midpoint is ~30 s out.
+const SETTLEMENT_LEAD_SECS: f64 = 30.0;
+/// Lookback for the late-window momentum term.
+const MOMENTUM_LOOKBACK_SECS: i64 = 120;
+
 /// Entry rules for one mode. NORMAL is the measured-edge default; RISK is the turbo mode
 /// the HUD's red button switches on.
 #[derive(Debug, Clone)]
@@ -66,6 +71,8 @@ struct Ctx {
     vol: SharedVol,
     mode: Arc<std::sync::Mutex<String>>,
     book: Arc<Mutex<TradeBook>>,
+    /// Fraction of the last two minutes' move carried into the forecast (0 = pure GBM).
+    momentum_weight: f64,
 }
 
 impl Ctx {
@@ -113,6 +120,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         vol: vol::shared(),
         mode: Arc::new(std::sync::Mutex::new(initial_mode)),
         book: Arc::new(Mutex::new(TradeBook::load("trades.jsonl", bot_limit, sniper_limit))),
+        momentum_weight: env::var("MOMENTUM_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.3),
     });
 
     {
@@ -313,21 +321,33 @@ async fn run_window(
         if spot <= 0.0 {
             continue;
         }
-        let Some(sigma) = ctx.vol.lock().unwrap().sigma_for(rem) else {
+        // Settlement is the average BRTI over the last minute before close, so the price
+        // that matters is fixed ~30 s before close, not at close.
+        let horizon = (rem - SETTLEMENT_LEAD_SECS).max(5.0);
+        let (sigma, momentum) = {
+            let v = ctx.vol.lock().unwrap();
+            (v.sigma_for(horizon), v.momentum(MOMENTUM_LOOKBACK_SECS))
+        };
+        let Some(sigma) = sigma else {
             if now - last_print >= 15 {
                 println!("[*] waiting for volatility data...");
                 last_print = now;
             }
             continue;
         };
-        let p_yes = clamp_prob(prob_above(spot, strike, sigma));
+        let p_gbm = clamp_prob(prob_above(spot, strike, sigma));
+        // Late-window continuation: carry a fraction of the last two minutes' move forward.
+        // The one signal that was positive across every published variant, though none of
+        // those tests were out of sample, so the weight is small and both numbers are logged.
+        let mom = momentum.unwrap_or(0.0);
+        let p_yes = clamp_prob(prob_above(spot * (ctx.momentum_weight * mom).exp(), strike, sigma));
         let edge = best_edge(p_yes, yes_ask, no_ask);
         let mode = ctx.mode();
 
         if now - last_print >= 15 {
             println!(
-                "[TICK] {} | {}s left | spot {:.2} vs strike {:.2} ({:+.3}%) | model P(up) {:.1}% | yes {}c/{}c | best {} {:+.2}c | {}",
-                ticker, rem as i64, spot, strike, (spot / strike - 1.0) * 100.0, p_yes * 100.0,
+                "[TICK] {} | {}s left | spot {:.2} vs strike {:.2} ({:+.3}%) | gbm {:.1}% mom {:+.3}% -> model P(up) {:.1}% | yes {}c/{}c | best {} {:+.2}c | {}",
+                ticker, rem as i64, spot, strike, (spot / strike - 1.0) * 100.0, p_gbm * 100.0, mom * 100.0, p_yes * 100.0,
                 yes_bid.map_or("-".into(), |b| format!("{:.0}", b * 100.0)),
                 yes_ask.map_or("-".into(), |a| format!("{:.0}", a * 100.0)),
                 edge.map_or("-".into(), |e| e.side.as_str().to_uppercase()), edge.map_or(0.0, |e| e.cents), mode.name
@@ -347,6 +367,7 @@ async fn run_window(
                     "edge_cents": edge.map(|e| e.cents),
                     "side": edge.map(|e| e.side.as_str()),
                     "price_cents": edge.map(|e| (e.price * 100.0).round() as i64),
+                    "message": format!("gbm {:.1}% | 2m momentum {:+.3}% | weight {:.2}", p_gbm * 100.0, mom * 100.0, ctx.momentum_weight),
                 }));
             }
             last_status = now;
@@ -410,6 +431,8 @@ async fn run_window(
                 cost,
                 fee,
                 model_prob: p_yes,
+                gbm_prob: p_gbm,
+                momentum: mom,
                 edge_cents: edge.cents,
                 spot,
                 strike,

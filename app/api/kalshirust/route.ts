@@ -4,7 +4,7 @@ import { summarize, type KalshirustConfig, type KalshirustEvent } from '@/lib/ka
 
 export const dynamic = 'force-dynamic';
 
-const MISSING = 'kalshirust tables missing: run supabase/migrations/20261101120000_kalshirust.sql';
+const MISSING = 'kalshirust tables missing: run supabase/migrations/20261101130000_kalshirust.sql';
 
 /** Everything /kalshirust shows: the bot's mode, newest heartbeat, trades and errors. Public. */
 export async function GET() {

@@ -24,6 +24,10 @@ pub struct Trade {
     pub fee: f64,
     pub model_prob: f64,
     #[serde(default)]
+    pub gbm_prob: f64,
+    #[serde(default)]
+    pub momentum: f64,
+    #[serde(default)]
     pub edge_cents: f64,
     pub spot: f64,
     pub strike: f64,
