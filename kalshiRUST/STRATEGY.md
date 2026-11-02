@@ -25,7 +25,7 @@
    expected value: `EV = p_win·(1 − price) − (1 − p_win)·price − 0.07·price·(1 − price)`.
    NORMAL mode needs ≥ 2¢ per contract; RISK mode needs ≥ 1¢.
 2. **Prices both sides.** YES at the ask or NO at (1 − YES bid), whichever has the edge.
-3. **Enters late.** NORMAL: one trade a window, only in the last 90 s, at a 75%+ win chance. RISK: the last 90 s, plus the early engine from 7 minutes out.
+3. **Enters late.** NORMAL: one trade a window, only in the last 2 minutes, at a 75%+ win chance. RISK: the last 90 s, plus the early engine from 7 minutes out.
 4. **Caps size.** NORMAL $5 per trade, 1 per window, and live trading stops for the UTC day after a $30 loss. RISK up to $100, 2 per window.
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
@@ -43,46 +43,32 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | 2 | 2 |
-| Entry | one trade a window, only in the last 90 s | last 90 s, plus the early engine from 7 min out |
+| Entry | one trade a window, only in the last 2 minutes | last 90 s, plus the early engine from 7 min out |
 | Last-90 trade | 75%+ win chance; 90% and 3c of edge before 3 prints exist unless the price is 62.5c or less | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | 2c of edge, $0.15 expected profit, 97c top price | $0.50 expected profit, 97c top price |
 
 Every NORMAL trade needs a 75%+ win chance, and none buys a falling price. NORMAL makes one trade a
-window (`BETS_PER_WINDOW`), in the last 90 s, by whichever of two rules fires first:
+window (`BETS_PER_WINDOW`), in the last 2 minutes, by whichever of two rules fires first:
 
-- **Sharp rise.** With 1 minute left, the side whose mid rose 15c or more over the prior minute, at 72c
-  to 82c.
-- **Steady favorite.** With 1 minute left, a favorite at 90c to under 94c whose price did not fall over the
-  prior minute. A win pays about $0.37 and a loss costs about $4.63.
-- **Settlement math.** A 75%+ win chance from both engines, at 60c or less or at 72c to 82c. It skips a
-  side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price history.
+- **Sharp rise.** With 2 minutes and then 1 minute left, the side whose mid rose 12c or more over the
+  prior minute, at 72c to 82c.
+- **Settlement math.** In the last 90 s, a 75%+ win chance from both engines, at 60c or less or at 72c to
+  82c. It skips a side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price history.
 
-On the month of data the sharp-rise rule is 57 trades in 2% of windows, 91.2% wins against 79% needed
-to break even, +$0.74 a trade, about +$1.29 a day, worst drop $9.93. It is positive in all three parts
-of the month (+$0.72, +$1.24, +$0.22 a trade) and has t=3.27. Buyers paid about the quoted price in the
-first 3 s after signals. Its edge appears only near the close:
+A win must pay over $1 after fees, because a small win cannot make up for a loss of about $4.75.
 
-| Minutes left, alone | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
-|---|---|---|---|---|---|---|---|---|---|
-| $ a trade | +0.11 | -0.02 | -0.12 | +0.03 | +0.12 | -0.14 | +0.21 | +0.32 | +0.74 |
+On the month of data the sharp-rise rule is 155 trades, 87.1% wins against 79% needed to break even, +$0.51 a
+trade, about +$2.38 a day, worst drop $16.39. It is positive in all three parts of the month (+$0.15, +$1.17,
++$0.23 a trade), has t=3.16, and stays positive at 2c of worse fills (+$0.23). Buyers paid about the quoted
+price in the first 3 s after signals. It was the most profitable of 72 combinations of timing, move size and
+price that won 75%+, stayed positive in every part of the month and at worse fills, with no small wins. Starting at 3
+minutes made more in total but about nothing in the newest part of the month, with a worst drop of $33.
+These rules were picked from well over a hundred tried on the same data, so expect less.
 
-Also checking with 2 minutes left gives 136 trades, 86.8% wins, +$0.48 a trade, about +$1.98 a day, worst
-drop $16.39. The same prices while falling won 69% and lost $0.53 a trade. It was picked from well over a
-hundred rules tried on the same data, so expect less. Requiring the settlement model to agree made it
-worse.
-
-The steady-favorite rule alone is 128 trades, 94.5% wins against about 93% needed, +$0.10 a trade, positive in
-all three parts of the month but with t=1.0, so its edge is thin. With the sharp-rise rule it is about 5.5 trades
-a day, 93.4% wins, +$0.28 a trade, about +$1.54 a day. Not every window can trade: 36% have no usable quote at
-1 minute left, and in 31% the favorite is already at 99c or more. Buying every favorite from 50c to 99c made 31
-trades a day and lost $0.01 a trade.
-
-A win must pay over $0.20 after fees. On $5 that allows prices up to about 95c, but no rule buys above 94c
-because favorites at 94c to 97c lost $0.12 to $0.21 a trade. Replaying 25 live windows, settlement math at
-82c to 96c would have lost: it showed 92% to 99% for a side that then lost. At 45 s left or later, only 3 of the
-25 windows had a side under 96c, and settlement math found no edge in any of them.
+Rejected for winning too little: favorites at 90c to under 94c, which earned +$0.10 a trade but win about
+$0.37 against a loss of about $4.63.
 
 Quant methods tested against this rule, and why none changed it:
 
@@ -198,7 +184,7 @@ older two thirds and scored on the newer third. Run `report` and `candidate` to 
   and 15 down. An earlier version of this test showed more because it picked each window's
   latest move, which live trading cannot know.
 
-No earlier rule clearly beats the market, so NORMAL trades only in the last 90 s. These results say nothing about
+No earlier rule clearly beats the market, so NORMAL trades only in the last 2 minutes. These results say nothing about
 the settlement engine itself, because Kalshi publishes only the last 60 BRTI prints: its
 evidence can only come from live windows and `settle_calib.jsonl`.
 

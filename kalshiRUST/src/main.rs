@@ -34,30 +34,21 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// A window's second trade must rest on this many published settlement prints: a
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
-/// Sharp-rise slot: with 1 minute left, the side whose mid rose this much over the prior minute, if it
-/// costs 72c to 82c. On 2,958 windows: 57 trades, 91.2% wins against 79% needed to break even, $0.74 a
-/// trade after fees, positive in all three parts of the month, t=3.27. Starting with 2 minutes left adds
-/// about $0.69 a day but drops the average to $0.48 a trade. The same prices while falling won 69% and
-/// lost money. Picked from many rules tried on the same data, so expect less.
-const SHARP_FIRST_MIN: i64 = 1;
+/// Sharp-rise slot: with 2 minutes and then 1 minute left, the side whose mid rose this much over the
+/// prior minute, if it costs 72c to 82c. On 2,958 windows: 155 trades, 87.1% wins against 79% needed to
+/// break even, $0.51 a trade after fees, about $2.38 a day, worst drop $16.39, positive in all three parts
+/// of the month, t=3.16. It was the most profitable of 72 combinations tried that passed every test
+/// without small wins, and those were chosen from many rules on the same data, so expect less.
+const SHARP_FIRST_MIN: i64 = 2;
 const SHARP_LAST_MIN: i64 = 1;
-const SHARP_MIN_MOVE: f64 = 0.15;
+const SHARP_MIN_MOVE: f64 = 0.12;
 const SHARP_MAX_PRICE: f64 = 0.85;
-/// Win rate above price used for expected profit, below the 13.6c measured.
+/// Win rate above price used for expected profit, below the 9.7c measured.
 const SHARP_EDGE: f64 = 0.08;
 /// Every price here carries a 75%+ win chance: 72c plus the edge above.
 const SHARP_PRICE_BANDS: &[(f64, f64)] = &[(0.72, 0.82)];
 const RECONCILE_SECS: u64 = 120;
 const RECONCILE_PUBLISH_SECS: i64 = 3600;
-/// Steady favorite: with 1 minute left, a favorite at 90c to under 94c whose price did not fall over the
-/// prior minute. On 2,958 windows: 128 trades, 94.5% wins against about 93% needed to break even, $0.10
-/// a trade after fees, positive in all three parts of the month, t=1.0. A win pays about $0.37 and a loss
-/// costs about $4.63, so it is a thin edge.
-const STEADY_MINUTE: i64 = 1;
-const STEADY_MIN_PRICE: f64 = 0.90;
-const STEADY_MAX_PRICE: f64 = 0.94;
-/// Win rate above price used for expected profit, the 2.6c measured rounded down.
-const STEADY_EDGE: f64 = 0.02;
 /// The last-90 slot never buys a side whose mid fell by this much over the lookback.
 const FALLING_LOOKBACK_SECS: i64 = 30;
 const FALLING_MOVE: f64 = 0.01;
@@ -133,7 +124,7 @@ fn mode_params(name: &str) -> ModeParams {
             early_engine: env::var("RISK_EARLY_ENGINE").map(|v| !v.eq_ignore_ascii_case("false")).unwrap_or(true),
             max_price: f("RISK_SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("RISK_MIN_EV_DOLLARS", 0.5),
-            min_win_dollars: f("MIN_WIN_DOLLARS", 0.20),
+            min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
             sharp_slot: false,
             price_bands: ALL_PRICES,
             sharp_bands: ALL_PRICES,
@@ -157,7 +148,7 @@ fn mode_params(name: &str) -> ModeParams {
             early_engine: env::var("EARLY_ENGINE").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false),
             max_price: f("SETTLE_MAX_PRICE", 0.97),
             min_ev_dollars: f("MIN_EV_DOLLARS", 0.15),
-            min_win_dollars: f("MIN_WIN_DOLLARS", 0.20),
+            min_win_dollars: f("MIN_WIN_DOLLARS", 1.0),
             sharp_slot: true,
             price_bands: NORMAL_PRICE_BANDS,
             sharp_bands: SHARP_PRICE_BANDS,
@@ -220,22 +211,6 @@ fn side_is_falling(samples: &VecDeque<(i64, f64)>, side: Side, now: i64) -> bool
         Side::No => then - latest,
     };
     change <= -FALLING_MOVE
-}
-
-/// What the steady-favorite rule would buy: the favorite, if its price is in range and not falling.
-fn steady_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
-    let no_ask = 1.0 - yes_bid;
-    let (side, price, toward) = if yes_ask >= no_ask { (Side::Yes, yes_ask, moved) } else { (Side::No, no_ask, -moved) };
-    if toward < -1e-9 || price < STEADY_MIN_PRICE - 1e-9 || price >= STEADY_MAX_PRICE - 1e-9 {
-        return None;
-    }
-    let p_win = price + STEADY_EDGE;
-    let p_yes = match side {
-        Side::Yes => p_win,
-        Side::No => 1.0 - p_win,
-    };
-    let cents = models::ev_cents(p_yes, side, price);
-    (cents > 0.0).then_some(models::Edge { side, price, cents, p_yes })
 }
 
 /// What a win pays on this stake, in dollars after the taker fee, in whole contracts.
@@ -583,8 +558,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("[+] Analytics engine: {}", if ctx.analytics_veto { "must agree before any settlement trade" } else { "logging only" });
     println!("[+] Every trade must win over ${:.2} after fees", mode_params("NORMAL").min_win_dollars);
     let ranges = |bands: &[(f64, f64)]| bands.iter().map(|(lo, hi)| format!("{:.0}-{:.0}c", lo * 100.0, hi * 100.0)).collect::<Vec<_>>().join(" and ");
-    println!("[+] Sharp-rise slot: {:.0}c+ rise over the prior minute, checked with {} minute left, at {}", SHARP_MIN_MOVE * 100.0, SHARP_FIRST_MIN, ranges(SHARP_PRICE_BANDS));
-    println!("[+] Steady-favorite rule: with {} minute left, a favorite at {:.0}c to under {:.0}c that is not falling", STEADY_MINUTE, STEADY_MIN_PRICE * 100.0, STEADY_MAX_PRICE * 100.0);
+    println!("[+] Sharp-rise slot: {:.0}c+ rise over the prior minute, checked with {} and {} minutes left, at {}", SHARP_MIN_MOVE * 100.0, SHARP_FIRST_MIN, SHARP_LAST_MIN, ranges(SHARP_PRICE_BANDS));
     println!("[+] Last-90-seconds slot: settlement math, at {}", ranges(NORMAL_PRICE_BANDS));
 
     // Coinbase spot: feeds both the watch channel and the tick-vol estimator.
@@ -946,17 +920,7 @@ async fn run_window(
                     let mid = (bid + ask) / 2.0;
                     if let Some((m0, mid0)) = mark {
                         let moved = mid - mid0;
-                        let steady = if mode.sharp_slot && m0 == minute + 1 && !sharp_done && minute == STEADY_MINUTE { steady_entry(moved, bid, ask) } else { None };
-                        if let Some(edge) = steady {
-                            let p_win = match edge.side { Side::Yes => edge.p_yes, Side::No => 1.0 - edge.p_yes };
-                            let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, false);
-                            let count = (dollars / edge.price).floor();
-                            let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
-                            if count >= 1.0 && allowed && win_dollars(dollars, edge.price) > mode.min_win_dollars {
-                                let note = format!("steady favorite | {}m left | {} @ {:.1}c, not falling | YES mid {:+.1}c in 60 s", minute, edge.side.as_str().to_uppercase(), edge.price * 100.0, moved * 100.0);
-                                sharp_done = enter(ctx, &ticker, strike, close_ts, spot, edge.p_yes, edge.p_yes, moved, edge, dollars, "BTC 15 min (steady favorite)", "steady", &note).await;
-                            }
-                        } else if mode.sharp_slot && m0 == minute + 1 && !sharp_done && (SHARP_LAST_MIN..=SHARP_FIRST_MIN).contains(&minute) && moved.abs() >= SHARP_MIN_MOVE {
+                        if mode.sharp_slot && m0 == minute + 1 && !sharp_done && (SHARP_LAST_MIN..=SHARP_FIRST_MIN).contains(&minute) && moved.abs() >= SHARP_MIN_MOVE {
                             match sharp_entry(moved, bid, ask) {
                                 Some(edge) => {
                                     let p_win = match edge.side { Side::Yes => edge.p_yes, Side::No => 1.0 - edge.p_yes };
@@ -1426,7 +1390,8 @@ mod tests {
 
     #[test]
     fn sharp_slot_skips_small_moves_and_high_prices() {
-        assert!(sharp_entry(0.14, 0.59, 0.60).is_none());
+        assert!(sharp_entry(0.11, 0.59, 0.60).is_none());
+        assert!(sharp_entry(0.12, 0.59, 0.60).is_some());
         assert!(sharp_entry(0.30, 0.89, 0.90).is_none());
         assert!(sharp_entry(-0.30, 0.10, 0.11).is_none());
     }
@@ -1444,10 +1409,12 @@ mod tests {
     }
 
     #[test]
-    fn a_win_pays_over_a_dollar_only_at_82c_or_less_on_five_dollars() {
-        assert!(win_dollars(5.0, 0.82) > 1.0);
-        assert!(win_dollars(5.0, 0.83) < 1.0);
-        assert!(win_dollars(5.0, 0.50) > 1.0);
+    fn a_five_dollar_win_pays_over_a_dollar_only_at_82c_or_less() {
+        let floor = mode_params("NORMAL").min_win_dollars;
+        assert!(win_dollars(5.0, 0.82) > floor);
+        assert!(win_dollars(5.0, 0.83) < floor);
+        assert!(win_dollars(5.0, 0.95) < floor);
+        assert!(win_dollars(5.0, 0.50) > floor);
     }
 
     #[test]
@@ -1480,8 +1447,8 @@ mod tests {
     }
 
     #[test]
-    fn sharp_slot_checks_inside_the_last_90_seconds() {
-        assert_eq!((SHARP_FIRST_MIN, SHARP_LAST_MIN), (1, 1));
+    fn sharp_slot_checks_in_the_last_two_minutes() {
+        assert_eq!((SHARP_FIRST_MIN, SHARP_LAST_MIN), (2, 1));
     }
 
     #[test]
@@ -1509,34 +1476,6 @@ mod tests {
         let short: VecDeque<(i64, f64)> = vec![(now - 5, 0.54), (now, 0.60)].into();
         assert!(side_is_falling(&short, Side::Yes, now));
         assert!(side_is_falling(&VecDeque::new(), Side::Yes, now));
-    }
-
-    #[test]
-    fn steady_rule_buys_a_favorite_at_90_to_94c_that_is_not_falling() {
-        let yes = steady_entry(0.03, 0.91, 0.92).unwrap();
-        assert!(matches!(yes.side, Side::Yes));
-        assert!((yes.price - 0.92).abs() < 1e-9);
-        assert!(yes.cents > 0.0);
-        let no = steady_entry(-0.02, 0.08, 0.09).unwrap();
-        assert!(matches!(no.side, Side::No));
-        assert!((no.price - 0.92).abs() < 1e-9);
-        assert!(steady_entry(0.0, 0.89, 0.90).is_some());
-    }
-
-    #[test]
-    fn steady_rule_skips_falling_prices_and_other_ranges() {
-        assert!(steady_entry(-0.01, 0.91, 0.92).is_none());
-        assert!(steady_entry(0.01, 0.07, 0.08).is_none());
-        assert!(steady_entry(0.03, 0.88, 0.89).is_none());
-        assert!(steady_entry(0.03, 0.93, 0.94).is_none());
-        assert!(steady_entry(0.03, 0.50, 0.51).is_none());
-    }
-
-    #[test]
-    fn a_steady_win_clears_the_minimum_win() {
-        let floor = mode_params("NORMAL").min_win_dollars;
-        assert!(win_dollars(5.0, 0.93) > floor);
-        assert!(floor < 0.40);
     }
 
     #[test]

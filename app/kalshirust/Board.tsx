@@ -477,12 +477,12 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: 1 trade a window at $5 in the last 90 s, never while its price is falling. With 1
-        min left: a sharp 15¢+ rise over the prior minute into 72–82¢, or a favorite at 90¢ to under
-        94¢ that is not falling. Or settlement math at a 75%+ win chance, at 60¢ or less or at
-        72–82¢, with the analytics engine agreeing. No trade unless expected profit after fees is
-        positive. Live trading stops for the UTC day after a $30 loss. RISK: up to $100 a trade, as
-        low as 60% in the last 90 s, plus earlier trades from 7 min out with no win-chance floor.
+        NORMAL: 1 trade a window at $5 in the last 2 min, never while its price is falling. With 2
+        min and 1 min left: a sharp 12¢+ rise over the prior minute into 72–82¢. In the last 90 s:
+        settlement math at a 75%+ win chance, at 60¢ or less or at 72–82¢, with the analytics engine
+        agreeing. A win must pay over $1 after fees. Live trading stops for the UTC day after a $30
+        loss. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from 7
+        min out with no win-chance floor.
       </p>
     </div>
   );
@@ -1021,14 +1021,12 @@ function Trades({
       )}
       {(totals.bySlot.anytime.trades > 0 ||
         totals.bySlot.sharp.trades > 0 ||
-        totals.bySlot.steady.trades > 0 ||
         totals.bySlot.last90.trades > 0) && (
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/60">
           {totals.bySlot.anytime.trades > 0 && (
             <SlotSummary label="After 9 min" totals={totals.bySlot.anytime} />
           )}
           <SlotSummary label="Sharp rise" totals={totals.bySlot.sharp} />
-          <SlotSummary label="Steady favorite" totals={totals.bySlot.steady} />
           <SlotSummary label="Last 90 s" totals={totals.bySlot.last90} />
         </div>
       )}
@@ -1069,13 +1067,11 @@ function Trades({
                   >
                     {t.slot === 'sharp'
                       ? 'sharp rise'
-                      : t.slot === 'steady'
-                        ? 'steady favorite'
-                        : t.slot === 'anytime'
-                          ? 'after 9 min'
-                          : t.slot === 'last90'
-                            ? 'last 90 s'
-                            : t.source}
+                      : t.slot === 'anytime'
+                        ? 'after 9 min'
+                        : t.slot === 'last90'
+                          ? 'last 90 s'
+                          : t.source}
                   </span>
                 </Td>
                 <Td>
