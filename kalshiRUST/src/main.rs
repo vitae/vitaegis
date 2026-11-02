@@ -14,7 +14,7 @@ use base64::Engine as _;
 use analytics::{ExecutionSignal, KalshiBookTop, KxBtc15mEngine};
 use models::{best_edge, clamp_binding, clamp_prob, prob_above, taker_fee, tradable_price, v2_fill_cost, v2_order_terms, Side};
 use paper::{Trade, TradeBook};
-use kalshi_btc_bot::reconcile;
+use kalshi_btc_bot::{reconcile, ufc};
 use scanner::ScanConfig;
 use std::collections::VecDeque;
 use supa::Supa;
@@ -249,6 +249,141 @@ fn host_label() -> String {
         .or_else(|| fs::read_to_string("/etc/hostname").ok().map(|h| h.trim().to_string()))
         .filter(|h| !h.is_empty())
         .unwrap_or_else(|| "bot".into())
+}
+
+/// Every open fight market on Kalshi.
+async fn ufc_markets(client: &reqwest::Client, rest_base: &str) -> Vec<ufc::FightMarket> {
+    let url = format!("{}/markets", rest_base);
+    let mut out = Vec::new();
+    let mut cursor = String::new();
+    loop {
+        let mut query = vec![("series_ticker", ufc::SERIES), ("status", "open"), ("limit", "200")];
+        if !cursor.is_empty() {
+            query.push(("cursor", cursor.as_str()));
+        }
+        let page = match client.get(&url).query(&query).send().await {
+            Ok(r) => r.json::<serde_json::Value>().await.ok(),
+            Err(e) => {
+                println!("[UFC] Could not read Kalshi's fights: {}", e);
+                None
+            }
+        };
+        let Some(page) = page else { break };
+        let rows = page["markets"].as_array().cloned().unwrap_or_default();
+        let empty = rows.is_empty();
+        out.extend(rows.iter().filter_map(ufc::parse_market));
+        let next = page["cursor"].as_str().unwrap_or("").to_string();
+        if next.is_empty() || empty {
+            break;
+        }
+        cursor = next;
+    }
+    out
+}
+
+/// Copies each new site bet once, if its win chance beats Kalshi's price plus the fee.
+async fn ufc_loop(ctx: Arc<Ctx>) {
+    let live = ctx.live && env::var("UFC_LIVE").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
+    let number = |key: &str, default: f64| env::var(key).ok().and_then(|v| v.parse().ok()).unwrap_or(default);
+    let stake = number("UFC_DOLLARS", 5.0);
+    let max_open = number("UFC_MAX_OPEN", 5.0) as usize;
+    let poll = number("UFC_POLL_SECS", 900.0) as u64;
+    println!("[+] UFC copy from {}: {} | ${:.0} a pick, up to {} open, checked every {} s", ufc::SITE, if live { "LIVE" } else { "paper" }, stake, max_open, poll);
+    let mut last_seen = String::new();
+    loop {
+        let page = match ctx.client.get(ufc::SITE).send().await {
+            Ok(r) => r.text().await.ok(),
+            Err(e) => {
+                println!("[UFC] Could not read the site: {}", e);
+                None
+            }
+        };
+        let picks = page.as_deref().map(ufc::parse_picks).unwrap_or_default();
+        let markets = if picks.is_empty() { Vec::new() } else { ufc_markets(&ctx.client, ctx.rest_base).await };
+        let mut lines = vec![format!("{} pending bets on the site, {} fight markets open on Kalshi", picks.len(), markets.len())];
+        for pick in &picks {
+            let Some(market) = ufc::find_market(pick, &markets) else {
+                lines.push(format!("{} vs {}: no open Kalshi market", pick.fighter_a, pick.fighter_b));
+                continue;
+            };
+            let allowed = {
+                let b = ctx.book.lock().await;
+                !b.trades.iter().any(|t| t.source == "ufc" && t.ticker.starts_with(&market.event_ticker))
+                    && b.open_count("ufc") < max_open
+                    && !(live && b.daily_stopped(ctx.daily_loss_limit))
+            };
+            if !allowed {
+                continue;
+            }
+            let Some(bet) = ufc::decide(pick.ai_win, market.yes_ask, stake) else {
+                lines.push(format!("{}: site says {:.1}%, Kalshi asks {}, not profitable", pick.pick, pick.ai_win * 100.0, market.yes_ask.map_or("nothing".to_string(), |a| format!("{:.0}c", a * 100.0))));
+                continue;
+            };
+            let client_order_id = format!("ufc-{}-{}", market.ticker, chrono::Utc::now().timestamp_millis());
+            let (mut count, mut price, mut fee, mut order_id) = (bet.count, bet.price, taker_fee(bet.price) * bet.count as f64, None);
+            if live {
+                let outcome = place_order(&ctx, &market.ticker, Side::Yes, bet.price, bet.count, &client_order_id).await.map_err(|e| e.to_string());
+                match outcome {
+                    Ok(fill) if fill.filled > 0.0 => {
+                        count = (fill.filled.round() as u32).max(1);
+                        if let Some(avg) = fill.average_price {
+                            price = v2_fill_cost(Side::Yes, avg, bet.price);
+                        }
+                        fee = fill.fee_per_contract.map_or(taker_fee(price) * fill.filled, |per| per * fill.filled);
+                        order_id = Some(fill.order_id);
+                    }
+                    Ok(_) => {
+                        lines.push(format!("{}: order got no fill", pick.pick));
+                        continue;
+                    }
+                    Err(e) => {
+                        println!("[UFC] Order failed on {}: {}", market.ticker, e);
+                        continue;
+                    }
+                }
+            }
+            let note = format!(
+                "copied from mma-ai.net | {} | site {:.1}% vs Kalshi {:.0}c | edge {:+.1}c{}",
+                pick.event, pick.ai_win * 100.0, bet.price * 100.0, bet.edge_cents,
+                pick.site_ev.map_or(String::new(), |ev| format!(" | site EV {:+.1}%", ev))
+            );
+            println!("[UFC] {} {} x{} @ {:.0}c | {}", if live { "LIVE" } else { "PAPER" }, market.fighter, count, price * 100.0, note);
+            ctx.book.lock().await.record(
+                Trade {
+                    mode: if live { "LIVE-UFC".into() } else { "PAPER-UFC".into() },
+                    source: "ufc".into(),
+                    ticker: market.ticker.clone(),
+                    title: format!("{} to beat {}", market.fighter, pick.opponent()),
+                    side: "yes".into(),
+                    price,
+                    count,
+                    cost: count as f64 * price,
+                    fee,
+                    model_prob: pick.ai_win,
+                    gbm_prob: pick.ai_win,
+                    momentum: 0.0,
+                    edge_cents: bet.edge_cents,
+                    spot: 0.0,
+                    strike: 0.0,
+                    placed_ts: chrono::Utc::now().timestamp(),
+                    close_ts: market.expected_ts,
+                    client_order_id,
+                    order_id,
+                    result: None,
+                    pnl: None,
+                    note: String::new(),
+                },
+                ctx.supa.as_ref(),
+                &note,
+            );
+        }
+        let summary = lines.join(" | ");
+        if summary != last_seen {
+            println!("[UFC] {}", summary);
+            last_seen = summary;
+        }
+        sleep(Duration::from_secs(poll)).await;
+    }
 }
 
 /// Reads Kalshi's records on a timer, compares them with the book, and publishes the result. Open
@@ -543,6 +678,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if ctx.live {
         let c = ctx.clone();
         tokio::spawn(async move { reconcile_loop(c).await });
+    }
+
+    // UFC picks from mma-ai.net: paper unless UFC_LIVE=true on a live bot.
+    {
+        let c = ctx.clone();
+        tokio::spawn(async move { ufc_loop(c).await });
     }
 
     // Sniper: every 60 s, paper only.

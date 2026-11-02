@@ -973,6 +973,7 @@ function Trades({
 }) {
   const allPaper = trades.length > 0 && trades.every((t) => !t.live);
   const sniper = totals.bySource.sniper;
+  const ufc = totals.bySource.ufc;
   const rows = trades.slice(0, TRADE_ROWS);
   return (
     <section className="mt-10" aria-labelledby="trades-heading">
@@ -1007,6 +1008,15 @@ function Trades({
             {sniper.settled ? signedDollars(sniper.pnlCents) : '—'}
           </span>{' '}
           net, {pct(sniper.hitRate)} hit rate
+        </p>
+      )}
+      {ufc.trades > 0 && (
+        <p className="mt-3 text-sm text-white/60">
+          UFC copies from mma-ai.net: {ufc.trades} trade{ufc.trades === 1 ? '' : 's'},{' '}
+          <span className={tone(ufc.settled ? ufc.pnlCents : null)}>
+            {ufc.settled ? signedDollars(ufc.pnlCents) : '—'}
+          </span>{' '}
+          net, {pct(ufc.hitRate)} hit rate
         </p>
       )}
       {(totals.bySlot.anytime.trades > 0 ||

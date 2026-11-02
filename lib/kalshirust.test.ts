@@ -398,6 +398,36 @@ describe('summarize', () => {
   });
 });
 
+describe('UFC copy trades', () => {
+  it('counts them under their own source, apart from the bot', () => {
+    const NOW_MS = Date.parse('2026-11-02T10:00:00Z');
+    const s = summarize(
+      [
+        {
+          id: 'u1',
+          kind: 'signal',
+          source: 'ufc',
+          created_at: '2026-11-02T09:00:00Z',
+          ticker: 'KXUFCFIGHT-26NOV14GANHOK-HOK',
+          client_order_id: 'ufc-1',
+          side: 'yes',
+          price_cents: 34,
+          count: 14,
+          cost_cents: 476,
+          fee_cents: 22,
+          live: false,
+          mode: 'PAPER-UFC',
+        } as KalshirustEvent,
+      ],
+      NOW_MS,
+    );
+    expect(s.trades[0].source).toBe('ufc');
+    expect(s.totals.bySource.ufc.trades).toBe(1);
+    expect(s.totals.bySource.bot.trades).toBe(0);
+    expect(s.trades[0].slot).toBe('other');
+  });
+});
+
 describe('exchangeCheck', () => {
   const row = (message: string | null) =>
     ({ kind: 'reconcile', created_at: '2026-11-02T09:00:00Z', message }) as KalshirustEvent;
