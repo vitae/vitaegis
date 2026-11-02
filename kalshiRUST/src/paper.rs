@@ -41,6 +41,9 @@ pub struct Trade {
     pub result: Option<String>,
     #[serde(default)]
     pub pnl: Option<f64>,
+    /// Why the engine entered, as shown on the HUD.
+    #[serde(default)]
+    pub note: String,
 }
 
 fn default_source() -> String {
@@ -97,7 +100,8 @@ impl TradeBook {
         self.trades.iter().filter(|t| t.source == source && t.result.is_none()).count()
     }
 
-    pub fn record(&mut self, trade: Trade, supa: Option<&Supa>) {
+    pub fn record(&mut self, mut trade: Trade, supa: Option<&Supa>, note: &str) {
+        trade.note = note.to_string();
         if let Some(s) = supa {
             s.event(signal_row(&trade));
         }
@@ -212,5 +216,6 @@ fn signal_row(t: &Trade) -> serde_json::Value {
         "fee_cents": (t.fee * 100.0).round() as i64,
         "client_order_id": t.client_order_id,
         "order_id": t.order_id,
+        "message": t.note,
     })
 }

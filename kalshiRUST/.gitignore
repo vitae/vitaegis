@@ -1,3 +1,8 @@
 target/
 trades.jsonl
 backtest.jsonl
+settle_calib.jsonl
+btc_history.json
+b.json
+h.txt
+backtest.log

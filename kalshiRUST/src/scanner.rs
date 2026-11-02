@@ -216,8 +216,10 @@ pub async fn scan(
                 order_id: None,
                 result: None,
                 pnl: None,
+                note: String::new(),
             },
             supa,
+            &format!("sniper | {} | {}m left | GBM on {} with horizon vol", c.strike_type, c.secs_left / 60, c.subtitle),
         );
     }
 }
