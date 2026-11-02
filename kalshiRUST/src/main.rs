@@ -27,6 +27,9 @@ const SETTLE_MIN_SECS_LEFT: f64 = 4.0;
 /// A window's second settlement trade waits this long after the first, so it is a new
 /// opportunity rather than the same one at a worse price.
 const SETTLE_REENTRY_SECS: i64 = 10;
+/// A window's second trade must rest on this many published settlement prints: a
+/// calculation, not a projection.
+const SETTLE_SECOND_MIN_KNOWN: usize = 15;
 
 /// Entry rules for one mode. NORMAL is the measured-edge default; RISK is the turbo mode
 /// the HUD's red button switches on.
@@ -82,6 +85,8 @@ struct Ctx {
     brti: settle::SharedBrti,
     settle_min_edge_cents: f64,
     settle_min_pwin: f64,
+    /// The second trade in a window is only taken as a near-certainty.
+    settle_second_min_pwin: f64,
     settle_max_price: f64,
     /// Dollar floor on the settlement estimate's spread (feed timing + basis error).
     settle_noise_dollars: f64,
@@ -156,6 +161,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         brti: settle::shared(),
         settle_min_edge_cents: env::var("SETTLE_MIN_EDGE_CENTS").ok().and_then(|v| v.parse().ok()).unwrap_or(2.0),
         settle_min_pwin: env::var("SETTLE_MIN_PWIN").ok().and_then(|v| v.parse().ok()).unwrap_or(0.8),
+        settle_second_min_pwin: env::var("SETTLE_SECOND_MIN_PWIN").ok().and_then(|v| v.parse().ok()).unwrap_or(0.95),
         settle_max_price: env::var("SETTLE_MAX_PRICE").ok().and_then(|v| v.parse().ok()).unwrap_or(0.97),
         settle_noise_dollars: env::var("SETTLE_NOISE_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(4.0),
         bankroll_dollars: env::var("BANKROLL_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0),
@@ -506,7 +512,8 @@ async fn run_window(
                 }
                 if let Some(edge) = edge {
                     let p_win = match edge.side { Side::Yes => est.p_yes, Side::No => 1.0 - est.p_yes };
-                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= ctx.settle_min_edge_cents && p_win >= ctx.settle_min_pwin {
+                    let (pwin_floor, known_floor) = if bets_settle == 0 { (ctx.settle_min_pwin, 0) } else { (ctx.settle_second_min_pwin, SETTLE_SECOND_MIN_KNOWN) };
+                    if bets_settle < mode.bets_per_window && now - last_settle_entry >= SETTLE_REENTRY_SECS && rem >= SETTLE_MIN_SECS_LEFT && edge.cents >= ctx.settle_min_edge_cents && p_win >= pwin_floor && est.known_prints >= known_floor {
                         let dollars = settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, ctx.kelly_fraction, ctx.risk_target_profit);
                         let count = (dollars / edge.price).floor() as u32;
                         let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window };

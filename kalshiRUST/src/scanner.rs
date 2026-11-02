@@ -19,6 +19,8 @@ pub struct ScanConfig {
     pub max_open: usize,
     pub max_horizon_secs: i64,
     pub min_secs_left: i64,
+    /// Paper-trade the candidates (off: the scan still feeds the HUD's snipe list).
+    pub trade: bool,
 }
 
 impl ScanConfig {
@@ -30,6 +32,7 @@ impl ScanConfig {
             max_open: f("SNIPE_MAX_OPEN", 5.0) as usize,
             max_horizon_secs: f("SNIPE_MAX_HORIZON_SECS", 86_400.0) as i64,
             min_secs_left: f("SNIPE_MIN_SECS_LEFT", 60.0) as i64,
+            trade: std::env::var("SNIPE_TRADES").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false),
         }
     }
 }
@@ -174,6 +177,9 @@ pub async fn scan(
         }
     }
 
+    if !cfg.trade {
+        return;
+    }
     let mut book = book.lock().await;
     for c in list.iter().filter(|c| c.edge.cents >= cfg.min_edge_cents) {
         if !book.can_record("sniper") || book.open_count("sniper") >= cfg.max_open {
