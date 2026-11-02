@@ -79,6 +79,11 @@ a day, 93.4% wins, +$0.28 a trade, about +$1.54 a day. Not every window can trad
 1 minute left, and in 31% the favorite is already at 99c or more. Buying every favorite from 50c to 99c made 31
 trades a day and lost $0.01 a trade.
 
+A win must pay over $0.20 after fees. On $5 that allows prices up to about 95c, but no rule buys above 94c
+because favorites at 94c to 97c lost $0.12 to $0.21 a trade. Replaying 25 live windows, settlement math at
+82c to 96c would have lost: it showed 92% to 99% for a side that then lost. At 45 s left or later, only 3 of the
+25 windows had a side under 96c, and settlement math found no edge in any of them.
+
 Quant methods tested against this rule, and why none changed it:
 
 - **Brier decomposition.** Kalshi's price is very well calibrated overall (reliability 0.0003 to 0.0014),
