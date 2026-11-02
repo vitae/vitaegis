@@ -54,6 +54,8 @@ window (`BETS_PER_WINDOW`), in the last 90 s, by whichever of two rules fires fi
 
 - **Sharp rise.** With 1 minute left, the side whose mid rose 15c or more over the prior minute, at 72c
   to 82c.
+- **Steady favorite.** With 1 minute left, a favorite at 90c to under 94c whose price did not fall over the
+  prior minute. A win pays about $0.37 and a loss costs about $4.63.
 - **Settlement math.** A 75%+ win chance from both engines, at 60c or less or at 72c to 82c. It skips a
   side whose mid fell 1c or more over the last 30 s, or that has under 15 s of price history.
 
@@ -70,6 +72,12 @@ Also checking with 2 minutes left gives 136 trades, 86.8% wins, +$0.48 a trade, 
 drop $16.39. The same prices while falling won 69% and lost $0.53 a trade. It was picked from well over a
 hundred rules tried on the same data, so expect less. Requiring the settlement model to agree made it
 worse.
+
+The steady-favorite rule alone is 128 trades, 94.5% wins against about 93% needed, +$0.10 a trade, positive in
+all three parts of the month but with t=1.0, so its edge is thin. With the sharp-rise rule it is about 5.5 trades
+a day, 93.4% wins, +$0.28 a trade, about +$1.54 a day. Not every window can trade: 36% have no usable quote at
+1 minute left, and in 31% the favorite is already at 99c or more. Buying every favorite from 50c to 99c made 31
+trades a day and lost $0.01 a trade.
 
 Quant methods tested against this rule, and why none changed it:
 

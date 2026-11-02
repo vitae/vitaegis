@@ -83,11 +83,12 @@ export interface Prediction {
 }
 
 /** Which of the bot's entry slots took a trade, from its order id prefix. */
-export type TradeSlot = 'anytime' | 'sharp' | 'last90' | 'other';
+export type TradeSlot = 'anytime' | 'sharp' | 'steady' | 'last90' | 'other';
 
 export function tradeSlot(clientOrderId: string | null | undefined): TradeSlot {
   if (clientOrderId?.startsWith('anytime-')) return 'anytime';
   if (clientOrderId?.startsWith('sharp-')) return 'sharp';
+  if (clientOrderId?.startsWith('steady-')) return 'steady';
   if (clientOrderId?.startsWith('settle-')) return 'last90';
   return 'other';
 }
@@ -238,7 +239,7 @@ export interface Summary {
   trades: Trade[];
   totals: Totals & {
     bySource: Record<RustSource, Totals>;
-    bySlot: Record<'anytime' | 'sharp' | 'last90', Totals>;
+    bySlot: Record<'anytime' | 'sharp' | 'steady' | 'last90', Totals>;
   };
   windows: Windows;
   watchlist: WatchRow[];
@@ -454,6 +455,7 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
     bySlot: {
       anytime: tally(trades.filter((t) => t.slot === 'anytime')),
       sharp: tally(trades.filter((t) => t.slot === 'sharp')),
+      steady: tally(trades.filter((t) => t.slot === 'steady')),
       last90: tally(trades.filter((t) => t.slot === 'last90')),
     },
   };
