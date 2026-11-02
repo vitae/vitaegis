@@ -81,7 +81,7 @@ While live, the bot compares Kalshi's own fills and settlements with its book ev
 only Kalshi knows about uses that window's trade, and the daily stop uses the worse of the two P&L
 figures. `examples/pnl_report.rs` prints the same comparison market by market.
 
-UFC copies (`src/ufc.rs`) check mma-ai.net every 15 minutes and take each new bet the site lists, once,
+UFC copies (`src/ufc.rs`) are off unless `UFC_COPY=true`. When on, they check mma-ai.net every 15 minutes and take each new bet the site lists, once,
 at $5, when its win chance beats Kalshi's ask plus the fee, up to 5 open. They stay on paper unless
 `UFC_LIVE=true` on a live bot. The site's 236 graded bets, at the Vegas price with Kalshi's fee, returned
 -3.9%; this filter returned about -1%. Favorites were +1.5% and underdogs -13.8%, and the site's AI

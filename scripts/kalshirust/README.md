@@ -152,4 +152,4 @@ sudo -E env $(sudo cat /var/lib/kalshirust/.env | grep -v '^#' | xargs) /opt/kal
 
 ## UFC copies
 
-The bot checks mma-ai.net every 15 minutes and copies each new bet at $5 onto Kalshi's `KXUFCFIGHT` markets when the site's win chance beats the ask plus the fee. They are paper trades unless `UFC_LIVE=true` is set and `LIVE_TRADING=true`. `UFC_DOLLARS`, `UFC_MAX_OPEN` and `UFC_POLL_SECS` adjust the stake, the open limit and the interval.
+Off unless `UFC_COPY=true` is set. When on, the bot checks mma-ai.net every 15 minutes and copies each new bet at $5 onto Kalshi's `KXUFCFIGHT` markets when the site's win chance beats the ask plus the fee. They are paper trades unless `UFC_LIVE=true` is set and `LIVE_TRADING=true`. `UFC_DOLLARS`, `UFC_MAX_OPEN` and `UFC_POLL_SECS` adjust the stake, the open limit and the interval.

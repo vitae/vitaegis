@@ -680,8 +680,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio::spawn(async move { reconcile_loop(c).await });
     }
 
-    // UFC picks from mma-ai.net: paper unless UFC_LIVE=true on a live bot.
-    {
+    // UFC picks from mma-ai.net, off unless UFC_COPY=true. Paper unless UFC_LIVE=true on a live bot.
+    if env::var("UFC_COPY").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false) {
         let c = ctx.clone();
         tokio::spawn(async move { ufc_loop(c).await });
     }
