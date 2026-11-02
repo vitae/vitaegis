@@ -116,3 +116,16 @@ Linux host (the Lightsail VPS), with `kalshi-bot.service` installed and
     sudo cp scripts/kalshirust/supervisor.sh /opt/kalshirust/supervisor.sh && sudo chmod +x /opt/kalshirust/supervisor.sh
     sudo cp scripts/kalshirust/kalshirust-supervisor.service /etc/systemd/system/
     sudo systemctl daemon-reload && sudo systemctl enable --now kalshirust-supervisor
+
+## One-command deploy to the Ubuntu VPS
+
+From this PC, with the Lightsail key file and the instance's public IP:
+
+    powershell -ExecutionPolicy Bypass -File scripts\kalshirust\deploy-vps.ps1 -VpsIp <ip> -KeyPath C:\path\LightsailDefaultKey.pem
+
+`deploy-vps.ps1` uploads the project with `.env` and `kalshi_private.key`, then runs
+`remote-setup.sh` on the VPS: installs Rust and build tools, builds the release binary in
+`/opt/kalshirust`, puts the runtime files in `/var/lib/kalshirust` (owned by the `kalshi`
+user, secrets 600), installs `kalshi-bot.service` and `kalshirust-supervisor.service`, and
+starts both. After that the RUN / STOP buttons control the VPS. Re-run the same command
+to ship updates. Stop any supervisor on the PC so only one host answers the HUD.

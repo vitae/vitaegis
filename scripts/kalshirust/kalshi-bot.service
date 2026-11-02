@@ -1,17 +1,16 @@
-# systemd unit for the Rust bot. Install:
-#   sudo cp scripts/kalshirust/kalshi-bot.service /etc/systemd/system/
-#   sudo systemctl daemon-reload && sudo systemctl enable --now kalshi-bot
+# systemd unit for the Rust bot (kalshiRUST). Installed by remote-setup.sh:
+#   binary   /opt/kalshirust/target/release/kalshi_btc_bot
+#   runtime  /var/lib/kalshirust  (.env, kalshi_private.key, trades.jsonl, settle_calib.jsonl)
 [Unit]
-Description=Kalshi KXBTC15M bot (Rust) with HUD status endpoint
+Description=KALSHIRUST: Kalshi KXBTC15M bot
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=kalshi
-WorkingDirectory=/opt/kalshirust
-EnvironmentFile=/etc/kalshi-bot.env
-ExecStart=/opt/kalshirust/target/release/kalshirust
+WorkingDirectory=/var/lib/kalshirust
+ExecStart=/opt/kalshirust/target/release/kalshi_btc_bot
 Restart=always
 RestartSec=5
 StartLimitIntervalSec=300
@@ -21,6 +20,7 @@ ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
 ReadOnlyPaths=/opt/kalshirust
+ReadWritePaths=/var/lib/kalshirust
 
 [Install]
 WantedBy=multi-user.target
