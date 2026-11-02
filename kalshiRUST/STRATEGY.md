@@ -76,6 +76,11 @@ before close (+$0.12 a trade, not statistically distinct from zero). A live BTC 
 before the last 90 s, and a trained LightGBM model predicted outcomes worse than the market's own price
 in 4 of 5 walk-forward periods. The HUD reports each slot's P&L apart.
 
+While live, the bot compares Kalshi's own fills and settlements with its book every 2 minutes
+(`src/reconcile.rs`). The HUD shows Kalshi's P&L beside the bot's, with any mismatch. An open position
+only Kalshi knows about uses that window's trade, and the daily stop uses the worse of the two P&L
+figures. `examples/pnl_report.rs` prints the same comparison market by market.
+
 A $1 win is not a $1 average. An average of $1 a trade on $5 needs 61.7% wins at 50c, 85.5% at
 70c and 97.1% at 80c.
 

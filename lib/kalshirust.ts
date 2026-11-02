@@ -33,7 +33,7 @@ export type HostState = 'offline' | 'running' | 'stopped' | 'starting' | 'stoppi
 export interface KalshirustEvent {
   id: string;
   created_at: string;
-  kind: 'status' | 'signal' | 'settle' | 'error' | 'watch';
+  kind: 'status' | 'signal' | 'settle' | 'error' | 'watch' | 'reconcile';
   source: RustEventSource;
   mode: string | null;
   live: boolean;
@@ -185,6 +185,53 @@ export interface Windows {
   rows: WindowRow[];
 }
 
+/** The bot's latest comparison of Kalshi's own records with its trade book. */
+export interface ExchangeCheck {
+  at: string;
+  fills: number;
+  settledMarkets: number;
+  wins: number;
+  losses: number;
+  costCents: number;
+  feesCents: number;
+  netCents: number;
+  netTodayCents: number;
+  bookSettled: number;
+  bookNetCents: number;
+  openTickers: string[];
+  problems: string[];
+  matches: boolean;
+}
+
+export function exchangeCheck(e: KalshirustEvent | undefined): ExchangeCheck | null {
+  if (!e?.message) return null;
+  try {
+    const r = JSON.parse(e.message) as Record<string, unknown>;
+    const dollars = (key: string) => Math.round((Number(r[key]) || 0) * 100);
+    const count = (key: string) => Number(r[key]) || 0;
+    const list = (key: string) => (Array.isArray(r[key]) ? (r[key] as unknown[]).map(String) : []);
+    const problems = list('problems');
+    return {
+      at: e.created_at,
+      fills: count('fills'),
+      settledMarkets: count('settled_markets'),
+      wins: count('wins'),
+      losses: count('losses'),
+      costCents: dollars('cost'),
+      feesCents: dollars('fees'),
+      netCents: dollars('net'),
+      netTodayCents: dollars('net_today'),
+      bookSettled: count('book_settled'),
+      bookNetCents: dollars('book_net'),
+      openTickers: list('open_tickers'),
+      problems,
+      matches: problems.length === 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export interface Summary {
   status: KalshirustEvent | null;
   online: boolean;
@@ -197,6 +244,7 @@ export interface Summary {
   watchlist: WatchRow[];
   history: HistoryPoint[];
   errors: { at: string; message: string }[];
+  exchange: ExchangeCheck | null;
 }
 
 export interface BacktestTrade extends Prediction {
@@ -458,7 +506,8 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
 
   const windows = windowStats(byTime, trades);
 
-  return { status, online, trades, totals, windows, watchlist, history, errors };
+  const exchange = exchangeCheck(byTime.filter((e) => e.kind === 'reconcile').at(-1));
+  return { status, online, trades, totals, windows, watchlist, history, errors, exchange };
 }
 
 function tally(trades: Trade[]): Totals {

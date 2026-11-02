@@ -3,6 +3,7 @@
 /// mirrored to Supabase for the HUD. P&L is after the taker fee.
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 
@@ -61,6 +62,10 @@ pub struct TradeBook {
     bot_limit: usize,
     sniper_limit: usize,
     pub trades: Vec<Trade>,
+    /// Markets where Kalshi's records show an open position.
+    pub exchange_open: HashSet<String>,
+    /// Today's real-money P&L from Kalshi's records, once a check has run.
+    pub exchange_pnl_today: Option<f64>,
 }
 
 impl TradeBook {
@@ -69,7 +74,7 @@ impl TradeBook {
         let trades = fs::read_to_string(&path)
             .map(|s| s.lines().filter_map(|l| serde_json::from_str(l).ok()).collect())
             .unwrap_or_default();
-        Self { path, bot_limit, sniper_limit, trades }
+        Self { path, bot_limit, sniper_limit, trades, exchange_open: HashSet::new(), exchange_pnl_today: None }
     }
 
     fn save(&self) {
@@ -98,7 +103,9 @@ impl TradeBook {
 
     /// Open trades on one market, so a window can hold up to its mode's allowance.
     pub fn open_on(&self, ticker: &str) -> usize {
-        self.trades.iter().filter(|t| t.ticker == ticker && t.result.is_none()).count()
+        let local = self.trades.iter().filter(|t| t.ticker == ticker && t.result.is_none()).count();
+        // A position only Kalshi knows about, say from a crash before it was recorded, still counts.
+        local.max(usize::from(self.exchange_open.contains(ticker)))
     }
 
     pub fn open_count(&self, source: &str) -> usize {
@@ -136,7 +143,8 @@ impl TradeBook {
     }
 
     pub fn daily_stopped(&self, limit: f64) -> bool {
-        limit > 0.0 && self.live_pnl_today() <= -limit
+        let worst = self.exchange_pnl_today.map_or(self.live_pnl_today(), |x| x.min(self.live_pnl_today()));
+        limit > 0.0 && worst <= -limit
     }
 
     pub fn settled_bot_count(&self) -> usize {

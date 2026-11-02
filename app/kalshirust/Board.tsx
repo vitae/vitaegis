@@ -23,6 +23,7 @@ import {
   type Summary,
   type Trade,
   type WatchRow,
+  type ExchangeCheck,
   type Totals,
   SNIPE_EDGE_CENTS,
   type Windows,
@@ -215,6 +216,7 @@ export default function Board() {
         {error && <p className="mt-6 text-sm text-vitae-red">{error}</p>}
 
         {data && <PerWindow windows={data.windows} mode={mode} />}
+        {data && <KalshiRecords check={data.exchange} />}
         <NowPanel status={online ? status : null} secondsLeft={secondsLeft} />
 
         {data && (
@@ -884,6 +886,66 @@ function Charts({ history }: { history: Summary['history'] }) {
           />
         </div>
       </div>
+    </section>
+  );
+}
+
+function KalshiRecords({ check }: { check: ExchangeCheck | null }) {
+  return (
+    <section className="mt-8" aria-labelledby="kalshi-records-heading">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h2
+          id="kalshi-records-heading"
+          className="text-sm uppercase tracking-[0.2em] text-white/50"
+        >
+          Kalshi&apos;s records
+        </h2>
+        <p className="max-w-xl text-xs text-white/45">
+          Real-money P&amp;L from Kalshi&apos;s own fills and settlements, checked against the
+          bot&apos;s numbers. Published when something changes, and at least hourly.
+        </p>
+      </div>
+      {check == null ? (
+        <p className="glass-panel mt-3 rounded-2xl px-4 py-5 text-sm text-white/45">
+          No check yet. It runs only while the bot is live.
+        </p>
+      ) : (
+        <>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <Stat
+              label="Net P&L per Kalshi"
+              value={check.settledMarkets ? signedDollars(check.netCents) : '—'}
+              sub={`${check.settledMarkets} settled · ${check.wins}W ${check.losses}L`}
+              toneClass={tone(check.settledMarkets ? check.netCents : null)}
+            />
+            <Stat
+              label="Bot's own number"
+              value={check.bookSettled ? signedDollars(check.bookNetCents) : '—'}
+              sub={`${check.bookSettled} settled`}
+              toneClass={tone(check.bookSettled ? check.bookNetCents : null)}
+            />
+            <Stat label="Fees paid" value={dollars(check.feesCents)} sub={`${check.fills} fills`} />
+            <Stat
+              label="Open positions"
+              value={String(check.openTickers.length)}
+              sub={`checked ${new Date(check.at).toLocaleTimeString()}`}
+            />
+            <Stat
+              label="Records"
+              value={check.matches ? 'Match' : 'Mismatch'}
+              sub={check.matches ? 'bot and Kalshi agree' : `${check.problems.length} to check`}
+              toneClass={check.matches ? 'text-vitae-green' : 'text-vitae-red'}
+            />
+          </div>
+          {check.problems.length > 0 && (
+            <ul className="glass-panel mt-3 space-y-1 rounded-2xl px-4 py-3 text-xs text-vitae-red">
+              {check.problems.slice(0, 10).map((problem) => (
+                <li key={problem}>{problem}</li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
     </section>
   );
 }

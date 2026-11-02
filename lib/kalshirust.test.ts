@@ -10,6 +10,7 @@ import {
   summarizeBacktest,
   type HostConfig,
   type KalshirustEvent,
+  exchangeCheck,
   expectedProfitCents,
   maxBuyCents,
   tradeSlot,
@@ -394,6 +395,71 @@ describe('summarize', () => {
     );
     const s = summarize(events, NOW);
     expect(s.errors.map((e) => e.message)).toEqual(['err6', 'err5', 'err4', 'err3', 'err2']);
+  });
+});
+
+describe('exchangeCheck', () => {
+  const row = (message: string | null) =>
+    ({ kind: 'reconcile', created_at: '2026-11-02T09:00:00Z', message }) as KalshirustEvent;
+
+  it('reads the bot report into cents', () => {
+    const c = exchangeCheck(
+      row(
+        JSON.stringify({
+          fills: 3,
+          settled_markets: 2,
+          wins: 1,
+          losses: 1,
+          cost: 9.48,
+          fees: 0.13,
+          net: -3.61,
+          net_today: -3.61,
+          book_settled: 2,
+          book_net: -3.61,
+          open_tickers: ['T1'],
+          problems: [],
+        }),
+      ),
+    );
+    expect(c).toMatchObject({
+      fills: 3,
+      settledMarkets: 2,
+      wins: 1,
+      losses: 1,
+      costCents: 948,
+      feesCents: 13,
+      netCents: -361,
+      bookNetCents: -361,
+      openTickers: ['T1'],
+      matches: true,
+      at: '2026-11-02T09:00:00Z',
+    });
+  });
+
+  it('marks a report with problems as not matching', () => {
+    expect(exchangeCheck(row(JSON.stringify({ problems: ['T1: differs'] })))?.matches).toBe(false);
+  });
+
+  it('returns null without a usable report', () => {
+    expect(exchangeCheck(undefined)).toBeNull();
+    expect(exchangeCheck(row(null))).toBeNull();
+    expect(exchangeCheck(row('not json'))).toBeNull();
+  });
+
+  it('summarize returns the newest report', () => {
+    const NOW_MS = Date.parse('2026-11-02T10:00:00Z');
+    const older = {
+      ...row(JSON.stringify({ net: 1 })),
+      id: 'a',
+      created_at: '2026-11-02T09:00:00Z',
+    };
+    const newer = {
+      ...row(JSON.stringify({ net: 2 })),
+      id: 'b',
+      created_at: '2026-11-02T09:30:00Z',
+    };
+    expect(summarize([newer, older], NOW_MS).exchange?.netCents).toBe(200);
+    expect(summarize([], NOW_MS).exchange).toBeNull();
   });
 });
 

@@ -14,6 +14,7 @@ use base64::Engine as _;
 use analytics::{ExecutionSignal, KalshiBookTop, KxBtc15mEngine};
 use models::{best_edge, clamp_binding, clamp_prob, prob_above, taker_fee, tradable_price, v2_fill_cost, v2_order_terms, Side};
 use paper::{Trade, TradeBook};
+use kalshi_btc_bot::reconcile;
 use scanner::ScanConfig;
 use std::collections::VecDeque;
 use supa::Supa;
@@ -46,6 +47,8 @@ const SHARP_MAX_PRICE: f64 = 0.85;
 const SHARP_EDGE: f64 = 0.08;
 /// Every price here carries a 75%+ win chance: 72c plus the edge above.
 const SHARP_PRICE_BANDS: &[(f64, f64)] = &[(0.72, 0.82)];
+const RECONCILE_SECS: u64 = 120;
+const RECONCILE_PUBLISH_SECS: i64 = 3600;
 /// The last-90 slot never buys a side whose mid fell by this much over the lookback.
 const FALLING_LOOKBACK_SECS: i64 = 30;
 const FALLING_MOVE: f64 = 0.01;
@@ -246,6 +249,62 @@ fn host_label() -> String {
         .or_else(|| fs::read_to_string("/etc/hostname").ok().map(|h| h.trim().to_string()))
         .filter(|h| !h.is_empty())
         .unwrap_or_else(|| "bot".into())
+}
+
+/// Reads Kalshi's records on a timer, compares them with the book, and publishes the result. Open
+/// positions and today's loss from Kalshi feed the per-window limit and the daily stop.
+async fn reconcile_loop(ctx: Arc<Ctx>) {
+    let started = chrono::Utc::now().timestamp();
+    let since = env::var("RECONCILE_SINCE").ok().and_then(|v| v.parse().ok()).unwrap_or(started);
+    println!("[+] Exchange check: Kalshi's records since {} against the book, every {} s", since, RECONCILE_SECS);
+    let mut last: Option<reconcile::Report> = None;
+    let mut last_published = 0i64;
+    let mut reported = std::collections::HashSet::new();
+    loop {
+        match reconcile::fetch(&ctx.client, ctx.rest_base, &ctx.api_key_id, &ctx.pem_path, since).await {
+            Err(e) => println!("[RECONCILE] Could not read Kalshi's records: {}", e),
+            Ok((fills, settlements)) => {
+                let now = chrono::Utc::now();
+                let day_start = now.date_naive().and_hms_opt(0, 0, 0).map(|d| d.and_utc().timestamp()).unwrap_or(0);
+                let report = {
+                    let mut b = ctx.book.lock().await;
+                    let r = reconcile::reconcile(&fills, &settlements, &b.trades, since, day_start, now.timestamp());
+                    b.exchange_open = r.open_tickers.iter().cloned().collect();
+                    b.exchange_pnl_today = Some(r.net_today);
+                    r
+                };
+                let changed = last.as_ref() != Some(&report);
+                if changed || now.timestamp() - last_published >= RECONCILE_PUBLISH_SECS {
+                    println!(
+                        "[RECONCILE] {} | Kalshi: {} fills, {} settled, net ${:+.2}, today ${:+.2} | book: {} settled, net ${:+.2} | open {}",
+                        if report.problems.is_empty() { "MATCH" } else { "MISMATCH" },
+                        report.fills, report.settled_markets, report.net, report.net_today, report.book_settled, report.book_net, report.open_tickers.len()
+                    );
+                    if let Some(s) = &ctx.supa {
+                        s.event(json!({
+                            "kind": "reconcile",
+                            "source": "bot",
+                            "mode": ctx.mode_label(),
+                            "live": true,
+                            "pnl_cents": (report.net * 100.0).round() as i64,
+                            "message": serde_json::to_string(&report).unwrap_or_default(),
+                        }));
+                    }
+                    last_published = now.timestamp();
+                }
+                for problem in &report.problems {
+                    if reported.insert(problem.clone()) {
+                        println!("[RECONCILE] PROBLEM {}", problem);
+                        if let Some(s) = &ctx.supa {
+                            s.event(json!({ "kind": "error", "source": "bot", "mode": ctx.mode_label(), "live": true, "message": format!("exchange check: {}", problem) }));
+                        }
+                    }
+                }
+                last = Some(report);
+            }
+        }
+        sleep(Duration::from_secs(RECONCILE_SECS)).await;
+    }
 }
 
 /// Signed GET against the trade API; `path` is relative to the v2 base (e.g. "/portfolio/balance").
@@ -478,6 +537,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 sleep(Duration::from_secs(10)).await;
             }
         });
+    }
+
+    // Exchange check: Kalshi's fills and settlements against the book, live only.
+    if ctx.live {
+        let c = ctx.clone();
+        tokio::spawn(async move { reconcile_loop(c).await });
     }
 
     // Sniper: every 60 s, paper only.

@@ -139,3 +139,13 @@ It needs three repository secrets:
 - `LIGHTSAIL_HOST`: the server's public IPv4 address. GitHub-hosted runners have no IPv6 route.
 - `LIGHTSAIL_USER`: `ubuntu`.
 - `LIGHTSAIL_SSH_KEY`: the full text of the server's private key.
+
+## Checking real-money P&L against Kalshi
+
+While live, the bot checks Kalshi's fills and settlements against its book every 2 minutes and shows the result on the HUD. `RECONCILE_SINCE` in its env file sets the start time, in Unix seconds, so older manual trades are left out.
+
+For a market-by-market report, run this from `/var/lib/kalshirust` on the server after building the examples:
+
+```bash
+sudo -E env $(sudo cat /var/lib/kalshirust/.env | grep -v '^#' | xargs) /opt/kalshirust/target/release/examples/pnl_report
+```

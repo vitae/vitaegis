@@ -19,7 +19,7 @@ export async function GET() {
 
   const newest = (limit = 400) =>
     db.from('kalshirust_events').select('*').order('created_at', { ascending: false }).limit(limit);
-  const [config, events, closes, tradeRows, btSettles, btSignals] = await Promise.all([
+  const [config, events, closes, tradeRows, btSettles, btSignals, reconcile] = await Promise.all([
     db.from('kalshirust_config').select('*').eq('id', 1).maybeSingle(),
     newest().neq('source', 'backtest'),
     newest(WINDOWS_PER_DAY)
@@ -30,8 +30,9 @@ export async function GET() {
     newest().in('kind', ['signal', 'settle']).neq('source', 'backtest'),
     newest().eq('source', 'backtest').eq('kind', 'settle'),
     newest().eq('source', 'backtest').eq('kind', 'signal'),
+    newest(1).eq('kind', 'reconcile'),
   ]);
-  const failed = [config, events, closes, tradeRows, btSettles, btSignals].find(
+  const failed = [config, events, closes, tradeRows, btSettles, btSignals, reconcile].find(
     (r) => r.error,
   )?.error;
   if (failed) {
@@ -41,7 +42,12 @@ export async function GET() {
 
   const cfg = (config.data ?? null) as KalshirustConfig | null;
   const live = new Map<string, KalshirustEvent>();
-  const rows = [...(events.data ?? []), ...(closes.data ?? []), ...(tradeRows.data ?? [])];
+  const rows = [
+    ...(events.data ?? []),
+    ...(closes.data ?? []),
+    ...(tradeRows.data ?? []),
+    ...(reconcile.data ?? []),
+  ];
   for (const e of rows as KalshirustEvent[]) live.set(e.id, e);
   return NextResponse.json(
     {
