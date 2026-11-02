@@ -477,10 +477,11 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: 1 $5 trade a window with 90 s left: a 10¢+ rise over the prior minute into 70–82¢,
-        never while its price is falling. Live trading stops for the UTC day after a $30 loss. RISK:
-        up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from 7 min out with
-        no win-chance floor.
+        NORMAL: up to 2 $5 trades a window, checked with 2 min and 1 min left: a 10¢+ rise over the
+        prior minute into 70–82¢, or an 18¢+ rise into 50–70¢, never while its price is falling. A
+        second trade stays on the same side. Live trading stops for the UTC day after a $30 loss.
+        RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from 7 min out
+        with no win-chance floor.
       </p>
     </div>
   );
