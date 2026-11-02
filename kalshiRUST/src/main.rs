@@ -14,7 +14,7 @@ use tokio_tungstenite::tungstenite::handshake::client::Request;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use base64::Engine as _;
 
-use models::{best_edge, clamp_prob, prob_above, taker_fee, Side};
+use models::{best_edge, clamp_binding, clamp_prob, prob_above, taker_fee, tradable_price, Side};
 use paper::{Trade, TradeBook};
 use scanner::ScanConfig;
 use supa::Supa;
@@ -340,8 +340,9 @@ async fn run_window(
         // The one signal that was positive across every published variant, though none of
         // those tests were out of sample, so the weight is small and both numbers are logged.
         let mom = momentum.unwrap_or(0.0);
-        let p_yes = clamp_prob(prob_above(spot * (ctx.momentum_weight * mom).exp(), strike, sigma));
-        let edge = best_edge(p_yes, yes_ask, no_ask);
+        let p_raw = prob_above(spot * (ctx.momentum_weight * mom).exp(), strike, sigma);
+        let p_yes = clamp_prob(p_raw);
+        let edge = best_edge(p_yes, yes_ask, no_ask).filter(|e| tradable_price(e.price) && !clamp_binding(p_raw));
         let mode = ctx.mode();
 
         if now - last_print >= 15 {
@@ -376,9 +377,6 @@ async fn run_window(
         let Some(edge) = edge else { continue };
         let in_window = rem >= mode.min_secs_left && rem <= mode.max_secs_left;
         if bets_this_window >= mode.bets_per_window || !in_window || edge.cents < mode.min_edge_cents {
-            continue;
-        }
-        if !(0.05..=0.95).contains(&edge.price) {
             continue;
         }
         let count = (mode.max_order_dollars / edge.price).floor() as u32;

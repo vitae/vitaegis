@@ -85,6 +85,21 @@ pub fn clamp_prob(p: f64) -> f64 {
     p.max(PROB_FLOOR).min(PROB_CEIL)
 }
 
+/// True when the raw model sits outside the clamp. A clamped probability against a
+/// near-certain market is the clamp talking, not an edge, so no trade is taken then.
+pub fn clamp_binding(p_raw: f64) -> bool {
+    !(PROB_FLOOR..=PROB_CEIL).contains(&p_raw)
+}
+
+/// Prices the bot will pay. Below 15c is longshot territory, which prediction markets
+/// systematically overprice; above 85c the fee eats most of the payoff.
+pub const MIN_ENTRY_PRICE: f64 = 0.15;
+pub const MAX_ENTRY_PRICE: f64 = 0.85;
+
+pub fn tradable_price(price: f64) -> bool {
+    (MIN_ENTRY_PRICE..=MAX_ENTRY_PRICE).contains(&price)
+}
+
 /// Kalshi taker fee per contract in dollars: 0.07 * P * (1 - P).
 pub fn taker_fee(price: f64) -> f64 {
     0.07 * price * (1.0 - price)

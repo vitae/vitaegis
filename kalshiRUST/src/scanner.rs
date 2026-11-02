@@ -4,7 +4,7 @@ use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use crate::models::{best_edge, prob_yes, Edge, StrikeType};
+use crate::models::{best_edge, clamp_binding, prob_yes, tradable_price, Edge, StrikeType};
 use crate::paper::{Trade, TradeBook};
 use crate::supa::Supa;
 use crate::vol::SharedVol;
@@ -12,11 +12,6 @@ use crate::vol::SharedVol;
 /// Series swept each scan: 15-minute, hourly range, hourly above/below, daily above/below,
 /// daily range.
 const SERIES: [&str; 5] = ["KXBTC15M", "KXBTC", "KXBTCD", "BTCD", "BTC"];
-/// The scanner's own clamp: wider than the 15-minute engine's, since long-horizon
-/// markets are where deep favorites live, but never a claimed certainty.
-const SCAN_FLOOR: f64 = 0.03;
-const SCAN_CEIL: f64 = 0.97;
-
 pub struct ScanConfig {
     pub min_edge_cents: f64,
     pub dollars: f64,
@@ -89,8 +84,12 @@ pub async fn candidates(client: &reqwest::Client, rest_base: &str, vol: &SharedV
             }
             let Some(sigma) = vol.lock().unwrap().sigma_for(secs_left as f64) else { continue };
             let Some(p) = prob_yes(kind, spot, floor, cap, sigma) else { continue };
-            let p = p.max(SCAN_FLOOR).min(SCAN_CEIL);
-            let Some(edge) = best_edge(p, yes_ask, no_ask) else { continue };
+            // Markets the model calls near-certain are where its vol error shows up as a
+            // fake edge on the cheap side, so they are dropped, not clamped.
+            if clamp_binding(p) {
+                continue;
+            }
+            let Some(edge) = best_edge(p, yes_ask, no_ask).filter(|e| tradable_price(e.price)) else { continue };
             let ask_size = match edge.side {
                 crate::models::Side::Yes => dollars(&m, "yes_ask_size_fp").unwrap_or(0.0),
                 crate::models::Side::No => dollars(&m, "no_ask_size_fp").unwrap_or(0.0),
@@ -179,7 +178,7 @@ pub async fn scan(
         if !book.can_record("sniper") || book.open_count("sniper") >= cfg.max_open {
             break;
         }
-        if book.has_open(&c.ticker) || !(0.05..=0.95).contains(&c.edge.price) {
+        if book.has_open(&c.ticker) {
             continue;
         }
         let count = (cfg.dollars / c.edge.price).floor() as u32;
