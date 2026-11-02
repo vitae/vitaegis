@@ -10,6 +10,8 @@ import {
   summarizeBacktest,
   type HostConfig,
   type KalshirustEvent,
+  expectedProfitCents,
+  maxBuyCents,
   tradeSlot,
 } from './kalshirust';
 
@@ -288,7 +290,7 @@ describe('summarize', () => {
     });
   });
 
-  it('keeps the newest watch row per ticker from the last 10 minutes, best edge first', () => {
+  it('keeps the newest YES row per ticker from the last 10 minutes, best expected profit first', () => {
     const watch = (
       secondsAgo: number,
       ticker: string,
@@ -305,18 +307,20 @@ describe('summarize', () => {
       });
     const s = summarize(
       [
-        watch(500, 'KXBTC-A', 9),
+        watch(500, 'KXBTC-A', 9, { side: 'yes' }),
         watch(60, 'KXBTC-A', 1.5, {
-          side: 'no',
+          side: 'yes',
           price_cents: 40,
-          model_prob: 0.25,
+          model_prob: 0.75,
+          message: 'BTC trending down',
           title: 'BTC above 70k',
           strike_type: 'greater',
           strike: 70000,
         }),
-        watch(60, 'KXBTC15M-B', 4, { side: 'yes', model_prob: 0.9 }),
-        watch(60, 'KXBTCD-C', null as unknown as number),
-        watch(900, 'BTCD-OLD', 20),
+        watch(60, 'KXBTC15M-B', 4, { side: 'yes', model_prob: 0.9, price_cents: 80 }),
+        watch(60, 'KXBTCD-C', null as unknown as number, { side: 'yes' }),
+        watch(60, 'KXBTC-NO', 30, { side: 'no', model_prob: 0.1, price_cents: 50 }),
+        watch(900, 'BTCD-OLD', 20, { side: 'yes' }),
         ev({ kind: 'watch', source: 'sniper', created_at: at(10), ticker: null, edge_cents: 50 }),
       ],
       NOW,
@@ -327,8 +331,10 @@ describe('summarize', () => {
       ['KXBTCD-C', null],
     ]);
     expect(s.watchlist[1]).toMatchObject({
-      side: 'no',
+      side: 'yes',
       priceCents: 40,
+      note: 'BTC trending down',
+      expectedProfitCents: 18,
       title: 'BTC above 70k',
       strikeType: 'greater',
       strike: 70000,
@@ -337,7 +343,7 @@ describe('summarize', () => {
     expect(s.watchlist.map((w) => w.pWin)).toEqual([0.9, 0.75, null]);
   });
 
-  it('derives P(win) of the watched side: the model’s P(YES) for yes, its complement for no', () => {
+  it('lists YES picks only, with the model P(YES) as the win chance', () => {
     const watch = (side: 'yes' | 'no' | null, modelProb: number | null) =>
       ev({
         kind: 'watch',
@@ -348,19 +354,34 @@ describe('summarize', () => {
         model_prob: modelProb,
       });
     const s = summarize(
-      [watch('no', 0.12), watch('yes', 0.12), watch(null, 0.12), watch('no', null)],
+      [watch('no', 0.12), watch('yes', 0.8), watch(null, 0.12), watch('no', null)],
       NOW,
     );
-    const byTicker = Object.fromEntries(s.watchlist.map((w) => [w.ticker, w.pWin]));
-    expect(byTicker['T-no-0.12']).toBeCloseTo(0.88);
-    expect(byTicker['T-yes-0.12']).toBe(0.12);
-    expect(byTicker['T-null-0.12']).toBeNull();
-    expect(byTicker['T-no-null']).toBeNull();
+    expect(s.watchlist.map((w) => [w.ticker, w.pWin, w.maxBuyCents])).toEqual([
+      ['T-yes-0.8', 0.8, 75],
+    ]);
+  });
+
+  it('prices the highest buy and the expected profit on the stake', () => {
+    expect(maxBuyCents(0.8)).toBe(75);
+    expect(maxBuyCents(0.01)).toBeNull();
+    expect(maxBuyCents(null)).toBeNull();
+    expect(expectedProfitCents(75, 3.5)).toBeCloseTo(21);
+    expect(expectedProfitCents(null, 3)).toBeNull();
+    expect(expectedProfitCents(75, null)).toBeNull();
   });
 
   it('caps the watchlist at 15', () => {
     const events = Array.from({ length: 20 }, (_, i) =>
-      ev({ kind: 'watch', source: 'sniper', created_at: at(30), ticker: `T${i}`, edge_cents: i }),
+      ev({
+        kind: 'watch',
+        source: 'sniper',
+        created_at: at(30),
+        ticker: `T${i}`,
+        side: 'yes',
+        price_cents: 50,
+        edge_cents: i,
+      }),
     );
     const s = summarize(events, NOW);
     expect(s.watchlist).toHaveLength(15);
@@ -549,6 +570,8 @@ describe('summarize windows', () => {
       settledPnlCents: 0,
       perWindowCents: 0,
       projectedDayCents: 0,
+      settledTrades: 0,
+      avgProfitPerTradeCents: null,
     });
   });
 
@@ -583,7 +606,7 @@ describe('summarize windows', () => {
       settledPnlCents: 876,
       perWindowCents: 292,
       projectedDayCents: 292 * 96,
-      target: { normalCents: 100, riskCents: 300 },
+      target: { normalCents: 20, riskCents: 300 },
     });
     expect(s.windows.rows.map((r) => r.ticker)).toEqual([C, B, A]);
     expect(s.windows.rows[0]).toMatchObject({
@@ -637,7 +660,9 @@ describe('summarize windows', () => {
       settledPnlCents: 0,
       perWindowCents: null,
       projectedDayCents: null,
-      target: { normalCents: 100, riskCents: 300 },
+      settledTrades: 0,
+      avgProfitPerTradeCents: null,
+      target: { normalCents: 20, riskCents: 300 },
       rows: [],
     };
     expect(summarize([], NOW).windows).toEqual(empty);

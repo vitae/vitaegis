@@ -465,11 +465,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let rx = spot_rx.clone();
         tokio::spawn(async move {
             let cfg = ScanConfig::from_env();
+            let mut series = scanner::SeriesCache::default();
             sleep(Duration::from_secs(15)).await;
             loop {
                 let spot = *rx.borrow();
                 let mode = c.mode().name;
-                scanner::scan(&c.client, c.rest_base, &c.vol, spot, c.supa.as_ref(), &c.book, &cfg, &mode, false).await;
+                scanner::scan(&c.client, c.rest_base, &c.vol, spot, c.supa.as_ref(), &c.book, &cfg, &mut series, &mode, false).await;
                 sleep(Duration::from_secs(60)).await;
             }
         });

@@ -138,6 +138,12 @@ export interface WatchRow {
   pWin: number | null;
   priceCents: number | null;
   edgeCents: number | null;
+  /** The highest price at which the win chance still clears the edge bar after the fee. */
+  maxBuyCents: number | null;
+  /** Expected profit on the snipe stake at the current price, after fee. */
+  expectedProfitCents: number | null;
+  /** The bot's explanation: trend, entry price and projection. */
+  note: string | null;
   at: string;
 }
 
@@ -172,6 +178,8 @@ export interface Windows {
   settledPnlCents: number;
   perWindowCents: number | null;
   projectedDayCents: number | null;
+  settledTrades: number;
+  avgProfitPerTradeCents: number | null;
   target: { normalCents: number; riskCents: number };
   rows: WindowRow[];
 }
@@ -228,7 +236,10 @@ export const WATCH_LIMIT = 15;
 export const WINDOW_SECS = 15 * 60;
 export const WINDOWS_PER_DAY = 96;
 /** The goal: at least $1 per window in NORMAL, $3 in RISK. */
-export const WINDOW_TARGET_CENTS = { normalCents: 100, riskCents: 300 };
+/** The goal for average profit per settled trade. */
+export const TRADE_TARGET_CENTS = { normalCents: 20, riskCents: 300 };
+export const SNIPE_EDGE_CENTS = 3;
+export const SNIPE_STAKE_CENTS = 500;
 export const PRICE_BUCKETS: { bucket: PriceBucket; below: number }[] = [
   { bucket: '15–30¢', below: 30 },
   { bucket: '30–50¢', below: 50 },
@@ -294,6 +305,28 @@ const HOST_LABELS: Record<Exclude<HostState, 'error'>, string> = {
 export function hostLabel(config: HostConfig, now = Date.now()): string {
   const state = hostState(config, now);
   return state === 'error' ? (config.hostStatus as string) : HOST_LABELS[state];
+}
+
+/** The highest whole-cent price at which this win chance keeps the edge bar after the fee. */
+export function maxBuyCents(
+  pWin: number | null,
+  minEdgeCents: number = SNIPE_EDGE_CENTS,
+): number | null {
+  if (pWin == null) return null;
+  for (let c = 99; c >= 1; c--) {
+    const price = c / 100;
+    if ((pWin - price - 0.07 * price * (1 - price)) * 100 >= minEdgeCents) return c;
+  }
+  return null;
+}
+
+/** Expected profit on the snipe stake: whole contracts times the edge per contract. */
+export function expectedProfitCents(
+  priceCents: number | null,
+  edgeCents: number | null,
+): number | null {
+  if (priceCents == null || priceCents <= 0 || edgeCents == null) return null;
+  return Math.floor(SNIPE_STAKE_CENTS / priceCents) * edgeCents;
 }
 
 const sidePWin = (modelProb: number | null, side: RustSide | null) =>
@@ -397,9 +430,13 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
       pWin: sidePWin(num(e.model_prob), e.side),
       priceCents: num(e.price_cents),
       edgeCents: num(e.edge_cents),
+      maxBuyCents: maxBuyCents(sidePWin(num(e.model_prob), e.side)),
+      expectedProfitCents: expectedProfitCents(num(e.price_cents), num(e.edge_cents)),
+      note: e.message,
       at: e.created_at,
     }))
-    .sort((a, b) => (b.edgeCents ?? -Infinity) - (a.edgeCents ?? -Infinity))
+    .filter((w) => w.side === 'yes')
+    .sort((a, b) => (b.expectedProfitCents ?? -Infinity) - (a.expectedProfitCents ?? -Infinity))
     .slice(0, WATCH_LIMIT);
 
   const history: HistoryPoint[] = statuses.slice(-HISTORY_POINTS).map((e) => ({
@@ -482,9 +519,8 @@ function windowStats(byTime: KalshirustEvent[], trades: Trade[]): Windows {
       };
     })
     .sort((a, b) => Date.parse(b.closedAt) - Date.parse(a.closedAt));
-  const settledPnlCents = trades
-    .filter((t) => onWindow(t) && t.result != null)
-    .reduce((a, t) => a + (t.pnlCents ?? 0), 0);
+  const settled = trades.filter((t) => onWindow(t) && t.result != null);
+  const settledPnlCents = settled.reduce((a, t) => a + (t.pnlCents ?? 0), 0);
   const observed = closes.size;
   const perWindowCents = observed ? settledPnlCents / observed : null;
   return {
@@ -493,7 +529,9 @@ function windowStats(byTime: KalshirustEvent[], trades: Trade[]): Windows {
     settledPnlCents,
     perWindowCents,
     projectedDayCents: perWindowCents == null ? null : perWindowCents * WINDOWS_PER_DAY,
-    target: WINDOW_TARGET_CENTS,
+    settledTrades: settled.length,
+    avgProfitPerTradeCents: settled.length ? settledPnlCents / settled.length : null,
+    target: TRADE_TARGET_CENTS,
     rows,
   };
 }

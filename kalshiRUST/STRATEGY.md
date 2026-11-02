@@ -31,9 +31,11 @@
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
    after 8 settled 15-minute trades so the edge can be read before any money moves.
-6. **Sniper (paper only).** Every 60 s it prices every open BTC market (15-minute, hourly
-   range, hourly and daily above/below) with the same model scaled to the horizon, publishes
-   the top 15 by edge to the HUD, and paper-trades any with ≥ 3¢ edge, $5 each, up to 5 open.
+6. **Sniper (paper only).** Every 60 s it prices every open Kalshi Bitcoin price market except the
+   15-minute one, found from Kalshi's series list. Markets that pay on touching a level use twice
+   the chance of ending beyond it. It lists YES picks with a 75%+ win chance and 3¢ of edge at
+   0.75x, 1x and 1.5x volatility, with a 45% a year volatility floor beyond a day, top 15 by
+   expected profit. Picks closing within a day get a $5 paper trade, up to 5 open.
 
 ## Modes
 

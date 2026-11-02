@@ -24,6 +24,7 @@ import {
   type Trade,
   type WatchRow,
   type Totals,
+  SNIPE_EDGE_CENTS,
   type Windows,
   tradesSince,
   uptimeLabel,
@@ -94,7 +95,6 @@ const countdown = (s: number) =>
   s >= 3600
     ? `${Math.floor(s / 3600)}h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}m`
     : mmss(s);
-const SNIPE_EDGE_CENTS = 3;
 const cents = (n: number | null | undefined, digits = 0) =>
   n == null ? '—' : `${n.toFixed(digits)}¢`;
 const pct = (x: number | null | undefined, digits = 0) =>
@@ -551,7 +551,8 @@ function NowPanel({
 
 function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
   const targetCents = mode === 'RISK' ? windows.target.riskCents : windows.target.normalCents;
-  const met = windows.perWindowCents != null && windows.perWindowCents >= targetCents;
+  const met =
+    windows.avgProfitPerTradeCents != null && windows.avgProfitPerTradeCents >= targetCents;
   const rows = windows.rows.slice(0, WINDOW_ROWS);
   return (
     <section className="mt-8" aria-labelledby="window-heading">
@@ -585,9 +586,10 @@ function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
           toneClass={tone(windows.projectedDayCents)}
         />
         <Stat
-          label="Target"
-          value={`${dollars(targetCents)} / window`}
-          sub={`${mode} goal`}
+          label="Avg profit per trade"
+          value={signedDollars(windows.avgProfitPerTradeCents)}
+          sub={`${windows.settledTrades} settled · goal ${dollars(targetCents)}+`}
+          toneClass={tone(windows.avgProfitPerTradeCents)}
           badge={
             met && (
               <span className="ml-2 text-base text-vitae-green" aria-label="target met">
@@ -745,33 +747,36 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
     <section className="mt-10" aria-labelledby="snipe-heading">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2 id="snipe-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
-          Snipe list · sure trades only
+          Snipe list · YES picks
         </h2>
-        <p className="text-xs text-white/45">
-          Only markets where the bot&apos;s side has at least an 80% win probability and a{' '}
-          {SNIPE_EDGE_CENTS}¢ fee-adjusted edge. The best one gets a $5 paper trade.
+        <p className="max-w-2xl text-xs text-white/45">
+          Every open Kalshi Bitcoin price market, scanned each minute. Listed only if YES keeps a
+          75%+ win chance and {SNIPE_EDGE_CENTS}¢ of edge after fees at low, normal and high
+          volatility, most expected profit first. These are model estimates, not guarantees. A
+          projected entry assumes the recent BTC trend continues, which often fails. Paper trades
+          only.
         </p>
       </div>
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[1040px] text-left text-sm">
           <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
-              <Th>Market</Th>
+              <Th>Market and entry</Th>
               <Th right>Closes in</Th>
               <Th>Strike</Th>
               <Th right>BTC spot</Th>
-              <Th right>YES / NO ask</Th>
-              <Th right>Model P(YES)</Th>
-              <Th>Buy</Th>
-              <Th right>P(win)</Th>
+              <Th right>YES ask</Th>
+              <Th right>Buy up to</Th>
+              <Th right>Win chance</Th>
               <Th right>Edge</Th>
+              <Th right>Exp. profit on $5</Th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-4 py-6 text-center text-white/40">
-                  No candidates in the last 10 minutes.
+                  No YES picks clear the bar right now.
                 </td>
               </tr>
             )}
@@ -786,36 +791,28 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
                     <span className="text-white">{w.title ?? w.ticker}</span>
                     {w.subtitle && <span className="ml-2 text-xs text-white/45">{w.subtitle}</span>}
                     <TickerLink ticker={w.ticker} className="ml-2 text-[10px] text-white/50" />
+                    {w.note && (
+                      <p className="mt-1 max-w-xl text-xs leading-snug text-white/55">{w.note}</p>
+                    )}
+                    <p className="mt-1 text-[10px] text-white/40">
+                      Re-checks in {Math.max(0, 60 - Math.round((now - Date.parse(w.at)) / 1000))} s
+                    </p>
                   </Td>
                   <Td right>{left == null ? '—' : countdown(left)}</Td>
                   <Td>{strikeRange(w)}</Td>
                   <Td right>{usd(w.spot)}</Td>
-                  <Td right>
-                    {cents(w.yesAskCents)} <span className="text-white/40">/</span>{' '}
-                    {cents(w.noAskCents)}
-                  </Td>
-                  <Td right>{pct(w.modelProb, 1)}</Td>
-                  <Td>
-                    <span
-                      className={
-                        w.side === 'yes'
-                          ? 'text-vitae-green'
-                          : w.side === 'no'
-                            ? 'text-vitae-red'
-                            : ''
-                      }
-                    >
-                      {w.side?.toUpperCase() ?? '—'}
-                    </span>
-                    {w.priceCents != null && (
-                      <span className="ml-1 text-xs text-white/45">@ {cents(w.priceCents)}</span>
-                    )}
+                  <Td right>{cents(w.yesAskCents)}</Td>
+                  <Td right className="font-semibold">
+                    {cents(w.maxBuyCents)}
                   </Td>
                   <Td right className="font-semibold">
                     {pct(w.pWin, 1)}
                   </Td>
                   <Td right className={hot ? 'font-semibold text-vitae-green' : tone(w.edgeCents)}>
                     {cents(w.edgeCents, 2)}
+                  </Td>
+                  <Td right className={tone(w.expectedProfitCents)}>
+                    {signedDollars(w.expectedProfitCents)}
                   </Td>
                 </tr>
               );
