@@ -17,6 +17,7 @@ export interface KalshirustConfig {
   host_name: string | null;
   host_status: string | null;
   host_seen_at: string | null;
+  bot_started_at?: string | null;
 }
 
 /** The slice of kalshirust_config the host pill and the RUN / STOP button read, as /api/kalshirust names it. */
