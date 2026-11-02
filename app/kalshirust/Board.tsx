@@ -475,12 +475,12 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: $5 a trade, at most 2 a window, each needing a 75%+ win chance. After the first 9
+        NORMAL: 1 trade a window at $5, needing a 75%+ win chance. First choice, after the first 9
         min, from 5 to 2 min before close: after a 15¢+ move in a minute, buying the side that rose
-        at 72–82¢. In the last 90 s: settlement math at 75%+, at 60¢ or less or at 72–82¢, with the
-        analytics engine agreeing. No trade unless expected profit after fees is positive. Live
-        trading stops for the UTC day after a $30 loss. RISK: up to $100 a trade, as low as 60% in
-        the last 90 s, plus earlier trades from 7 min out with no win-chance floor.
+        at 72–82¢. If none qualifies, the last 90 s: settlement math at 75%+, at 60¢ or less or at
+        72–82¢, with the analytics engine agreeing. No trade unless expected profit after fees is
+        positive. Live trading stops for the UTC day after a $30 loss. RISK: up to $100 a trade, as
+        low as 60% in the last 90 s, plus earlier trades from 7 min out with no win-chance floor.
       </p>
     </div>
   );

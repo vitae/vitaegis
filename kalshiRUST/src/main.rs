@@ -124,7 +124,7 @@ fn mode_params(name: &str) -> ModeParams {
             name: "NORMAL".into(),
             max_order_dollars: f("MAX_ORDER_DOLLARS", 5.0),
             min_edge_cents: f("MIN_EDGE_CENTS", 2.0),
-            bets_per_window: f("BETS_PER_WINDOW", 2.0) as usize,
+            bets_per_window: f("BETS_PER_WINDOW", 1.0) as usize,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.75),
@@ -1130,10 +1130,10 @@ mod tests {
     }
 
     #[test]
-    fn normal_takes_one_trade_in_each_slot() {
+    fn normal_makes_one_trade_a_window() {
         std::env::remove_var("BETS_PER_WINDOW");
         let m = mode_params("NORMAL");
-        assert_eq!((m.bets_per_window, m.settle_trades), (2, 1));
+        assert_eq!((m.bets_per_window, m.settle_trades), (1, 1));
     }
 
     #[test]
