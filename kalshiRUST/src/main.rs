@@ -70,7 +70,7 @@ fn mode_params(name: &str) -> ModeParams {
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.9),
-            settle_min_known: f("SETTLE_MIN_KNOWN", 5.0) as usize,
+            settle_min_known: f("SETTLE_MIN_KNOWN", 3.0) as usize,
         }
     }
 }
@@ -472,13 +472,18 @@ async fn run_window(
 
         // ---- settlement engine -------------------------------------------------------
         if last_minute {
+            // Millisecond time left and the feed's measured lag keep the known/unknown
+            // split aligned to the actual print timestamps.
+            let now_ms = chrono::Utc::now().timestamp_millis();
+            let rem_s = (close_ts * 1000 - now_ms) as f64 / 1000.0;
             let (est, feed_fresh, sigma_1s, anchor) = {
                 let b = ctx.brti.lock().unwrap();
                 let fresh = b.fresh(now);
                 let s1 = b.sigma_1s().unwrap_or(0.00005);
-                let anchor = b.anchor(chrono::Utc::now().timestamp_millis());
+                let anchor = b.anchor(now_ms);
+                let lag = (now_ms as f64 / 1000.0 - b.as_of as f64).clamp(1.0, 10.0);
                 let est = match (fresh, anchor) {
-                    (true, Some(a)) => settle::estimate(&b.raw, rem, settle::FEED_LAG_SECS, a, s1, ctx.settle_noise_dollars, strike),
+                    (true, Some(a)) => settle::estimate(&b.raw, rem_s, lag, a, s1, ctx.settle_noise_dollars, strike),
                     _ => None,
                 };
                 (est, fresh, s1, anchor)
