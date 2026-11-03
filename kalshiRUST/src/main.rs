@@ -45,6 +45,10 @@ const SHARP_LOOKBACK_SECS: i64 = 60;
 const SHARP_SLACK_SECS: i64 = 5;
 /// Win rate above price used for expected profit, below the 7.4c measured.
 const SHARP_EDGE: f64 = 0.05;
+/// A live order's limit sits this far above the ask it was priced on. The signals are rises, so
+/// the ask keeps moving while the order is in flight: 7 of 7 live orders at the exact ask got no
+/// fill. The order still fills at the book's price, and paying 2c more keeps the rule positive.
+const IOC_CUSHION: f64 = 0.02;
 const RECONCILE_SECS: u64 = 120;
 const RECONCILE_PUBLISH_SECS: i64 = 3600;
 /// The last-90 slot never buys a side whose mid fell by this much over the lookback.
@@ -209,6 +213,11 @@ fn sharp_move(samples: &VecDeque<(i64, f64)>, now: i64) -> Option<f64> {
     let &(_, latest) = samples.back()?;
     let &(then_ts, then) = samples.iter().find(|(t, _)| *t >= now - SHARP_LOOKBACK_SECS)?;
     (now - then_ts >= SHARP_LOOKBACK_SECS - SHARP_SLACK_SECS).then_some(latest - then)
+}
+
+/// The limit a live immediate-or-cancel order is sent at, for a signal priced at `price`.
+fn ioc_limit(price: f64) -> f64 {
+    ((price + IOC_CUSHION).min(0.99) * 100.0).round() / 100.0
 }
 
 /// What the sharp-rise slot would buy after a 60 s move in the YES mid, or None when the rise and price
@@ -1197,7 +1206,8 @@ async fn enter(
     note: &str,
 ) -> bool {
     let now = chrono::Utc::now().timestamp();
-    let mut count = (dollars / edge.price).floor() as u32;
+    let limit = if ctx.live { ioc_limit(edge.price) } else { edge.price };
+    let mut count = (dollars / limit).floor() as u32;
     let mut price = edge.price;
     let mut fee = taker_fee(edge.price) * count as f64;
     let client_order_id = format!("{}-{}-{}", tag, ticker, chrono::Utc::now().timestamp_millis());
@@ -1207,11 +1217,11 @@ async fn enter(
         match edge.side { Side::Yes => p_yes, Side::No => 1.0 - p_yes } * 100.0, edge.cents, note, ctx.mode_label()
     );
     let order_id = if ctx.live {
-        match place_order(ctx, ticker, edge.side, edge.price, count, &client_order_id).await {
+        match place_order(ctx, ticker, edge.side, limit, count, &client_order_id).await {
             Ok(fill) if fill.filled <= 0.0 => {
-                println!("[LIVE] order {} got no fill at {:.1}c: the book moved, nothing bought", fill.order_id, edge.price * 100.0);
+                println!("[LIVE] order {} got no fill up to {:.1}c (ask was {:.1}c): the book moved, nothing bought", fill.order_id, limit * 100.0, edge.price * 100.0);
                 if let Some(s) = &ctx.supa {
-                    s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": true, "ticker": ticker, "message": format!("no fill at {:.1}c (book moved), nothing bought", edge.price * 100.0) }));
+                    s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": true, "ticker": ticker, "message": format!("no fill up to {:.1}c, ask was {:.1}c (book moved), nothing bought", limit * 100.0, edge.price * 100.0) }));
                 }
                 return false;
             }
@@ -1219,7 +1229,7 @@ async fn enter(
                 // Whole contracts on the record; fills smaller than one still count as one.
                 count = (fill.filled.round() as u32).max(1);
                 if let Some(avg) = fill.average_price {
-                    price = v2_fill_cost(edge.side, avg, edge.price);
+                    price = v2_fill_cost(edge.side, avg, limit);
                 }
                 fee = match fill.fee_per_contract {
                     Some(per) => per * fill.filled,
@@ -1353,6 +1363,13 @@ mod tests {
         let m = mode_params("NORMAL");
         assert_eq!((m.bets_per_window, m.settle_trades), (2, 0));
         assert_eq!(SHARP_CHECKS_SECS_LEFT, &[120.0, 60.0]);
+    }
+
+    #[test]
+    fn live_orders_are_sent_a_little_above_the_ask_and_sized_to_that_limit() {
+        assert!((ioc_limit(0.75) - 0.77).abs() < 1e-9);
+        assert!((ioc_limit(0.98) - 0.99).abs() < 1e-9);
+        assert_eq!((5.0 / ioc_limit(0.75)).floor() as u32, 6);
     }
 
     #[test]

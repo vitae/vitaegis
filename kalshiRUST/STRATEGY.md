@@ -190,6 +190,43 @@ No earlier rule clearly beats the market, so NORMAL trades only in the last 2 mi
 the settlement engine itself, because Kalshi publishes only the last 60 BRTI prints: its
 evidence can only come from live windows and `settle_calib.jsonl`.
 
+## The read, Nov 3 2026 (`research/window_study.py download 3400`, 3,396 windows, Sep 28 to Nov 3)
+
+The live bot filled nothing in its first 25 hours live: 6 orders were refused for insufficient balance
+(the account held $0.27) and 7 immediate-or-cancel orders at the exact ask got no fill because the ask
+had moved up. Live orders now carry a 2c cushion above the ask (`IOC_CUSHION`), sized so a $5 trade stays
+$5; the fill is still at the book's price.
+
+The current rule (10c+ rise into 70-82c or 18c+ into 50-70c, at 2 and 1 minutes left, up to two $5 trades):
+
+| | trades | wins | net | a trade | t |
+|---|---|---|---|---|---|
+| older two thirds (rules chosen here) | 223 | 78.0% | +$107.57 | +$0.48 | 2.48 |
+| newer third | 118 | 73.7% | +$20.83 | +$0.18 | 0.62 |
+| after the rules were chosen (Nov 2 02:00 on, 2 days) | 14 | 64.3% | -$6.51 | -$0.47 | -0.51 |
+| all, paying 2c more | 344 | 76.2% | about +$0.25 a trade | | |
+
+Out of sample it is 9 wins and 5 losses: too few to say anything, and consistent with no edge. The
+newer third's +$0.18 a trade has t = 0.62, not distinct from zero. 36 days: 24 up, 12 down, worst
+day -$33.94, worst drop -$39.97. A 30-day bootstrap of those days at $5 gives a 5th percentile of
+-$14 and a median of +$96, but the days are in-sample and the newest ones are the worst.
+
+**Resting at the bid is adversely selected, and is off the table.** With no maker fee, a bid that
+filled would earn +$0.59 a trade if every order filled. But using the next minute's candle to tell
+which bids the market came down to: the filled orders won 28% and lost $2.78 a trade (58 trades,
+t = -6.6); the orders the market never came back to won 93%. The same split holds in every part of
+the sample. A rise signal that gets filled passively is one that reversed. Cross the spread or stay out.
+
+**Settlement engine**: 7 live windows in `settle_calib.jsonl`, the right side 34 of 35 times from 45 s
+down, 6 of 7 at 60 s. Only one of the seven had a tradable price (70c, won $1.99); four were already at
+98c or more, one was under the 90% floor. It is the only part of the bot with a structural reason to
+win, and it has one scored trade. Its evidence can only come from live windows.
+
+What the $60 live run is for: a true out-of-sample read of the sharp-rise rule at $5, roughly 10 trades
+a day. If 200 live trades do not clear about +$0.15 a trade after fees, the rule has no edge and should
+be turned off; the settlement engine's log keeps scoring either way. Do not raise the stake or switch to
+RISK on fewer than that.
+
 ## Honest expectations
 
 On a 45¢ contract with $5, the most you can win is about $6, not $10. A "slight edge" at
