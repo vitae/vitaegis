@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalshi BTC Hub</title>
+<style>
+:root{
+  --bg:#05080a; --panel:#0b1114; --panel2:#0f181c; --line:#16312a; --text:#d9ffe9; --dim:#7fa596;
+  --neon:#00ff00; --neon-soft:rgba(0,255,0,.5); --amber:#ffc23d; --red:#ff4d6d; --blue:#4dc3ff; --grey:#6b7d77;
+  --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--mono);padding-bottom:84px}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,255,0,.025) 0 1px,transparent 1px 3px)}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(5,8,10,.92);backdrop-filter:blur(6px);z-index:5}
+h1{margin:0;font-size:15px;letter-spacing:.18em;color:var(--neon);text-shadow:0 0 12px var(--neon-soft)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--dim)}
+.pill.on{color:var(--neon);border-color:var(--neon-soft)} .pill.live{color:#000;background:var(--neon);border-color:var(--neon);font-weight:700}
+.pill.bad{color:var(--red);border-color:var(--red)}
+main{max-width:1280px;margin:0 auto;padding:18px 20px;display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.card h2{margin:0 0 12px;font-size:11px;letter-spacing:.2em;color:var(--dim);font-weight:600;text-transform:uppercase}
+.s12{grid-column:span 12}.s8{grid-column:span 8}.s6{grid-column:span 6}.s4{grid-column:span 4}
+@media(max-width:900px){.s8,.s6,.s4{grid-column:span 12}}
+.signal{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.sig-badge{font-size:28px;font-weight:800;letter-spacing:.08em;padding:10px 18px;border-radius:10px;border:2px solid currentColor;min-width:150px;text-align:center}
+.sig-text{flex:1 1 300px;font-size:15px}
+.sig-text small{display:block;color:var(--dim);margin-top:4px;font-size:12px}
+.big{font-size:30px;font-weight:800}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border:0} .row span:first-child{color:var(--dim)}
+.asks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.ask{background:var(--panel2);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line)}
+.ask .lbl{color:var(--dim);font-size:11px;letter-spacing:.2em}
+.ask.hot{border-color:var(--neon);box-shadow:0 0 18px rgba(0,255,0,.25)}
+svg{display:block;width:100%;height:auto}
+.muted{color:var(--dim)} .g{color:var(--neon)} .r{color:var(--red)} .a{color:var(--amber)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.1em}
+.tablewrap{overflow-x:auto}
+.log{background:#020403;border:1px solid var(--line);border-radius:8px;padding:10px;height:260px;overflow:auto;font-size:12px;white-space:pre-wrap;color:#9fdcbc}
+.log .buy{color:var(--neon);font-weight:700}.log .warn{color:var(--amber)}.log .err{color:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.stat{background:var(--panel2);border-radius:10px;padding:10px 12px;border:1px solid var(--line)}
+.stat .v{font-size:20px;font-weight:800} .stat .k{font-size:11px;color:var(--dim);letter-spacing:.1em}
+.how ol{margin:0;padding-left:20px} .how li{margin:0 0 10px}
+.how b{color:var(--neon)}
+.note{border-left:3px solid var(--amber);padding:8px 12px;background:rgba(255,194,61,.06);border-radius:4px;color:#f3e2b5;font-size:13px}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:rgba(0,255,0,.5);color:#001400;font:700 15px/1.35 var(--mono);padding:12px 20px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;backdrop-filter:blur(3px)}
+.bar .msg{flex:1 1 380px} .bar .meta{font-weight:600;font-size:13px}
+.offline{color:var(--red)}
+</style>
+</head>
+<body>
+<header>
+  <h1>VITAEGIS // KALSHI BTC 15-MIN HUB</h1>
+  <div class="pills">
+    <span id="p-mode" class="pill">—</span>
+    <span id="p-feed" class="pill">feed</span>
+    <span id="p-btc" class="pill">BTC feed</span>
+    <span id="p-bal" class="pill">balance —</span>
+    <span id="p-up" class="pill">uptime —</span>
+  </div>
+</header>
+
+<main>
+  <!-- SIGNAL -->
+  <section class="card s12">
+    <h2>What the bot is doing right now</h2>
+    <div class="signal">
+      <div id="sig-badge" class="sig-badge">—</div>
+      <div class="sig-text"><div id="sig-reason">Connecting to the bot…</div><small id="sig-sub"></small></div>
+    </div>
+  </section>
+
+  <!-- WINDOW TIMELINE -->
+  <section class="card s12">
+    <h2>15-minute window · when the bot is allowed to buy</h2>
+    <svg id="timeline" viewBox="0 0 1000 86" aria-label="Market timeline"></svg>
+    <div class="muted" id="tl-text" style="margin-top:6px"></div>
+  </section>
+
+  <!-- MARKET -->
+  <section class="card s4">
+    <h2>Current market</h2>
+    <div class="asks">
+      <div class="ask" id="ask-yes"><div class="lbl">YES · UP</div><div class="big" id="yes">—</div></div>
+      <div class="ask" id="ask-no"><div class="lbl">NO · DOWN</div><div class="big" id="no">—</div></div>
+    </div>
+    <svg id="ladder" viewBox="0 0 400 70" aria-label="Price ladder"></svg>
+    <div class="row"><span>Market</span><span id="m-ticker">—</span></div>
+    <div class="row"><span>Closes in</span><span id="m-left" class="g">—</span></div>
+    <div class="row"><span>Crowd says UP</span><span id="m-crowd">—</span></div>
+    <div class="row"><span>Traded this market</span><span id="m-traded">—</span></div>
+  </section>
+
+  <!-- BTC vs TARGET -->
+  <section class="card s4">
+    <h2>Bitcoin vs the target</h2>
+    <div class="big" id="btc">—</div>
+    <div class="muted" id="btc-sub" style="margin-bottom:8px">Coinbase BTC-USD</div>
+    <svg id="spark" viewBox="0 0 400 110" aria-label="BTC last 10 minutes vs target"></svg>
+    <div class="row"><span>Target (strike)</span><span id="strike">—</span></div>
+    <div class="row"><span>Distance</span><span id="dist">—</span></div>
+    <div class="row"><span>1-min volatility</span><span id="vol">—</span></div>
+  </section>
+
+  <!-- MODEL -->
+  <section class="card s4">
+    <h2>Odds analysis</h2>
+    <div class="row"><span>Model: chance BTC ends ≥ target</span><span id="mod-p" class="big" style="font-size:20px">—</span></div>
+    <div class="row"><span>Kalshi price for YES</span><span id="kal-p">—</span></div>
+    <div class="row"><span>Edge on YES (after fee)</span><span id="edge-y">—</span></div>
+    <div class="row"><span>Edge on NO (after fee)</span><span id="edge-n">—</span></div>
+    <p class="note" style="margin:12px 0 0">The model works out the odds from BTC's distance to the target, the time left and recent volatility. Over 300 past markets it was <b>slightly less accurate than Kalshi's own prices</b>, so it doesn't trigger buys. Treat a positive edge as interesting, not as a sure thing.</p>
+  </section>
+
+  <!-- PRICE PATH -->
+  <section class="card s8">
+    <h2>This market · YES price over the 15 minutes</h2>
+    <svg id="path" viewBox="0 0 800 220" aria-label="YES price path"></svg>
+    <div class="muted" style="margin-top:6px">Green band = the bot's buy zone. It buys whichever side's price is inside the band during the buy window.</div>
+  </section>
+
+  <!-- TODAY -->
+  <section class="card s4">
+    <h2>Today</h2>
+    <div class="stats">
+      <div class="stat"><div class="k">P&amp;L</div><div class="v" id="t-pnl">—</div></div>
+      <div class="stat"><div class="k">Trades</div><div class="v" id="t-orders">—</div></div>
+      <div class="stat"><div class="k">Won</div><div class="v" id="t-wins">—</div></div>
+      <div class="stat"><div class="k">Loss stop</div><div class="v" id="t-stop">—</div></div>
+    </div>
+    <div class="row" style="margin-top:10px"><span>Buy zone</span><span id="c-zone">—</span></div>
+    <div class="row"><span>Only buys with</span><span id="c-sec">—</span></div>
+    <div class="row"><span>Max risk / trade</span><span id="c-risk">—</span></div>
+    <div class="row"><span>Win target</span><span id="c-target">—</span></div>
+  </section>
+
+  <!-- TRADES -->
+  <section class="card s12">
+    <h2>Trades</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Time</th><th>Market</th><th>Mode</th><th>Side</th><th>Contracts</th><th>Price</th><th>Risk</th><th>Win nets</th><th>Left</th><th>Model</th><th>Result</th><th>P&amp;L</th></tr></thead>
+      <tbody id="trades"><tr><td colspan="12" class="muted">No trades yet this session.</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <!-- LOG -->
+  <section class="card s6">
+    <h2>PowerShell output (live)</h2>
+    <div class="log" id="log"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="card s6 how">
+    <h2>How the PowerShell bot works</h2>
+    <ol>
+      <li><b>Find the market.</b> Every 15 seconds it asks Kalshi for the BTC 15-minute market closing soonest. Each one asks: will BTC be at or above the target when the 15 minutes end?</li>
+      <li><b>Watch prices live.</b> With your API key it streams every YES/NO price change over a WebSocket ("streaming" above), so it reacts within milliseconds.</li>
+      <li><b>Check the rules on every price change.</b> In order: already traded this market? Daily trade cap? Daily loss stop? Too late in the window? Is either side priced inside the buy zone? The first rule that fails is the reason shown in the signal panel.</li>
+      <li><b>Size the trade.</b> It buys just enough contracts that a win nets about the win target after Kalshi's fee, but never risks more than the max per trade.</li>
+      <li><b>Place the order.</b> In live mode it sends one immediate-or-cancel order at that price: it fills right away or not at all. Test mode only logs what it would have bought.</li>
+      <li><b>Settle.</b> About two minutes after a market closes, it fetches the result, records the profit or loss, and counts it toward the daily loss stop.</li>
+    </ol>
+    <p class="note">Results over the last 300 markets (about 3 days): the current setting (favorite at 65–80¢, first 5 minutes) netted <b>−$3.52 over 254 trades</b> with 72% won; it made money in one half of the period and lost in the other. Wins are frequent but small, and losses are bigger. No setting tested showed a reliable edge, so keep stakes small and watch the P&amp;L.</p>
+  </section>
+</main>
+
+<div class="bar" id="bar"><span class="msg" id="bar-msg">Connecting to the bot on this computer…</span><span class="meta" id="bar-meta"></span></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = c => c == null ? '—' : (c < 0 ? '−$' : '+$') + Math.abs(c / 100).toFixed(2);
+const usd = (v, d = 2) => v == null ? '—' : '$' + Number(v).toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d});
+const mmss = s => s == null ? '—' : `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
+const pct = p => p == null ? '—' : (p * 100).toFixed(1) + '%';
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+const COLORS = {buy: 'var(--neon)', wait: 'var(--amber)', done: 'var(--blue)', stop: 'var(--red)', closed: 'var(--grey)', starting: 'var(--grey)'};
+const LABEL = {buy: 'BUYING', wait: 'WAIT', done: 'IN TRADE', stop: 'STOPPED', closed: 'WINDOW SHUT', starting: 'STARTING'};
+let S = null, fetchedAt = 0;
+
+async function pull() {
+  try {
+    const r = await fetch('/state', {cache: 'no-store'});
+    S = await r.json(); fetchedAt = Date.now(); render();
+  } catch (e) {
+    $('bar-msg').textContent = 'Bot not reachable: is run_kalshi.ps1 still running? (retrying)';
+    $('sig-reason').innerHTML = '<span class="offline">The bot stopped or the window was closed. Restart run_kalshi.ps1.</span>';
+  }
+}
+
+function secondsLeft() {
+  if (!S || !S.market) return null;
+  return Math.max(0, S.market.seconds_left - (Date.now() - fetchedAt) / 1000);
+}
+
+function render() {
+  const m = S.market, c = S.config, d = S.decision || {};
+  // header
+  $('p-mode').textContent = S.live ? 'LIVE TRADING' : 'TEST MODE (no orders)';
+  $('p-mode').className = 'pill ' + (S.live ? 'live' : '');
+  $('p-feed').textContent = S.streaming ? 'streaming prices' : 'polling every 15s';
+  $('p-feed').className = 'pill ' + (S.streaming ? 'on' : '');
+  $('p-btc').textContent = S.btc.ok ? 'BTC feed ok' : 'BTC feed down';
+  $('p-btc').className = 'pill ' + (S.btc.ok ? 'on' : 'bad');
+  $('p-bal').textContent = 'balance ' + (S.balance == null ? '—' : usd(S.balance / 100));
+  $('p-up').textContent = 'up ' + mmss(S.uptime).replace(/^(\d+):/, (x, mi) => mi >= 60 ? `${Math.floor(mi / 60)}h ${mi % 60}:` : x);
+
+  // signal
+  const col = COLORS[d.action] || 'var(--grey)';
+  $('sig-badge').textContent = LABEL[d.action] || '—';
+  $('sig-badge').style.color = col;
+  $('sig-reason').textContent = d.reason || '';
+  const last = S.trades[0];
+  $('sig-sub').textContent = last ? `Last trade: ${last.side.toUpperCase()} ${last.count} @ ${last.price}¢ on ${last.ticker.split('-').pop()} · ${last.result ? 'settled ' + last.result.toUpperCase() + ' ' + money(last.pnl) : 'waiting for result'}` : 'No trades yet this session.';
+
+  // market
+  if (m) {
+    $('yes').textContent = m.yes == null ? '—' : m.yes + '¢';
+    $('no').textContent = m.no == null ? '—' : m.no + '¢';
+    const inZone = v => v != null && v >= c.min_entry && v <= c.max_entry;
+    $('ask-yes').classList.toggle('hot', inZone(m.yes));
+    $('ask-no').classList.toggle('hot', inZone(m.no));
+    $('m-ticker').textContent = m.ticker;
+    $('m-crowd').textContent = m.yes == null ? '—' : m.yes + '% chance';
+    $('m-traded').textContent = m.traded ? 'yes (one per market)' : 'not yet';
+    drawLadder(m, c);
+    drawPath(m, c);
+    // btc
+    $('btc').textContent = usd(S.btc.price);
+    $('strike').textContent = usd(m.strike);
+    if (S.btc.price && m.strike) {
+      const diff = S.btc.price - m.strike;
+      $('dist').innerHTML = `<span class="${diff >= 0 ? 'g' : 'r'}">${diff >= 0 ? '+' : '−'}${usd(Math.abs(diff))} (${(100 * diff / m.strike).toFixed(3)}%)</span> ${diff >= 0 ? 'above → YES winning' : 'below → NO winning'}`;
+      $('btc-sub').textContent = diff >= 0 ? 'Currently ABOVE the target' : 'Currently BELOW the target';
+    }
+    drawSpark(S.btc.history, m.strike);
+    // model
+    $('mod-p').textContent = pct(m.model_yes);
+    $('kal-p').textContent = m.yes == null ? '—' : m.yes + '¢ = ' + m.yes + '% implied';
+    const e = v => v == null ? '—' : `<span class="${v > 0 ? 'g' : 'r'}">${v > 0 ? '+' : ''}${v}¢ per contract</span>`;
+    $('edge-y').innerHTML = e(m.edge_yes);
+    $('edge-n').innerHTML = e(m.edge_no);
+  } else {
+    $('sig-reason').textContent = 'No open BTC 15-min market right now.';
+  }
+  $('vol').textContent = S.btc.vol_1m == null ? '—' : (S.btc.vol_1m * 100).toFixed(3) + '% / min';
+
+  // today + config
+  const t = S.today;
+  $('t-pnl').innerHTML = `<span class="${t.pnl >= 0 ? 'g' : 'r'}">${money(t.pnl)}</span>`;
+  $('t-orders').textContent = `${t.orders}/${c.max_orders}`;
+  $('t-wins').textContent = t.settled ? `${t.wins}/${t.settled}` : '—';
+  $('t-stop').textContent = '−$' + c.daily_loss;
+  $('c-zone').textContent = `${c.min_entry}–${c.max_entry}¢`;
+  $('c-sec').textContent = `${mmss(c.min_seconds)}+ left`;
+  $('c-risk').textContent = '$' + c.max_risk;
+  $('c-target').textContent = '~$' + c.target.toFixed(2);
+
+  // trades
+  $('trades').innerHTML = S.trades.length ? S.trades.map(x => `<tr>
+    <td>${new Date(x.at * 1000).toLocaleTimeString()}</td><td>${esc(x.ticker.split('-').slice(1).join('-'))}</td>
+    <td>${x.live ? '<span class="g">LIVE</span>' : 'test'}</td><td><b>${x.side.toUpperCase()}</b></td>
+    <td>${x.filled ?? 0}/${x.count}</td><td>${x.price}¢</td><td>$${(x.risk / 100).toFixed(2)}</td><td>${money(x.win)}</td>
+    <td>${mmss(x.seconds_left)}</td><td>${pct(x.model_p)}</td>
+    <td>${x.result ? x.result.toUpperCase() : '<span class="a">pending</span>'}</td>
+    <td>${x.pnl == null ? '—' : `<span class="${x.pnl >= 0 ? 'g' : 'r'}">${money(x.pnl)}</span>`}</td></tr>`).join('')
+    : '<tr><td colspan="12" class="muted">No trades yet this session.</td></tr>';
+
+  // log
+  const box = $('log'), atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 20;
+  box.innerHTML = S.log.map(l => `<div class="${/\] buy /.test(l) ? 'buy' : /ERROR/.test(l) ? 'err' : /WARNING/.test(l) ? 'warn' : ''}">${esc(l)}</div>`).join('');
+  if (atBottom) box.scrollTop = box.scrollHeight;
+
+  // bottom bar
+  const msg = {buy: '▶ BUYING NOW', wait: 'WAIT', done: '✔ IN TRADE', stop: '■ STOPPED', closed: 'WINDOW SHUT', starting: 'STARTING'}[d.action] || '';
+  $('bar-msg').textContent = `${msg} — ${d.reason || ''}`;
+  $('bar-meta').textContent = `${S.live ? 'LIVE' : 'TEST'} · today ${money(t.pnl)} · ${t.orders} trades`;
+}
+
+function tickClock() {
+  const s = secondsLeft();
+  $('m-left').textContent = mmss(s);
+  if (S) drawTimeline(s, S.config);
+}
+
+function drawTimeline(s, c) {
+  const W = 1000, x = sec => 20 + (900 - sec) / 900 * (W - 40);
+  const buyEnd = c.min_seconds;
+  let g = `<rect x="20" y="26" width="${W - 40}" height="22" rx="6" fill="#0f181c" stroke="#16312a"/>
+    <rect x="${x(900)}" y="26" width="${x(buyEnd) - x(900)}" height="22" rx="6" fill="rgba(0,255,0,.28)" stroke="var(--neon)"/>
+    <text x="${(x(900) + x(buyEnd)) / 2}" y="41" fill="#d9ffe9" font-size="12" text-anchor="middle">BUY WINDOW (${mmss(900)} → ${mmss(buyEnd)} left)</text>`;
+  for (let m = 0; m <= 15; m += 5) g += `<text x="${x(900 - m * 60)}" y="70" fill="#7fa596" font-size="11" text-anchor="${m === 0 ? 'start' : m === 15 ? 'end' : 'middle'}">${15 - m}:00 left</text>`;
+  if (s != null) {
+    const nx = x(Math.min(900, s));
+    g += `<line x1="${nx}" y1="14" x2="${nx}" y2="58" stroke="#fff" stroke-width="2"/><text x="${nx}" y="11" fill="#fff" font-size="11" text-anchor="middle">now ${mmss(s)}</text>`;
+    const inWin = s <= 900 && s >= buyEnd;
+    $('tl-text').innerHTML = inWin ? `<span class="g">Inside the buy window</span>: ${mmss(s - buyEnd)} left to buy in this market if a side reaches ${c.min_entry}–${c.max_entry}¢.`
+      : `Buy window over for this market. A new market starts in ${mmss(s)}, and its window opens right away.`;
+  }
+  $('timeline').innerHTML = g;
+}
+
+function drawLadder(m, c) {
+  const x = v => 10 + v / 100 * 380;
+  let g = `<rect x="10" y="22" width="380" height="14" rx="4" fill="#0f181c" stroke="#16312a"/>
+    <rect x="${x(c.min_entry)}" y="22" width="${x(c.max_entry) - x(c.min_entry)}" height="14" fill="rgba(0,255,0,.35)"/>
+    <text x="${(x(c.min_entry) + x(c.max_entry)) / 2}" y="33" fill="#d9ffe9" font-size="9" text-anchor="middle">buy zone ${c.min_entry}–${c.max_entry}¢</text>`;
+  [0, 25, 50, 75, 100].forEach(v => g += `<text x="${x(v)}" y="62" fill="#7fa596" font-size="10" text-anchor="middle">${v}¢</text>`);
+  [['YES', m.yes, '#00ff00'], ['NO', m.no, '#4dc3ff']].forEach(([n, v, col], i) => {
+    if (v == null) return;
+    g += i ? `<polygon points="${x(v) - 6},50 ${x(v) + 6},50 ${x(v)},38" fill="${col}"/><text x="${x(v) + 9}" y="50" fill="${col}" font-size="10">${n} ${v}¢</text>`
+           : `<polygon points="${x(v) - 6},8 ${x(v) + 6},8 ${x(v)},20" fill="${col}"/><text x="${x(v) + 9}" y="11" fill="${col}" font-size="10">${n} ${v}¢</text>`;
+  });
+  $('ladder').innerHTML = g;
+}
+
+function drawPath(m, c) {
+  const W = 800, H = 220, P = 30;
+  const x = sec => P + (900 - sec) / 900 * (W - 2 * P), y = v => H - P - v / 100 * (H - 2 * P);
+  let g = `<rect x="${P}" y="${y(c.max_entry)}" width="${W - 2 * P}" height="${y(c.min_entry) - y(c.max_entry)}" fill="rgba(0,255,0,.12)"/>
+    <rect x="${P}" y="${y(100 - c.min_entry)}" width="${W - 2 * P}" height="${y(100 - c.max_entry) - y(100 - c.min_entry)}" fill="rgba(77,195,255,.08)"/>
+    <rect x="${x(900)}" y="${P - 10}" width="${x(c.min_seconds) - x(900)}" height="4" fill="var(--neon)"/>`;
+  [0, 25, 50, 75, 100].forEach(v => g += `<line x1="${P}" x2="${W - P}" y1="${y(v)}" y2="${y(v)}" stroke="#16312a"/><text x="${P - 6}" y="${y(v) + 4}" fill="#7fa596" font-size="10" text-anchor="end">${v}</text>`);
+  [15, 10, 5, 0].forEach(mi => g += `<text x="${x(mi * 60)}" y="${H - 8}" fill="#7fa596" font-size="10" text-anchor="middle">${mi}:00</text>`);
+  const pts = (m.path || []).filter(p => p[1] != null).map(p => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`);
+  if (pts.length) g += `<polyline points="${pts.join(' ')}" fill="none" stroke="#00ff00" stroke-width="2.5"/>`;
+  const tr = S.trades.find(t => t.ticker === m.ticker);
+  if (tr) { const yv = tr.side === 'yes' ? tr.price : 100 - tr.price;
+    g += `<circle cx="${x(tr.seconds_left)}" cy="${y(yv)}" r="7" fill="none" stroke="#fff" stroke-width="2"/><text x="${x(tr.seconds_left) + 10}" y="${y(yv) - 10}" fill="#fff" font-size="11">bought ${tr.side.toUpperCase()} @ ${tr.price}¢</text>`; }
+  if (!pts.length) g += `<text x="${W / 2}" y="${H / 2}" fill="#7fa596" font-size="13" text-anchor="middle">Price path appears as quotes arrive</text>`;
+  $('path').innerHTML = g;
+}
+
+function drawSpark(hist, strike) {
+  const W = 400, H = 110, P = 8;
+  const pts = (hist || []).slice(-300);
+  if (pts.length < 2) { $('spark').innerHTML = `<text x="200" y="58" fill="#7fa596" font-size="12" text-anchor="middle">collecting BTC prices…</text>`; return; }
+  const vals = pts.map(p => p[1]).concat(strike ? [strike] : []);
+  let lo = Math.min(...vals), hi = Math.max(...vals); if (hi - lo < 1) { hi += 1; lo -= 1; }
+  const t0 = pts[0][0], t1 = pts[pts.length - 1][0];
+  const x = t => P + (t - t0) / Math.max(1, t1 - t0) * (W - 2 * P), y = v => H - P - (v - lo) / (hi - lo) * (H - 2 * P);
+  let g = '';
+  if (strike) g += `<line x1="${P}" x2="${W - P}" y1="${y(strike)}" y2="${y(strike)}" stroke="#ffc23d" stroke-dasharray="5 4"/><text x="${W - P}" y="${y(strike) < 16 ? y(strike) + 13 : y(strike) - 4}" fill="#ffc23d" font-size="10" text-anchor="end">target</text>`;
+  g += `<polyline points="${pts.map(p => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="#00ff00" stroke-width="2"/>`;
+  $('spark').innerHTML = g;
+}
+
+pull(); setInterval(pull, 1000); setInterval(tickClock, 250);
+</script>
+</body>
+</html>
