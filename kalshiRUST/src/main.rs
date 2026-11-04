@@ -34,13 +34,19 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// A window's second trade must rest on this many published settlement prints: a
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
-/// Sharp-rise rule, the only trade NORMAL makes: with 1 minute left it buys the side whose mid rose over
-/// the prior 60 s, if the rise and price fit (smallest rise, lowest price, highest price). On 3,396
-/// windows (Sep 28 to Nov 3): 121 trades, 3.4 a day, 80% wins, $0.60 a trade after fees, positive in all
-/// three parts of the month, $0.47 a trade paying 2c more, worst day -$9.47. Rises under 20c lost at
-/// both prices, and the 2-minute check lost on rises of 30c or more. Chosen on the same data, so expect less.
-const SHARP_RULES: &[(f64, f64, f64)] = &[(0.20, 0.50, 0.82)];
-const SHARP_CHECKS_SECS_LEFT: &[f64] = &[60.0];
+/// Sharp-rise rule, the only trade NORMAL makes: at each check it buys the side whose mid rose over the
+/// prior 60 s, if the rise and price fit (smallest rise, lowest price, highest price), once a window.
+/// The widest variant of 540 that stayed positive on the newest third of the month after paying 2c
+/// more. On 3,396 windows (Sep 28 to Nov 3): 608 trades, 16.4 a day, 69% wins, $0.30 a trade after
+/// fees, $0.13 paying 2c more, positive in all three thirds, 25 of 37 days up, worst day -$33, worst
+/// drop -$53. Half the profit is 30-49c entries that win 54%. Chosen on the same data, so expect less.
+const SHARP_RULES: &[(f64, f64, f64)] = &[(0.25, 0.30, 0.82)];
+const SHARP_CHECKS_SECS_LEFT: &[f64] = &[300.0, 240.0, 180.0, 120.0, 60.0];
+/// The shadow rule: the narrow 1-minute rule (20c+ rise into 50-82c, 121 trades, 80% wins, $0.60 a
+/// trade on the month), logged as paper trades under source "shadow", never sent live and never
+/// counted against the paper cap, so both rules are scored on the same live books.
+const SHADOW_RULES: &[(f64, f64, f64)] = &[(0.20, 0.50, 0.82)];
+const SHADOW_CHECKS_SECS_LEFT: &[f64] = &[60.0];
 const SHARP_LOOKBACK_SECS: i64 = 60;
 /// A check this late, or a lookback this far short of 60 s, is skipped.
 const SHARP_SLACK_SECS: i64 = 5;
@@ -224,12 +230,21 @@ fn ioc_limit(price: f64) -> f64 {
 /// What the sharp-rise slot would buy after a 60 s move in the YES mid, or None when the rise and price
 /// fit no rule, or expected profit after fees is not positive.
 fn sharp_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
+    rule_entry(SHARP_RULES, moved, yes_bid, yes_ask)
+}
+
+/// The shadow rule's trade, on the same terms.
+fn shadow_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
+    rule_entry(SHADOW_RULES, moved, yes_bid, yes_ask)
+}
+
+fn rule_entry(rules: &[(f64, f64, f64)], moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
     let side = if moved > 0.0 { Side::Yes } else { Side::No };
     let price = match side {
         Side::Yes => yes_ask,
         Side::No => 1.0 - yes_bid,
     };
-    if !SHARP_RULES.iter().any(|(rise, lo, hi)| moved.abs() >= rise - 1e-9 && price >= lo - 1e-9 && price <= hi + 1e-9) {
+    if !rules.iter().any(|(rise, lo, hi)| moved.abs() >= rise - 1e-9 && price >= lo - 1e-9 && price <= hi + 1e-9) {
         return None;
     }
     let p_win = (price + SHARP_EDGE).min(1.0);
@@ -841,6 +856,8 @@ async fn run_window(
     let mut book_updated = Instant::now();
     let mut veto_logged = false;
     let mut sharp_next = 0usize;
+    let mut shadow_next = 0usize;
+    let mut shadow_taken = false;
     let mut mid_samples: VecDeque<(i64, f64)> = VecDeque::new();
     let mut falling_logged = false;
     let mut maker_logged = false;
@@ -926,12 +943,62 @@ async fn run_window(
                             let note = format!("sharp-rise slot | {:.0}s left | YES mid {:+.1}c in {} s | assumed edge {:.2}c", rem, moved * 100.0, SHARP_LOOKBACK_SECS, SHARP_EDGE * 100.0);
                             if enter(ctx, &ticker, strike, close_ts, spot, edge.p_yes, edge.p_yes, moved, edge, dollars, "BTC 15 min (sharp rise)", "sharp", &note).await {
                                 window_side = Some(edge.side.as_str());
+                                // One sharp-rise trade a window: the later checks are skipped.
+                                sharp_next = SHARP_CHECKS_SECS_LEFT.len();
                             }
                         }
                     }
                     None => println!("[SHARP] {} | {:.0}s left | YES mid {:+.1}c in {} s, YES {:.0}c/{:.0}c | fits no rule, no trade", ticker, rem, moved * 100.0, SHARP_LOOKBACK_SECS, bid * 100.0, ask * 100.0),
                 },
                 _ => println!("[SHARP] {} | {:.0}s left | no price history for the check, no trade", ticker, rem),
+            }
+        }
+
+        // ---- shadow rule: paper only, one a window, outside every cap -------------------
+        if mode.sharp_slot && !shadow_taken && shadow_next < SHADOW_CHECKS_SECS_LEFT.len() && rem <= SHADOW_CHECKS_SECS_LEFT[shadow_next] {
+            let on_time = rem >= SHADOW_CHECKS_SECS_LEFT[shadow_next] - SHARP_SLACK_SECS as f64;
+            shadow_next += 1;
+            if let (Some(bid), Some(ask), Some(moved), true) = (yes_bid, yes_ask, sharp_move(&mid_samples, now), on_time) {
+                if let Some(edge) = shadow_entry(moved, bid, ask) {
+                    if side_is_falling(&mid_samples, edge.side, now) {
+                        println!("[SHADOW] {} | {:.0}s left | {} @ {:.1}c has a falling price, not logged", ticker, rem, edge.side.as_str().to_uppercase(), edge.price * 100.0);
+                    } else {
+                        let count = (mode.max_order_dollars / edge.price).floor() as u32;
+                        if count >= 1 {
+                            let note = format!("shadow rule | {:.0}s left | YES mid {:+.1}c in {} s | paper only", rem, moved * 100.0, SHARP_LOOKBACK_SECS);
+                            println!("[SHADOW] {} | {:.0}s left | {} @ {:.1}c x{} logged on paper", ticker, rem, edge.side.as_str().to_uppercase(), edge.price * 100.0, count);
+                            ctx.book.lock().await.record(
+                                Trade {
+                                    mode: ctx.mode_label(),
+                                    source: "shadow".into(),
+                                    ticker: ticker.to_string(),
+                                    title: "BTC 15 min (shadow rule)".into(),
+                                    side: edge.side.as_str().into(),
+                                    price: edge.price,
+                                    count,
+                                    cost: count as f64 * edge.price,
+                                    fee: taker_fee(edge.price) * count as f64,
+                                    model_prob: edge.p_yes,
+                                    gbm_prob: edge.p_yes,
+                                    momentum: moved,
+                                    edge_cents: edge.cents,
+                                    spot,
+                                    strike,
+                                    placed_ts: now,
+                                    close_ts,
+                                    client_order_id: format!("shadow-{}-{}", ticker, now),
+                                    order_id: None,
+                                    result: None,
+                                    pnl: None,
+                                    note: String::new(),
+                                },
+                                ctx.supa.as_ref(),
+                                &note,
+                            );
+                            shadow_taken = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -1359,11 +1426,12 @@ mod tests {
     }
 
     #[test]
-    fn normal_checks_the_sharp_rise_once_with_a_minute_left() {
+    fn normal_checks_the_sharp_rise_every_minute_from_five_out() {
         std::env::remove_var("BETS_PER_WINDOW");
         let m = mode_params("NORMAL");
         assert_eq!((m.bets_per_window, m.settle_trades), (2, 0));
-        assert_eq!(SHARP_CHECKS_SECS_LEFT, &[60.0]);
+        assert_eq!(SHARP_CHECKS_SECS_LEFT, &[300.0, 240.0, 180.0, 120.0, 60.0]);
+        assert_eq!(SHADOW_CHECKS_SECS_LEFT, &[60.0]);
     }
 
     #[test]
@@ -1385,17 +1453,25 @@ mod tests {
     }
 
     #[test]
-    fn sharp_slot_needs_a_rise_of_20c_into_50_to_82c() {
-        assert!(sharp_entry(0.19, 0.74, 0.75).is_none());
-        assert!(sharp_entry(0.20, 0.74, 0.75).is_some());
-        assert!(sharp_entry(-0.20, 0.25, 0.26).is_some());
-        assert!(sharp_entry(0.19, 0.59, 0.60).is_none());
-        assert!(sharp_entry(0.20, 0.59, 0.60).is_some());
-        assert!(sharp_entry(0.20, 0.49, 0.50).is_some());
-        assert!(sharp_entry(0.20, 0.81, 0.82).is_some());
+    fn sharp_slot_needs_a_rise_of_25c_into_30_to_82c() {
+        assert!(sharp_entry(0.24, 0.74, 0.75).is_none());
+        assert!(sharp_entry(0.25, 0.74, 0.75).is_some());
+        assert!(sharp_entry(-0.25, 0.25, 0.26).is_some());
+        assert!(sharp_entry(0.25, 0.29, 0.30).is_some());
+        assert!(sharp_entry(0.25, 0.28, 0.29).is_none());
+        assert!(sharp_entry(0.25, 0.81, 0.82).is_some());
         assert!(sharp_entry(0.30, 0.82, 0.83).is_none());
-        assert!(sharp_entry(0.30, 0.48, 0.49).is_none());
         assert!(sharp_entry(-0.30, 0.10, 0.11).is_none());
+    }
+
+    #[test]
+    fn shadow_rule_is_the_narrow_20c_rule_at_one_minute() {
+        assert!(shadow_entry(0.19, 0.74, 0.75).is_none());
+        assert!(shadow_entry(0.20, 0.74, 0.75).is_some());
+        assert!(shadow_entry(0.20, 0.49, 0.50).is_some());
+        assert!(shadow_entry(0.20, 0.48, 0.49).is_none());
+        assert!(shadow_entry(0.20, 0.81, 0.82).is_some());
+        assert!(shadow_entry(0.20, 0.82, 0.83).is_none());
     }
 
     #[test]

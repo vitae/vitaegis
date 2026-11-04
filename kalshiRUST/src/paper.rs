@@ -1,6 +1,7 @@
-/// Every trade the bot takes, paper or live, from either the 15-minute engine ("bot") or
-/// the market sniper ("sniper"): logged to trades.jsonl, settled against Kalshi's result,
-/// mirrored to Supabase for the HUD. P&L is after the taker fee.
+/// Every trade the bot takes, paper or live, from the 15-minute engine ("bot"), the market
+/// sniper ("sniper") or the shadow rule ("shadow", paper only, outside every cap): logged to
+/// trades.jsonl, settled against Kalshi's result, mirrored to Supabase for the HUD. P&L is
+/// after the taker fee.
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashSet;
@@ -101,9 +102,10 @@ impl TradeBook {
         self.trades.iter().any(|t| t.ticker == ticker && t.result.is_none())
     }
 
-    /// Open trades on one market, so a window can hold up to its mode's allowance.
+    /// Open trades on one market, so a window can hold up to its mode's allowance. Shadow
+    /// trades are not positions and take no room.
     pub fn open_on(&self, ticker: &str) -> usize {
-        let local = self.trades.iter().filter(|t| t.ticker == ticker && t.result.is_none()).count();
+        let local = self.trades.iter().filter(|t| t.ticker == ticker && t.source != "shadow" && t.result.is_none()).count();
         // A position only Kalshi knows about, say from a crash before it was recorded, still counts.
         local.max(usize::from(self.exchange_open.contains(ticker)))
     }
@@ -120,8 +122,12 @@ impl TradeBook {
         self.trades.push(trade);
         self.save();
         let src = &self.trades.last().unwrap().source;
-        let limit = if src == "sniper" { self.sniper_limit } else { self.bot_limit };
-        println!("[BOOK] {} trade {}/{} logged", src.to_uppercase(), self.count_source(src), limit);
+        if src == "shadow" {
+            println!("[BOOK] SHADOW trade {} logged (paper only, no cap)", self.count_source(src));
+        } else {
+            let limit = if src == "sniper" { self.sniper_limit } else { self.bot_limit };
+            println!("[BOOK] {} trade {}/{} logged", src.to_uppercase(), self.count_source(src), limit);
+        }
     }
 
     /// Bot trades on one window and their settled P&L (None while any is pending).
@@ -151,8 +157,9 @@ impl TradeBook {
         self.trades.iter().filter(|t| t.source == "bot" && t.pnl.is_some()).count()
     }
 
+    /// Unsettled trades that hold a paper run open. Shadow trades settle on their own and never delay an exit.
     pub fn pending(&self) -> usize {
-        self.trades.iter().filter(|t| t.result.is_none()).count()
+        self.trades.iter().filter(|t| t.result.is_none() && t.source != "shadow").count()
     }
 
     pub fn is_done(&self) -> bool {
@@ -215,7 +222,7 @@ impl TradeBook {
             );
         }
         println!("-------------------------------------------------------");
-        for src in ["bot", "sniper"] {
+        for src in ["bot", "sniper", "shadow"] {
             let settled: Vec<&Trade> = self.trades.iter().filter(|t| t.source == src && t.pnl.is_some()).collect();
             if settled.is_empty() && self.count_source(src) == 0 {
                 continue;

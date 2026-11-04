@@ -25,7 +25,7 @@
    expected value: `EV = p_win·(1 − price) − (1 − p_win)·price − 0.07·price·(1 − price)`.
    NORMAL mode needs ≥ 2¢ per contract; RISK mode needs ≥ 1¢.
 2. **Prices both sides.** YES at the ask or NO at (1 − YES bid), whichever has the edge.
-3. **Enters late.** NORMAL: one check with 1 minute left. RISK: the last 90 s, plus the early engine from 7 minutes out.
+3. **Enters late.** NORMAL: a check every minute from 5 minutes out, one trade a window. RISK: the last 90 s, plus the early engine from 7 minutes out.
 4. **Caps size.** NORMAL $5 per trade, up to 2 per window, and live trading stops for the UTC day after a $30 loss. RISK up to $100, 2 per window.
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
@@ -43,18 +43,24 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | up to 2 | 2 |
-| Entry | one check with 1 minute left | last 90 s, plus the early engine from 7 min out |
+| Entry | checks at 5, 4, 3, 2 and 1 minutes left, one trade a window | last 90 s, plus the early engine from 7 min out |
 | Last-90 trade | none, settlement math only logs | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | the rules below | $0.50 expected profit, 97c top price |
 
-NORMAL makes one $5 trade a window, checked with 1 minute left. The check buys the side whose mid rose over
-the prior 60 s if the rise is 20c or more and the price is 50c to 82c. (Until Nov 4 it also checked at
-2 minutes and took rises of 10c into 70-82c or 18c into 50-70c; see the Nov 4 read for why those went.)
+NORMAL makes one $5 trade a window. It checks with 5, 4, 3, 2 and 1 minutes left and buys the side whose mid
+rose over the prior 60 s if the rise is 25c or more and the price is 30c to 82c; after a trade the later
+checks are skipped. (Until Nov 4 it checked at 2 and 1 minutes for rises of 10c into 70-82c or 18c into
+50-70c; see the Nov 4 reads for the choice.)
 
 A check skips a side whose mid fell 1c or more over the last 30 s. Settlement math still runs and logs in
 NORMAL, but places no trades.
+
+**Shadow rule.** Alongside, the bot logs the narrow rule (a 20c+ rise into 50-82c, checked once with 1 minute
+left) as paper trades under source `shadow`: never sent live, never counted against `PAPER_TRADE_LIMIT`,
+settled like every other paper trade. The trade summary and `kalshirust_events` (kinds `signal` and
+`settle`, source `shadow`) score it beside the live rule on the same windows.
 
 On the month of data: 326 trades, 9.9 a day, in 10.8% of windows, 6 of them second trades, 77.0% wins, +$0.40 a
 trade, about +$3.96 a day, worst drop $36.24, worst UTC day -$33.94. It is positive in all three parts of the
@@ -254,3 +260,33 @@ positive in all three thirds (+$10.95, +$42.78, +$19.15). The last 7 days are 29
 -$4.39, and the book in these windows moves 50c in five seconds, so fills are the open question. Chosen on
 the same data again: the 96-trade paper run (`PAPER_TRADE_LIMIT=96`, about 4 weeks) is its test, and it needs
 about +$0.15 a trade after fees to keep.
+
+## The read, Nov 4 2026, second pass: more trades a day
+
+540 variants of the sharp-rise rule (rise 10-30c, price bands from 30c to 96c, checks at 1 to 5 minutes,
+one or two trades a window), chosen on the older 25 days and scored on the newest 13. Nearly every variant
+that trades more than 10 times a day on the older days loses on the newer ones. The exceptions all take a
+25c+ rise into 30-82c; the best, checked every minute from 5 out with one trade a window, is the new
+NORMAL rule:
+
+| | trades | a day | wins | net | a trade | paying 2c more |
+|---|---|---|---|---|---|---|
+| older two thirds | 403 | 16.1 | 68% | +$98 | +$0.24 | +$0.10 |
+| newest third | 205 | 15.8 | 71% | +$81 | +$0.40 | +$0.23 |
+| whole month | 608 | 16.4 | 69% | +$179 | +$0.30 | +$0.13 |
+
+Positive in all three thirds, 25 of 37 days up, worst day -$33, worst drop -$53. By check: 5 min +$0.13 a
+trade, 4 min +$0.31, 3 min +$0.43, 2 min -$0.06, 1 min +$0.81. By price: 30-49c entries are 106 trades
+winning 54% for +$107, 50-82c are 502 trades winning 73% for +$73, so half the profit is the cheap side.
+The narrow 1-minute rule (121 trades, +$0.60 a trade) now runs as the shadow.
+
+**Stake for $10 a day.** The month's edge is about $4.90 a day at $5 before slippage and $2.24 at 2c
+more. $10 a day needs $10 a trade before slippage or $20 at 2c, and the worst day scales with it: -$68
+at $10 (4 days past the $30 daily stop), -$139 at $20 (10 days). The paper run at $5 says what the fills
+actually cost; the stake is set after it, not before.
+
+**Other coins.** Kalshi runs the same market, with the same CF Benchmarks settlement, on ETH, SOL, XRP,
+DOGE and others. On 7-13 days of public data none of them carries either rule: ETH loses under both (a 4c
+spread at the last minute against 1c on BTC), the wide rule loses on XRP (-$0.34 a trade) and SOL (-$0.18)
+and is flat on DOGE, and the narrow rule is positive on SOL and XRP only in windows that mostly have no
+quote in the last minute. BTC is the only market with the depth for this.
