@@ -428,6 +428,47 @@ describe('UFC copy trades', () => {
   });
 });
 
+describe('shadow rule trades', () => {
+  it('counts them under their own source, apart from the bot', () => {
+    const NOW_MS = Date.parse('2026-11-04T21:30:00Z');
+    const s = summarize(
+      [
+        {
+          id: 's1',
+          kind: 'signal',
+          source: 'shadow',
+          created_at: '2026-11-04T20:59:00Z',
+          ticker: 'KXBTC15M-26NOV041600-00',
+          client_order_id: 'shadow-KXBTC15M-26NOV041600-00-1793825940',
+          side: 'yes',
+          price_cents: 57,
+          count: 8,
+          cost_cents: 456,
+          fee_cents: 14,
+          live: false,
+          mode: 'PAPER-NORMAL',
+        } as KalshirustEvent,
+        {
+          id: 's2',
+          kind: 'settle',
+          source: 'shadow',
+          created_at: '2026-11-04T21:00:08Z',
+          ticker: 'KXBTC15M-26NOV041600-00',
+          client_order_id: 'shadow-KXBTC15M-26NOV041600-00-1793825940',
+          result: 'no',
+          pnl_cents: -470,
+          live: false,
+          mode: 'PAPER-NORMAL',
+        } as KalshirustEvent,
+      ],
+      NOW_MS,
+    );
+    expect(s.trades[0].source).toBe('shadow');
+    expect(s.totals.bySource.shadow).toMatchObject({ trades: 1, settled: 1, pnlCents: -470 });
+    expect(s.totals.bySource.bot.trades).toBe(0);
+  });
+});
+
 describe('exchangeCheck', () => {
   const row = (message: string | null) =>
     ({ kind: 'reconcile', created_at: '2026-11-02T09:00:00Z', message }) as KalshirustEvent;

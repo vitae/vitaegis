@@ -973,6 +973,7 @@ function Trades({
   const allPaper = trades.length > 0 && trades.every((t) => !t.live);
   const sniper = totals.bySource.sniper;
   const ufc = totals.bySource.ufc;
+  const shadow = totals.bySource.shadow;
   const rows = trades.slice(0, TRADE_ROWS);
   return (
     <section className="mt-10" aria-labelledby="trades-heading">
@@ -1007,6 +1008,16 @@ function Trades({
             {sniper.settled ? signedDollars(sniper.pnlCents) : '—'}
           </span>{' '}
           net, {pct(sniper.hitRate)} hit rate
+        </p>
+      )}
+      {shadow.trades > 0 && (
+        <p className="mt-3 text-sm text-white/60">
+          Shadow rule (20c+ into 50-82c at 1 min, never sent): {shadow.trades} trade
+          {shadow.trades === 1 ? '' : 's'},{' '}
+          <span className={tone(shadow.settled ? shadow.pnlCents : null)}>
+            {shadow.settled ? signedDollars(shadow.pnlCents) : '—'}
+          </span>{' '}
+          net, {pct(shadow.hitRate)} hit rate
         </p>
       )}
       {ufc.trades > 0 && (

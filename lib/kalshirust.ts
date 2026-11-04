@@ -2,7 +2,7 @@
 
 export type RustMode = 'NORMAL' | 'RISK';
 export type RustSide = 'yes' | 'no';
-export type RustSource = 'bot' | 'sniper' | 'ufc';
+export type RustSource = 'bot' | 'sniper' | 'ufc' | 'shadow';
 export type RustEventSource = RustSource | 'backtest';
 export type StrikeType = 'greater' | 'less' | 'between' | 'greater_or_equal';
 
@@ -420,7 +420,13 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
     .map((e) => {
       const s = e.client_order_id ? settles.get(e.client_order_id) : undefined;
       const source: RustSource =
-        e.source === 'sniper' ? 'sniper' : e.source === 'ufc' ? 'ufc' : 'bot';
+        e.source === 'sniper'
+          ? 'sniper'
+          : e.source === 'ufc'
+            ? 'ufc'
+            : e.source === 'shadow'
+              ? 'shadow'
+              : 'bot';
       const secondsToClose = num(e.seconds_to_close);
       return {
         id: e.id,
@@ -450,6 +456,7 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
       bot: tally(trades.filter((t) => t.source === 'bot')),
       sniper: tally(trades.filter((t) => t.source === 'sniper')),
       ufc: tally(trades.filter((t) => t.source === 'ufc')),
+      shadow: tally(trades.filter((t) => t.source === 'shadow')),
     },
     bySlot: {
       anytime: tally(trades.filter((t) => t.slot === 'anytime')),
