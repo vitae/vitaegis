@@ -25,11 +25,11 @@
    expected value: `EV = p_win·(1 − price) − (1 − p_win)·price − 0.07·price·(1 − price)`.
    NORMAL mode needs ≥ 2¢ per contract; RISK mode needs ≥ 1¢.
 2. **Prices both sides.** YES at the ask or NO at (1 − YES bid), whichever has the edge.
-3. **Enters late.** NORMAL: up to two trades a window, checked with 2 minutes and 1 minute left. RISK: the last 90 s, plus the early engine from 7 minutes out.
+3. **Enters late.** NORMAL: one check with 1 minute left. RISK: the last 90 s, plus the early engine from 7 minutes out.
 4. **Caps size.** NORMAL $5 per trade, up to 2 per window, and live trading stops for the UTC day after a $30 loss. RISK up to $100, 2 per window.
 5. **Paper first.** `LIVE_TRADING=false` logs every signal to `trades.jsonl` and
    Supabase, settles against Kalshi's result, and reports P&L after fees. The run stops
-   after 8 settled 15-minute trades so the edge can be read before any money moves.
+   after 96 settled 15-minute trades (`PAPER_TRADE_LIMIT`) so the edge can be read before any money moves.
 6. **Sniper (paper only).** Every 60 s it prices every open Kalshi Bitcoin price market except the
    15-minute one, found from Kalshi's series list. Markets that pay on touching a level use twice
    the chance of ending beyond it. It lists YES picks with a 75%+ win chance and 3¢ of edge at
@@ -43,20 +43,18 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | up to 2 | 2 |
-| Entry | checks with 2 minutes and 1 minute left | last 90 s, plus the early engine from 7 min out |
+| Entry | one check with 1 minute left | last 90 s, plus the early engine from 7 min out |
 | Last-90 trade | none, settlement math only logs | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | the rules below | $0.50 expected profit, 97c top price |
 
-NORMAL makes up to two $5 trades a window (`BETS_PER_WINDOW`), one per check, with 2 minutes and 1 minute
-left. A check buys the side whose mid rose over the prior 60 s if either rule fits:
+NORMAL makes one $5 trade a window, checked with 1 minute left. The check buys the side whose mid rose over
+the prior 60 s if the rise is 20c or more and the price is 50c to 82c. (Until Nov 4 it also checked at
+2 minutes and took rises of 10c into 70-82c or 18c into 50-70c; see the Nov 4 read for why those went.)
 
-- A rise of 10c or more, at 70c to 82c.
-- A rise of 18c or more, at 50c to 70c.
-
-A check skips a side whose mid fell 1c or more over the last 30 s. A second trade must be on the same side as
-the first. Settlement math still runs and logs in NORMAL, but places no trades.
+A check skips a side whose mid fell 1c or more over the last 30 s. Settlement math still runs and logs in
+NORMAL, but places no trades.
 
 On the month of data: 326 trades, 9.9 a day, in 10.8% of windows, 6 of them second trades, 77.0% wins, +$0.40 a
 trade, about +$3.96 a day, worst drop $36.24, worst UTC day -$33.94. It is positive in all three parts of the
@@ -232,3 +230,27 @@ RISK on fewer than that.
 On a 45¢ contract with $5, the most you can win is about $6, not $10. A "slight edge" at
 these prices is cents per contract; with $5 trades that is cents per trade. Volume only
 turns cents into dollars if the edge is real, which is exactly what the paper run measures.
+
+## The read, Nov 4 2026 (same 3,396 windows, plus the live log)
+
+The live bot still had no fill after 2 days: the account held $0.03, the $60 having gone into two NFL
+positions placed from the account, and the VPS ran the binary from before the cushion. Scoring the 29
+refused or unfilled orders against the settled results gave 17 wins and 12 losses, about -$15 at $5 each.
+
+One of them, YES at 79c after a 68c rise in the last minute, pointed at the size of the rise. Buying the
+rising side at the 1-minute check, by rise over the prior 60 s, $5 a trade after fees:
+
+| rise | 70-82c | 50-70c |
+|---|---|---|
+| under 10c | 10 trades, 70%, -$0.53 a trade | 29, 59%, -$0.30 |
+| 10-19c | 22, 73%, -$0.29 | 17, 47%, -$1.08 |
+| 20-29c | 18, 89%, +$0.72 | 19, 74%, +$0.83 |
+| 30c+ | 50, 84%, +$0.37 | 34, 74%, +$0.75 |
+
+The same split at the 2-minute check is mixed (10-19c into 70-82c +$0.41, 30c+ -$0.20), so that check
+goes. The rule is now a 20c+ rise into 50-82c, checked once with 1 minute left: 121 trades, 3.4 a day,
+80.2% wins, +$72.87, +$0.60 a trade, +$0.47 paying 2c more, 24 of 36 days up, worst day -$9.47, and
+positive in all three thirds (+$10.95, +$42.78, +$19.15). The last 7 days are 29 trades, 69% wins,
+-$4.39, and the book in these windows moves 50c in five seconds, so fills are the open question. Chosen on
+the same data again: the 96-trade paper run (`PAPER_TRADE_LIMIT=96`, about 4 weeks) is its test, and it needs
+about +$0.15 a trade after fees to keep.

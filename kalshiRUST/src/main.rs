@@ -34,12 +34,13 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 /// A window's second trade must rest on this many published settlement prints: a
 /// calculation, not a projection.
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
-/// Sharp-rise rules, the only trades NORMAL makes: each check buys the side whose mid rose over the prior
-/// 60 s, if the rise and price fit a rule of (smallest rise, lowest price, highest price). On 2,958 windows:
-/// 326 trades, 77% wins, $0.40 a trade after fees, about $3.96 a day, worst drop $36.24, positive in all
-/// three parts of the month, t=2.46. Those rules were chosen on the same data, so expect less.
-const SHARP_RULES: &[(f64, f64, f64)] = &[(0.10, 0.70, 0.82), (0.18, 0.50, 0.70)];
-const SHARP_CHECKS_SECS_LEFT: &[f64] = &[120.0, 60.0];
+/// Sharp-rise rule, the only trade NORMAL makes: with 1 minute left it buys the side whose mid rose over
+/// the prior 60 s, if the rise and price fit (smallest rise, lowest price, highest price). On 3,396
+/// windows (Sep 28 to Nov 3): 121 trades, 3.4 a day, 80% wins, $0.60 a trade after fees, positive in all
+/// three parts of the month, $0.47 a trade paying 2c more, worst day -$9.47. Rises under 20c lost at
+/// both prices, and the 2-minute check lost on rises of 30c or more. Chosen on the same data, so expect less.
+const SHARP_RULES: &[(f64, f64, f64)] = &[(0.20, 0.50, 0.82)];
+const SHARP_CHECKS_SECS_LEFT: &[f64] = &[60.0];
 const SHARP_LOOKBACK_SECS: i64 = 60;
 /// A check this late, or a lookback this far short of 60 s, is skipped.
 const SHARP_SLACK_SECS: i64 = 5;
@@ -513,7 +514,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     // The trade limit ends a paper run. A live bot stops on STOP or the daily loss limit.
-    let bot_limit: usize = if live { usize::MAX } else { env::var("PAPER_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(8) };
+    let bot_limit: usize = if live { usize::MAX } else { env::var("PAPER_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(96) };
     let sniper_limit: usize = env::var("SNIPE_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(20);
     let initial_mode = env::var("MODE").unwrap_or_else(|_| "NORMAL".into()).to_uppercase();
     let supa = Supa::from_env(&client);
@@ -1358,11 +1359,11 @@ mod tests {
     }
 
     #[test]
-    fn normal_makes_up_to_two_sharp_trades_a_window() {
+    fn normal_checks_the_sharp_rise_once_with_a_minute_left() {
         std::env::remove_var("BETS_PER_WINDOW");
         let m = mode_params("NORMAL");
         assert_eq!((m.bets_per_window, m.settle_trades), (2, 0));
-        assert_eq!(SHARP_CHECKS_SECS_LEFT, &[120.0, 60.0]);
+        assert_eq!(SHARP_CHECKS_SECS_LEFT, &[60.0]);
     }
 
     #[test]
@@ -1384,14 +1385,14 @@ mod tests {
     }
 
     #[test]
-    fn sharp_slot_needs_a_rise_and_price_that_fit_a_rule() {
-        assert!(sharp_entry(0.09, 0.74, 0.75).is_none());
-        assert!(sharp_entry(0.10, 0.74, 0.75).is_some());
-        assert!(sharp_entry(-0.10, 0.25, 0.26).is_some());
-        assert!(sharp_entry(0.09, 0.69, 0.70).is_none());
-        assert!(sharp_entry(0.10, 0.69, 0.70).is_some());
-        assert!(sharp_entry(0.17, 0.59, 0.60).is_none());
-        assert!(sharp_entry(0.18, 0.59, 0.60).is_some());
+    fn sharp_slot_needs_a_rise_of_20c_into_50_to_82c() {
+        assert!(sharp_entry(0.19, 0.74, 0.75).is_none());
+        assert!(sharp_entry(0.20, 0.74, 0.75).is_some());
+        assert!(sharp_entry(-0.20, 0.25, 0.26).is_some());
+        assert!(sharp_entry(0.19, 0.59, 0.60).is_none());
+        assert!(sharp_entry(0.20, 0.59, 0.60).is_some());
+        assert!(sharp_entry(0.20, 0.49, 0.50).is_some());
+        assert!(sharp_entry(0.20, 0.81, 0.82).is_some());
         assert!(sharp_entry(0.30, 0.82, 0.83).is_none());
         assert!(sharp_entry(0.30, 0.48, 0.49).is_none());
         assert!(sharp_entry(-0.30, 0.10, 0.11).is_none());
