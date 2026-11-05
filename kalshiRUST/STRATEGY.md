@@ -43,16 +43,24 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | up to 2 | 2 |
-| Entry | checks at 5, 4, 3 and 1 minutes left, one trade a window | last 90 s, plus the early engine from 7 min out |
+| Entry | checks at 5, 4, 3 and 1 minutes left, one trade a window, with the hour's BTC trend | last 90 s, plus the early engine from 7 min out |
 | Last-90 trade | none, settlement math only logs | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
-| Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
+| Stake | live: 15% of the Kalshi balance, $5 max (`STAKE_FRACTION`, `MAX_ORDER_DOLLARS`); paper: $5 flat | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | the rules below | $0.50 expected profit, 97c top price |
 
-NORMAL makes one $5 trade a window. It checks with 5, 4, 3 and 1 minutes left and buys the side whose mid
-rose over the prior 60 s if the rise is 25c or more and the price is 30c to 49c or 66c to 82c; after a trade
-the later checks are skipped. (From Nov 4 19:00 to Nov 5 it also checked at 2 minutes and took 50-65c; before
-that it checked at 2 and 1 minutes for rises of 10c into 70-82c or 18c into 50-70c. See the Nov 4 reads.)
+NORMAL makes one trade a window. It checks with 5, 4, 3 and 1 minutes left and buys the side whose mid
+rose over the prior 60 s if the rise is 25c or more, the price is 30c to 49c or 66c to 82c, and the side
+agrees with BTC's move over the prior hour (this window's strike against the strike of the window that
+closed an hour earlier; YES needs BTC up, NO needs BTC down); after a trade the later checks are skipped.
+Live, the stake is 15% of the Kalshi balance up to $5, read again at every window, so $30 funds $4.50
+trades and a losing run shrinks the stake. (From Nov 4 19:00 to Nov 5 it also checked at 2 minutes, took
+50-65c and had no trend condition; before that it checked at 2 and 1 minutes for rises of 10c into 70-82c or
+18c into 50-70c. See the Nov 4 and Nov 5 reads.)
+
+With `LIVE_TRADING=true` and under $5 in the account the bot waits for the deposit, checking every 60 s and
+posting the wait to the HUD, rather than trading paper under a live flag. The strikes of the last two hours
+of windows are fetched at startup so the trend is known from the first check.
 
 A check skips a side whose mid fell 1c or more over the last 30 s. Settlement math still runs and logs in
 NORMAL, but places no trades.
@@ -304,7 +312,37 @@ The new rule keeps the month's profit on 230 fewer trades, test third 80% wins, 
 finding was in the first Nov 4 read; the band cut is new and chosen on the same month, so it is the
 less certain of the two, which is why the Nov 4 rule runs on as the shadow.
 
-**Stake for $10 a day.** The month's edge is about $4.90 a day at $5 before slippage and $2.24 at 2c
+## The read, Nov 5 2026: the profit is trend-following, not BTC going up
+
+The user asked whether the rule makes money because Bitcoin rises. It does not: BTC fell from $82,961 to
+$77,003 over the 37 days, the rule is positive on the 18 up days (+$116) and the 19 down days (+$63), and
+the day's P&L has a correlation of +0.13 with the day's BTC move. What it is doing is following a trend that
+is already an hour old. Splitting the new rule's 374 trades by BTC's move over the prior hour (this
+window's strike against the strike four windows back):
+
+| 25c+ into 30-49c or 66-82c at 5, 4, 3, 1 | trades | a day | wins | net | a trade | thirds | test third | days up | worst day |
+|---|---|---|---|---|---|---|---|---|---|
+| all | 374 | 10.1 | 74.1% | +$178 | +$0.48 | +27/+43/+108 | +$108 (80%) | 24/37 | -$20 |
+| with the hour's trend | 198 | 5.4 | 78.8% | +$179 | +$0.91 | +31/+44/+104 | +$104 (86%) | 25/36 | -$11 |
+| against the hour's trend | 171 | 4.6 | 67.8% | -$8 | -$0.05 | -8/-3/+3 | +$3 (70%) | 17/37 | -$20 |
+| with the trend, paying 2c more | 176 | 4.8 | 76.1% | +$93 | +$0.53 | -3/+16/+80 | +$80 (84%) | 21/36 | -$13 |
+
+The trades against the hour's trend are the whole of the rule's break-even half. Dropping them keeps the
+month's profit on half the trades, lifts the win rate to 79%, and halves the worst day. The horizon is not
+tuned: 15, 30 and 120 minute trends keep +$104 to +$119 of the +$179, and 60 is the best of them. The same
+filter on the Nov 4 wide rule keeps +$186 of +$177 on 324 of 606 trades, so it is not an artefact of the
+band cut. By side the month is lopsided (NO after a fall +$160, YES after a rise +$18), which is the
+downtrend showing through: on up days the YES trades win 72% and on down days 66%, and the trend filter
+is the symmetric form of that. The wide rule still runs as the shadow and every trade's note now carries
+the hour's BTC move, so the filter is scored on live books too.
+
+**Going live with $30.** The stake is now 15% of the balance up to $5 ($4.50 at $30), re-read every window,
+and the daily loss stop is set to $10 in `.env`. At 5.4 trades a day, 79% wins and $0.91 a trade the month
+says about +$4.90 a day at a full $5 stake, less at $4.50 and less again for the 2c the live book costs
+(about +$2.50 a day). A run of four losses, which 100 trades at 79% produce about one time in five, costs
+about $14 and drops the stake to $2.40, which is the point of the fraction.
+
+**Stake for $10 a day (Nov 4, before the trend condition).** The month's edge is about $4.90 a day at $5 before slippage and $2.24 at 2c
 more. $10 a day needs $10 a trade before slippage or $20 at 2c, and the worst day scales with it: -$68
 at $10 (4 days past the $30 daily stop), -$139 at $20 (10 days). The paper run at $5 says what the fills
 actually cost; the stake is set after it, not before.

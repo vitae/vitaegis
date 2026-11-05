@@ -478,9 +478,10 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: one $5 trade a window, checked with 5, 4, 3 and 1 min left: a 25¢+ rise over the
-        prior minute into 30–49¢ or 66–82¢, never while its price is falling. The old rule (every
-        minute from 5 out, 30–82¢) is logged as a shadow, never sent. Live trading stops for the UTC
+        NORMAL: one trade a window of 15% of the balance ($5 max), checked with 5, 4, 3 and 1 min
+        left: a 25¢+ rise over the prior minute into 30–49¢ or 66–82¢, only in the direction BTC
+        moved over the prior hour, never while its price is falling. The old rule (every minute from
+        5 out, 30–82¢, no trend) is logged as a shadow, never sent. Live trading stops for the UTC
         day after a $30 loss. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier
         trades from 7 min out with no win-chance floor.
       </p>
