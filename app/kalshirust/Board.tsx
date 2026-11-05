@@ -29,6 +29,7 @@ import {
   type Windows,
   tradesSince,
   uptimeLabel,
+  shortTicker,
 } from '@/lib/kalshirust';
 import LineChart from '../kalshi/LineChart';
 import kalshiStyles from '../kalshi/kalshi.module.css';
@@ -720,7 +721,11 @@ const ExternalLink = ({ href, children }: { href: string; children: React.ReactN
 const TickerLink = ({ ticker, className = '' }: { ticker: string | null; className?: string }) =>
   ticker ? (
     <span className={className}>
-      <ExternalLink href={kalshiUrl(ticker)}>{ticker}</ExternalLink>
+      <ExternalLink href={kalshiUrl(ticker)}>
+        <span title={ticker} className="whitespace-nowrap">
+          {shortTicker(ticker)}
+        </span>
+      </ExternalLink>
     </span>
   ) : (
     <span className={className}>—</span>

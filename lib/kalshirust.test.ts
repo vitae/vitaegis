@@ -14,6 +14,7 @@ import {
   expectedProfitCents,
   maxBuyCents,
   tradeSlot,
+  shortTicker,
 } from './kalshirust';
 
 const base: KalshirustEvent = {
@@ -899,5 +900,15 @@ describe('summarizeBacktest', () => {
     expect(b.ranAt).toBeNull();
     expect(b.totals).toMatchObject({ trades: 0, hitRate: null, roi: null, avgEdgeCents: null });
     expect(b.byPriceBucket.map((r) => r.trades)).toEqual([0, 0, 0, 0]);
+  });
+});
+
+describe('shortTicker', () => {
+  it('turns a 15 minute crypto ticker into coin and close time', () => {
+    expect(shortTicker('KXBTC15M-26NOV041430-30')).toBe('BTC 14:30 ET');
+    expect(shortTicker('KXETH15M-26NOV040015-15')).toBe('ETH 00:15 ET');
+  });
+  it('leaves other tickers alone', () => {
+    expect(shortTicker('KXUFCFIGHT-26NOV14GANHOK-HOK')).toBe('KXUFCFIGHT-26NOV14GANHOK-HOK');
   });
 });

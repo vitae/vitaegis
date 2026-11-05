@@ -85,6 +85,12 @@ export interface Prediction {
 /** Which of the bot's entry slots took a trade, from its order id prefix. */
 export type TradeSlot = 'anytime' | 'sharp' | 'last90' | 'other';
 
+/** KXBTC15M-26NOV041430-30 reads as "BTC 14:30 ET"; other tickers are returned as they are. */
+export function shortTicker(ticker: string): string {
+  const m = /^KX([A-Z]+)15M-\d{2}[A-Z]{3}\d{2}(\d{2})(\d{2})-\d{2}$/.exec(ticker);
+  return m ? `${m[1]} ${m[2]}:${m[3]} ET` : ticker;
+}
+
 export function tradeSlot(clientOrderId: string | null | undefined): TradeSlot {
   if (clientOrderId?.startsWith('anytime-')) return 'anytime';
   if (clientOrderId?.startsWith('sharp-')) return 'sharp';
