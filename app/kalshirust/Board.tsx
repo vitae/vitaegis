@@ -1050,11 +1050,11 @@ function Trades({
           <thead className="text-[10px] uppercase tracking-[0.15em] text-white/40">
             <tr>
               <Th>Time</Th>
+              <Th right>P&amp;L</Th>
+              <Th>Result</Th>
               <Th>Window</Th>
               <Th>Entry</Th>
               <PredictionHeads />
-              <Th>Result</Th>
-              <Th right>P&amp;L</Th>
             </tr>
           </thead>
           <tbody>
@@ -1067,13 +1067,25 @@ function Trades({
             )}
             {rows.map((t) => (
               <tr key={t.id} className="border-t border-white/10 text-white/80">
+                <Td title={hst(t.at, true)}>
+                  <span className="text-white/50">{clock(Date.parse(t.at))}</span>
+                  {!allPaper && (
+                    <span
+                      className={`ml-1.5 text-[9px] uppercase tracking-[0.15em] ${t.live ? 'text-vitae-green' : 'text-white/40'}`}
+                    >
+                      {t.live ? 'live' : 'paper'}
+                    </span>
+                  )}
+                </Td>
+                <Td right className={tone(t.pnlCents)}>
+                  {t.pnlCents == null ? '—' : signedDollars(t.pnlCents)}
+                </Td>
                 <Td>
-                  <span className="text-white/50">{hst(t.at)}</span>
-                  <span
-                    className={`ml-1.5 text-[9px] uppercase tracking-[0.15em] ${t.live ? 'text-vitae-green' : 'text-white/40'}`}
-                  >
-                    {t.live ? 'live' : 'paper'}
-                  </span>
+                  {t.result ? (
+                    <ResultPill result={t.result} side={t.side} />
+                  ) : (
+                    <span className="text-white/40">{pendingText(t.closeTime, now)}</span>
+                  )}
                 </Td>
                 <Td>
                   <TickerLink ticker={t.ticker} />
@@ -1093,16 +1105,6 @@ function Trades({
                 </Td>
                 <EntryCell t={t} />
                 <PredictionCells t={t} />
-                <Td>
-                  {t.result ? (
-                    <ResultPill result={t.result} side={t.side} />
-                  ) : (
-                    <span className="text-white/40">{pendingText(t.closeTime, now)}</span>
-                  )}
-                </Td>
-                <Td right className={tone(t.pnlCents)}>
-                  {t.pnlCents == null ? '—' : signedDollars(t.pnlCents)}
-                </Td>
               </tr>
             ))}
           </tbody>
