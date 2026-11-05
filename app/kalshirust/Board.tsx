@@ -478,11 +478,11 @@ function Controls({
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
-        NORMAL: one $5 trade a window, checked with 5, 4, 3, 2 and 1 min left: a 25¢+ rise over the
-        prior minute into 30–82¢, never while its price is falling. The narrow 20¢+ rule at 1 min is
-        logged as a shadow, never sent. Live trading stops for the UTC day after a $30 loss. RISK:
-        up to $100 a trade, as low as 60% in the last 90 s, plus earlier trades from 7 min out with
-        no win-chance floor.
+        NORMAL: one $5 trade a window, checked with 5, 4, 3 and 1 min left: a 25¢+ rise over the
+        prior minute into 30–49¢ or 66–82¢, never while its price is falling. The old rule (every
+        minute from 5 out, 30–82¢) is logged as a shadow, never sent. Live trading stops for the UTC
+        day after a $30 loss. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier
+        trades from 7 min out with no win-chance floor.
       </p>
     </div>
   );
@@ -1017,7 +1017,8 @@ function Trades({
       )}
       {shadow.trades > 0 && (
         <p className="mt-3 text-sm text-white/60">
-          Shadow rule (20c+ into 50-82c at 1 min, never sent): {shadow.trades} trade
+          Shadow rule (old 30-82c rule at every minute from 5 out, never sent): {shadow.trades}{' '}
+          trade
           {shadow.trades === 1 ? '' : 's'},{' '}
           <span className={tone(shadow.settled ? shadow.pnlCents : null)}>
             {shadow.settled ? signedDollars(shadow.pnlCents) : '—'}

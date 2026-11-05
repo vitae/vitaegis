@@ -43,24 +43,25 @@ The HUD's red RISK button writes `kalshirust_config.mode`; the bot polls it ever
 | | NORMAL | RISK |
 |---|---|---|
 | Trades a window | up to 2 | 2 |
-| Entry | checks at 5, 4, 3, 2 and 1 minutes left, one trade a window | last 90 s, plus the early engine from 7 min out |
+| Entry | checks at 5, 4, 3 and 1 minutes left, one trade a window | last 90 s, plus the early engine from 7 min out |
 | Last-90 trade | none, settlement math only logs | 60%+ win chance, 5c of edge |
 | Second last-90 trade | none | 70%+, same side, 10 s later |
 | Stake | $5 flat (`SURE_BET_MULT` above 1 raises it at 95%+ with 15 prints) | 0.75 Kelly on the bankroll, $5 to $100 |
 | Other floors | the rules below | $0.50 expected profit, 97c top price |
 
-NORMAL makes one $5 trade a window. It checks with 5, 4, 3, 2 and 1 minutes left and buys the side whose mid
-rose over the prior 60 s if the rise is 25c or more and the price is 30c to 82c; after a trade the later
-checks are skipped. (Until Nov 4 it checked at 2 and 1 minutes for rises of 10c into 70-82c or 18c into
-50-70c; see the Nov 4 reads for the choice.)
+NORMAL makes one $5 trade a window. It checks with 5, 4, 3 and 1 minutes left and buys the side whose mid
+rose over the prior 60 s if the rise is 25c or more and the price is 30c to 49c or 66c to 82c; after a trade
+the later checks are skipped. (From Nov 4 19:00 to Nov 5 it also checked at 2 minutes and took 50-65c; before
+that it checked at 2 and 1 minutes for rises of 10c into 70-82c or 18c into 50-70c. See the Nov 4 reads.)
 
 A check skips a side whose mid fell 1c or more over the last 30 s. Settlement math still runs and logs in
 NORMAL, but places no trades.
 
-**Shadow rule.** Alongside, the bot logs the narrow rule (a 20c+ rise into 50-82c, checked once with 1 minute
-left) as paper trades under source `shadow`: never sent live, never counted against `PAPER_TRADE_LIMIT`,
-settled like every other paper trade. The trade summary and `kalshirust_events` (kinds `signal` and
-`settle`, source `shadow`) score it beside the live rule on the same windows.
+**Shadow rule.** Alongside, the bot logs the wide rule it ran on Nov 4 (a 25c+ rise into 30-82c, checked
+with 5, 4, 3, 2 and 1 minutes left) as paper trades under source `shadow`: never sent live, never counted
+against `PAPER_TRADE_LIMIT`, settled like every other paper trade. The trade summary and `kalshirust_events`
+(kinds `signal` and `settle`, source `shadow`) score it beside the live rule on the same windows, so the
+two cuts can be checked on live books. (On Nov 4 the shadow was the narrow 20c+ rule at 1 minute.)
 
 On the month of data: 326 trades, 9.9 a day, in 10.8% of windows, 6 of them second trades, 77.0% wins, +$0.40 a
 trade, about +$3.96 a day, worst drop $36.24, worst UTC day -$33.94. It is positive in all three parts of the
@@ -278,7 +279,30 @@ NORMAL rule:
 Positive in all three thirds, 25 of 37 days up, worst day -$33, worst drop -$53. By check: 5 min +$0.13 a
 trade, 4 min +$0.31, 3 min +$0.43, 2 min -$0.06, 1 min +$0.81. By price: 30-49c entries are 106 trades
 winning 54% for +$107, 50-82c are 502 trades winning 73% for +$73, so half the profit is the cheap side.
-The narrow 1-minute rule (121 trades, +$0.60 a trade) now runs as the shadow.
+The narrow 1-minute rule (121 trades, +$0.60 a trade) ran as the shadow on Nov 4.
+
+## The read, Nov 4 2026, third pass: fewer losers, same profit
+
+The first nine paper trades of the wide rule (3 wins, 6 losses, -$19.55) had nothing at entry that told
+the wins from the losses: two wins ran on to the close, one reversed to 22c and still settled YES, two
+losses ran the right way and still lost. What the backtest does separate is the next minute: 86% wins
+when the move continues, 42% when it reverts, and two parts of the rule carry most of the reverts.
+
+| 25c+ rise, $5, 3,396 windows | trades | a day | wins | net | a trade | paying 2c | days up | worst day |
+|---|---|---|---|---|---|---|---|---|
+| 30-82c at 5, 4, 3, 2, 1 (Nov 4 rule) | 606 | 16.4 | 69% | +$177 | +$0.29 | +$70 | 24/37 | -$33 |
+| drop the 2-minute check | 496 | 13.4 | 70% | +$188 | +$0.38 | +$103 | 26/37 | -$29 |
+| drop 2 min and the 50-65c band (new rule) | 374 | 10.1 | 74% | +$178 | +$0.48 | +$63 | 24/37 | -$20 |
+| 66-82c only, no 2 min | 303 | 8.2 | 79% | +$44 | +$0.14 | +$7 | 20/37 | -$26 |
+| 80-95c favourites | 148 | 4.0 | 92% | +$18 | +$0.13 | +$9 | 26/35 | -$14 |
+| enter a minute later if the move held, 50-82c | 115 | 3.1 | 77% | +$47 | +$0.41 | +$29 | 23/35 | -$17 |
+
+The 2-minute check is the one losing check (65% wins, -$0.08 a trade; the others +$0.19 to +$0.81). The
+50-65c band is 187 trades at 61% for +$0.07 a trade; 30-49c wins 54% at +$1.12 and 66-82c wins 79% at
++$0.17. Anything above 80% wins makes under $10 a month at $5 because the fee eats the small payouts.
+The new rule keeps the month's profit on 230 fewer trades, test third 80% wins, +$108. The 2-minute
+finding was in the first Nov 4 read; the band cut is new and chosen on the same month, so it is the
+less certain of the two, which is why the Nov 4 rule runs on as the shadow.
 
 **Stake for $10 a day.** The month's edge is about $4.90 a day at $5 before slippage and $2.24 at 2c
 more. $10 a day needs $10 a trade before slippage or $20 at 2c, and the worst day scales with it: -$68

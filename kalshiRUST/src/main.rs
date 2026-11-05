@@ -36,17 +36,18 @@ const SETTLE_REENTRY_SECS: i64 = 10;
 const SETTLE_SECOND_MIN_KNOWN: usize = 15;
 /// Sharp-rise rule, the only trade NORMAL makes: at each check it buys the side whose mid rose over the
 /// prior 60 s, if the rise and price fit (smallest rise, lowest price, highest price), once a window.
-/// The widest variant of 540 that stayed positive on the newest third of the month after paying 2c
-/// more. On 3,396 windows (Sep 28 to Nov 3): 608 trades, 16.4 a day, 69% wins, $0.30 a trade after
-/// fees, $0.13 paying 2c more, positive in all three thirds, 25 of 37 days up, worst day -$33, worst
-/// drop -$53. Half the profit is 30-49c entries that win 54%. Chosen on the same data, so expect less.
-const SHARP_RULES: &[(f64, f64, f64)] = &[(0.25, 0.30, 0.82)];
-const SHARP_CHECKS_SECS_LEFT: &[f64] = &[300.0, 240.0, 180.0, 120.0, 60.0];
-/// The shadow rule: the narrow 1-minute rule (20c+ rise into 50-82c, 121 trades, 80% wins, $0.60 a
-/// trade on the month), logged as paper trades under source "shadow", never sent live and never
+/// The wide 25c rule (30-82c at 5, 4, 3, 2 and 1 min) with its two losing parts cut: the 2-minute check
+/// (65% wins, -$0.08 a trade) and the 50-65c band (61% wins, +$0.07 a trade). On 3,396 windows (Sep 28
+/// to Nov 3): 374 trades, 10.1 a day, 74% wins, $0.48 a trade after fees, $0.17 paying 2c more, test
+/// third 80% wins, 24 of 37 days up, worst day -$20. The band cut was chosen on the same month, so
+/// expect less.
+const SHARP_RULES: &[(f64, f64, f64)] = &[(0.25, 0.30, 0.49), (0.25, 0.66, 0.82)];
+const SHARP_CHECKS_SECS_LEFT: &[f64] = &[300.0, 240.0, 180.0, 60.0];
+/// The shadow rule: the wide rule as it ran from Nov 4 19:00 to Nov 5 (25c+ rise into 30-82c, checked
+/// every minute from 5 out), logged as paper trades under source "shadow", never sent live and never
 /// counted against the paper cap, so both rules are scored on the same live books.
-const SHADOW_RULES: &[(f64, f64, f64)] = &[(0.20, 0.50, 0.82)];
-const SHADOW_CHECKS_SECS_LEFT: &[f64] = &[60.0];
+const SHADOW_RULES: &[(f64, f64, f64)] = &[(0.25, 0.30, 0.82)];
+const SHADOW_CHECKS_SECS_LEFT: &[f64] = &[300.0, 240.0, 180.0, 120.0, 60.0];
 const SHARP_LOOKBACK_SECS: i64 = 60;
 /// A check this late, or a lookback this far short of 60 s, is skipped.
 const SHARP_SLACK_SECS: i64 = 5;
@@ -1426,12 +1427,24 @@ mod tests {
     }
 
     #[test]
-    fn normal_checks_the_sharp_rise_every_minute_from_five_out() {
+    fn normal_checks_the_sharp_rise_at_five_four_three_and_one_minutes() {
         std::env::remove_var("BETS_PER_WINDOW");
         let m = mode_params("NORMAL");
         assert_eq!((m.bets_per_window, m.settle_trades), (2, 0));
-        assert_eq!(SHARP_CHECKS_SECS_LEFT, &[300.0, 240.0, 180.0, 120.0, 60.0]);
-        assert_eq!(SHADOW_CHECKS_SECS_LEFT, &[60.0]);
+        assert_eq!(SHARP_CHECKS_SECS_LEFT, &[300.0, 240.0, 180.0, 60.0]);
+        assert_eq!(SHADOW_CHECKS_SECS_LEFT, &[300.0, 240.0, 180.0, 120.0, 60.0]);
+    }
+
+    #[test]
+    fn the_sharp_rule_skips_the_50_to_65c_band_and_the_shadow_keeps_it() {
+        assert!(sharp_entry(0.25, 0.48, 0.49).is_some());
+        assert!(sharp_entry(0.25, 0.49, 0.50).is_none());
+        assert!(sharp_entry(0.25, 0.64, 0.65).is_none());
+        assert!(sharp_entry(0.25, 0.65, 0.66).is_some());
+        assert!(sharp_entry(-0.25, 0.42, 0.43).is_none());
+        assert!(sharp_entry(-0.25, 0.60, 0.61).is_some());
+        assert!(shadow_entry(0.25, 0.49, 0.50).is_some());
+        assert!(shadow_entry(0.24, 0.49, 0.50).is_none());
     }
 
     #[test]
@@ -1443,13 +1456,13 @@ mod tests {
 
     #[test]
     fn sharp_slot_buys_the_side_that_rose() {
-        let up = sharp_entry(0.30, 0.59, 0.60).unwrap();
+        let up = sharp_entry(0.30, 0.69, 0.70).unwrap();
         assert!(matches!(up.side, Side::Yes));
-        assert!((up.price - 0.60).abs() < 1e-9);
-        let down = sharp_entry(-0.30, 0.39, 0.40).unwrap();
+        assert!((up.price - 0.70).abs() < 1e-9);
+        let down = sharp_entry(-0.30, 0.29, 0.30).unwrap();
         assert!(matches!(down.side, Side::No));
-        assert!((down.price - 0.61).abs() < 1e-9);
-        assert!((down.p_yes - (1.0 - 0.61 - SHARP_EDGE)).abs() < 1e-9);
+        assert!((down.price - 0.71).abs() < 1e-9);
+        assert!((down.p_yes - (1.0 - 0.71 - SHARP_EDGE)).abs() < 1e-9);
     }
 
     #[test]
@@ -1465,18 +1478,18 @@ mod tests {
     }
 
     #[test]
-    fn shadow_rule_is_the_narrow_20c_rule_at_one_minute() {
-        assert!(shadow_entry(0.19, 0.74, 0.75).is_none());
-        assert!(shadow_entry(0.20, 0.74, 0.75).is_some());
-        assert!(shadow_entry(0.20, 0.49, 0.50).is_some());
-        assert!(shadow_entry(0.20, 0.48, 0.49).is_none());
-        assert!(shadow_entry(0.20, 0.81, 0.82).is_some());
-        assert!(shadow_entry(0.20, 0.82, 0.83).is_none());
+    fn shadow_rule_is_the_wide_25c_rule_into_30_to_82c() {
+        assert!(shadow_entry(0.24, 0.74, 0.75).is_none());
+        assert!(shadow_entry(0.25, 0.74, 0.75).is_some());
+        assert!(shadow_entry(0.25, 0.29, 0.30).is_some());
+        assert!(shadow_entry(0.25, 0.28, 0.29).is_none());
+        assert!(shadow_entry(0.25, 0.81, 0.82).is_some());
+        assert!(shadow_entry(0.25, 0.82, 0.83).is_none());
     }
 
     #[test]
     fn sharp_slot_only_trades_with_positive_expected_profit() {
-        let e = sharp_entry(0.30, 0.49, 0.50).unwrap();
+        let e = sharp_entry(0.30, 0.48, 0.49).unwrap();
         assert!(e.cents > 0.0 && e.cents < SHARP_EDGE * 100.0);
     }
 
