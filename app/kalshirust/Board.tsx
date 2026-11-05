@@ -1046,13 +1046,12 @@ function Trades({
         </div>
       )}
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
-        <table className="w-full min-w-[1360px] text-left text-sm">
-          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+        <table className="w-full text-left text-xs sm:text-sm">
+          <thead className="text-[10px] uppercase tracking-[0.15em] text-white/40">
             <tr>
               <Th>Time</Th>
-              <Th>Slot</Th>
-              <Th>Ticker</Th>
-              <Th>Entered</Th>
+              <Th>Window</Th>
+              <Th>Entry</Th>
               <PredictionHeads />
               <Th>Result</Th>
               <Th right>P&amp;L</Th>
@@ -1061,7 +1060,7 @@ function Trades({
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={16} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={8} className="px-4 py-6 text-center text-white/40">
                   No trades yet.
                 </td>
               </tr>
@@ -1069,39 +1068,30 @@ function Trades({
             {rows.map((t) => (
               <tr key={t.id} className="border-t border-white/10 text-white/80">
                 <Td>
-                  <span className="text-white/50">{hst(t.at, true)}</span>
+                  <span className="text-white/50">{hst(t.at)}</span>
                   <span
-                    className={`ml-2 text-[10px] uppercase tracking-[0.2em] ${t.live ? 'text-vitae-green' : 'text-white/40'}`}
+                    className={`ml-1.5 text-[9px] uppercase tracking-[0.15em] ${t.live ? 'text-vitae-green' : 'text-white/40'}`}
                   >
                     {t.live ? 'live' : 'paper'}
                   </span>
                 </Td>
                 <Td>
+                  <TickerLink ticker={t.ticker} />
                   <span
-                    className={`text-[11px] uppercase tracking-[0.15em] ${t.source === 'sniper' ? 'text-vitae-cyan' : 'text-white/60'}`}
+                    className={`ml-1.5 text-[10px] ${t.source === 'sniper' ? 'text-vitae-cyan' : 'text-white/40'}`}
                   >
-                    {t.slot === 'sharp'
-                      ? 'sharp rise'
-                      : t.slot === 'anytime'
-                        ? 'after 9 min'
-                        : t.slot === 'last90'
-                          ? 'last 90 s'
-                          : t.source}
+                    {t.source === 'shadow'
+                      ? 'shadow'
+                      : t.slot === 'sharp'
+                        ? `${t.secondsToClose ?? '—'}s left`
+                        : t.slot === 'anytime'
+                          ? '9 min+'
+                          : t.slot === 'last90'
+                            ? 'last 90 s'
+                            : t.source}
                   </span>
                 </Td>
-                <Td>
-                  <TickerLink ticker={t.ticker} />
-                </Td>
-                <Td>
-                  {t.enteredAfterOpenSecs == null ? (
-                    <span className="text-white/40">—</span>
-                  ) : (
-                    <>
-                      {plusMmss(t.enteredAfterOpenSecs)}
-                      <span className="ml-1 text-xs text-white/40">· {t.secondsToClose}s left</span>
-                    </>
-                  )}
-                </Td>
+                <EntryCell t={t} />
                 <PredictionCells t={t} />
                 <Td>
                   {t.result ? (
@@ -1129,46 +1119,41 @@ const pendingText = (closeTime: string | null, now: number) => {
 
 const PredictionHeads = () => (
   <>
-    <Th>Side</Th>
-    <Th right>Price</Th>
-    <Th right>Count</Th>
     <Th right>Cost</Th>
-    <Th right>Fee</Th>
-    <Th right>Model</Th>
-    <Th right>P(win)</Th>
     <Th right>Edge</Th>
-    <Th right>EV</Th>
-    <Th right>Max win</Th>
   </>
 );
 
+/** Side, price and count in one cell: "YES 49¢ ×10". */
+const EntryCell = ({ t }: { t: Prediction }) => (
+  <Td>
+    <span className={t.side === 'yes' ? 'text-vitae-green' : 'text-vitae-red'}>
+      {t.side?.toUpperCase() ?? '—'}
+    </span>{' '}
+    {cents(t.priceCents)}
+    <span className="ml-1 text-white/40">×{t.count ?? '—'}</span>
+  </Td>
+);
+
+/** Cost with the fee beneath; edge with the model's win odds beneath. The rest is in the tooltip. */
 const PredictionCells = ({ t }: { t: Prediction }) => (
   <>
-    <Td>
-      <span className={t.side === 'yes' ? 'text-vitae-green' : 'text-vitae-red'}>
-        {t.side?.toUpperCase() ?? '—'}
+    <Td right title={`fee ${dollars(t.feeCents)} · max win ${dollars(t.maxWinCents)}`}>
+      {dollars(t.costCents)}
+      <span className="block text-[10px] text-white/40">+{dollars(t.feeCents)} fee</span>
+    </Td>
+    <Td right title={`model ${pct(t.modelProb, 1)} · EV ${signedDollars(t.evCents)}`}>
+      {cents(t.edgeCents, 1)}
+      <span className="block text-[10px] text-white/40">
+        {pct(t.pWin)} vs {pct(t.marketPWin)}
       </span>
     </Td>
-    <Td right>{cents(t.priceCents)}</Td>
-    <Td right>{t.count ?? '—'}</Td>
-    <Td right>{dollars(t.costCents)}</Td>
-    <Td right>{dollars(t.feeCents)}</Td>
-    <Td right>{pct(t.modelProb, 1)}</Td>
-    <Td right>
-      {pct(t.pWin)}
-      <span className="ml-1 text-xs text-white/40">vs {pct(t.marketPWin)}</span>
-    </Td>
-    <Td right>{cents(t.edgeCents, 2)}</Td>
-    <Td right className={tone(t.evCents)}>
-      {signedDollars(t.evCents)}
-    </Td>
-    <Td right>{dollars(t.maxWinCents)}</Td>
   </>
 );
 
 const ResultPill = ({ result, side }: { result: 'yes' | 'no'; side: 'yes' | 'no' | null }) => (
   <span
-    className={`rounded-full border px-2 py-0.5 text-[11px] ${result === side ? 'border-vitae-green/50 text-vitae-green' : 'border-vitae-red/50 text-vitae-red'}`}
+    className={`rounded-full border px-1.5 py-0.5 text-[10px] ${result === side ? 'border-vitae-green/50 text-vitae-green' : 'border-vitae-red/50 text-vitae-red'}`}
   >
     {result.toUpperCase()}
   </span>
@@ -1279,11 +1264,12 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
             </div>
           </div>
           <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
-            <table className="w-full min-w-[1400px] text-left text-sm">
-              <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead className="text-[10px] uppercase tracking-[0.15em] text-white/40">
                 <tr>
                   <Th>Close</Th>
-                  <Th>Ticker</Th>
+                  <Th>Window</Th>
+                  <Th>Entry</Th>
                   <PredictionHeads />
                   <Th>Result</Th>
                   <Th right>P&amp;L</Th>
@@ -1299,6 +1285,7 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
                     <Td>
                       <TickerLink ticker={t.ticker} />
                     </Td>
+                    <EntryCell t={t} />
                     <PredictionCells t={t} />
                     <Td>
                       {t.result ? (
@@ -1338,18 +1325,23 @@ function Research() {
 }
 
 const Th = ({ children, right }: { children: React.ReactNode; right?: boolean }) => (
-  <th className={`px-3 py-3 font-medium ${right ? 'text-right' : ''}`}>{children}</th>
+  <th className={`px-2 py-3 font-medium sm:px-3 ${right ? 'text-right' : ''}`}>{children}</th>
 );
 const Td = ({
   children,
   right,
   className = '',
+  title,
 }: {
   children: React.ReactNode;
   right?: boolean;
   className?: string;
+  title?: string;
 }) => (
-  <td className={`whitespace-nowrap px-3 py-2 ${right ? 'text-right' : ''} ${className}`}>
+  <td
+    title={title}
+    className={`whitespace-nowrap px-2 py-2 sm:px-3 ${right ? 'text-right' : ''} ${className}`}
+  >
     {children}
   </td>
 );
