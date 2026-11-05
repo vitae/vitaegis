@@ -470,6 +470,91 @@ describe('shadow rule trades', () => {
   });
 });
 
+describe('the total loss stop', () => {
+  it('shows one row per order, totals the live trades apart, and reads the stop line', () => {
+    const s = summarize(
+      [
+        ev({ kind: 'status', created_at: at(900), live: true, message: 'heartbeat' }),
+        ev({
+          kind: 'signal',
+          created_at: at(800),
+          live: true,
+          mode: 'LIVE-NORMAL',
+          side: 'yes',
+          cost_cents: 420,
+          fee_cents: 9,
+          client_order_id: 'sharp-1',
+        }),
+        ev({
+          kind: 'signal',
+          created_at: at(790),
+          live: true,
+          mode: 'LIVE-NORMAL',
+          side: 'yes',
+          cost_cents: 420,
+          fee_cents: 9,
+          client_order_id: 'sharp-1',
+        }),
+        ev({
+          kind: 'settle',
+          created_at: at(700),
+          live: true,
+          client_order_id: 'sharp-1',
+          result: 'no',
+          pnl_cents: -429,
+        }),
+        ev({
+          kind: 'signal',
+          created_at: at(600),
+          live: false,
+          mode: 'PAPER-NORMAL',
+          side: 'no',
+          cost_cents: 300,
+          fee_cents: 6,
+          client_order_id: 'sharp-2',
+        }),
+        ev({
+          kind: 'settle',
+          created_at: at(500),
+          client_order_id: 'sharp-2',
+          result: 'no',
+          pnl_cents: 194,
+        }),
+        ev({
+          kind: 'status',
+          created_at: at(400),
+          live: false,
+          message:
+            'Live trading stopped: the live run lost $30.12, past the $30 limit. Recording paper trades only until trades.jsonl is archived and the bot restarted.',
+        }),
+        ev({ kind: 'status', created_at: at(10), live: false, message: 'heartbeat' }),
+      ],
+      NOW,
+    );
+    expect(s.trades).toHaveLength(2);
+    expect(s.totals.trades).toBe(2);
+    expect(s.totals.live).toMatchObject({ trades: 1, settled: 1, losses: 1, pnlCents: -429 });
+    expect(s.totals.pnlCents).toBe(-235);
+    expect(s.liveStop).toMatch(/^Live trading stopped: the live run lost \$30\.12/);
+  });
+
+  it('clears the stop line once the bot reports live again', () => {
+    const s = summarize(
+      [
+        ev({
+          kind: 'status',
+          created_at: at(400),
+          live: false,
+          message: 'Live trading stopped: the live run lost $31.00, past the $30 limit.',
+        }),
+        ev({ kind: 'status', created_at: at(10), live: true, message: 'heartbeat' }),
+      ],
+      NOW,
+    );
+    expect(s.liveStop).toBeNull();
+  });
+});
+
 describe('exchangeCheck', () => {
   const row = (message: string | null) =>
     ({ kind: 'reconcile', created_at: '2026-11-02T09:00:00Z', message }) as KalshirustEvent;

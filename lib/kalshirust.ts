@@ -245,7 +245,11 @@ export interface Summary {
   totals: Totals & {
     bySource: Record<RustSource, Totals>;
     bySlot: Record<'anytime' | 'sharp' | 'last90', Totals>;
+    /** Real-money trades only: what the total loss stop watches. */
+    live: Totals;
   };
+  /** The bot's status line once the live run has lost the total limit, until it is live again. */
+  liveStop: string | null;
   windows: Windows;
   watchlist: WatchRow[];
   history: HistoryPoint[];
@@ -294,6 +298,10 @@ export const WINDOWS_PER_DAY = 96;
 /** The goal for average profit per settled trade. */
 export const TRADE_TARGET_CENTS = { normalCents: 20, riskCents: 300 };
 export const SNIPE_EDGE_CENTS = 3;
+/** The live run's loss that turns the bot to paper (TOTAL_LOSS_LIMIT_DOLLARS on the VPS). */
+export const TOTAL_LOSS_LIMIT_CENTS = 3000;
+/** The bot's status message once that stop has tripped starts with this. */
+export const LIVE_STOP_PREFIX = 'Live trading stopped';
 export const SNIPE_STAKE_CENTS = 500;
 export const PRICE_BUCKETS: { bucket: PriceBucket; below: number }[] = [
   { bucket: '15–30¢', below: 30 },
@@ -421,8 +429,16 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
   for (const e of byTime) {
     if (e.kind === 'settle' && e.client_order_id) settles.set(e.client_order_id, e);
   }
+  // One row per order: a signal posted twice (a retry, a restart) shows once.
+  const seenOrders = new Set<string>();
   const trades: Trade[] = byTime
     .filter((e) => e.kind === 'signal')
+    .filter((e) => {
+      if (!e.client_order_id) return true;
+      if (seenOrders.has(e.client_order_id)) return false;
+      seenOrders.add(e.client_order_id);
+      return true;
+    })
     .map((e) => {
       const s = e.client_order_id ? settles.get(e.client_order_id) : undefined;
       const source: RustSource =
@@ -469,7 +485,14 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
       sharp: tally(trades.filter((t) => t.slot === 'sharp')),
       last90: tally(trades.filter((t) => t.slot === 'last90')),
     },
+    live: tally(trades.filter((t) => t.live)),
   };
+  const lastLive = statuses.filter((e) => e.live).at(-1);
+  const lastStop = statuses.filter((e) => (e.message ?? '').startsWith(LIVE_STOP_PREFIX)).at(-1);
+  const liveStop =
+    lastStop && (!lastLive || Date.parse(lastStop.created_at) >= Date.parse(lastLive.created_at))
+      ? (lastStop.message as string)
+      : null;
 
   const newestWatch = new Map<string, KalshirustEvent>();
   for (const e of byTime) {
@@ -522,7 +545,7 @@ export function summarize(events: KalshirustEvent[], now = Date.now()): Summary 
   const windows = windowStats(byTime, trades);
 
   const exchange = exchangeCheck(byTime.filter((e) => e.kind === 'reconcile').at(-1));
-  return { status, online, trades, totals, windows, watchlist, history, errors, exchange };
+  return { status, online, trades, totals, liveStop, windows, watchlist, history, errors, exchange };
 }
 
 function tally(trades: Trade[]): Totals {

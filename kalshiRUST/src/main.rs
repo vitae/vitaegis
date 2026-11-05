@@ -2,6 +2,7 @@
 
 use futures_util::{SinkExt, StreamExt};
 use serde_json::json;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 use std::{env, fs};
@@ -43,11 +44,6 @@ const SETTLE_SECOND_MIN_KNOWN: usize = 15;
 /// expect less.
 const SHARP_RULES: &[(f64, f64, f64)] = &[(0.25, 0.30, 0.49), (0.25, 0.66, 0.82)];
 const SHARP_CHECKS_SECS_LEFT: &[f64] = &[300.0, 240.0, 180.0, 60.0];
-/// The shadow rule: the wide rule as it ran from Nov 4 19:00 to Nov 5 (25c+ rise into 30-82c, checked
-/// every minute from 5 out), logged as paper trades under source "shadow", never sent live and never
-/// counted against the paper cap, so both rules are scored on the same live books.
-const SHADOW_RULES: &[(f64, f64, f64)] = &[(0.25, 0.30, 0.82)];
-const SHADOW_CHECKS_SECS_LEFT: &[f64] = &[300.0, 240.0, 180.0, 120.0, 60.0];
 const SHARP_LOOKBACK_SECS: i64 = 60;
 /// A check this late, or a lookback this far short of 60 s, is skipped.
 const SHARP_SLACK_SECS: i64 = 5;
@@ -61,6 +57,8 @@ const TREND_SECS: i64 = 3600;
 /// A live stake is this share of the Kalshi balance, capped by the mode's max (MAX_ORDER_DOLLARS): $30
 /// funds $4.50 trades and a losing run shrinks the stake instead of emptying the account. STAKE_FRACTION.
 const STAKE_FRACTION_DEFAULT: f64 = 0.15;
+/// The live run's loss, over all days, that turns the bot to paper (TOTAL_LOSS_LIMIT_DOLLARS).
+const TOTAL_LOSS_LIMIT_DEFAULT: f64 = 30.0;
 /// A live bot with less than this in the account waits for the deposit instead of trading paper.
 const MIN_LIVE_BALANCE: f64 = 5.0;
 /// A live order's limit sits this far above the ask it was priced on. The signals are rises, so
@@ -148,7 +146,7 @@ fn mode_params(name: &str) -> ModeParams {
             name: "NORMAL".into(),
             max_order_dollars: f("MAX_ORDER_DOLLARS", 5.0),
             min_edge_cents: f("MIN_EDGE_CENTS", 2.0),
-            bets_per_window: f("BETS_PER_WINDOW", 2.0) as usize,
+            bets_per_window: f("BETS_PER_WINDOW", 1.0) as usize,
             min_secs_left: f("MIN_SECS_LEFT", 90.0),
             max_secs_left: f("MAX_SECS_LEFT", 300.0),
             settle_min_pwin: f("SETTLE_MIN_PWIN", 0.75),
@@ -172,7 +170,7 @@ struct Ctx {
     client: reqwest::Client,
     rest_base: &'static str,
     ws_host: &'static str,
-    live: bool,
+    live: AtomicBool,
     api_key_id: String,
     pem_path: String,
     supa: Option<Supa>,
@@ -193,6 +191,9 @@ struct Ctx {
     bankroll_dollars: f64,
     /// Stop opening live trades once today's realized loss reaches this many dollars.
     daily_loss_limit: f64,
+    /// Once the live run's realized loss reaches this many dollars the bot drops to paper for good
+    /// (until trades.jsonl is archived); see TOTAL_LOSS_LIMIT_DEFAULT.
+    total_loss_limit: f64,
     /// Share of the balance a live trade may use; see STAKE_FRACTION_DEFAULT.
     stake_fraction: f64,
     /// The Kalshi balance, read at startup and again at every window when live.
@@ -309,10 +310,6 @@ fn sharp_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
     rule_entry(SHARP_RULES, moved, yes_bid, yes_ask)
 }
 
-/// The shadow rule's trade, on the same terms.
-fn shadow_entry(moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
-    rule_entry(SHADOW_RULES, moved, yes_bid, yes_ask)
-}
 
 fn rule_entry(rules: &[(f64, f64, f64)], moved: f64, yes_bid: f64, yes_ask: f64) -> Option<models::Edge> {
     let side = if moved > 0.0 { Side::Yes } else { Side::No };
@@ -374,7 +371,7 @@ async fn ufc_markets(client: &reqwest::Client, rest_base: &str) -> Vec<ufc::Figh
 
 /// Copies each new site bet once, if its win chance beats Kalshi's price plus the fee.
 async fn ufc_loop(ctx: Arc<Ctx>) {
-    let live = ctx.live && env::var("UFC_LIVE").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
+    let live = ctx.is_live() && env::var("UFC_LIVE").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
     let number = |key: &str, default: f64| env::var(key).ok().and_then(|v| v.parse().ok()).unwrap_or(default);
     let stake = number("UFC_DOLLARS", 5.0);
     let max_open = number("UFC_MAX_OPEN", 5.0) as usize;
@@ -561,9 +558,34 @@ impl Ctx {
     fn mode(&self) -> ModeParams {
         mode_params(&self.mode.lock().unwrap())
     }
-    fn mode_label(&self) -> String {
-        format!("{}-{}", if self.live { "LIVE" } else { "PAPER" }, self.mode().name)
+    fn is_live(&self) -> bool {
+        self.live.load(Ordering::Relaxed)
     }
+    fn mode_label(&self) -> String {
+        format!("{}-{}", if self.is_live() { "LIVE" } else { "PAPER" }, self.mode().name)
+    }
+    /// Drops the bot to paper once the live run has lost the total limit. True when it just did.
+    fn total_stop(&self, book: &TradeBook) -> bool {
+        let lost = book.live_pnl_total();
+        if !self.is_live() || self.total_loss_limit <= 0.0 || lost > -self.total_loss_limit {
+            return false;
+        }
+        self.live.store(false, Ordering::Relaxed);
+        let msg = total_stop_message(lost, self.total_loss_limit);
+        println!("[STOP] {}", msg);
+        if let Some(s) = &self.supa {
+            s.event(json!({ "kind": "status", "source": "bot", "mode": self.mode_label(), "live": false, "seconds_to_close": 0, "message": msg }));
+        }
+        true
+    }
+}
+
+/// The status line the HUD shows once the total loss stop has tripped; /kalshirust matches its start.
+fn total_stop_message(lost: f64, limit: f64) -> String {
+    format!(
+        "Live trading stopped: the live run lost ${:.2}, past the ${:.0} limit. Recording paper trades only until trades.jsonl is archived and the bot restarted.",
+        -lost, limit
+    )
 }
 
 #[tokio::main]
@@ -584,13 +606,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder().timeout(Duration::from_secs(20)).build()?;
     let api_key_id = env::var("KALSHI_API_KEY_ID")?;
     let pem_path = env::var("KALSHI_PRIVATE_KEY_PATH")?;
-    let live = env::var("LIVE_TRADING").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
+    let mut live = env::var("LIVE_TRADING").map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false);
     let mut bankroll: f64 = env::var("BANKROLL_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(100.0);
     let daily_loss_limit: f64 = env::var("DAILY_LOSS_LIMIT_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(30.0);
     let stake_fraction: f64 = env::var("STAKE_FRACTION").ok().and_then(|v| v.parse().ok()).unwrap_or(STAKE_FRACTION_DEFAULT);
+    let total_loss_limit: f64 = env::var("TOTAL_LOSS_LIMIT_DOLLARS").ok().and_then(|v| v.parse().ok()).unwrap_or(TOTAL_LOSS_LIMIT_DEFAULT);
     let supa = Supa::from_env(&client);
     if supa.is_none() {
         eprintln!("[!] Supabase not configured (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY): HUD will not update.");
+    }
+    // The trade limit ends a paper run. A live bot stops on STOP, the daily loss limit or the total loss limit.
+    let bot_limit: usize = if live { usize::MAX } else { env::var("PAPER_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(96) };
+    let sniper_limit: usize = env::var("SNIPE_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(20);
+    let book = TradeBook::load("trades.jsonl", bot_limit, sniper_limit);
+    if live && total_loss_limit > 0.0 && book.live_pnl_total() <= -total_loss_limit {
+        let msg = total_stop_message(book.live_pnl_total(), total_loss_limit);
+        println!("[STOP] {}", msg);
+        if let Some(s) = &supa {
+            s.event(json!({ "kind": "status", "source": "bot", "mode": "PAPER-NORMAL", "live": false, "seconds_to_close": 0, "message": msg }));
+        }
+        live = false;
     }
     let mut balance = 0.0;
     if live {
@@ -599,8 +634,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match kalshi_balance(&client, rest_base, &api_key_id, &pem_path).await {
                 Ok(bal) if bal >= MIN_LIVE_BALANCE => {
                     println!(
-                        "[LIVE] Kalshi balance ${:.2} | daily loss stop ${:.0} | stake {:.0}% of the balance, ${:.2} max",
-                        bal, daily_loss_limit, stake_fraction * 100.0, mode_params(&env::var("MODE").unwrap_or_else(|_| "NORMAL".into()).to_uppercase()).max_order_dollars
+                        "[LIVE] Kalshi balance ${:.2} | daily loss stop ${:.0} | total loss stop ${:.0} (${:+.2} so far) | stake {:.0}% of the balance, ${:.2} max",
+                        bal, daily_loss_limit, total_loss_limit, book.live_pnl_total(), stake_fraction * 100.0, mode_params(&env::var("MODE").unwrap_or_else(|_| "NORMAL".into()).to_uppercase()).max_order_dollars
                     );
                     bankroll = bankroll.min(bal);
                     balance = bal;
@@ -618,9 +653,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             sleep(Duration::from_secs(60)).await;
         }
     }
-    // The trade limit ends a paper run. A live bot stops on STOP or the daily loss limit.
-    let bot_limit: usize = if live { usize::MAX } else { env::var("PAPER_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(96) };
-    let sniper_limit: usize = env::var("SNIPE_TRADE_LIMIT").ok().and_then(|v| v.parse().ok()).unwrap_or(20);
     let initial_mode = env::var("MODE").unwrap_or_else(|_| "NORMAL".into()).to_uppercase();
     let strikes = match recent_strikes(&client, rest_base).await {
         Ok(v) => {
@@ -641,13 +673,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         client: client.clone(),
         rest_base,
         ws_host,
-        live,
+        live: AtomicBool::new(live),
         api_key_id,
         pem_path,
         supa,
         vol: vol::shared(),
         mode: Arc::new(std::sync::Mutex::new(initial_mode)),
-        book: Arc::new(Mutex::new(TradeBook::load("trades.jsonl", bot_limit, sniper_limit))),
+        book: Arc::new(Mutex::new(book)),
         momentum_weight: env::var("MOMENTUM_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.3),
         model_weight: env::var("MODEL_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(0.15),
         brti: settle::shared(),
@@ -655,6 +687,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         analytics_veto: env::var("ANALYTICS_VETO").map(|v| !v.eq_ignore_ascii_case("false")).unwrap_or(true),
         bankroll_dollars: bankroll,
         daily_loss_limit,
+        total_loss_limit,
         stake_fraction,
         balance: std::sync::Mutex::new(balance),
         strikes: std::sync::Mutex::new(strikes),
@@ -665,7 +698,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let m = ctx.mode();
         println!(
             "[+] {} | mode {} (${:.0} max, {:.1}c min edge, {} bet/window, early engine {}, settlement engine {}) | 15m trades {}/{} logged, sniper {}/{}, {} pending",
-            if live { "LIVE TRADING" } else { "PAPER (LIVE_TRADING=false)" },
+            if live { "LIVE TRADING" } else { "PAPER" },
             m.name, m.max_order_dollars, m.min_edge_cents, m.bets_per_window,
             if m.early_engine { format!("{}-{}s before close", m.min_secs_left as i64, m.max_secs_left as i64) } else { "off".to_string() },
             if m.settle_trades == 0 { "logging only".to_string() } else { format!("first trade needs P(win) >= {:.0}% on >= {} known prints", m.settle_min_pwin * 100.0, m.settle_min_known) },
@@ -791,7 +824,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Exchange check: Kalshi's fills and settlements against the book, live only.
-    if ctx.live {
+    if ctx.is_live() {
         let c = ctx.clone();
         tokio::spawn(async move { reconcile_loop(c).await });
     }
@@ -869,20 +902,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     windows_seen.push(ticker.clone());
                 }
                 ctx.strikes.lock().unwrap().push(close_ts, strike);
-                if ctx.live {
+                if ctx.is_live() {
                     match kalshi_balance(&ctx.client, ctx.rest_base, &ctx.api_key_id, &ctx.pem_path).await {
                         Ok(bal) => *ctx.balance.lock().unwrap() = bal,
                         Err(e) => println!("[LIVE] Could not refresh the balance ({}); sizing on ${:.2}", e, *ctx.balance.lock().unwrap()),
                     }
                     let b = ctx.book.lock().await;
-                    if b.daily_stopped(ctx.daily_loss_limit) {
+                    if !ctx.total_stop(&b) && b.daily_stopped(ctx.daily_loss_limit) {
                         println!("[STOP] Daily loss limit ${:.0} reached (${:+.2} realized today). No new live trades until 00:00 UTC.", ctx.daily_loss_limit, b.live_pnl_today());
                     }
                 }
                 if let Err(e) = run_window(&ctx, ticker, strike, close_ts, &mut spot_rx).await {
                     eprintln!("[!] WebSocket stream error: {}. Reconnecting in 3s...", e);
                     if let Some(s) = &ctx.supa {
-                        s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": ctx.live, "message": format!("ws: {}", e) }));
+                        s.event(json!({ "kind": "error", "mode": ctx.mode_label(), "live": ctx.is_live(), "message": format!("ws: {}", e) }));
                     }
                 }
             }
@@ -964,8 +997,6 @@ async fn run_window(
     let mut book_updated = Instant::now();
     let mut veto_logged = false;
     let mut sharp_next = 0usize;
-    let mut shadow_next = 0usize;
-    let mut shadow_taken = false;
     let mut mid_samples: VecDeque<(i64, f64)> = VecDeque::new();
     let mut falling_logged = false;
     let mut maker_logged = false;
@@ -1050,9 +1081,9 @@ async fn run_window(
                     Some(edge) => {
                         let p_win = match edge.side { Side::Yes => edge.p_yes, Side::No => 1.0 - edge.p_yes };
                         let balance = *ctx.balance.lock().unwrap();
-                        let dollars = live_stake(settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, false), ctx.live, ctx.stake_fraction, balance);
+                        let dollars = live_stake(settle_size(&mode, p_win, edge.price, ctx.bankroll_dollars, false), ctx.is_live(), ctx.stake_fraction, balance);
                         let count = (dollars / edge.price).floor();
-                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
+                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.is_live() && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1.0 && allowed {
                             let note = format!("sharp-rise slot | {:.0}s left | YES mid {:+.1}c in {} s | {} | assumed edge {:.2}c", rem, moved * 100.0, SHARP_LOOKBACK_SECS, trend_label(trend), SHARP_EDGE * 100.0);
                             if enter(ctx, &ticker, strike, close_ts, spot, edge.p_yes, edge.p_yes, moved, edge, dollars, "BTC 15 min (sharp rise)", "sharp", &note).await {
@@ -1067,54 +1098,6 @@ async fn run_window(
                     None => println!("[SHARP] {} | {:.0}s left | YES mid {:+.1}c in {} s, YES {:.0}c/{:.0}c | fits no rule, no trade", ticker, rem, moved * 100.0, SHARP_LOOKBACK_SECS, bid * 100.0, ask * 100.0),
                 },
                 _ => println!("[SHARP] {} | {:.0}s left | no price history for the check, no trade", ticker, rem),
-            }
-        }
-
-        // ---- shadow rule: paper only, one a window, outside every cap -------------------
-        if mode.sharp_slot && !shadow_taken && shadow_next < SHADOW_CHECKS_SECS_LEFT.len() && rem <= SHADOW_CHECKS_SECS_LEFT[shadow_next] {
-            let on_time = rem >= SHADOW_CHECKS_SECS_LEFT[shadow_next] - SHARP_SLACK_SECS as f64;
-            shadow_next += 1;
-            if let (Some(bid), Some(ask), Some(moved), true) = (yes_bid, yes_ask, sharp_move(&mid_samples, now), on_time) {
-                if let Some(edge) = shadow_entry(moved, bid, ask) {
-                    if side_is_falling(&mid_samples, edge.side, now) {
-                        println!("[SHADOW] {} | {:.0}s left | {} @ {:.1}c has a falling price, not logged", ticker, rem, edge.side.as_str().to_uppercase(), edge.price * 100.0);
-                    } else {
-                        let count = (mode.max_order_dollars / edge.price).floor() as u32;
-                        if count >= 1 {
-                            let note = format!("shadow rule | {:.0}s left | YES mid {:+.1}c in {} s | {} | paper only", rem, moved * 100.0, SHARP_LOOKBACK_SECS, trend_label(ctx.strikes.lock().unwrap().hour_trend(close_ts, strike)));
-                            println!("[SHADOW] {} | {:.0}s left | {} @ {:.1}c x{} logged on paper", ticker, rem, edge.side.as_str().to_uppercase(), edge.price * 100.0, count);
-                            ctx.book.lock().await.record(
-                                Trade {
-                                    mode: ctx.mode_label(),
-                                    source: "shadow".into(),
-                                    ticker: ticker.to_string(),
-                                    title: "BTC 15 min (shadow rule)".into(),
-                                    side: edge.side.as_str().into(),
-                                    price: edge.price,
-                                    count,
-                                    cost: count as f64 * edge.price,
-                                    fee: taker_fee(edge.price) * count as f64,
-                                    model_prob: edge.p_yes,
-                                    gbm_prob: edge.p_yes,
-                                    momentum: moved,
-                                    edge_cents: edge.cents,
-                                    spot,
-                                    strike,
-                                    placed_ts: now,
-                                    close_ts,
-                                    client_order_id: format!("shadow-{}-{}", ticker, now),
-                                    order_id: None,
-                                    result: None,
-                                    pnl: None,
-                                    note: String::new(),
-                                },
-                                ctx.supa.as_ref(),
-                                &note,
-                            );
-                            shadow_taken = true;
-                        }
-                    }
-                }
             }
         }
 
@@ -1186,7 +1169,7 @@ async fn run_window(
                 if now - last_status >= 5 {
                     if let Some(s) = &ctx.supa {
                         s.event(json!({
-                            "kind": "status", "source": "bot", "mode": ctx.mode_label(), "live": ctx.live,
+                            "kind": "status", "source": "bot", "mode": ctx.mode_label(), "live": ctx.is_live(),
                             "ticker": ticker, "close_time": chrono::DateTime::from_timestamp(close_ts, 0).map(|d| d.to_rfc3339()),
                             "seconds_to_close": rem as i64, "spot": spot, "strike": strike, "vol_window": est.sd / strike,
                             "yes_bid_cents": yes_bid.map(|b| (b * 100.0).round() as i64),
@@ -1240,7 +1223,7 @@ async fn run_window(
                     }
                     if settle_ok && analytics_ok && !falling {
                         let count = (dollars / edge.price).floor() as u32;
-                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
+                        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.is_live() && b.daily_stopped(ctx.daily_loss_limit)) };
                         if count >= 1 && allowed {
                             last_settle_entry = now;
                             let file_size = match &a_signal { ExecutionSignal::SnipeTaker { contracts, .. } => *contracts, _ => 0 };
@@ -1303,7 +1286,7 @@ async fn run_window(
         if now - last_status >= 15 {
             if let Some(s) = &ctx.supa {
                 s.event(json!({
-                    "kind": "status", "source": "bot", "mode": ctx.mode_label(), "live": ctx.live,
+                    "kind": "status", "source": "bot", "mode": ctx.mode_label(), "live": ctx.is_live(),
                     "ticker": ticker, "close_time": chrono::DateTime::from_timestamp(close_ts, 0).map(|d| d.to_rfc3339()),
                     "seconds_to_close": rem as i64, "spot": spot, "strike": strike, "vol_window": sigma,
                     "yes_bid_cents": yes_bid.map(|b| (b * 100.0).round() as i64),
@@ -1324,7 +1307,7 @@ async fn run_window(
         if !mode.early_engine || bets_early >= mode.bets_per_window || !in_window || edge.cents < mode.min_edge_cents || now - last_early_attempt < SETTLE_REENTRY_SECS {
             continue;
         }
-        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.live && b.daily_stopped(ctx.daily_loss_limit)) };
+        let allowed = { let b = ctx.book.lock().await; b.can_record("bot") && b.open_on(&ticker) < mode.bets_per_window && !(ctx.is_live() && b.daily_stopped(ctx.daily_loss_limit)) };
         // Sized by the odds it just computed, never the mode's whole cap.
         let early_p_win = match edge.side { Side::Yes => p_yes, Side::No => 1.0 - p_yes };
         let early_dollars = settle_size(&mode, early_p_win, edge.price, ctx.bankroll_dollars, false);
@@ -1364,7 +1347,7 @@ async fn run_window(
                 println!("               {}", l);
             }
             if let Some(sup) = &ctx.supa {
-                sup.event(json!({ "kind": "status", "source": "bot", "mode": ctx.mode_label(), "live": ctx.live, "ticker": ticker, "strike": strike, "spot": s,
+                sup.event(json!({ "kind": "status", "source": "bot", "mode": ctx.mode_label(), "live": ctx.is_live(), "ticker": ticker, "strike": strike, "spot": s,
                     "seconds_to_close": 0, "message": format!("settled {:.2} ({}) | {}", s, outcome, lines.join(" | ")) }));
             }
         }
@@ -1390,7 +1373,7 @@ async fn enter(
     note: &str,
 ) -> bool {
     let now = chrono::Utc::now().timestamp();
-    let limit = if ctx.live { ioc_limit(edge.price) } else { edge.price };
+    let limit = if ctx.is_live() { ioc_limit(edge.price) } else { edge.price };
     let mut count = (dollars / limit).floor() as u32;
     let mut price = edge.price;
     let mut fee = taker_fee(edge.price) * count as f64;
@@ -1400,7 +1383,7 @@ async fn enter(
         ticker, edge.side.as_str().to_uppercase(), count, price * 100.0, count as f64 * price, fee,
         match edge.side { Side::Yes => p_yes, Side::No => 1.0 - p_yes } * 100.0, edge.cents, note, ctx.mode_label()
     );
-    let order_id = if ctx.live {
+    let order_id = if ctx.is_live() {
         match place_order(ctx, ticker, edge.side, limit, count, &client_order_id).await {
             Ok(fill) if fill.filled <= 0.0 => {
                 println!("[LIVE] order {} got no fill up to {:.1}c (ask was {:.1}c): the book moved, nothing bought", fill.order_id, limit * 100.0, edge.price * 100.0);
@@ -1545,9 +1528,8 @@ mod tests {
     fn normal_checks_the_sharp_rise_at_five_four_three_and_one_minutes() {
         std::env::remove_var("BETS_PER_WINDOW");
         let m = mode_params("NORMAL");
-        assert_eq!((m.bets_per_window, m.settle_trades), (2, 0));
+        assert_eq!((m.bets_per_window, m.settle_trades), (1, 0));
         assert_eq!(SHARP_CHECKS_SECS_LEFT, &[300.0, 240.0, 180.0, 60.0]);
-        assert_eq!(SHADOW_CHECKS_SECS_LEFT, &[300.0, 240.0, 180.0, 120.0, 60.0]);
     }
 
     #[test]
@@ -1582,15 +1564,38 @@ mod tests {
     }
 
     #[test]
-    fn the_sharp_rule_skips_the_50_to_65c_band_and_the_shadow_keeps_it() {
+    fn the_sharp_rule_skips_the_50_to_65c_band() {
         assert!(sharp_entry(0.25, 0.48, 0.49).is_some());
         assert!(sharp_entry(0.25, 0.49, 0.50).is_none());
         assert!(sharp_entry(0.25, 0.64, 0.65).is_none());
         assert!(sharp_entry(0.25, 0.65, 0.66).is_some());
         assert!(sharp_entry(-0.25, 0.42, 0.43).is_none());
         assert!(sharp_entry(-0.25, 0.60, 0.61).is_some());
-        assert!(shadow_entry(0.25, 0.49, 0.50).is_some());
-        assert!(shadow_entry(0.24, 0.49, 0.50).is_none());
+    }
+
+    #[test]
+    fn the_total_loss_stop_turns_the_bot_to_paper_at_thirty_dollars() {
+        let mut t: Trade = serde_json::from_value(json!({
+            "mode": "LIVE-NORMAL", "source": "bot", "ticker": "KXBTC15M-1", "side": "yes", "price": 0.7, "count": 6,
+            "cost": 4.2, "fee": 0.09, "model_prob": 0.7, "spot": 1.0, "strike": 1.0, "placed_ts": 1, "close_ts": 2, "pnl": -4.29
+        })).unwrap();
+        let mut book = TradeBook::load("/nonexistent/trades.jsonl", usize::MAX, 0);
+        for _ in 0..6 {
+            book.trades.push(t.clone());
+        }
+        assert!((book.live_pnl_total() + 25.74).abs() < 1e-9);
+        assert!(book.live_pnl_total() > -TOTAL_LOSS_LIMIT_DEFAULT);
+        book.trades.push(t.clone());
+        assert!(book.live_pnl_total() <= -TOTAL_LOSS_LIMIT_DEFAULT);
+        // Paper trades never count toward it.
+        t.mode = "PAPER-NORMAL".into();
+        let paper = TradeBook::load("/nonexistent/trades.jsonl", usize::MAX, 0);
+        let mut paper = paper;
+        for _ in 0..10 {
+            paper.trades.push(t.clone());
+        }
+        assert_eq!(paper.live_pnl_total(), 0.0);
+        assert!(total_stop_message(-30.12, 30.0).starts_with("Live trading stopped: the live run lost $30.12, past the $30 limit"));
     }
 
     #[test]
@@ -1621,16 +1626,6 @@ mod tests {
         assert!(sharp_entry(0.25, 0.81, 0.82).is_some());
         assert!(sharp_entry(0.30, 0.82, 0.83).is_none());
         assert!(sharp_entry(-0.30, 0.10, 0.11).is_none());
-    }
-
-    #[test]
-    fn shadow_rule_is_the_wide_25c_rule_into_30_to_82c() {
-        assert!(shadow_entry(0.24, 0.74, 0.75).is_none());
-        assert!(shadow_entry(0.25, 0.74, 0.75).is_some());
-        assert!(shadow_entry(0.25, 0.29, 0.30).is_some());
-        assert!(shadow_entry(0.25, 0.28, 0.29).is_none());
-        assert!(shadow_entry(0.25, 0.81, 0.82).is_some());
-        assert!(shadow_entry(0.25, 0.82, 0.83).is_none());
     }
 
     #[test]

@@ -1,7 +1,7 @@
-/// Every trade the bot takes, paper or live, from the 15-minute engine ("bot"), the market
-/// sniper ("sniper") or the shadow rule ("shadow", paper only, outside every cap): logged to
-/// trades.jsonl, settled against Kalshi's result, mirrored to Supabase for the HUD. P&L is
-/// after the taker fee.
+/// Every trade the bot takes, paper or live, from the 15-minute engine ("bot") or the market
+/// sniper ("sniper"): logged to trades.jsonl, settled against Kalshi's result, mirrored to
+/// Supabase for the HUD. P&L is after the taker fee. (Older logs may hold "shadow" rows from
+/// the shadow rule that ran on Nov 4-5; they are paper and take no room in a window.)
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashSet;
@@ -146,6 +146,11 @@ impl TradeBook {
     pub fn live_pnl_today(&self) -> f64 {
         let day_start = chrono::Utc::now().date_naive().and_hms_opt(0, 0, 0).map(|d| d.and_utc().timestamp()).unwrap_or(0);
         self.trades.iter().filter(|t| t.source == "bot" && t.live() && t.placed_ts >= day_start).filter_map(|t| t.pnl).sum()
+    }
+
+    /// Realized P&L of every live bot trade in the book, over all days: the total loss stop reads it.
+    pub fn live_pnl_total(&self) -> f64 {
+        self.trades.iter().filter(|t| t.source == "bot" && t.live()).filter_map(|t| t.pnl).sum()
     }
 
     pub fn daily_stopped(&self, limit: f64) -> bool {

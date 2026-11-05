@@ -26,6 +26,7 @@ import {
   type ExchangeCheck,
   type Totals,
   SNIPE_EDGE_CENTS,
+  TOTAL_LOSS_LIMIT_CENTS,
   type Windows,
   tradesSince,
   uptimeLabel,
@@ -214,6 +215,14 @@ export default function Board() {
           <Controls config={config} onChanged={onChanged} />
         </header>
 
+        {data?.liveStop && (
+          <p
+            role="status"
+            className="mt-6 rounded-xl border border-vitae-red/40 bg-vitae-red/10 px-4 py-3 text-sm text-white/85"
+          >
+            {data.liveStop}
+          </p>
+        )}
         {error && <p className="mt-6 text-sm text-vitae-red">{error}</p>}
 
         {data && <PerWindow windows={data.windows} mode={mode} />}
@@ -480,10 +489,10 @@ function Controls({
       <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
         NORMAL: one trade a window of 15% of the balance ($5 max), checked with 5, 4, 3 and 1 min
         left: a 25¢+ rise over the prior minute into 30–49¢ or 66–82¢, only in the direction BTC
-        moved over the prior hour, never while its price is falling. The old rule (every minute from
-        5 out, 30–82¢, no trend) is logged as a shadow, never sent. Live trading stops for the UTC
-        day after a $30 loss. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus earlier
-        trades from 7 min out with no win-chance floor.
+        moved over the prior hour, never while its price is falling. Live trading pauses for the UTC
+        day after a $10 loss and stops for good once the live run is $30 down, after which only
+        paper trades are recorded. RISK: up to $100 a trade, as low as 60% in the last 90 s, plus
+        earlier trades from 7 min out with no win-chance floor.
       </p>
     </div>
   );
@@ -979,14 +988,20 @@ function Trades({
   const allPaper = trades.length > 0 && trades.every((t) => !t.live);
   const sniper = totals.bySource.sniper;
   const ufc = totals.bySource.ufc;
-  const shadow = totals.bySource.shadow;
+  const live = totals.live;
   const rows = trades.slice(0, TRADE_ROWS);
   return (
     <section className="mt-10" aria-labelledby="trades-heading">
       <h2 id="trades-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
         {allPaper ? `${TRADE_ROWS} TRADE PAPER RUN` : `${TRADE_ROWS} TRADE RUN`}
       </h2>
-      <div className="mt-3 grid gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="mt-3 grid gap-3 sm:grid-cols-4 lg:grid-cols-8">
+        <Stat
+          label="Live P&L"
+          value={live.settled ? signedDollars(live.pnlCents) : '—'}
+          sub={`${live.settled} settled · stops at −${dollars(TOTAL_LOSS_LIMIT_CENTS)}`}
+          toneClass={tone(live.settled ? live.pnlCents : null)}
+        />
         <Stat label="Trades" value={String(totals.trades)} />
         <Stat label="Settled" value={String(totals.settled)} />
         <Stat label="Wins / losses" value={`${totals.wins} / ${totals.losses}`} />
@@ -1014,17 +1029,6 @@ function Trades({
             {sniper.settled ? signedDollars(sniper.pnlCents) : '—'}
           </span>{' '}
           net, {pct(sniper.hitRate)} hit rate
-        </p>
-      )}
-      {shadow.trades > 0 && (
-        <p className="mt-3 text-sm text-white/60">
-          Shadow rule (old 30-82c rule at every minute from 5 out, never sent): {shadow.trades}{' '}
-          trade
-          {shadow.trades === 1 ? '' : 's'},{' '}
-          <span className={tone(shadow.settled ? shadow.pnlCents : null)}>
-            {shadow.settled ? signedDollars(shadow.pnlCents) : '—'}
-          </span>{' '}
-          net, {pct(shadow.hitRate)} hit rate
         </p>
       )}
       {ufc.trades > 0 && (
@@ -1081,6 +1085,12 @@ function Trades({
                 </Td>
                 <Td right className={tone(t.pnlCents)}>
                   {t.pnlCents == null ? '—' : signedDollars(t.pnlCents)}
+                  {t.pnlCents != null && t.costCents != null && t.costCents > 0 && (
+                    <span className="ml-1 text-[10px] text-white/45">
+                      {t.pnlCents >= 0 ? '+' : '−'}
+                      {pct(Math.abs(t.pnlCents) / (t.costCents + (t.feeCents ?? 0)), 0)}
+                    </span>
+                  )}
                 </Td>
                 <Td>
                   {t.result ? (
