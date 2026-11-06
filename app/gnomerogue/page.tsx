@@ -5,10 +5,10 @@ import { poisonCritTrees, trees, type Talent, type Tree } from './talents';
 export const metadata: Metadata = {
   title: 'Gnome Rogue PvP Builds | WoW Forever | VITAEGIS',
   description:
-    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 31/0/20 Poison Crit build that poisons, stuns and vanishes.',
+    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 31/8/12 Poison Crit build that poisons, stuns and vanishes.',
   openGraph: {
     title: 'Gnome Rogue PvP Builds | WoW Forever',
-    description: 'The 10/5/36 Subtlety spec and the 31/0/20 Poison Crit spec, with the full talent trees.',
+    description: 'The 10/5/36 Subtlety spec and the 31/8/12 Poison Crit spec, with the full talent trees.',
     type: 'article',
   },
 };
@@ -79,33 +79,43 @@ const gear: Gear[] = [
 ];
 
 const poisonCritSequence: Step[] = [
-  { step: 'Stealth', icon: 'ability_stealth', text: 'Deadly Poison on the main hand, Crippling on the off hand. Master of Deception and Camouflage get you behind them unseen.' },
-  { step: 'Premeditation', icon: 'spell_shadow_possession', text: 'Two free combo points from 20 yards.' },
-  { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards.' },
-  { step: 'Garrote', icon: 'ability_rogue_garrote', text: 'Dirty Deeds makes it cheap and lets it land from any angle. Initiative adds a point, so you are at four. Blood Splatter stretches the bleed to 27 seconds.' },
-  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers at once, 20% harder on a poisoned target, two combo points. You are at five, and a Seal Fate crit adds another whenever you are still building.' },
-  { step: 'Kidney Shot', icon: 'ability_rogue_kidneyshot', text: 'Five points. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.' },
-  { step: 'Shank', icon: 'inv_sword_31', text: 'Venom: poison damage up 30% and poisons apply 20% more often for 6 seconds. Improved Poisons means the charges last and the stacks come fast.' },
-  { step: 'Mutilate, Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Inside the stun and the Venom window. Every Mutilate swings both daggers, so Deadly Poison races to five stacks, and Vile Poisons makes every stack 20% stronger.' },
-  { step: 'Rupture', icon: 'ability_rogue_rupture', text: 'Five points as the stun ends. Blood Splatter adds 6 seconds, so it bleeds for 22. Garrote, Rupture and Deadly Poison are all ticking now.' },
-  { step: 'Gouge and Vanish', icon: 'ability_vanish', text: 'Improved Gouge holds them for 5.5 seconds. Step back and Vanish. Elusiveness brings Vanish back 90 seconds sooner. Without Preparation this is your one Vanish, so make it count.' },
-  { step: 'Bandage in Stealth', icon: 'inv_misc_bandage_12', text: 'Two bleeds and five stacks of poison keep ticking while you heal. Crippling means they cannot chase you, and Master of Deception means they cannot find you.' },
-  { step: 'Garrote again', icon: 'ability_rogue_garrote', text: 'If they are still standing, open from Stealth with Garrote a second time. Ghostly Strike lets Garrote land without Stealth if you would rather stay on them.' },
-  { step: 'Cold Blood into Mutilate', icon: 'spell_ice_lament', text: 'When they are low and still coming, Cold Blood guarantees the Mutilate crit, and Eviscerate ends it.' },
+  { step: 'Stealth', icon: 'ability_stealth', text: 'Deadly Poison on the main hand, Instant Poison on the off hand. Master of Deception and Camouflage get you behind them unseen.' },
+  { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards so the whole stun lands inside it.' },
+  { step: 'Cheap Shot', icon: 'ability_cheapshot', text: 'Four second stun and two combo points, three with Initiative. Every hit from here on is on a stunned target.' },
+  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers, 20% harder once the first poison lands. You are at five, and with Seal Fate a crit here is a point you bank for later.' },
+  { step: 'Kidney Shot', icon: 'ability_rogue_kidneyshot', text: 'Five points as Cheap Shot ends. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.' },
+  { step: 'Shank', icon: 'inv_sword_31', text: 'Venom: poison damage up 30% and poisons apply 20% more often for 6 seconds. Every Mutilate that follows is inside that window.' },
+  { step: 'Mutilate, Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Puncturing Wounds gives each one 15% more crit, Lethality makes the crits 20% bigger, and Seal Fate turns each crit into an extra combo point. Deadly Poison stacks twice a press.' },
+  { step: 'Cold Blood into Eviscerate', icon: 'spell_ice_lament', text: 'Five points, a guaranteed crit, Coup de Grace adds 20%. This is the kill, still inside the stun.' },
+  { step: 'Vanish and again', icon: 'ability_vanish', text: 'If anyone is left, Vanish and open with Cheap Shot on the next one. Remorseless Attacks gives the first Mutilate after a kill 40% more crit.' },
 ];
 
 const poisonCritPoisons: Poison[] = [
-  { name: 'Deadly Poison', icon: 'ability_rogue_dualweild', text: 'Main hand. Stacks up to five and keeps ticking after you Vanish. Vile Poisons adds 20% damage and makes it hard to dispel, and Improved Poisons keeps the charges from running out.' },
-  { name: 'Crippling Poison', icon: 'ability_poisonsting', text: 'Off hand. Your way out: a snared target cannot follow you while you hide and heal.' },
-  { name: 'Wound Poison', icon: 'inv_misc_herb_16', text: 'Swap onto the off hand against healers and anyone with a self heal, so they cannot heal through the bleeds.' },
+  { name: 'Deadly Poison', icon: 'ability_rogue_dualweild', text: 'Main hand. Stacks to five fast with Mutilate swinging both daggers, and Vile Poisons adds 20% damage.' },
+  { name: 'Instant Poison', icon: 'ability_poisons', text: 'Off hand. Direct damage on every proc, which the fast off-hand dagger procs often. This is the damage pick.' },
+  { name: 'Wound Poison', icon: 'inv_misc_herb_16', text: 'Swap onto the off hand against healers and anyone with a self heal. Crippling Poison goes there instead when you are being kited.' },
 ];
 
 const poisonCritGear: Gear[] = [
-  { title: 'Weapons', text: 'Two daggers, and Mutilate will not fire without them. Mutilate swings both, so a fast off hand stacks Deadly Poison faster. Put the fastest dagger in the off hand.' },
-  { title: 'Stats', text: 'Critical strike first, then Attack Power. Poisons scale with Attack Power and can crit, Malice gives 5% crit to everything including poisons, Seal Fate turns crits into combo points, and Lethality makes Mutilate crits hit 20% harder.' },
-  { title: 'No Death Mark', text: 'Left out on purpose. Death Mark stores 6 seconds of damage and would cost 31 points in Subtlety. This plan is 27 seconds of Garrote, 22 seconds of Rupture and five stacks of Deadly Poison, all ticking while you hide. The points went into Venom, Improved Poisons, Cold Blood, Improved Kidney Shot, Seal Fate and Mutilate instead.' },
-  { title: 'No Preparation', text: 'Mutilate is the 31st Assassination point, which leaves Subtlety at 20, one short of Preparation. You get one Vanish a fight, with Elusiveness bringing it back 90 seconds sooner. If you would rather have the second Vanish than Mutilate, move that one point.' },
-  { title: 'Professions', text: 'Engineering for grenades and the Gnome racial. Keep Heavy Runecloth Bandages on the bar: the bandage in Stealth is the whole point of the build.' },
+  { title: 'Weapons', text: 'Two daggers, and Mutilate will not fire without them. It hits with both, so the main hand wants the hardest-hitting dagger you can find and the off hand wants the fastest one for poison procs.' },
+  { title: 'Stats', text: 'Critical strike first, since Puncturing Wounds, Seal Fate, Lethality, Cold Blood and Malice all pay out on crits, then Attack Power. The build skips Precision, so take hit from gear: a missed Kidney Shot is a lost fight.' },
+  { title: 'Why 31 / 8 / 12', text: 'Thirty-one in Assassination for Mutilate and every poison and crit talent on the way. Eight in Combat for Puncturing Wounds and Coup de Grace, the two biggest damage talents outside the main tree. Twelve in Subtlety for Opportunity, which is 20% on Mutilate, plus Initiative and Camouflage for the opener. Death Mark, Preparation and the escape talents are gone on purpose: this build kills inside the first stun or Vanishes to try again.' },
+  { title: 'Professions', text: 'Engineering for grenades, which land harder on a target you have stunned with Improved Kidney Shot, and the Gnome racial.' },
+];
+
+const poisonCritDuos: Partners[] = [
+  {
+    name: 'Mage, Fire or Arcane',
+    tag: 'Most lethal · double burst',
+    icons: ['classicon_mage'],
+    text: 'The fastest kill either of you can set up. Your Cheap Shot and Kidney Shot give the mage ten seconds of free casting, and Pyroblast, Fire Blast and your Cold Blood Eviscerate land in the same window. Polymorph or Frost Nova takes the second player out while it happens. Nobody heals, so if the opener misses you both reset with Vanish and Blink.',
+  },
+  {
+    name: 'Holy Paladin',
+    tag: 'Longest stun window',
+    icons: ['classicon_paladin'],
+    text: 'Hammer of Justice on the end of your Kidney Shot nearly doubles the window where Mutilate does 20% more to a poisoned target. Blessing of Freedom keeps you in melee when Escape Artist is down, Cleanse strips what gets you kited, and Blessing of Protection replaces the Preparation this build gave up.',
+  },
 ];
 
 type Partners = { name: string; tag: string; icons: string[]; text: string };
@@ -484,9 +494,8 @@ export default function GnomeRoguePage() {
             Poison Crit
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            A poison and critical strike spec built on Mutilate that keeps Stealth and Vanish.
-            Garrote, Kidney Shot, stack Deadly Poison with Mutilate, Rupture, then Vanish and bandage
-            while the bleeds and poison finish the job.
+            A Mutilate spec built for the most damage a Gnome Rogue can do inside one stun. Cheap
+            Shot, Mutilate, Kidney Shot, Venom, two more Mutilates and a Cold Blood Eviscerate.
           </p>
           <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(poisonCritTrees)}</p>
           <p className={`${label} mt-2`}>Assassination · Combat · Subtlety</p>
@@ -495,16 +504,16 @@ export default function GnomeRoguePage() {
         <section className="border-l-2 border-vitae-green pl-5">
           <h2 className={label}>The short version</h2>
           <p className="mt-3 font-light leading-relaxed text-white/75">
-            Open from Stealth with Garrote, Mutilate to five, stun with Kidney Shot, Shank for Venom
-            and Mutilate twice more to stack Deadly Poison inside the stun, then Rupture. Gouge,
-            Vanish and bandage in Stealth while two bleeds and the poison keep ticking. Crippling
-            Poison means they cannot chase you.
+            Open with Cheap Shot, Mutilate to five, Kidney Shot, Shank for Venom, then two Mutilates
+            and a Cold Blood Eviscerate while they are still stunned. Every talent in the build makes
+            that ten seconds hit harder: Opportunity and Puncturing Wounds on Mutilate, Improved
+            Kidney Shot on everything, Seal Fate to reach five points faster, Coup de Grace on the
+            finisher.
           </p>
           <p className="mt-3 text-sm font-light leading-relaxed text-white/50">
-            Malice gives 5% critical strike to attacks and poisons, Seal Fate turns crits into combo
-            points, and Cold Blood guarantees the Mutilate crit that ends it. Vile Poisons, Improved
-            Poisons, Venom and Mutilate are all here. Death Mark and Preparation are not, on purpose:
-            see the gear notes.
+            Malice gives 5% critical strike to attacks and poisons, and Vile Poisons, Improved
+            Poisons and Venom make Deadly and Instant Poison a real share of the damage. Death Mark,
+            Preparation and the escape talents are not here, on purpose: see the gear notes.
           </p>
         </section>
 
@@ -512,6 +521,8 @@ export default function GnomeRoguePage() {
         <SequenceSection items={poisonCritSequence} />
         <PoisonSection items={poisonCritPoisons} />
         <GearSection items={poisonCritGear} />
+
+        <PartnerSection title="Most lethal DUO" color="text-vitae-magenta" border="border-vitae-magenta/40" items={poisonCritDuos} />
 
         <section className="mt-12">
           <h2 className={label}>Sources</h2>
