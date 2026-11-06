@@ -626,3 +626,41 @@ export const trees: Tree[] = [
     ]
   }
 ];
+
+export function withRanks(base: Tree[], ranks: Record<string, number>): Tree[] {
+  const left = new Set(Object.keys(ranks));
+  const out = base.map((tree) => {
+    const talents = tree.talents.map((t) => {
+      const rank = ranks[t.name] ?? 0;
+      left.delete(t.name);
+      if (rank > t.max) throw new Error(`${t.name}: rank ${rank} exceeds max ${t.max}`);
+      return { ...t, rank };
+    });
+    return { ...tree, talents, points: talents.reduce((n, t) => n + t.rank, 0) };
+  });
+  if (left.size) throw new Error(`Unknown talents: ${[...left].join(', ')}`);
+  return out;
+}
+
+export const poisonCritTrees: Tree[] = withRanks(trees, {
+  Malice: 5,
+  'Improved Gouge': 2,
+  Ruthlessness: 3,
+  Lethality: 2,
+  Vigor: 2,
+  'Blood Splatter': 1,
+  'Vile Poisons': 5,
+  'Master of Deception': 3,
+  Opportunity: 5,
+  'Dirty Deeds': 2,
+  Camouflage: 3,
+  Initiative: 3,
+  Premeditation: 1,
+  'Serrated Blades': 3,
+  Elusiveness: 2,
+  'Ghostly Strike': 1,
+  Preparation: 1,
+  Hemorrhage: 1,
+  'Boot Knife': 5,
+  'Death Mark': 1,
+});

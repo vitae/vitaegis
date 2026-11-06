@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { trees, type Talent, type Tree } from './talents';
+import { poisonCritTrees, trees, type Talent, type Tree } from './talents';
 
 export const metadata: Metadata = {
-  title: 'Gnome Subtlety Rogue PvP Build | WoW Forever | VITAEGIS',
+  title: 'Gnome Rogue PvP Builds | WoW Forever | VITAEGIS',
   description:
-    'A level 60 Gnome Subtlety Rogue PvP spec for WoW Forever: the 10/5/36 Ambush and Death Mark talent tree, racials, kill sequence, poisons and gear.',
+    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 20/0/31 Poison Crit build that poisons, marks and vanishes.',
   openGraph: {
-    title: 'Gnome Subtlety Rogue PvP Build | WoW Forever',
-    description: 'The 10/5/36 Ambush and Death Mark spec, with the full talent tree.',
+    title: 'Gnome Rogue PvP Builds | WoW Forever',
+    description: 'The 10/5/36 Subtlety spec and the 20/0/31 Poison Crit spec, with the full talent trees.',
     type: 'article',
   },
 };
@@ -20,6 +20,10 @@ const ROW = 72;
 const COL = 68;
 const PAD = 16;
 const HEAD = 56;
+
+type Step = { step: string; icon: string; text: string };
+type Poison = { name: string; icon: string; text: string };
+type Gear = { title: string; text: string };
 
 const racials: { name: string; icon: string; kind: string; text: string }[] = [
   {
@@ -48,7 +52,7 @@ const racials: { name: string; icon: string; kind: string; text: string }[] = [
   },
 ];
 
-const sequence: { step: string; icon: string; text: string }[] = [
+const sequence: Step[] = [
   { step: 'Stealth', icon: 'ability_stealth', text: 'Pick the target and the angle. Camouflage keeps you close to run speed.' },
   { step: 'Premeditation', icon: 'spell_shadow_possession', text: 'Two free combo points from 20 yards, before you open.' },
   { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards.' },
@@ -61,17 +65,44 @@ const sequence: { step: string; icon: string; text: string }[] = [
   { step: 'Vanish and Preparation', icon: 'ability_vanish', text: 'Vanish and open again. Preparation resets Vanish, Sprint, Evasion and Premeditation for a third go.' },
 ];
 
-const poisons: { name: string; icon: string; text: string }[] = [
+const poisons: Poison[] = [
   { name: 'Crippling Poison', icon: 'ability_poisonsting', text: 'Main hand by default. Nobody walks away from you.' },
   { name: 'Wound Poison', icon: 'inv_misc_herb_16', text: 'Off hand against healers and anyone with a self heal.' },
   { name: 'Mind-Numbing Poison', icon: 'spell_nature_nullifydisease', text: 'Swap in against casters to stretch their cast times.' },
 ];
 
-const gear: { title: string; text: string }[] = [
+const gear: Gear[] = [
   { title: 'Weapons', text: 'Two daggers. Ambush needs a dagger in the main hand, and Ghostly Strike and Hemorrhage both hit harder with one. Put the slowest, hardest-hitting dagger in the main hand.' },
   { title: 'Stats', text: 'Agility first, then Attack Power and critical strike. Poisons now scale with Attack Power and can crit. Keep Stamina high: a dead rogue does no burst.' },
   { title: 'Hit', text: 'This build skips Precision. Hit rating from gear covers players, who are the same level as you. Pick up Precision if you also raid on this spec.' },
   { title: 'Professions', text: 'Engineering for grenades and gadgets, which pairs with the Gnome racial. Leatherworking or Alchemy as the second, depending on whether you want gear or potions.' },
+];
+
+const poisonCritSequence: Step[] = [
+  { step: 'Stealth', icon: 'ability_stealth', text: 'Deadly Poison on the main hand, Crippling on the off hand. Master of Deception and Camouflage get you behind them unseen.' },
+  { step: 'Premeditation', icon: 'spell_shadow_possession', text: 'Two free combo points from 20 yards.' },
+  { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards.' },
+  { step: 'Garrote', icon: 'ability_rogue_garrote', text: 'Dirty Deeds makes it cheap and lets it land from any angle. Initiative adds a point, so you are at four. Blood Splatter stretches the bleed to 27 seconds.' },
+  { step: 'Hemorrhage', icon: 'spell_shadow_lifedrain', text: 'Fifth point. It also makes Garrote and Rupture hit 15% harder for 15 seconds.' },
+  { step: 'Death Mark', icon: 'ability_creature_cursed_02', text: 'Five points. Garrote and Rupture feed it at twice the rate, and your crit chance raises its cap. Ruthlessness often hands a point straight back.' },
+  { step: 'Shank and Hemorrhage', icon: 'inv_sword_32', text: 'Boot Knife makes every Shank worth two points. Each hit stacks Deadly Poison, and Vile Poisons makes every stack 20% stronger.' },
+  { step: 'Rupture', icon: 'ability_rogue_rupture', text: 'Five points. Serrated Blades adds 30% and Blood Splatter adds 6 seconds. Garrote, Rupture and Deadly Poison are all ticking into the mark now.' },
+  { step: 'Gouge and Vanish', icon: 'ability_vanish', text: 'Improved Gouge holds them for 5.5 seconds. Step back and Vanish. Elusiveness brings Vanish back 90 seconds sooner.' },
+  { step: 'Bandage in Stealth', icon: 'inv_misc_bandage_12', text: 'The mark detonates 6 seconds after you placed it, and the bleeds and poison keep ticking while you heal. Crippling means they cannot chase you.' },
+  { step: 'Preparation', icon: 'spell_shadow_antishadow', text: 'If they are still standing, Preparation resets Vanish, Sprint and Premeditation and you open with Garrote again. Ghostly Strike lets Garrote land without Stealth if you would rather stay on them.' },
+];
+
+const poisonCritPoisons: Poison[] = [
+  { name: 'Deadly Poison', icon: 'ability_rogue_dualweild', text: 'Main hand. Stacks up to five and keeps ticking after you Vanish. Vile Poisons adds 20% damage and makes it hard to dispel.' },
+  { name: 'Crippling Poison', icon: 'ability_poisonsting', text: 'Off hand. Your way out: a snared target cannot follow you while you hide and heal.' },
+  { name: 'Wound Poison', icon: 'inv_misc_herb_16', text: 'Swap onto the off hand against healers and anyone with a self heal, so they cannot heal through the bleeds.' },
+];
+
+const poisonCritGear: Gear[] = [
+  { title: 'Weapons', text: 'Two daggers. Hemorrhage and Ghostly Strike hit harder with a dagger, and a fast off hand stacks Deadly Poison faster. Put the fastest dagger in the off hand.' },
+  { title: 'Stats', text: 'Critical strike first, then Attack Power. Poisons scale with Attack Power and can crit, Malice gives 5% crit to everything including poisons, and both stats raise the Death Mark cap. Lethality turns the Hemorrhage crits into 20% more damage.' },
+  { title: 'Trade-off', text: 'Death Mark costs 31 points in Subtlety, which leaves 20 for Assassination. Venom and Improved Poisons sit too deep to fit alongside it, so Vile Poisons is the poison talent this build takes. If you ever want Venom instead, Death Mark is the point you give up.' },
+  { title: 'Professions', text: 'Engineering for grenades and the Gnome racial. Keep Heavy Runecloth Bandages on the bar: the bandage in Stealth is the whole point of the build.' },
 ];
 
 type Partners = { name: string; tag: string; icons: string[]; text: string };
@@ -215,6 +246,115 @@ function TreePanel({ tree }: { tree: Tree }) {
   );
 }
 
+function TalentSections({ build }: { build: Tree[] }) {
+  return (
+    <>
+      <section className="mt-12">
+        <h2 className={`${label} text-center`}>Talent trees</h2>
+        <p className="mt-2 text-center text-sm font-light text-white/50">
+          Hover or tap a talent to read it. Lit talents are taken.
+        </p>
+        <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          {build.map((tree) => (
+            <TreePanel key={tree.name} tree={tree} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-12">
+        <h2 className={label}>Spec list</h2>
+        <div className="mt-4 grid gap-6 lg:grid-cols-3">
+          {build.map((tree) => (
+            <div key={tree.name} className={`${glass} p-5`}>
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium uppercase tracking-[0.15em]">{tree.name}</h3>
+                <span className={label}>{tree.points} points</span>
+              </div>
+              {tree.points === 0 ? (
+                <p className="mt-4 text-sm font-light text-white/50">No points in this tree.</p>
+              ) : (
+                <ul className="mt-4 divide-y divide-vitae-green/20">
+                  {tree.talents
+                    .filter((t) => t.rank > 0)
+                    .map((t) => (
+                      <li key={t.name} className="grid grid-cols-[3.5rem_1fr] gap-3 py-3">
+                        <Icon name={t.icon} alt="" />
+                        <div>
+                          <p className="font-medium leading-tight">
+                            {t.name}{' '}
+                            <span className="whitespace-nowrap text-vitae-green">
+                              {t.rank}/{t.max}
+                            </span>
+                          </p>
+                          <p className="mt-1 text-sm font-light leading-snug text-white/60">{t.text}</p>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function SequenceSection({ items }: { items: Step[] }) {
+  return (
+    <section className={`${glass} mt-12 p-6 sm:p-10`}>
+      <h2 className={`${label} text-center`}>Kill sequence</h2>
+      <ol className="mt-6 divide-y divide-vitae-green/20">
+        {items.map((s, i) => (
+          <li key={s.step} className="grid grid-cols-[2.5rem_3.5rem_1fr] items-center gap-3 py-3">
+            <span className="text-2xl font-light leading-none text-vitae-green">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <Icon name={s.icon} alt="" />
+            <div>
+              <p className="font-medium">{s.step}</p>
+              <p className="text-sm font-light leading-snug text-white/60">{s.text}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function PoisonSection({ items }: { items: Poison[] }) {
+  return (
+    <section className="mt-12">
+      <h2 className={label}>Poisons</h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        {items.map((p) => (
+          <div key={p.name} className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5">
+            <Icon name={p.icon} alt="" />
+            <p className="mt-3 font-medium">{p.name}</p>
+            <p className="mt-1 text-sm font-light leading-relaxed text-white/70">{p.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function GearSection({ items }: { items: Gear[] }) {
+  return (
+    <section className="mt-12">
+      <h2 className={label}>Gear and professions</h2>
+      <dl className="mt-4 divide-y divide-vitae-green/20">
+        {items.map((g) => (
+          <div key={g.title} className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr] sm:gap-6">
+            <dt className="text-lg font-medium">{g.title}</dt>
+            <dd className="font-light leading-relaxed text-white/75">{g.text}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 function PartnerSection({ title, color, border, items }: { title: string; color: string; border: string; items: Partners[] }) {
   return (
     <section className="mt-12">
@@ -238,8 +378,9 @@ function PartnerSection({ title, color, border, items }: { title: string; color:
   );
 }
 
+const split = (build: Tree[]) => build.map((t) => t.points).join(' / ');
+
 export default function GnomeRoguePage() {
-  const split = trees.map((t) => t.points).join(' / ');
   return (
     <main
       className="min-h-screen w-full bg-black text-left text-white"
@@ -250,7 +391,7 @@ export default function GnomeRoguePage() {
           ← Vitaegis
         </Link>
 
-        <header className="py-14 text-center">
+        <header id="subtlety" className="py-14 text-center">
           <div className="flex items-center justify-center gap-3">
             <Icon name="achievement_character_gnome_male" alt="Gnome" />
             <Icon name="classicon_rogue" alt="Rogue" />
@@ -269,8 +410,16 @@ export default function GnomeRoguePage() {
             An Ambush and Death Mark spec built for battlegrounds, duels and world PvP, with daggers,
             Engineering and the Gnome racials doing the heavy lifting.
           </p>
-          <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split}</p>
+          <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(trees)}</p>
           <p className={`${label} mt-2`}>Assassination · Combat · Subtlety</p>
+          <nav className="mt-8 flex justify-center gap-6 text-sm font-semibold uppercase tracking-[0.2em]">
+            <a href="#subtlety" className="text-vitae-green">
+              Build 1 · Subtlety
+            </a>
+            <a href="#poison-crit" className="text-white/60 hover:text-vitae-green">
+              Build 2 · Poison Crit
+            </a>
+          </nav>
         </header>
 
         <section className="border-l-2 border-vitae-green pl-5">
@@ -287,49 +436,7 @@ export default function GnomeRoguePage() {
           </p>
         </section>
 
-        <section className="mt-12">
-          <h2 className={`${label} text-center`}>Talent trees</h2>
-          <p className="mt-2 text-center text-sm font-light text-white/50">
-            Hover or tap a talent to read it. Lit talents are taken.
-          </p>
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            {trees.map((tree) => (
-              <TreePanel key={tree.name} tree={tree} />
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-12">
-          <h2 className={label}>Spec list</h2>
-          <div className="mt-4 grid gap-6 lg:grid-cols-3">
-            {trees.map((tree) => (
-              <div key={tree.name} className={`${glass} p-5`}>
-                <div className="flex items-baseline justify-between">
-                  <h3 className="text-lg font-medium uppercase tracking-[0.15em]">{tree.name}</h3>
-                  <span className={label}>{tree.points} points</span>
-                </div>
-                <ul className="mt-4 divide-y divide-vitae-green/20">
-                  {tree.talents
-                    .filter((t) => t.rank > 0)
-                    .map((t) => (
-                      <li key={t.name} className="grid grid-cols-[3.5rem_1fr] gap-3 py-3">
-                        <Icon name={t.icon} alt="" />
-                        <div>
-                          <p className="font-medium leading-tight">
-                            {t.name}{' '}
-                            <span className="whitespace-nowrap text-vitae-green">
-                              {t.rank}/{t.max}
-                            </span>
-                          </p>
-                          <p className="mt-1 text-sm font-light leading-snug text-white/60">{t.text}</p>
-                        </div>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
+        <TalentSections build={trees} />
 
         <section className="mt-12">
           <h2 className={label}>Why Gnome</h2>
@@ -347,48 +454,9 @@ export default function GnomeRoguePage() {
           </div>
         </section>
 
-        <section className={`${glass} mt-12 p-6 sm:p-10`}>
-          <h2 className={`${label} text-center`}>Kill sequence</h2>
-          <ol className="mt-6 divide-y divide-vitae-green/20">
-            {sequence.map((s, i) => (
-              <li key={s.step} className="grid grid-cols-[2.5rem_3.5rem_1fr] items-center gap-3 py-3">
-                <span className="text-2xl font-light leading-none text-vitae-green">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <Icon name={s.icon} alt="" />
-                <div>
-                  <p className="font-medium">{s.step}</p>
-                  <p className="text-sm font-light leading-snug text-white/60">{s.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="mt-12">
-          <h2 className={label}>Poisons</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
-            {poisons.map((p) => (
-              <div key={p.name} className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5">
-                <Icon name={p.icon} alt="" />
-                <p className="mt-3 font-medium">{p.name}</p>
-                <p className="mt-1 text-sm font-light leading-relaxed text-white/70">{p.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-12">
-          <h2 className={label}>Gear and professions</h2>
-          <dl className="mt-4 divide-y divide-vitae-green/20">
-            {gear.map((g) => (
-              <div key={g.title} className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr] sm:gap-6">
-                <dt className="text-lg font-medium">{g.title}</dt>
-                <dd className="font-light leading-relaxed text-white/75">{g.text}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+        <SequenceSection items={sequence} />
+        <PoisonSection items={poisons} />
+        <GearSection items={gear} />
 
         <PartnerSection title="Best DUO partners" color="text-vitae-magenta" border="border-vitae-magenta/40" items={duos} />
 
@@ -398,6 +466,47 @@ export default function GnomeRoguePage() {
           Partner picks are Alliance classes and follow how these pairings have worked in classic-era
           PvP. Forever has no settled level 60 results yet.
         </p>
+
+        <header id="poison-crit" className="mt-24 border-t border-vitae-green/25 py-14 text-center">
+          <div className="flex items-center justify-center gap-3">
+            <Icon name="achievement_character_gnome_male" alt="Gnome" />
+            <Icon name="classicon_rogue" alt="Rogue" />
+            <Icon name="ability_rogue_dualweild" alt="Deadly Poison" />
+          </div>
+          <p className={`${label} mt-6`}>Build 2 · WoW Forever · Level 60 PvP</p>
+          <h2
+            className="mt-4 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green sm:text-6xl"
+            style={{ textShadow: '0 0 24px rgba(0,255,0,0.45)' }}
+          >
+            Poison Crit
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
+            A poison and critical strike spec that keeps Stealth and Death Mark. Garrote, mark,
+            Rupture, then Vanish and bandage while the bleeds and Deadly Poison finish the job.
+          </p>
+          <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(poisonCritTrees)}</p>
+          <p className={`${label} mt-2`}>Assassination · Combat · Subtlety</p>
+        </header>
+
+        <section className="border-l-2 border-vitae-green pl-5">
+          <h2 className={label}>The short version</h2>
+          <p className="mt-3 font-light leading-relaxed text-white/75">
+            Open from Stealth with Garrote, put Death Mark on them, then Rupture. Garrote, Rupture and
+            Deadly Poison all tick into the mark at once. Gouge, Vanish and bandage in Stealth while it
+            detonates and the poison keeps ticking. Crippling Poison means they cannot chase you, and
+            Preparation gives you a second Vanish if they are still up.
+          </p>
+          <p className="mt-3 text-sm font-light leading-relaxed text-white/50">
+            Malice gives 5% critical strike to attacks and poisons, Lethality makes the Hemorrhage
+            crits hit 20% harder, and crit raises the Death Mark cap. Vile Poisons is the poison
+            talent that fits alongside Death Mark: Venom and Improved Poisons do not.
+          </p>
+        </section>
+
+        <TalentSections build={poisonCritTrees} />
+        <SequenceSection items={poisonCritSequence} />
+        <PoisonSection items={poisonCritPoisons} />
+        <GearSection items={poisonCritGear} />
 
         <section className="mt-12">
           <h2 className={label}>Sources</h2>
