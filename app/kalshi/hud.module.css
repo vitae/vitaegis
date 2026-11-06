@@ -5,7 +5,7 @@
 .hud,
 .hud * {
   font-family:
-    var(--font-hud), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
     'Liberation Mono', monospace;
   user-select: text;
   -webkit-user-select: text;
@@ -13,7 +13,7 @@
 
 .hud {
   font-family:
-    var(--font-hud), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
     'Liberation Mono', monospace;
   font-variant-numeric: tabular-nums lining-nums;
   background-color: #0a0a0a;

@@ -1,7 +1,7 @@
 /* KeyCrate: scoped to .kc-root so nothing leaks into the rest of the site. */
 
 .kc-root {
-  font-family: var(--kc-font), 'Jost', 'Century Gothic', sans-serif;
+  font-family: 'Jost', 'Century Gothic', sans-serif;
   font-weight: 400;
   --kc-green: #00ff00;
   --kc-red: #ff0000;

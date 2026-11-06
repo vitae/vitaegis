@@ -67,6 +67,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* JetBrains Mono for the Kalshi HUD. Linked here, not through next/font, so the build never fetches Google Fonts. */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap"
+          rel="stylesheet"
+        />
         {/* iOS PWA settings */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
