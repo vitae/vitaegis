@@ -24,14 +24,15 @@ describe('gnomerogue builds', () => {
     build.forEach(checkTree);
   });
 
-  it('poison crit is 30 / 0 / 21 with Venom and Preparation and no Death Mark', () => {
-    expect(poisonCritTrees.map((t) => t.points)).toEqual([30, 0, 21]);
+  it('poison crit is 31 / 0 / 20 with Mutilate and no Death Mark', () => {
+    expect(poisonCritTrees.map((t) => t.points)).toEqual([31, 0, 20]);
     const all = poisonCritTrees.flatMap((t) => t.talents);
     expect(all.find((t) => t.name === 'Death Mark')?.rank).toBe(0);
     expect(all.find((t) => t.name === 'Venom')?.rank).toBe(1);
     expect(all.find((t) => t.name === 'Improved Poisons')?.rank).toBe(5);
     expect(all.find((t) => t.name === 'Vile Poisons')?.rank).toBe(5);
-    expect(all.find((t) => t.name === 'Preparation')?.rank).toBe(1);
+    expect(all.find((t) => t.name === 'Mutilate')?.rank).toBe(1);
+    expect(all.find((t) => t.name === 'Preparation')?.rank).toBe(0);
   });
 
   it('withRanks rejects unknown talents and ranks over max', () => {

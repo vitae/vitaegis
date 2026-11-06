@@ -5,10 +5,10 @@ import { poisonCritTrees, trees, type Talent, type Tree } from './talents';
 export const metadata: Metadata = {
   title: 'Gnome Rogue PvP Builds | WoW Forever | VITAEGIS',
   description:
-    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 30/0/21 Poison Crit build that poisons, stuns and vanishes.',
+    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 31/0/20 Poison Crit build that poisons, stuns and vanishes.',
   openGraph: {
     title: 'Gnome Rogue PvP Builds | WoW Forever',
-    description: 'The 10/5/36 Subtlety spec and the 30/0/21 Poison Crit spec, with the full talent trees.',
+    description: 'The 10/5/36 Subtlety spec and the 31/0/20 Poison Crit spec, with the full talent trees.',
     type: 'article',
   },
 };
@@ -83,15 +83,15 @@ const poisonCritSequence: Step[] = [
   { step: 'Premeditation', icon: 'spell_shadow_possession', text: 'Two free combo points from 20 yards.' },
   { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards.' },
   { step: 'Garrote', icon: 'ability_rogue_garrote', text: 'Dirty Deeds makes it cheap and lets it land from any angle. Initiative adds a point, so you are at four. Blood Splatter stretches the bleed to 27 seconds.' },
-  { step: 'Backstab', icon: 'ability_backstab', text: 'Fifth point. Opportunity adds 20%, and Seal Fate turns a crit into an extra combo point whenever you are still building.' },
+  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers at once, 20% harder on a poisoned target, two combo points. You are at five, and a Seal Fate crit adds another whenever you are still building.' },
   { step: 'Kidney Shot', icon: 'ability_rogue_kidneyshot', text: 'Five points. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.' },
   { step: 'Shank', icon: 'inv_sword_31', text: 'Venom: poison damage up 30% and poisons apply 20% more often for 6 seconds. Improved Poisons means the charges last and the stacks come fast.' },
-  { step: 'Backstab, Backstab', icon: 'ability_backstab', text: 'Inside the stun. Every hit stacks Deadly Poison toward five, and Vile Poisons makes every stack 20% stronger.' },
+  { step: 'Mutilate, Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Inside the stun and the Venom window. Every Mutilate swings both daggers, so Deadly Poison races to five stacks, and Vile Poisons makes every stack 20% stronger.' },
   { step: 'Rupture', icon: 'ability_rogue_rupture', text: 'Five points as the stun ends. Blood Splatter adds 6 seconds, so it bleeds for 22. Garrote, Rupture and Deadly Poison are all ticking now.' },
-  { step: 'Gouge and Vanish', icon: 'ability_vanish', text: 'Improved Gouge holds them for 5.5 seconds. Step back and Vanish. Elusiveness brings Vanish back 90 seconds sooner.' },
+  { step: 'Gouge and Vanish', icon: 'ability_vanish', text: 'Improved Gouge holds them for 5.5 seconds. Step back and Vanish. Elusiveness brings Vanish back 90 seconds sooner. Without Preparation this is your one Vanish, so make it count.' },
   { step: 'Bandage in Stealth', icon: 'inv_misc_bandage_12', text: 'Two bleeds and five stacks of poison keep ticking while you heal. Crippling means they cannot chase you, and Master of Deception means they cannot find you.' },
-  { step: 'Preparation', icon: 'spell_shadow_antishadow', text: 'If they are still standing, Preparation resets Vanish, Sprint, Cold Blood and Premeditation and you open with Garrote again. Ghostly Strike lets Garrote land without Stealth if you would rather stay on them.' },
-  { step: 'Cold Blood into Eviscerate', icon: 'spell_ice_lament', text: 'When they are low and still coming, Cold Blood guarantees the crit and Eviscerate ends it.' },
+  { step: 'Garrote again', icon: 'ability_rogue_garrote', text: 'If they are still standing, open from Stealth with Garrote a second time. Ghostly Strike lets Garrote land without Stealth if you would rather stay on them.' },
+  { step: 'Cold Blood into Mutilate', icon: 'spell_ice_lament', text: 'When they are low and still coming, Cold Blood guarantees the Mutilate crit, and Eviscerate ends it.' },
 ];
 
 const poisonCritPoisons: Poison[] = [
@@ -101,9 +101,10 @@ const poisonCritPoisons: Poison[] = [
 ];
 
 const poisonCritGear: Gear[] = [
-  { title: 'Weapons', text: 'Two daggers. Backstab needs a dagger in the main hand and Ghostly Strike hits harder with one. A fast off hand stacks Deadly Poison faster, so put the fastest dagger there.' },
-  { title: 'Stats', text: 'Critical strike first, then Attack Power. Poisons scale with Attack Power and can crit, Malice gives 5% crit to everything including poisons, Seal Fate turns crits into combo points, and Lethality makes Backstab crits hit 20% harder.' },
-  { title: 'No Death Mark', text: 'Left out on purpose. Death Mark stores 6 seconds of damage and would cost 31 points in Subtlety. This plan is 27 seconds of Garrote, 22 seconds of Rupture and five stacks of Deadly Poison, all ticking while you hide. The ten points went into Venom, Improved Poisons, Cold Blood, Improved Kidney Shot and Seal Fate instead.' },
+  { title: 'Weapons', text: 'Two daggers, and Mutilate will not fire without them. Mutilate swings both, so a fast off hand stacks Deadly Poison faster. Put the fastest dagger in the off hand.' },
+  { title: 'Stats', text: 'Critical strike first, then Attack Power. Poisons scale with Attack Power and can crit, Malice gives 5% crit to everything including poisons, Seal Fate turns crits into combo points, and Lethality makes Mutilate crits hit 20% harder.' },
+  { title: 'No Death Mark', text: 'Left out on purpose. Death Mark stores 6 seconds of damage and would cost 31 points in Subtlety. This plan is 27 seconds of Garrote, 22 seconds of Rupture and five stacks of Deadly Poison, all ticking while you hide. The points went into Venom, Improved Poisons, Cold Blood, Improved Kidney Shot, Seal Fate and Mutilate instead.' },
+  { title: 'No Preparation', text: 'Mutilate is the 31st Assassination point, which leaves Subtlety at 20, one short of Preparation. You get one Vanish a fight, with Elusiveness bringing it back 90 seconds sooner. If you would rather have the second Vanish than Mutilate, move that one point.' },
   { title: 'Professions', text: 'Engineering for grenades and the Gnome racial. Keep Heavy Runecloth Bandages on the bar: the bandage in Stealth is the whole point of the build.' },
 ];
 
@@ -483,9 +484,9 @@ export default function GnomeRoguePage() {
             Poison Crit
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            A poison and critical strike spec that keeps Stealth, Vanish and Preparation. Garrote,
-            Kidney Shot, stack Deadly Poison, Rupture, then Vanish and bandage while the bleeds and
-            poison finish the job.
+            A poison and critical strike spec built on Mutilate that keeps Stealth and Vanish.
+            Garrote, Kidney Shot, stack Deadly Poison with Mutilate, Rupture, then Vanish and bandage
+            while the bleeds and poison finish the job.
           </p>
           <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(poisonCritTrees)}</p>
           <p className={`${label} mt-2`}>Assassination · Combat · Subtlety</p>
@@ -494,15 +495,16 @@ export default function GnomeRoguePage() {
         <section className="border-l-2 border-vitae-green pl-5">
           <h2 className={label}>The short version</h2>
           <p className="mt-3 font-light leading-relaxed text-white/75">
-            Open from Stealth with Garrote, stun with Kidney Shot, Shank for Venom and stack Deadly
-            Poison to five inside the stun, then Rupture. Gouge, Vanish and bandage in Stealth while
-            two bleeds and the poison keep ticking. Crippling Poison means they cannot chase you, and
-            Preparation gives you a second Vanish if they are still up.
+            Open from Stealth with Garrote, Mutilate to five, stun with Kidney Shot, Shank for Venom
+            and Mutilate twice more to stack Deadly Poison inside the stun, then Rupture. Gouge,
+            Vanish and bandage in Stealth while two bleeds and the poison keep ticking. Crippling
+            Poison means they cannot chase you.
           </p>
           <p className="mt-3 text-sm font-light leading-relaxed text-white/50">
             Malice gives 5% critical strike to attacks and poisons, Seal Fate turns crits into combo
-            points, and Cold Blood guarantees the Eviscerate that ends it. Vile Poisons, Improved
-            Poisons and Venom are all here. Death Mark is not, on purpose: see the gear notes.
+            points, and Cold Blood guarantees the Mutilate crit that ends it. Vile Poisons, Improved
+            Poisons, Venom and Mutilate are all here. Death Mark and Preparation are not, on purpose:
+            see the gear notes.
           </p>
         </section>
 
