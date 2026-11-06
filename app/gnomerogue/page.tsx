@@ -5,10 +5,10 @@ import { poisonCritTrees, trees, type Talent, type Tree } from './talents';
 export const metadata: Metadata = {
   title: 'Gnome Rogue PvP Builds | WoW Forever | VITAEGIS',
   description:
-    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 31/8/12 Poison Crit build that poisons, stuns and vanishes.',
+    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 32/8/11 Poison Crit build that poisons, stuns and vanishes.',
   openGraph: {
     title: 'Gnome Rogue PvP Builds | WoW Forever',
-    description: 'The 10/5/36 Subtlety spec and the 31/8/12 Poison Crit spec, with the full talent trees.',
+    description: 'The 10/5/36 Subtlety spec and the 32/8/11 Poison Crit spec, with the full talent trees.',
     type: 'article',
   },
 };
@@ -80,9 +80,10 @@ const gear: Gear[] = [
 
 const poisonCritSequence: Step[] = [
   { step: 'Stealth', icon: 'ability_stealth', text: 'Deadly Poison on the main hand, Instant Poison on the off hand. Master of Deception and Camouflage get you behind them unseen.' },
+  { step: 'Premeditation', icon: 'spell_shadow_possession', text: 'Two free combo points from 20 yards, before you open. Two minute cooldown, so it is there for the first opener of every fight.' },
   { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards so the whole stun lands inside it.' },
-  { step: 'Cheap Shot', icon: 'ability_cheapshot', text: 'Four second stun and two combo points, three with Initiative. Every hit from here on is on a stunned target.' },
-  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers, 20% harder once the first poison lands. You are at five, and with Seal Fate a crit here is a point you bank for later.' },
+  { step: 'Cheap Shot', icon: 'ability_cheapshot', text: 'Four second stun and two more combo points, so you are at four before you have swung. Every hit from here on is on a stunned target.' },
+  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers, 20% harder once the first poison lands. This takes you to five every time. The spare point is lost, and that is fine: the press is for the poison and the damage.' },
   { step: 'Kidney Shot', icon: 'ability_rogue_kidneyshot', text: 'Five points as Cheap Shot ends. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.' },
   { step: 'Shank', icon: 'inv_sword_31', text: 'Venom: poison damage up 30% and poisons apply 20% more often for 6 seconds. Every Mutilate that follows is inside that window.' },
   { step: 'Mutilate, Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Puncturing Wounds gives each one 15% more crit, Lethality makes the crits 20% bigger, and Seal Fate turns each crit into an extra combo point. Deadly Poison stacks twice a press.' },
@@ -99,7 +100,7 @@ const poisonCritPoisons: Poison[] = [
 const poisonCritGear: Gear[] = [
   { title: 'Weapons', text: 'Two daggers, and Mutilate will not fire without them. It hits with both, so the main hand wants the hardest-hitting dagger you can find and the off hand wants the fastest one for poison procs.' },
   { title: 'Stats', text: 'Critical strike first, since Puncturing Wounds, Seal Fate, Lethality, Cold Blood and Malice all pay out on crits, then Attack Power. The build skips Precision, so take hit from gear: a missed Kidney Shot is a lost fight.' },
-  { title: 'Why 31 / 8 / 12', text: 'Thirty-one in Assassination for Mutilate and every poison and crit talent on the way. Eight in Combat for Puncturing Wounds and Coup de Grace, the two biggest damage talents outside the main tree. Twelve in Subtlety for Opportunity, which is 20% on Mutilate, plus Initiative and Camouflage for the opener. Death Mark, Preparation and the escape talents are gone on purpose: this build kills inside the first stun or Vanishes to try again.' },
+  { title: 'Why 32 / 8 / 11', text: 'Thirty-two in Assassination for Mutilate and every poison and crit talent on the way, with the spare point in Improved Poisons. Eight in Combat for Puncturing Wounds and Coup de Grace, the two biggest damage talents outside the main tree. Eleven in Subtlety for Opportunity, which is 20% on Mutilate, Camouflage for the approach and Premeditation so Kidney Shot lands on time in every opener. Death Mark, Preparation and the escape talents are gone on purpose: this build kills inside the first stun or Vanishes to try again.' },
   { title: 'Professions', text: 'Engineering for grenades, which land harder on a target you have stunned with Improved Kidney Shot, and the Gnome racial.' },
 ];
 
