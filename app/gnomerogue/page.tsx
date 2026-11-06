@@ -74,6 +74,56 @@ const gear: { title: string; text: string }[] = [
   { title: 'Professions', text: 'Engineering for grenades and gadgets, which pairs with the Gnome racial. Leatherworking or Alchemy as the second, depending on whether you want gear or potions.' },
 ];
 
+type Partners = { name: string; tag: string; icons: string[]; text: string };
+
+const duos: Partners[] = [
+  {
+    name: 'Discipline or Holy Priest',
+    tag: 'Best all-around · healer duo',
+    icons: ['classicon_priest'],
+    text: 'Rogue and Priest is the time-tested pair and the base of Rogue, Mage, Priest in threes. The priest shields and dispels you, and Psychic Scream controls the second player while you kill the first. Subtlety lives on clean setups and clean resets: the priest covers your defensive gaps while Escape Artist keeps you on the kill target during your go.',
+  },
+  {
+    name: 'Mage, Fire or Arcane',
+    tag: 'Best double damage duo',
+    icons: ['classicon_mage'],
+    text: 'The classic kill pair. The mage brings damage, reliable slows and long control chains: Polymorph or Frost Nova holds one target while your stuns hold the other, and the burst lands inside your Kidney Shot. Sap and Polymorph together take a whole second player out of the fight. Frost trades some damage for even more control.',
+  },
+  {
+    name: 'Restoration Druid',
+    tag: 'Double stealth',
+    icons: ['classicon_druid'],
+    text: 'Two stealthers pick every fight. You both open from Stealth, the druid roots and heals over time while staying mobile, and neither of you can be forced into a fight you did not choose.',
+  },
+  {
+    name: 'Holy Paladin',
+    tag: 'Longest stun chain',
+    icons: ['classicon_paladin'],
+    text: 'Hammer of Justice extends your stun chain, Blessing of Freedom covers the snares Escape Artist is on cooldown for, and Blessing of Protection saves you from a warrior or another rogue.',
+  },
+];
+
+const trios: Partners[] = [
+  {
+    name: 'Mage and Discipline Priest',
+    tag: 'Most control',
+    icons: ['classicon_mage', 'classicon_priest'],
+    text: 'Rogue, Mage, Priest. The most control of any three: Sap, Polymorph and Psychic Scream on the others while you and the mage kill one target inside a stun. Hard to play, and the highest ceiling.',
+  },
+  {
+    name: 'Warlock and Restoration Druid',
+    tag: 'Spread pressure',
+    icons: ['classicon_warlock', 'classicon_druid'],
+    text: 'Pressure everywhere. The warlock spreads damage over time and Fears, the druid keeps both of you alive on the move, and your Death Mark burst finishes whoever the curses have worn down.',
+  },
+  {
+    name: 'Arms Warrior and Holy Paladin',
+    tag: 'Double melee',
+    icons: ['classicon_warrior', 'classicon_paladin'],
+    text: 'Two melee on one target with a healer behind them. Mortal Strike covers the healing reduction, so run Crippling Poison on both daggers, and chain Kidney Shot into Hammer of Justice.',
+  },
+];
+
 const sources: { label: string; href: string }[] = [
   { label: 'Warcraft Tavern: Subtlety Rogue Guide', href: 'https://www.warcrafttavern.com/forever/guides/subtlety-rogue/' },
   { label: 'Warcraft Tavern: Rogue Talent Calculator', href: 'https://www.warcrafttavern.com/forever/tools/talent-calculator/rogue' },
@@ -162,6 +212,29 @@ function TreePanel({ tree }: { tree: Tree }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function PartnerSection({ title, color, border, items }: { title: string; color: string; border: string; items: Partners[] }) {
+  return (
+    <section className="mt-12">
+      <h2 className={`text-2xl font-bold uppercase tracking-[0.15em] sm:text-3xl ${color}`}>{title}</h2>
+      <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+        {items.map((d) => (
+          <li key={d.name} className={`rounded-xl border bg-white/[0.03] p-5 ${border}`}>
+            <div className="flex items-center gap-2">
+              <Icon name="classicon_rogue" alt="Rogue" />
+              {d.icons.map((i) => (
+                <Icon key={i} name={i} alt="" />
+              ))}
+            </div>
+            <p className={`mt-3 text-lg font-medium ${color}`}>{d.name}</p>
+            <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-white/60">{d.tag}</p>
+            <p className="mt-2 font-light leading-relaxed text-white/75">{d.text}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -316,6 +389,15 @@ export default function GnomeRoguePage() {
             ))}
           </dl>
         </section>
+
+        <PartnerSection title="Best DUO partners" color="text-vitae-magenta" border="border-vitae-magenta/40" items={duos} />
+
+        <PartnerSection title="Best TRIO partners" color="text-vitae-cyan" border="border-vitae-cyan/40" items={trios} />
+
+        <p className="mt-4 text-sm font-light leading-relaxed text-white/50">
+          Partner picks are Alliance classes and follow how these pairings have worked in classic-era
+          PvP. Forever has no settled level 60 results yet.
+        </p>
 
         <section className="mt-12">
           <h2 className={label}>Sources</h2>
