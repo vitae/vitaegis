@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { poisonCritTrees, trees, type Talent, type Tree } from './talents';
+import TalentCalculator from './TalentCalculator';
+
+const TAVERN_URL = 'https://www.warcrafttavern.com/forever/tools/talent-calculator/rogue';
 
 export const metadata: Metadata = {
   title: 'Gnome Rogue PvP Builds | WoW Forever | VITAEGIS',
@@ -260,20 +263,31 @@ function TreePanel({ tree }: { tree: Tree }) {
   );
 }
 
-function TalentSections({ build }: { build: Tree[] }) {
+function TalentSections({ build, interactive }: { build: Tree[]; interactive?: boolean }) {
   return (
     <>
-      <section className="mt-12">
-        <h2 className={`${label} text-center`}>Talent trees</h2>
-        <p className="mt-2 text-center text-sm font-light text-white/50">
-          Hover or tap a talent to read it. Lit talents are taken.
-        </p>
-        <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          {build.map((tree) => (
-            <TreePanel key={tree.name} tree={tree} />
-          ))}
-        </div>
-      </section>
+      {interactive ? (
+        <TalentCalculator
+          trees={trees}
+          presets={[
+            { name: 'Poison Crit Stun', build: poisonCritTrees },
+            { name: 'Subtlety', build: trees },
+          ]}
+          tavernUrl={TAVERN_URL}
+        />
+      ) : (
+        <section className="mt-12">
+          <h2 className={`${label} text-center`}>Talent trees</h2>
+          <p className="mt-2 text-center text-sm font-light text-white/50">
+            Hover or tap a talent to read it. Lit talents are taken.
+          </p>
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            {build.map((tree) => (
+              <TreePanel key={tree.name} tree={tree} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mt-12">
         <h2 className={label}>Spec list</h2>
@@ -457,7 +471,7 @@ export default function GnomeRoguePage() {
           </p>
         </section>
 
-        <TalentSections build={poisonCritTrees} />
+        <TalentSections build={poisonCritTrees} interactive />
 
         <section className="mt-12">
           <h2 className={label}>Why Gnome</h2>
