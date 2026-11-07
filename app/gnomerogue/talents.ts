@@ -650,7 +650,7 @@ export const poisonCritTrees: Tree[] = withRanks(trees, {
   Vigor: 2,
   'Blood Splatter': 1,
   'Vile Poisons': 5,
-  'Improved Poisons': 4,
+  'Improved Poisons': 3,
   'Cold Blood': 1,
   Venom: 1,
   'Improved Kidney Shot': 2,
@@ -662,6 +662,6 @@ export const poisonCritTrees: Tree[] = withRanks(trees, {
   'Master of Deception': 3,
   Opportunity: 5,
   Camouflage: 1,
-  'Dirty Deeds': 1,
+  'Dirty Deeds': 2,
   Premeditation: 1,
 });

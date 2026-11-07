@@ -39,14 +39,14 @@ describe('talent build', () => {
     expect(encode(trees, b)).toBe('B000A2222211444889aaeeedccccciimmC111222225AmB22444AeC49');
   });
 
-  it('builds the full 32 / 8 / 11 Poison Crit Stun from talents.ts and round-trips its link', () => {
+  it('builds the full 31 / 8 / 12 Poison Crit Stun from talents.ts and round-trips its link', () => {
     const b = fromRanks(trees, poisonCritTrees);
-    expect([0, 1, 2].map((t) => treePoints(trees, b, t))).toEqual([32, 8, 11]);
+    expect([0, 1, 2].map((t) => treePoints(trees, b, t))).toEqual([31, 8, 12]);
     const r = ranks(b);
     expect(r.Mutilate).toBe(1);
     expect(r.Venom).toBe(1);
-    expect(r['Improved Poisons']).toBe(4);
-    expect(r['Dirty Deeds']).toBe(1);
+    expect(r['Improved Poisons']).toBe(3);
+    expect(r['Dirty Deeds']).toBe(2);
     expect(r.Premeditation).toBe(1);
     expect(r.Initiative).toBe(0);
     expect(pointsLeft(trees, b)).toBe(0);

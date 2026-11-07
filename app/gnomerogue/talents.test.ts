@@ -24,8 +24,8 @@ describe('gnomerogue builds', () => {
     build.forEach(checkTree);
   });
 
-  it('poison crit is 32 / 8 / 11 with Mutilate, Premeditation, Puncturing Wounds and full Seal Fate', () => {
-    expect(poisonCritTrees.map((t) => t.points)).toEqual([32, 8, 11]);
+  it('poison crit is 31 / 8 / 12 with Mutilate, Premeditation, Puncturing Wounds and full Seal Fate', () => {
+    expect(poisonCritTrees.map((t) => t.points)).toEqual([31, 8, 12]);
     const all = poisonCritTrees.flatMap((t) => t.talents);
     const rank = (name: string) => all.find((t) => t.name === name)?.rank;
     expect(rank('Mutilate')).toBe(1);
@@ -33,10 +33,10 @@ describe('gnomerogue builds', () => {
     expect(rank('Seal Fate')).toBe(3);
     expect(rank('Puncturing Wounds')).toBe(3);
     expect(rank('Premeditation')).toBe(1);
-    expect(rank('Dirty Deeds')).toBe(1);
+    expect(rank('Dirty Deeds')).toBe(2);
     expect(rank('Camouflage')).toBe(1);
     expect(rank('Initiative')).toBe(0);
-    expect(rank('Improved Poisons')).toBe(4);
+    expect(rank('Improved Poisons')).toBe(3);
     expect(rank('Vile Poisons')).toBe(5);
     expect(rank('Death Mark')).toBe(0);
     expect(rank('Preparation')).toBe(0);

@@ -2,16 +2,17 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { poisonCritTrees, trees, type Talent, type Tree } from './talents';
 import TalentCalculator from './TalentCalculator';
+import { gearPoint, numbersNotes, numbersRows } from './numbers';
 
 const TAVERN_URL = 'https://www.warcrafttavern.com/forever/tools/talent-calculator/rogue';
 
 export const metadata: Metadata = {
   title: 'Gnome Rogue PvP Builds | WoW Forever | VITAEGIS',
   description:
-    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 32/8/11 Poison Crit Stun build that stuns, poisons and kills inside one window, and the 10/5/36 Subtlety Ambush and Death Mark build.',
+    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 31/8/12 Poison Crit Stun build that stuns, poisons and kills inside one window, and the 10/5/36 Subtlety Ambush and Death Mark build.',
   openGraph: {
     title: 'Gnome Rogue PvP Builds | WoW Forever',
-    description: 'The 32/8/11 Poison Crit Stun spec and the 10/5/36 Subtlety spec, with the full talent trees.',
+    description: 'The 31/8/12 Poison Crit Stun spec and the 10/5/36 Subtlety spec, with the full talent trees.',
     type: 'article',
   },
 };
@@ -24,7 +25,7 @@ const COL = 68;
 const PAD = 16;
 const HEAD = 56;
 
-type Step = { step: string; icon: string; text: string };
+type Step = { step: string; icon: string; text: string; damage?: string };
 type Poison = { name: string; icon: string; text: string };
 type Gear = { title: string; text: string };
 
@@ -82,17 +83,68 @@ const gear: Gear[] = [
 ];
 
 const poisonCritSequence: Step[] = [
-  { step: 'Stealth', icon: 'ability_stealth', text: 'Deadly Poison on the main hand, Instant Poison on the off hand. Master of Deception keeps you unseen, and with Dirty Deeds you no longer need to be behind them.' },
-  { step: 'Premeditation', icon: 'spell_shadow_possession', text: 'Two free combo points from 20 yards, before you open. Two minute cooldown, so it is there for the first opener of every fight.' },
-  { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards so the whole stun lands inside it.' },
-  { step: 'Cheap Shot or Garrote', icon: 'ability_rogue_garrote', text: 'Cheap Shot when you want the full stun chain: four seconds and two more combo points, so you are at four before you have swung. Garrote from the front when you want guaranteed damage instead: Dirty Deeds drops the behind requirement, Opportunity adds 20%, Blood Splatter stretches the bleed, and you are at three. Either way Dirty Deeds makes the opener 10 energy cheaper.' },
-  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers, 20% harder once the first poison lands. This takes you to five from either opener. After Cheap Shot the spare point is lost, and that is fine: the press is for the poison and the damage.' },
-  { step: 'Kidney Shot', icon: 'ability_rogue_kidneyshot', text: 'Five points as Cheap Shot ends, or straight after the Mutilate if you opened with Garrote. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.' },
-  { step: 'Shank', icon: 'inv_sword_31', text: 'Venom: poison damage up 30% and poisons apply 20% more often for 6 seconds. Every Mutilate that follows is inside that window.' },
-  { step: 'Mutilate, Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Puncturing Wounds gives each one 15% more crit, Lethality makes the crits 20% bigger, and Seal Fate turns each crit into an extra combo point. Deadly Poison stacks twice a press.' },
-  { step: 'Cold Blood into Eviscerate', icon: 'spell_ice_lament', text: 'Five points, a guaranteed crit, Coup de Grace adds 20%. This is the kill, still inside the stun.' },
-  { step: 'Vanish and again', icon: 'ability_vanish', text: 'If anyone is left, Vanish and open with Cheap Shot on the next one. Remorseless Attacks gives the first Mutilate after a kill 40% more crit.' },
+  {
+    step: 'Stealth',
+    icon: 'ability_stealth',
+    text: 'Deadly Poison on the main hand, Instant Poison on the off hand. Master of Deception keeps you unseen, and with Dirty Deeds you no longer need to be behind them.',
+    damage: '0 damage \u00b7 Deadly Poison V: 30% per hit, 92 Nature over 12 s a stack, 5 stacks \u00b7 Instant Poison VI: 20% per hit, 76\u2013100 Nature \u00b7 both \u00d71.20 (Vile Poisons), +6% apply chance (Improved Poisons 3/5), +5% crit (Malice)',
+  },
+  {
+    step: 'Premeditation',
+    icon: 'spell_shadow_possession',
+    text: 'Two free combo points from 20 yards, before you open. Two minute cooldown, so it is there for the first opener of every fight.',
+    damage: '0 damage \u00b7 0 Energy \u00b7 +2 combo points \u00b7 20 yd \u00b7 2 min cooldown',
+  },
+  {
+    step: 'Eureka!',
+    icon: 'inv_gnometoy',
+    text: 'Pop the racial as you close the last few yards so the whole stun lands inside it.',
+    damage: '0 damage \u00b7 damaging abilities cost 10% less Energy and deal \u00d71.10 for 8 s \u00b7 2 min cooldown \u00b7 periodic damage (poison ticks, Garrote) is not boosted',
+  },
+  {
+    step: 'Cheap Shot or Garrote',
+    icon: 'ability_rogue_garrote',
+    text: 'Cheap Shot when you want the full stun chain: four seconds and two more combo points, so you are at four before you have swung. Garrote from the front when you want guaranteed damage instead: Dirty Deeds drops the behind requirement, Opportunity adds 20%, Blood Splatter stretches the bleed, and you are at three. Either way Dirty Deeds makes the opener 20 Energy cheaper.',
+    damage: 'Cheap Shot: 0 damage \u00b7 40 Energy with Dirty Deeds 2/2 \u00b7 +2 combo points \u00b7 4 s stun. Garrote: 552 over 18 s (rank 6) + 18% of Attack Power, \u00d71.20 (Opportunity), +9 s (Blood Splatter) \u00b7 30 Energy \u00b7 +1 combo point \u00b7 bleed, cannot be dispelled',
+  },
+  {
+    step: 'Mutilate',
+    icon: 'ability_rogue_deadlybrew',
+    text: 'Both daggers, 20% harder once the first poison lands. This takes you to five from either opener. After Cheap Shot the spare point is lost, and that is fine: the press is for the poison and the damage.',
+    damage: '90% weapon damage + 71 per hand (rank 3) \u00b7 60 Energy, 54 under Eureka! \u00b7 \u00d71.20 vs poisoned (Mutilate) \u00b7 \u00d71.20 (Opportunity) \u00b7 crit +15% (Puncturing Wounds) +5% (Malice) \u00b7 crit damage \u00d72.2 (Lethality) \u00b7 +2 combo points, +1 per crit (Seal Fate)',
+  },
+  {
+    step: 'Kidney Shot',
+    icon: 'ability_rogue_kidneyshot',
+    text: 'Five points as Cheap Shot ends, or straight after the Mutilate if you opened with Garrote. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.',
+    damage: '0 damage \u00b7 25 Energy \u00b7 6 s stun at 5 points (rank 2) \u00b7 target takes \u00d71.10 from your attacks and poisons for the stun (Improved Kidney Shot) \u00b7 40% chance to keep 1 combo point (Ruthlessness) \u00b7 20 s cooldown',
+  },
+  {
+    step: 'Shank',
+    icon: 'inv_sword_31',
+    text: 'Venom: poison damage up 30% and poisons apply 20% more often for 6 seconds. Every Mutilate that follows is inside that window.',
+    damage: '50% off-hand weapon damage (rank 2) \u00b7 5 Energy, generates 25 \u00b7 cannot miss \u00b7 10 s cooldown \u00b7 Venom: poison damage \u00d71.30 and +20% apply chance for 6 s \u00b7 no combo point without Boot Knife',
+  },
+  {
+    step: 'Mutilate, Mutilate',
+    icon: 'ability_rogue_deadlybrew',
+    text: 'Puncturing Wounds gives each one 15% more crit, Lethality makes the crits 20% bigger, and Seal Fate turns each crit into an extra combo point. Deadly Poison stacks twice a press.',
+    damage: 'Same formula \u00d71.10 inside Kidney Shot (Improved Kidney Shot) \u00b7 54 Energy, then 60 once Eureka! ends at 8 s \u00b7 Deadly Poison 30% + 6% + 20% (Venom) per hit, two hits a press',
+  },
+  {
+    step: 'Cold Blood into Eviscerate',
+    icon: 'spell_ice_lament',
+    text: 'Five points, a guaranteed crit, Coup de Grace adds 20%. This is the kill, still inside the stun.',
+    damage: '904\u20131012 at 5 points (rank 9) + 15% of Attack Power \u00b7 35 Energy, 32 under Eureka! \u00b7 \u00d71.20 (Coup de Grace) \u00b7 \u00d71.10 if still inside Kidney Shot \u00b7 100% crit (Cold Blood), crit \u00d72.0: Lethality does not cover Eviscerate',
+  },
+  {
+    step: 'Vanish and again',
+    icon: 'ability_vanish',
+    text: 'If anyone is left, Vanish and open with Cheap Shot on the next one. Remorseless Attacks gives the first Mutilate after a kill 40% more crit.',
+    damage: '0 damage \u00b7 5 min cooldown \u00b7 Remorseless Attacks: next Mutilate +40% crit for 20 s after a kill \u00b7 Deadly Poison keeps ticking for up to 12 s after you leave',
+  },
 ];
+
 
 const poisonCritPoisons: Poison[] = [
   { name: 'Deadly Poison', icon: 'ability_rogue_dualweild', text: 'Main hand. Stacks to five fast with Mutilate swinging both daggers, and Vile Poisons adds 20% damage.' },
@@ -103,7 +155,7 @@ const poisonCritPoisons: Poison[] = [
 const poisonCritGear: Gear[] = [
   { title: 'Weapons', text: 'Two daggers, and Mutilate will not fire without them. It hits with both, so the main hand wants the hardest-hitting dagger you can find and the off hand wants the fastest one for poison procs.' },
   { title: 'Stats', text: 'Critical strike first, since Puncturing Wounds, Seal Fate, Lethality, Cold Blood and Malice all pay out on crits, then Attack Power. The build skips Precision, so take hit from gear: a missed Kidney Shot is a lost fight.' },
-  { title: 'Why 32 / 8 / 11', text: 'Thirty-two in Assassination for Mutilate and every poison and crit talent on the way, with the spare point in Improved Poisons. Eight in Combat for Puncturing Wounds and Coup de Grace, the two biggest damage talents outside the main tree. Eleven in Subtlety for Opportunity, which is 20% on Mutilate and Garrote, Dirty Deeds so Garrote works from the front and the opener costs less, and Premeditation so Kidney Shot lands on time in every opener. One point in Camouflage is enough: you are not racing anyone in Stealth. Death Mark, Preparation and the escape talents are gone on purpose: this build kills inside the first stun or Vanishes to try again.' },
+  { title: 'Why 31 / 8 / 12', text: 'Thirty-one in Assassination for Mutilate and every poison and crit talent on the way. Eight in Combat for Puncturing Wounds and Coup de Grace, the two biggest damage talents outside the main tree. Twelve in Subtlety for Opportunity, which is 20% on Mutilate and Garrote, Dirty Deeds maxed so Garrote works from the front and the opener costs 20 less Energy, and Premeditation so Kidney Shot lands on time in every opener. One point in Camouflage is enough: you are not racing anyone in Stealth. Death Mark, Preparation and the escape talents are gone on purpose: this build kills inside the first stun or Vanishes to try again.' },
   { title: 'Professions', text: 'Engineering for grenades, which land harder on a target you have stunned with Improved Kidney Shot, and the Gnome racial.' },
 ];
 
@@ -178,6 +230,20 @@ const sources: { label: string; href: string }[] = [
   { label: 'Icy Veins: Gnome Race Guide', href: 'https://www.icy-veins.com/wow-forever/gnome-race-guide' },
   { label: 'Icy Veins: Best Races tier list', href: 'https://www.icy-veins.com/wow-forever/news/the-best-races-in-wow-forever-pve-and-pvp-tier-list/' },
   { label: 'Warcraft Tavern: Gnome Racial Abilities', href: 'https://www.warcrafttavern.com/forever/guides/gnome-racials/' },
+  { label: 'Warcraft Tavern: Rogue Poisons Guide (poisons scale with Attack Power and can crit in Forever)', href: 'https://www.warcrafttavern.com/forever/guides/poisons/' },
+  { label: 'Warcraft Tavern: Assassination Rogue Guide', href: 'https://www.warcrafttavern.com/forever/guides/assassination-rogue/' },
+  { label: 'Icy Veins: Assassination Rogue (Forever)', href: 'https://www.icy-veins.com/wow-forever/assassination-rogue-melee-dps-pve-spec-builds-talents' },
+  { label: 'warcraftdb: Mutilate rank 3, 90% weapon damage + 71 per hand, +20% vs poisoned', href: 'https://forever.warcraftdb.com/data/spell/1241584' },
+  { label: 'warcraftdb: Garrote rank 6, 552 over 18 s plus Attack Power', href: 'https://forever.warcraftdb.com/data/spell/11290' },
+  { label: 'warcraftdb: Cheap Shot, 60 Energy, 4 s stun, 2 combo points', href: 'https://forever.warcraftdb.com/data/spell/1833' },
+  { label: 'warcraftdb: Kidney Shot rank 2, 6 s at 5 points', href: 'https://forever.warcraftdb.com/data/spell/8643' },
+  { label: 'warcraftdb: Shank rank 2, 5 Energy, 50% off-hand damage, generates 25 Energy', href: 'https://forever.warcraftdb.com/data/spell/1329549' },
+  { label: 'warcraftdb: Eviscerate rank 9, 904\u20131012 at 5 points plus Attack Power', href: 'https://forever.warcraftdb.com/data/spell/31016' },
+  { label: 'warcraftdb: Deadly Poison V, 30% per hit, 92 Nature over 12 s, 5 stacks', href: 'https://forever.warcraftdb.com/data/spell/25351' },
+  { label: 'warcraftdb: Instant Poison VI, 20% per hit, 76\u2013100 Nature', href: 'https://forever.warcraftdb.com/data/spell/11340' },
+  { label: 'warcraftdb: Eureka! (Rogue), 10% cheaper and 10% more damage for 8 s', href: 'https://forever.warcraftdb.com/data/spell/1259812' },
+  { label: 'warcraftdb: Expansive Mind (Rogue), max Energy +5%', href: 'https://forever.warcraftdb.com/data/spell/1259803' },
+  { label: 'warcraftdb: Cold Blood, Premeditation and Venom talent tooltips', href: 'https://forever.warcraftdb.com/data/spell/14177' },
 ];
 
 const glass =
@@ -342,10 +408,68 @@ function SequenceSection({ items }: { items: Step[] }) {
             <div>
               <p className="font-medium">{s.step}</p>
               <p className="text-sm font-light leading-snug text-white/60">{s.text}</p>
+              {s.damage && <p className="mt-2 font-mono text-xs leading-relaxed text-vitae-cyan">{s.damage}</p>}
             </div>
           </li>
         ))}
       </ol>
+    </section>
+  );
+}
+
+function NumbersSection() {
+  const num = (n: number) => n.toLocaleString('en-US');
+  return (
+    <section className={`${glass} mt-12 p-6 sm:p-10`}>
+      <h2 className={`${label} text-center`}>The numbers</h2>
+      <p className="mt-3 text-center text-sm font-light leading-relaxed text-white/60">{gearPoint.caption}</p>
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full min-w-[720px] border-collapse font-mono text-xs">
+          <thead>
+            <tr className="border-b border-vitae-green/40 text-left text-[10px] uppercase tracking-[0.2em] text-vitae-green">
+              <th className="py-2 pr-3 font-semibold">Step</th>
+              <th className="py-2 pr-3 font-semibold">Ability</th>
+              <th className="py-2 pr-3 text-right font-semibold">Energy</th>
+              <th className="py-2 pr-3 text-right font-semibold">Pool</th>
+              <th className="py-2 pr-3 text-right font-semibold">Non-crit / crit</th>
+              <th className="py-2 pr-3 text-right font-semibold">Expected</th>
+              <th className="py-2 pr-3 text-right font-semibold">Running</th>
+              <th className="py-2 pr-3 text-right font-semibold">Sec</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-vitae-green/15">
+            {numbersRows.map((r, i) => {
+              const hit = r.nonCrit !== null && r.crit !== null;
+              const stunOver = r.t > 10;
+              return (
+                <tr key={i} className={stunOver ? 'text-white/55' : 'text-white/85'}>
+                  <td className="py-2 pr-3 text-vitae-green">{r.step}</td>
+                  <td className="py-2 pr-3">
+                    <span className={hit ? 'text-white' : ''}>{r.ability}</span>
+                    <span className="block max-w-[18rem] whitespace-normal font-sans text-[11px] font-light leading-snug text-white/45">{r.note}</span>
+                  </td>
+                  <td className="py-2 pr-3 text-right">
+                    {r.cost > 0 ? `\u2212${r.cost}` : ''}
+                    {r.gain > 0 ? ` +${r.gain}` : ''}
+                  </td>
+                  <td className="py-2 pr-3 text-right text-vitae-cyan">{r.energy}</td>
+                  <td className="py-2 pr-3 text-right">{hit ? `${num(r.nonCrit as number)} / ${num(r.crit as number)}` : '\u2014'}</td>
+                  <td className="py-2 pr-3 text-right text-white">{r.expected ? num(r.expected) : ''}</td>
+                  <td className="py-2 pr-3 text-right text-vitae-magenta">{num(r.running)}</td>
+                  <td className="py-2 pr-3 text-right">{r.t}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <ul className="mt-5 space-y-2">
+        {numbersNotes.map((n) => (
+          <li key={n} className="text-sm font-light leading-relaxed text-white/50">
+            {n}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -490,6 +614,7 @@ export default function GnomeRoguePage() {
         </section>
 
         <SequenceSection items={poisonCritSequence} />
+        <NumbersSection />
         <PoisonSection items={poisonCritPoisons} />
         <GearSection items={poisonCritGear} />
 
