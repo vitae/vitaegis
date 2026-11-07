@@ -554,7 +554,7 @@ export default function GnomeRoguePage() {
             className="mt-4 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green sm:text-6xl"
             style={{ textShadow: '0 0 24px rgba(0,255,0,0.45)' }}
           >
-            Gnome
+            Gnome Rogue
             <br />
             Poison Crit Stun
           </h1>
