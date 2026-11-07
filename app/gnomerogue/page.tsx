@@ -5,10 +5,10 @@ import { poisonCritTrees, trees, type Talent, type Tree } from './talents';
 export const metadata: Metadata = {
   title: 'Gnome Rogue PvP Builds | WoW Forever | VITAEGIS',
   description:
-    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 10/5/36 Subtlety Ambush and Death Mark build, and the 32/8/11 Poison Crit build that poisons, stuns and vanishes.',
+    'Two level 60 Gnome Rogue PvP specs for WoW Forever: the 32/8/11 Poison Crit Stun build that stuns, poisons and kills inside one window, and the 10/5/36 Subtlety Ambush and Death Mark build.',
   openGraph: {
     title: 'Gnome Rogue PvP Builds | WoW Forever',
-    description: 'The 10/5/36 Subtlety spec and the 32/8/11 Poison Crit spec, with the full talent trees.',
+    description: 'The 32/8/11 Poison Crit Stun spec and the 10/5/36 Subtlety spec, with the full talent trees.',
     type: 'article',
   },
 };
@@ -405,11 +405,11 @@ export default function GnomeRoguePage() {
           ← Vitaegis
         </Link>
 
-        <header id="subtlety" className="py-14 text-center">
+        <header id="poison-crit-stun" className="py-14 text-center">
           <div className="flex items-center justify-center gap-3">
             <Icon name="achievement_character_gnome_male" alt="Gnome" />
             <Icon name="classicon_rogue" alt="Rogue" />
-            <Icon name="ability_stealth" alt="Subtlety" />
+            <Icon name="ability_rogue_dualweild" alt="Deadly Poison" />
           </div>
           <p className={`${label} mt-6`}>WoW Forever · Level 60 PvP</p>
           <h1
@@ -418,20 +418,20 @@ export default function GnomeRoguePage() {
           >
             Gnome
             <br />
-            Subtlety Rogue
+            Poison Crit Stun
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            An Ambush and Death Mark spec built for battlegrounds, duels and world PvP, with daggers,
-            Engineering and the Gnome racials doing the heavy lifting.
+            A Mutilate spec built for the most damage a Gnome Rogue can do inside one stun. Cheap
+            Shot, Mutilate, Kidney Shot, Venom, two more Mutilates and a Cold Blood Eviscerate.
           </p>
-          <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(trees)}</p>
+          <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(poisonCritTrees)}</p>
           <p className={`${label} mt-2`}>Assassination · Combat · Subtlety</p>
           <nav className="mt-8 flex justify-center gap-6 text-sm font-semibold uppercase tracking-[0.2em]">
-            <a href="#subtlety" className="text-vitae-green">
-              Build 1 · Subtlety
+            <a href="#poison-crit-stun" className="text-vitae-green">
+              Build 1 · Poison Crit Stun
             </a>
-            <a href="#poison-crit" className="text-white/60 hover:text-vitae-green">
-              Build 2 · Poison Crit
+            <a href="#subtlety" className="text-white/60 hover:text-vitae-green">
+              Build 2 · Subtlety
             </a>
           </nav>
         </header>
@@ -439,18 +439,25 @@ export default function GnomeRoguePage() {
         <section className="border-l-2 border-vitae-green pl-5">
           <h2 className={label}>The short version</h2>
           <p className="mt-3 font-light leading-relaxed text-white/75">
-            Open from Stealth with Ambush, stun with Kidney Shot, then load Death Mark and feed it a
-            second Ambush through Ghostly Strike. Vanish and Preparation let you do it again. Escape
-            Artist keeps mages and hunters from kiting you while it happens.
+            Premeditation, then Cheap Shot or a front Garrote, Mutilate to five, Kidney Shot, Shank
+            for Venom, then two Mutilates and a Cold Blood Eviscerate while they are still stunned.
+            Every talent in the build makes that window hit harder: Opportunity and Puncturing
+            Wounds on Mutilate, Improved Kidney Shot on everything, Seal Fate to reach five points
+            faster, Coup de Grace on the finisher.
           </p>
           <p className="mt-3 text-sm font-light leading-relaxed text-white/50">
-            Forever launched on November 4, 2026. This spec is built on the live talent trees and
-            launch-week guides, not on settled level 60 results, so expect it to move as hotfixes
+            Malice gives 5% critical strike to attacks and poisons, and Vile Poisons, Improved
+            Poisons and Venom make Deadly and Instant Poison a real share of the damage. Death Mark,
+            Preparation and the escape talents are not here, on purpose: see the gear notes.
+          </p>
+          <p className="mt-3 text-sm font-light leading-relaxed text-white/50">
+            Forever launched on November 4, 2026. Both specs are built on the live talent trees and
+            launch-week guides, not on settled level 60 results, so expect them to move as hotfixes
             land.
           </p>
         </section>
 
-        <TalentSections build={trees} />
+        <TalentSections build={poisonCritTrees} />
 
         <section className="mt-12">
           <h2 className={label}>Why Gnome</h2>
@@ -468,6 +475,43 @@ export default function GnomeRoguePage() {
           </div>
         </section>
 
+        <SequenceSection items={poisonCritSequence} />
+        <PoisonSection items={poisonCritPoisons} />
+        <GearSection items={poisonCritGear} />
+
+        <PartnerSection title="Most lethal DUO" color="text-vitae-magenta" border="border-vitae-magenta/40" items={poisonCritDuos} />
+
+        <header id="subtlety" className="mt-24 border-t border-vitae-green/25 py-14 text-center">
+          <div className="flex items-center justify-center gap-3">
+            <Icon name="achievement_character_gnome_male" alt="Gnome" />
+            <Icon name="classicon_rogue" alt="Rogue" />
+            <Icon name="ability_stealth" alt="Subtlety" />
+          </div>
+          <p className={`${label} mt-6`}>Build 2 · WoW Forever · Level 60 PvP</p>
+          <h2
+            className="mt-4 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green sm:text-6xl"
+            style={{ textShadow: '0 0 24px rgba(0,255,0,0.45)' }}
+          >
+            Subtlety
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
+            An Ambush and Death Mark spec built for battlegrounds, duels and world PvP, with daggers,
+            Engineering and the Gnome racials doing the heavy lifting.
+          </p>
+          <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(trees)}</p>
+          <p className={`${label} mt-2`}>Assassination · Combat · Subtlety</p>
+        </header>
+
+        <section className="border-l-2 border-vitae-green pl-5">
+          <h2 className={label}>The short version</h2>
+          <p className="mt-3 font-light leading-relaxed text-white/75">
+            Open from Stealth with Ambush, stun with Kidney Shot, then load Death Mark and feed it a
+            second Ambush through Ghostly Strike. Vanish and Preparation let you do it again. Escape
+            Artist keeps mages and hunters from kiting you while it happens.
+          </p>
+        </section>
+
+        <TalentSections build={trees} />
         <SequenceSection items={sequence} />
         <PoisonSection items={poisons} />
         <GearSection items={gear} />
@@ -480,50 +524,6 @@ export default function GnomeRoguePage() {
           Partner picks are Alliance classes and follow how these pairings have worked in classic-era
           PvP. Forever has no settled level 60 results yet.
         </p>
-
-        <header id="poison-crit" className="mt-24 border-t border-vitae-green/25 py-14 text-center">
-          <div className="flex items-center justify-center gap-3">
-            <Icon name="achievement_character_gnome_male" alt="Gnome" />
-            <Icon name="classicon_rogue" alt="Rogue" />
-            <Icon name="ability_rogue_dualweild" alt="Deadly Poison" />
-          </div>
-          <p className={`${label} mt-6`}>Build 2 · WoW Forever · Level 60 PvP</p>
-          <h2
-            className="mt-4 text-4xl font-bold uppercase tracking-[0.12em] text-vitae-green sm:text-6xl"
-            style={{ textShadow: '0 0 24px rgba(0,255,0,0.45)' }}
-          >
-            Poison Crit
-          </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            A Mutilate spec built for the most damage a Gnome Rogue can do inside one stun. Cheap
-            Shot, Mutilate, Kidney Shot, Venom, two more Mutilates and a Cold Blood Eviscerate.
-          </p>
-          <p className="mt-8 text-5xl font-light tracking-[0.1em] text-white sm:text-6xl">{split(poisonCritTrees)}</p>
-          <p className={`${label} mt-2`}>Assassination · Combat · Subtlety</p>
-        </header>
-
-        <section className="border-l-2 border-vitae-green pl-5">
-          <h2 className={label}>The short version</h2>
-          <p className="mt-3 font-light leading-relaxed text-white/75">
-            Open with Cheap Shot, Mutilate to five, Kidney Shot, Shank for Venom, then two Mutilates
-            and a Cold Blood Eviscerate while they are still stunned. Every talent in the build makes
-            that ten seconds hit harder: Opportunity and Puncturing Wounds on Mutilate, Improved
-            Kidney Shot on everything, Seal Fate to reach five points faster, Coup de Grace on the
-            finisher.
-          </p>
-          <p className="mt-3 text-sm font-light leading-relaxed text-white/50">
-            Malice gives 5% critical strike to attacks and poisons, and Vile Poisons, Improved
-            Poisons and Venom make Deadly and Instant Poison a real share of the damage. Death Mark,
-            Preparation and the escape talents are not here, on purpose: see the gear notes.
-          </p>
-        </section>
-
-        <TalentSections build={poisonCritTrees} />
-        <SequenceSection items={poisonCritSequence} />
-        <PoisonSection items={poisonCritPoisons} />
-        <GearSection items={poisonCritGear} />
-
-        <PartnerSection title="Most lethal DUO" color="text-vitae-magenta" border="border-vitae-magenta/40" items={poisonCritDuos} />
 
         <section className="mt-12">
           <h2 className={label}>Sources</h2>
