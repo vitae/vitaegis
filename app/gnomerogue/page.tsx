@@ -79,12 +79,12 @@ const gear: Gear[] = [
 ];
 
 const poisonCritSequence: Step[] = [
-  { step: 'Stealth', icon: 'ability_stealth', text: 'Deadly Poison on the main hand, Instant Poison on the off hand. Master of Deception and Camouflage get you behind them unseen.' },
+  { step: 'Stealth', icon: 'ability_stealth', text: 'Deadly Poison on the main hand, Instant Poison on the off hand. Master of Deception keeps you unseen, and with Dirty Deeds you no longer need to be behind them.' },
   { step: 'Premeditation', icon: 'spell_shadow_possession', text: 'Two free combo points from 20 yards, before you open. Two minute cooldown, so it is there for the first opener of every fight.' },
   { step: 'Eureka!', icon: 'inv_gnometoy', text: 'Pop the racial as you close the last few yards so the whole stun lands inside it.' },
-  { step: 'Cheap Shot', icon: 'ability_cheapshot', text: 'Four second stun and two more combo points, so you are at four before you have swung. Every hit from here on is on a stunned target.' },
-  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers, 20% harder once the first poison lands. This takes you to five every time. The spare point is lost, and that is fine: the press is for the poison and the damage.' },
-  { step: 'Kidney Shot', icon: 'ability_rogue_kidneyshot', text: 'Five points as Cheap Shot ends. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.' },
+  { step: 'Cheap Shot or Garrote', icon: 'ability_rogue_garrote', text: 'Cheap Shot when you want the full stun chain: four seconds and two more combo points, so you are at four before you have swung. Garrote from the front when you want guaranteed damage instead: Dirty Deeds drops the behind requirement, Opportunity adds 20%, Blood Splatter stretches the bleed, and you are at three. Either way Dirty Deeds makes the opener 10 energy cheaper.' },
+  { step: 'Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Both daggers, 20% harder once the first poison lands. This takes you to five from either opener. After Cheap Shot the spare point is lost, and that is fine: the press is for the poison and the damage.' },
+  { step: 'Kidney Shot', icon: 'ability_rogue_kidneyshot', text: 'Five points as Cheap Shot ends, or straight after the Mutilate if you opened with Garrote. Improved Kidney Shot makes them take 10% more from your poisons and attacks for the whole stun.' },
   { step: 'Shank', icon: 'inv_sword_31', text: 'Venom: poison damage up 30% and poisons apply 20% more often for 6 seconds. Every Mutilate that follows is inside that window.' },
   { step: 'Mutilate, Mutilate', icon: 'ability_rogue_deadlybrew', text: 'Puncturing Wounds gives each one 15% more crit, Lethality makes the crits 20% bigger, and Seal Fate turns each crit into an extra combo point. Deadly Poison stacks twice a press.' },
   { step: 'Cold Blood into Eviscerate', icon: 'spell_ice_lament', text: 'Five points, a guaranteed crit, Coup de Grace adds 20%. This is the kill, still inside the stun.' },
@@ -100,7 +100,7 @@ const poisonCritPoisons: Poison[] = [
 const poisonCritGear: Gear[] = [
   { title: 'Weapons', text: 'Two daggers, and Mutilate will not fire without them. It hits with both, so the main hand wants the hardest-hitting dagger you can find and the off hand wants the fastest one for poison procs.' },
   { title: 'Stats', text: 'Critical strike first, since Puncturing Wounds, Seal Fate, Lethality, Cold Blood and Malice all pay out on crits, then Attack Power. The build skips Precision, so take hit from gear: a missed Kidney Shot is a lost fight.' },
-  { title: 'Why 32 / 8 / 11', text: 'Thirty-two in Assassination for Mutilate and every poison and crit talent on the way, with the spare point in Improved Poisons. Eight in Combat for Puncturing Wounds and Coup de Grace, the two biggest damage talents outside the main tree. Eleven in Subtlety for Opportunity, which is 20% on Mutilate, Camouflage for the approach and Premeditation so Kidney Shot lands on time in every opener. Death Mark, Preparation and the escape talents are gone on purpose: this build kills inside the first stun or Vanishes to try again.' },
+  { title: 'Why 32 / 8 / 11', text: 'Thirty-two in Assassination for Mutilate and every poison and crit talent on the way, with the spare point in Improved Poisons. Eight in Combat for Puncturing Wounds and Coup de Grace, the two biggest damage talents outside the main tree. Eleven in Subtlety for Opportunity, which is 20% on Mutilate and Garrote, Dirty Deeds so Garrote works from the front and the opener costs less, and Premeditation so Kidney Shot lands on time in every opener. One point in Camouflage is enough: you are not racing anyone in Stealth. Death Mark, Preparation and the escape talents are gone on purpose: this build kills inside the first stun or Vanishes to try again.' },
   { title: 'Professions', text: 'Engineering for grenades, which land harder on a target you have stunned with Improved Kidney Shot, and the Gnome racial.' },
 ];
 

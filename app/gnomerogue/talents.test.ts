@@ -33,6 +33,8 @@ describe('gnomerogue builds', () => {
     expect(rank('Seal Fate')).toBe(3);
     expect(rank('Puncturing Wounds')).toBe(3);
     expect(rank('Premeditation')).toBe(1);
+    expect(rank('Dirty Deeds')).toBe(1);
+    expect(rank('Camouflage')).toBe(1);
     expect(rank('Initiative')).toBe(0);
     expect(rank('Improved Poisons')).toBe(4);
     expect(rank('Vile Poisons')).toBe(5);
