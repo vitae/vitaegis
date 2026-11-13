@@ -58,7 +58,7 @@ function Chat({ adminKey }: { adminKey: string }) {
       <div className={`${ui.glass} max-h-[60vh] min-h-[320px] overflow-y-auto p-4 sm:p-6`}>
         {agent.data.messages.length === 0 && (
           <div className="space-y-2">
-            <p className="text-sm text-white/50">Try one of these, or type your own.</p>
+            <p className="text-sm text-white/60">Try one of these, or type your own.</p>
             <div className="flex flex-wrap gap-2">
               {STARTERS.map((s) => (
                 <button key={s} onClick={() => send(s)} className={ui.btnQuiet}>
@@ -88,7 +88,7 @@ function Chat({ adminKey }: { adminKey: string }) {
                       ? 'text-red-400'
                       : part.state === 'approval-requested'
                         ? 'text-yellow-300'
-                        : 'text-white/40';
+                        : 'text-white/60';
                   return (
                     <p key={i} className={`font-mono text-xs ${tone}`}>
                       ⌁ {part.toolName} · {part.state}
@@ -130,7 +130,7 @@ function Chat({ adminKey }: { adminKey: string }) {
           </fieldset>
         ))}
 
-        {busy && <p className="text-xs text-white/40">Working…</p>}
+        {busy && <p className="text-xs text-white/60">Working…</p>}
         {agent.error && (
           <p className="text-sm text-red-400">
             {agent.error instanceof Error ? agent.error.message : String(agent.error)}
@@ -166,7 +166,7 @@ function Chat({ adminKey }: { adminKey: string }) {
           New
         </button>
       </form>
-      <p className="text-xs text-white/40">
+      <p className="text-xs text-white/60">
         Scheduled runs (06:00 brief, Monday revenue, six-hourly watchdog) write to the dashboard and
         never publish. Session: {agent.session?.sessionId ?? 'not started'}.
       </p>

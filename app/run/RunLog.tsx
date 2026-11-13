@@ -70,7 +70,7 @@ export default async function RunLog() {
         <h3 className={`${label} text-center`}>Every activity</h3>
         <table className="mt-4 w-full min-w-[520px] text-left text-sm">
           <thead>
-            <tr className="border-b border-vitae-green/25 text-[11px] uppercase tracking-[0.18em] text-white/50">
+            <tr className="border-b border-vitae-green/25 text-[11px] uppercase tracking-[0.18em] text-white/60">
               <th scope="col" className="py-2 pr-3 font-medium">
                 Date
               </th>
@@ -96,13 +96,13 @@ export default async function RunLog() {
               <tr key={a.id} className="text-white/80">
                 <td className="whitespace-nowrap py-2.5 pr-3 tabular-nums">
                   <span className="text-white">{dayLabel(a.start_date_local)}</span>
-                  <span className="ml-2 text-xs text-white/45">
+                  <span className="ml-2 text-xs text-white/60">
                     {weekdayLabel(a.start_date_local)}
                   </span>
                 </td>
                 <td className="max-w-[220px] truncate py-2.5 pr-3">
                   <span className="text-white">{a.name}</span>
-                  <span className="ml-2 text-xs text-white/45">{sportLabel(a.sport_type)}</span>
+                  <span className="ml-2 text-xs text-white/60">{sportLabel(a.sport_type)}</span>
                 </td>
                 <td className="py-2.5 pr-3 text-right tabular-nums">
                   {metersToMiles(a.distance_m).toFixed(2)}
@@ -122,7 +122,7 @@ export default async function RunLog() {
         </table>
       </div>
 
-      <p className="mt-6 text-center text-xs font-light text-white/40">
+      <p className="mt-6 text-center text-xs font-light text-white/60">
         Every activity your watch uploads to Strava, oldest kept, newest first. Dates and weeks are
         Honolulu local time.
       </p>

@@ -283,7 +283,7 @@ export default function Checklist() {
                     <button
                       type="button"
                       onClick={() => void signOut()}
-                      className="text-white/40 underline-offset-2 hover:text-white hover:underline"
+                      className="text-white/60 underline-offset-2 hover:text-white hover:underline"
                     >
                       Sign out
                     </button>
@@ -459,7 +459,7 @@ export default function Checklist() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {buyAgain.length === 0 && (
-            <span className="text-sm font-light text-white/50">
+            <span className="text-sm font-light text-white/60">
               Everything popular is already on the list.
             </span>
           )}
@@ -477,7 +477,7 @@ export default function Checklist() {
                 <span className="text-sm font-medium text-white group-hover:text-vitae-red">
                   ✕ {i.name}
                 </span>
-                <span className="ml-2 text-[11px] text-white/45">
+                <span className="ml-2 text-[11px] text-white/60">
                   {i.timesBought}× · last{' '}
                   {formatDate(i.lastBoughtAt ?? '', HST).replace(/, \d{4}$/, '')}
                 </span>
@@ -503,7 +503,7 @@ export default function Checklist() {
         <div className="flex flex-wrap items-baseline justify-between gap-2 px-1">
           <h2 className={label}>Standard list · what we always get</h2>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-[11px] text-white/45">
+            <span className="text-[11px] text-white/60">
               <span className="text-vitae-green">✓</span> have it ·{' '}
               <span className="text-vitae-yellow">○</span> out ·{' '}
               <span className="text-vitae-green">+</span> to cart ·{' '}
@@ -528,7 +528,7 @@ export default function Checklist() {
           </div>
         </div>
         {groups.length === 0 && (
-          <p className="text-center font-light text-white/50">Nothing here. Change the filter.</p>
+          <p className="text-center font-light text-white/60">Nothing here. Change the filter.</p>
         )}
         {groups.map(({ aisle, items }) => (
           <div key={aisle} className={`${glass} p-5 sm:p-7`}>
@@ -566,14 +566,14 @@ export default function Checklist() {
                       >
                         {item.name}
                       </span>
-                      <span className="text-xs text-white/50">{item.qty}</span>
+                      <span className="text-xs text-white/60">{item.qty}</span>
                       {item.timesBought ? (
                         <span className="text-[10px] uppercase tracking-[0.15em] text-white/35">
                           {item.timesBought}× bought
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-white/45">
+                    <div className="mt-0.5 text-[11px] text-white/60">
                       {item.status === 'cart' && item.checkedAt && (
                         <span>In cart {formatStamp(item.checkedAt)}</span>
                       )}
@@ -691,7 +691,7 @@ export default function Checklist() {
       <section className={`${glass} p-6 sm:p-8`}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className={label}>Every visit</h2>
-          <span className="text-[11px] text-white/45">
+          <span className="text-[11px] text-white/60">
             {visits.length} visits · {state.trips.length} logged here,{' '}
             {visits.length - state.trips.length} from Amazon
           </span>
@@ -703,9 +703,9 @@ export default function Checklist() {
                 <span className="text-white/90">
                   {formatStamp(v.at, HST)}
                   {v.endedAt && v.endedAt !== v.at && (
-                    <span className="text-white/45"> → {formatStamp(v.endedAt, HST)}</span>
+                    <span className="text-white/60"> → {formatStamp(v.endedAt, HST)}</span>
                   )}
-                  <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-white/40">
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-white/60">
                     {v.kind}
                   </span>
                 </span>
@@ -726,7 +726,7 @@ export default function Checklist() {
                 </span>
               </div>
               {v.names && v.names.length > 0 && (
-                <p className="mt-1 text-xs text-white/50">{v.names.join(' · ')}</p>
+                <p className="mt-1 text-xs text-white/60">{v.names.join(' · ')}</p>
               )}
               {v.note && <p className="mt-1 text-xs italic text-white/60">{v.note}</p>}
             </li>

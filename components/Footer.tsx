@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import { socials } from '@/components/socials';
@@ -45,7 +43,7 @@ export default function Footer() {
   return (
     <footer className="relative pb-6 pt-10 sm:pb-8 sm:pt-14">
       <div className="section-container mx-auto w-full">
-        <GlassContainer variant="default" glow padding="lg" className="w-full">
+        <GlassContainer variant="default" padding="lg" className="w-full">
           <div className="grid gap-6 text-center sm:gap-8 md:grid-cols-[1.4fr_repeat(3,1fr)] md:text-left">
             {/* Brand */}
             <div className="flex flex-col items-center md:items-start">
@@ -116,14 +114,14 @@ export default function Footer() {
               </p>
               <Link
                 href="/donate"
-                className="text-xs text-white/50 transition-colors hover:text-[#ff8000]"
+                className="text-xs text-white/60 transition-colors hover:text-[#ff8000]"
               >
                 All donation options →
               </Link>
             </div>
           </div>
 
-          <p className="mt-5 whitespace-nowrap border-t border-white/10 pt-4 text-center text-xs text-white/40">
+          <p className="mt-5 whitespace-nowrap border-t border-white/10 pt-4 text-center text-xs text-white/60">
             © 2026 VITAEGIS. All Rights Reserved.
             <Link href="/privacy" className="ml-4 transition-colors hover:text-white">
               Privacy

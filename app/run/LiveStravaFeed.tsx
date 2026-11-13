@@ -159,7 +159,7 @@ export default function LiveStravaFeed({ initial }: { initial: StravaActivity[] 
         </div>
       </div>
 
-      <p className="mt-6 text-center text-xs font-light text-white/40">
+      <p className="mt-6 text-center text-xs font-light text-white/60">
         Pushed by Strava webhooks the moment the watch uploads; this page re-checks every minute.
         {updatedAt
           ? ` Last check ${updatedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`

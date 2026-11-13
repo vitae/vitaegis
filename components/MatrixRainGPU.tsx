@@ -138,6 +138,9 @@ export default function MatrixRainGPU() {
       // ── uniforms the CPU still owns: the clock ───────────────────────────────
       const uTime = uniform(0);
       const uView = uniform(new THREE.Vector2(20, 12)); // visible width/height at z=0
+      // Pointer in world units at z=0 (far off screen until it moves) and page scroll in screens.
+      const uPointer = uniform(new THREE.Vector2(999, 999));
+      const uScroll = uniform(0);
 
       const material = new THREE.MeshBasicNodeMaterial();
       material.transparent = true;
@@ -160,7 +163,10 @@ export default function MatrixRainGPU() {
       // The cycle is three screens tall, so each stream spends most of its time off
       // screen and only about a third of the columns are lit at any moment.
       const span = uView.y.mul(3).add(trailLen.mul(rowH)).add(2);
-      const head = fract(seed2.add(uTime.mul(speed).div(span))).mul(span); // 0..span
+      // Page scroll pushes the streams back up, nearer layers further: parallax, and it wraps
+      // with the stream's own cycle so it holds on a page of any length.
+      const drift = uScroll.mul(uView.y).mul(float(0.35).sub(layer.mul(0.1)));
+      const head = fract(seed2.add(uTime.mul(speed).sub(drift).div(span))).mul(span); // 0..span
       const headY = uView.y.mul(0.5).add(1).sub(head);
       const x = col.div(COLUMNS).sub(0.5).mul(uView.x.mul(1.15)).add(layer.mul(0.37));
       const y = headY.add(slot.mul(rowH));
@@ -198,10 +204,12 @@ export default function MatrixRainGPU() {
       const streamGain = hash(col.mul(13).add(layer.mul(401)).add(3))
         .mul(0.6)
         .add(0.4);
+      // Glyphs within reach of the pointer light up, falling off smoothly with distance.
+      const reach = float(1).sub(smoothstep(0.0, 3.2, vec2(x, y).sub(uPointer).length()));
       const alpha = sampled.a
         .mul(fade)
         .mul(depthFade)
-        .mul(streamGain)
+        .mul(streamGain.add(reach.mul(0.9)))
         .mul(mix(0.3, 0.95, isHead));
       material.colorNode = vec4(colorNode.mul(alpha), alpha);
 
@@ -212,12 +220,15 @@ export default function MatrixRainGPU() {
       // ── post: a soft bloom, the glow that bleeds onto black ──────────────────
       const post = new THREE.RenderPipeline(renderer);
       const scenePass = pass(scene, camera);
-      const glow = bloom(scenePass, 0.35, 0.45, 0.6);
-      post.outputNode = scenePass.add(glow);
+      // Bloom is the expensive pass; phones get the rain without it.
+      const phone = window.matchMedia('(max-width: 767px), (pointer: coarse)').matches;
+      post.outputNode = phone ? scenePass : scenePass.add(bloom(scenePass, 0.35, 0.45, 0.6));
 
       const fit = () => {
         const w = window.innerWidth;
         const h = window.innerHeight;
+        // A hidden or collapsed window reports zero; a zero-sized swapchain is an error.
+        if (w < 2 || h < 2) return;
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
@@ -226,6 +237,20 @@ export default function MatrixRainGPU() {
       };
       fit();
       window.addEventListener('resize', fit);
+
+      const onPointer = (e: PointerEvent) => {
+        uPointer.value.set(
+          (e.clientX / window.innerWidth - 0.5) * uView.value.x,
+          (0.5 - e.clientY / window.innerHeight) * uView.value.y,
+        );
+      };
+      const onPointerGone = () => uPointer.value.set(999, 999);
+      const onScroll = () => {
+        uScroll.value = window.scrollY / Math.max(window.innerHeight, 1);
+      };
+      window.addEventListener('pointermove', onPointer, { passive: true });
+      document.documentElement.addEventListener('pointerleave', onPointerGone);
+      window.addEventListener('scroll', onScroll, { passive: true });
 
       // Pause off-screen tabs so phones do not burn battery on a hidden page.
       let running = true;
@@ -236,7 +261,7 @@ export default function MatrixRainGPU() {
 
       const timer = new THREE.Timer();
       renderer.setAnimationLoop(() => {
-        if (!running) return;
+        if (!running || window.innerWidth < 2 || window.innerHeight < 2) return;
         timer.update();
         const t = timer.getElapsed();
         uTime.value = t;
@@ -248,6 +273,9 @@ export default function MatrixRainGPU() {
       cleanup = () => {
         renderer.setAnimationLoop(null);
         window.removeEventListener('resize', fit);
+        window.removeEventListener('pointermove', onPointer);
+        document.documentElement.removeEventListener('pointerleave', onPointerGone);
+        window.removeEventListener('scroll', onScroll);
         document.removeEventListener('visibilitychange', onVisibility);
         geometry.dispose();
         quad.dispose();

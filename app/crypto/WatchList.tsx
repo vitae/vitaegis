@@ -190,7 +190,7 @@ export default function WatchList({ rows }: { rows: WatchRow[] }) {
                       {r.zones.resistance ? (
                         <span className="text-vitae-green">
                           {usd(r.zones.resistance.price)} · {signed(r.zones.resistance.distance)}
-                          <span className="block text-white/50">{r.zones.resistance.label}</span>
+                          <span className="block text-white/60">{r.zones.resistance.label}</span>
                         </span>
                       ) : (
                         <span className="text-vitae-green">Above every level</span>
@@ -201,7 +201,7 @@ export default function WatchList({ rows }: { rows: WatchRow[] }) {
                       {r.zones.support ? (
                         <span className="text-vitae-red">
                           {usd(r.zones.support.price)} · {signed(r.zones.support.distance)}
-                          <span className="block text-white/50">{r.zones.support.label}</span>
+                          <span className="block text-white/60">{r.zones.support.label}</span>
                         </span>
                       ) : (
                         <span className="text-vitae-red">Below every level</span>

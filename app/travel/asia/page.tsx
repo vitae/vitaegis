@@ -174,17 +174,17 @@ export default function TravelPage() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ff0000]">
                     Direct-ish
                   </p>
-                  <p className="mt-2 text-3xl font-semibold tabular-nums text-white/40 line-through decoration-[#ff0000]/70">
+                  <p className="mt-2 text-3xl font-semibold tabular-nums text-white/60 line-through decoration-[#ff0000]/70">
                     {usd(rejected.farePP)}
                   </p>
-                  <p className="mt-1 text-xs font-light text-white/50">DPS → HNL, per person</p>
+                  <p className="mt-1 text-xs font-light text-white/60">DPS → HNL, per person</p>
                 </div>
                 <div className="bg-black p-5">
                   <p className={label}>Via Seoul</p>
                   <p className="mt-2 text-3xl font-semibold tabular-nums text-vitae-green">
                     {usd(rejected.viaSeoulPP)}
                   </p>
-                  <p className="mt-1 text-xs font-light text-white/50">
+                  <p className="mt-1 text-xs font-light text-white/60">
                     DPS → ICN → HNL, per person
                   </p>
                 </div>
@@ -279,7 +279,7 @@ export default function TravelPage() {
                 </article>
               ))}
             </div>
-            <p className="mt-5 text-center text-sm font-light italic text-white/50">
+            <p className="mt-5 text-center text-sm font-light italic text-white/60">
               Daily budgets are mid-range estimates for two people sharing a room — lodging, food,
               local transport and entry fees, flights excluded.
             </p>
@@ -300,7 +300,7 @@ export default function TravelPage() {
                     {monthLetters.map((m, i) => (
                       <th
                         key={i}
-                        className={`text-center text-xs font-medium ${i === 9 || i === 10 ? 'text-vitae-green' : 'text-white/45'}`}
+                        className={`text-center text-xs font-medium ${i === 9 || i === 10 ? 'text-vitae-green' : 'text-white/60'}`}
                       >
                         {m}
                       </th>
@@ -322,7 +322,7 @@ export default function TravelPage() {
                           />
                         </td>
                       ))}
-                      <td className="hidden pl-4 text-sm font-light text-white/55 lg:table-cell">
+                      <td className="hidden pl-4 text-sm font-light text-white/60 lg:table-cell">
                         {row.why}
                       </td>
                     </tr>
@@ -330,7 +330,7 @@ export default function TravelPage() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.18em] text-white/55">
+            <div className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.18em] text-white/60">
               {['Avoid', 'Workable', 'Prime'].map((name, level) => (
                 <span key={name} className="flex items-center gap-2">
                   <i className={`h-3 w-5 rounded-[3px] ${seasonCell[level]}`} /> {name}
@@ -366,7 +366,7 @@ export default function TravelPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-center text-sm font-light italic text-white/55">
+            <p className="mt-5 text-center text-sm font-light italic text-white/60">
               About $135 in fees for two. Passports need six months of validity past each entry date
               and a couple of blank pages. Rules change — Thailand’s did this month — so reconfirm
               each on the country’s official immigration site before booking.
@@ -385,17 +385,17 @@ export default function TravelPage() {
                 <li key={t.name} className="grid gap-3 py-5 md:grid-cols-[1.3fr_2fr_1fr]">
                   <div>
                     <p className="font-semibold">{t.name}</p>
-                    <p className="text-sm font-light text-white/55">{t.where}</p>
+                    <p className="text-sm font-light text-white/60">{t.where}</p>
                   </div>
                   <p className="font-light text-white/80">{t.desc}</p>
                   <div className="md:text-right">
                     <p className="tabular-nums text-vitae-green">{t.price}</p>
-                    <p className="text-sm font-light text-white/55">{t.rating}</p>
+                    <p className="text-sm font-light text-white/60">{t.rating}</p>
                   </div>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-center text-sm font-light italic text-white/55">
+            <p className="mt-5 text-center text-sm font-light italic text-white/60">
               Captive-tiger contact venues draw steady criticism from wildlife-welfare groups over
               breeding, training and housing. Worth weighing next to the price and the reviews.
               Prices and ratings as listed by each venue’s booking pages — reconfirm before you go.
@@ -440,7 +440,7 @@ export default function TravelPage() {
           </ul>
         </nav>
 
-        <footer className="mt-16 text-center text-sm font-light text-white/40">
+        <footer className="mt-16 text-center text-sm font-light text-white/60">
           <p className="mx-auto max-w-3xl">
             Built for two travelers leaving from and returning to Honolulu. Fares are indicative
             lowest one-way economy prices seen on fare aggregators in September 2026 — a planning

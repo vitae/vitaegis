@@ -76,9 +76,9 @@ function Body({ adminKey }: { adminKey: string }) {
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
-      {!logs && !error && <p className="text-sm text-white/50">Loading…</p>}
+      {!logs && !error && <p className="text-sm text-white/60">Loading…</p>}
       {logs && shown.length === 0 && (
-        <p className={`${ui.glass} p-6 text-sm text-white/50`}>
+        <p className={`${ui.glass} p-6 text-sm text-white/60`}>
           {filter === 'errors' ? 'No errors recorded.' : 'No consultations recorded yet.'}
         </p>
       )}
@@ -93,13 +93,13 @@ function Body({ adminKey }: { adminKey: string }) {
             >
               {log.error ? 'Error' : 'Answered'}
             </span>
-            <span className="text-xs text-white/40">{hst(log.created_at)}</span>
+            <span className="text-xs text-white/60">{hst(log.created_at)}</span>
           </header>
-          <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-white/40">Question</p>
+          <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-white/60">Question</p>
           <p className="mt-1 text-sm text-white">{log.question}</p>
           {log.reply && (
             <>
-              <p className="mt-4 text-[10px] uppercase tracking-[0.2em] text-white/40">Reply</p>
+              <p className="mt-4 text-[10px] uppercase tracking-[0.2em] text-white/60">Reply</p>
               <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-white/80">
                 {log.reply}
               </p>

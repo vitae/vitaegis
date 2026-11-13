@@ -197,7 +197,7 @@ export default function KalshiBoard() {
                 <div>
                   <h2
                     id="market-heading"
-                    className="text-sm uppercase tracking-[0.2em] text-white/50"
+                    className="text-sm uppercase tracking-[0.2em] text-white/60"
                   >
                     YES price
                   </h2>
@@ -273,7 +273,7 @@ export default function KalshiBoard() {
                       className="glass-panel flex justify-between gap-3 rounded-xl p-3 text-sm"
                     >
                       <span className="text-vitae-red">{e.message}</span>
-                      <span className="shrink-0 text-xs text-white/40">{hst(e.at, true)}</span>
+                      <span className="shrink-0 text-xs text-white/60">{hst(e.at, true)}</span>
                     </li>
                   ))}
                 </ul>
@@ -281,7 +281,7 @@ export default function KalshiBoard() {
             )}
           </>
         )}
-        {!data && !error && <p className="mt-8 text-sm text-white/50">Loading…</p>}
+        {!data && !error && <p className="mt-8 text-sm text-white/60">Loading…</p>}
 
         <p className="mt-12 text-xs text-white/35">
           Quotes: Kalshi WebSocket → bot → Supabase Realtime → this page. BTC/USD: Coinbase
@@ -302,7 +302,7 @@ export default function KalshiBoard() {
 function Pill({ on, label, pulse }: { on: boolean; label: string; pulse?: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 ${on ? 'border-vitae-green/50 text-white' : 'border-white/15 text-white/50'}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 ${on ? 'border-vitae-green/50 text-white' : 'border-white/15 text-white/60'}`}
     >
       <span
         className={`inline-block h-2 w-2 rounded-full ${on ? 'bg-vitae-green' : 'bg-white/30'} ${pulse ? styles.pulse : ''}`}
@@ -328,7 +328,7 @@ function Quote({ side, ask, hot }: { side: string; ask: number | null; hot: bool
     >
       <p className="text-xs uppercase tracking-[0.2em] text-white/60">{side}</p>
       <p className="mt-1 text-3xl font-semibold">{cents(ask)}</p>
-      <p className="mt-1 text-[11px] text-white/45">{hot ? 'in the entry zone' : 'ask'}</p>
+      <p className="mt-1 text-[11px] text-white/60">{hot ? 'in the entry zone' : 'ask'}</p>
     </div>
   );
 }
@@ -357,7 +357,7 @@ function ZoneMeter({ yes, no }: { yes: number | null; no: number | null }) {
           />
         )}
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-white/40">
+      <div className="mt-1 flex justify-between text-[10px] text-white/60">
         <span>0¢</span>
         <span>
           {MIN_ENTRY}–{MAX_ENTRY}¢ buys
@@ -396,7 +396,7 @@ function BtcTile({ feed }: { feed: ReturnType<typeof useCoinbaseTicker> }) {
     <div className="rounded-xl border border-white/10 p-3">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.2em] text-white/60">BTC / USD</p>
-        <span className="flex items-center gap-1.5 text-[10px] text-white/45">
+        <span className="flex items-center gap-1.5 text-[10px] text-white/60">
           <span
             className={`inline-block h-1.5 w-1.5 rounded-full ${feed.connected ? 'bg-vitae-green' : 'bg-white/30'} ${feed.connected ? styles.pulse : ''}`}
             aria-hidden
@@ -444,14 +444,14 @@ function Stat({
 }) {
   return (
     <div className="glass-panel rounded-xl p-4">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">{label}</p>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">{label}</p>
       <p
         className={`mt-2 text-2xl font-semibold ${toneClass}`}
         style={{ fontVariantNumeric: 'normal' }}
       >
         {value}
       </p>
-      {sub && <p className="mt-1 text-xs text-white/40">{sub}</p>}
+      {sub && <p className="mt-1 text-xs text-white/60">{sub}</p>}
     </div>
   );
 }
@@ -463,7 +463,7 @@ function Performance({ data }: { data: PublicSummary }) {
     <section className="mt-10" aria-labelledby="perf-heading">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="perf-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+          <h2 id="perf-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
             Profitability
           </h2>
           <p
@@ -472,7 +472,7 @@ function Performance({ data }: { data: PublicSummary }) {
           >
             {p.settled ? signedDollars(p.netCents) : '—'}
           </p>
-          <p className="mt-1 text-sm text-white/50">
+          <p className="mt-1 text-sm text-white/60">
             net after fees over {p.settled} settled trade{p.settled === 1 ? '' : 's'}
             {p.open ? `, ${p.open} open` : ''}
           </p>
@@ -524,7 +524,7 @@ function Performance({ data }: { data: PublicSummary }) {
       </div>
 
       <div className="glass-panel mt-4 rounded-2xl p-4">
-        <p className="text-xs uppercase tracking-[0.2em] text-white/50">
+        <p className="text-xs uppercase tracking-[0.2em] text-white/60">
           Equity curve · cumulative P&amp;L per settled trade
         </p>
         <div className="mt-3">
@@ -543,7 +543,7 @@ function Performance({ data }: { data: PublicSummary }) {
               })}
             />
           ) : (
-            <p className="py-10 text-center text-sm text-white/40">No settled trades yet.</p>
+            <p className="py-10 text-center text-sm text-white/60">No settled trades yet.</p>
           )}
         </div>
       </div>
@@ -583,7 +583,7 @@ function Thresholds({ backtest }: { backtest: Backtest }) {
 
   return (
     <section className="mt-10" aria-labelledby="thr-heading">
-      <h2 id="thr-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+      <h2 id="thr-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
         Where should the line be?
       </h2>
       <p className="mt-2 max-w-3xl text-sm text-white/60">
@@ -667,7 +667,7 @@ function Thresholds({ backtest }: { backtest: Backtest }) {
               className="pointer-events-none absolute top-1 rounded-lg border border-white/15 bg-black/85 px-3 py-2 text-xs backdrop-blur"
               style={{ left: `${((pad.left + slot * hover) / W) * 100}%` }}
             >
-              <p className="text-white/50">
+              <p className="text-white/60">
                 {rows[hover].maxEntry}¢ line · crowd {rows[hover].heavy}%+
               </p>
               <p className="text-sm font-medium text-white">
@@ -682,7 +682,7 @@ function Thresholds({ backtest }: { backtest: Backtest }) {
 
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+            <thead className="text-[10px] uppercase tracking-[0.2em] text-white/60">
               <tr>
                 <Th>Line</Th>
                 <Th>Crowd</Th>
@@ -740,12 +740,12 @@ function Thresholds({ backtest }: { backtest: Backtest }) {
 function Ledger({ trades }: { trades: Trade[] }) {
   return (
     <section className="mt-10" aria-labelledby="ledger-heading">
-      <h2 id="ledger-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+      <h2 id="ledger-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
         Every trade
       </h2>
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[1100px] text-left text-sm">
-          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/60">
             <tr>
               <Th>Placed</Th>
               <Th>Market</Th>
@@ -766,7 +766,7 @@ function Ledger({ trades }: { trades: Trade[] }) {
           <tbody>
             {trades.length === 0 && (
               <tr>
-                <td colSpan={14} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={14} className="px-4 py-6 text-center text-white/60">
                   No trades yet.
                 </td>
               </tr>
@@ -774,16 +774,16 @@ function Ledger({ trades }: { trades: Trade[] }) {
             {trades.map((t) => (
               <tr key={t.id} className="border-t border-white/10 text-white/80">
                 <Td>
-                  <span className="text-white/50">{hst(t.at, true)}</span>
+                  <span className="text-white/60">{hst(t.at, true)}</span>
                   <span
-                    className={`ml-2 text-[10px] uppercase tracking-[0.2em] ${t.live ? 'text-vitae-green' : 'text-white/40'}`}
+                    className={`ml-2 text-[10px] uppercase tracking-[0.2em] ${t.live ? 'text-vitae-green' : 'text-white/60'}`}
                   >
                     {t.live ? 'live' : 'dry'}
                   </span>
                 </Td>
                 <Td>
                   <span className="text-white">{t.title}</span>
-                  <span className="ml-2 text-xs text-white/40">{t.ticker}</span>
+                  <span className="ml-2 text-xs text-white/60">{t.ticker}</span>
                 </Td>
                 <Td>
                   <span className={t.outcome === 'yes' ? 'text-vitae-green' : 'text-vitae-red'}>
@@ -795,7 +795,7 @@ function Ledger({ trades }: { trades: Trade[] }) {
                 <Td right>
                   {t.contracts}
                   {t.contracts !== t.requested && (
-                    <span className="text-white/40"> / {t.requested}</span>
+                    <span className="text-white/60"> / {t.requested}</span>
                   )}
                 </Td>
                 <Td right>{dollars(t.stakeCents)}</Td>
@@ -811,7 +811,7 @@ function Ledger({ trades }: { trades: Trade[] }) {
                       {t.result.toUpperCase()} · {t.won ? 'won' : 'lost'}
                     </span>
                   ) : (
-                    <span className="text-white/40">open</span>
+                    <span className="text-white/60">open</span>
                   )}
                 </Td>
                 <Td right className={tone(t.pnlCents)}>
@@ -832,11 +832,11 @@ function Ledger({ trades }: { trades: Trade[] }) {
 function Markets({ data }: { data: PublicSummary }) {
   return (
     <section className="mt-10" aria-labelledby="mk-heading">
-      <h2 id="mk-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+      <h2 id="mk-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
         Recent markets
       </h2>
       {data.markets.length === 0 ? (
-        <p className="glass-panel mt-4 rounded-2xl p-5 text-sm text-white/40">None settled yet.</p>
+        <p className="glass-panel mt-4 rounded-2xl p-5 text-sm text-white/60">None settled yet.</p>
       ) : (
         <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {data.markets.map((m) => {
@@ -851,7 +851,7 @@ function Markets({ data }: { data: PublicSummary }) {
                     {m.result.toUpperCase()}
                   </span>
                 </div>
-                <p className="mt-1 flex justify-between text-xs text-white/45">
+                <p className="mt-1 flex justify-between text-xs text-white/60">
                   <span>{hst(m.closeTime)}</span>
                   <span className={m.trades.length ? tone(pnl) : ''}>
                     {m.trades.length

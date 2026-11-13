@@ -3,7 +3,7 @@ import OpenHashDetails from '@/components/OpenHashDetails';
 import { pillars, type Pillar } from '@/lib/pillars';
 import { LETTER, tenetId } from '@/lib/tenets';
 
-const label = 'text-[11px] font-semibold uppercase tracking-[0.25em]';
+const label = 'text-xs font-semibold uppercase tracking-[0.25em]';
 
 export default function PillarDossier({ pillar }: { pillar: Pillar }) {
   const c = pillar.color;
@@ -12,7 +12,7 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
   const Tag = ({ id }: { id: string }) => (
     <a
       href={`#${id}`}
-      className="ml-2 inline-block rounded-full border px-2 py-px align-middle font-mono text-[10px] tracking-[0.12em] opacity-60 transition hover:opacity-100"
+      className="ml-2 inline-block rounded-full border px-2 py-px align-middle font-mono text-xs tracking-[0.12em] opacity-60 transition hover:opacity-100"
       style={{ borderColor: `${c}66`, color: c }}
       title={`Tenet ${id}`}
     >
@@ -229,7 +229,7 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
             ))}
           </section>
 
-          <p className="mt-8 text-center text-sm font-light leading-relaxed text-white/45 sm:mt-10">
+          <p className="mt-8 text-center text-sm font-light leading-relaxed text-white/60 sm:mt-10">
             {pillar.disclaimer}
           </p>
 

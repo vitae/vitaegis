@@ -81,7 +81,7 @@ function Paywall({ failed }: { failed: boolean }) {
           we will unlock you by hand.
         </p>
       )}
-      <p className="mt-6 text-xs text-white/40">{SECRETS_PRICE_LABEL}, once. No subscription.</p>
+      <p className="mt-6 text-xs text-white/60">{SECRETS_PRICE_LABEL}, once. No subscription.</p>
     </GlassContainer>
   );
 }

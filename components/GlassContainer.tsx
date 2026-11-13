@@ -1,5 +1,3 @@
-'use client';
-
 import { ReactNode, CSSProperties } from 'react';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -12,6 +10,8 @@ interface GlassContainerProps {
   className?: string;
   variant?: 'default' | 'subtle' | 'prominent';
   glow?: boolean;
+  /** Full neon rim and bloom. Keep it to the one pane per screen that matters most. */
+  lit?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   style?: CSSProperties;
 }
@@ -21,6 +21,7 @@ export default function GlassContainer({
   className = '',
   variant = 'default',
   glow = false,
+  lit = false,
   padding = 'md',
   style,
 }: GlassContainerProps) {
@@ -43,6 +44,7 @@ export default function GlassContainer({
       className={`
         relative rounded-xl overflow-hidden
         ${variantClasses[variant]}
+        ${lit ? 'glass-panel--lit' : ''}
         ${paddingClasses[padding]}
         ${className}
       `}
@@ -53,7 +55,7 @@ export default function GlassContainer({
         <div
           className="absolute -top-px left-1/2 -translate-x-1/2 w-2/3 h-px"
           style={{
-            background: 'linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.5), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.5), transparent)',
           }}
         />
       )}
@@ -64,7 +66,7 @@ export default function GlassContainer({
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse at top, rgba(0, 255, 65, 0.05) 0%, transparent 50%)',
+              'radial-gradient(ellipse at top, rgba(0, 255, 0, 0.05) 0%, transparent 50%)',
           }}
         />
       )}

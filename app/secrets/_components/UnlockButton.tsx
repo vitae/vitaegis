@@ -37,7 +37,7 @@ export default function UnlockButton() {
       >
         {busy ? 'Opening checkout…' : `Unlock for ${SECRETS_PRICE_LABEL}`}
       </button>
-      <p className="text-xs text-white/40">
+      <p className="text-xs text-white/60">
         One-time payment. One year of access. Secure checkout by Stripe.
       </p>
       {error && <p className="text-xs text-vitae-red">{error}</p>}

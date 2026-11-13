@@ -205,7 +205,7 @@ export default async function CryptoPage() {
                     {i === btc.months.length - 1 ? ' · to date' : ''}
                   </p>
                   <p className={`mt-1 text-sm font-medium ${tone(m.pct)}`}>{signed(m.pct)}</p>
-                  <p className="text-xs text-white/50">
+                  <p className="text-xs text-white/60">
                     ${Math.round(m.close).toLocaleString('en-US')}
                   </p>
                 </li>

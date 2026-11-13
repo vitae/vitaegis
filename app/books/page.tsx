@@ -44,8 +44,7 @@ export default function BooksPage() {
             tagline={
               <>
                 Ten books behind everything we build. Strategy, energy, sovereignty, and purpose,
-                mapped to{' '}
-                <PillarLinks />.
+                mapped to <PillarLinks />.
               </>
             }
           >
@@ -58,7 +57,7 @@ export default function BooksPage() {
                 <article id={b.code.toLowerCase()} className="grid gap-6 sm:grid-cols-[6rem_1fr]">
                   <div className="flex items-baseline gap-4 sm:flex-col sm:gap-2">
                     <span className="text-3xl font-light text-vitae-green">{b.code}</span>
-                    <span className="text-xs uppercase tracking-[0.2em] text-white/50">
+                    <span className="text-xs uppercase tracking-[0.2em] text-white/60">
                       {b.year}
                     </span>
                   </div>
@@ -114,7 +113,7 @@ export default function BooksPage() {
                             <p className="font-light italic text-white/90">
                               &ldquo;{q.text}&rdquo;
                             </p>
-                            <cite className="mt-1 block text-[11px] not-italic uppercase tracking-[0.2em] text-white/45">
+                            <cite className="mt-1 block text-[11px] not-italic uppercase tracking-[0.2em] text-white/60">
                               {q.source}
                             </cite>
                           </blockquote>
@@ -150,7 +149,7 @@ export default function BooksPage() {
 
           <CategoryPosts posts={morePosts} title="More in Books" className="mt-8 w-full sm:mt-10" />
 
-          <p className="mt-8 text-center text-sm font-light leading-relaxed text-white/45 sm:mt-10">
+          <p className="mt-8 text-center text-sm font-light leading-relaxed text-white/60 sm:mt-10">
             Summaries are original Vitaegis notes. Quotes are from public-domain editions.
           </p>
 

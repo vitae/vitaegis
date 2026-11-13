@@ -15,7 +15,7 @@ export const KEY_STORAGE = 'vitaegis-content-admin-key';
  */
 export const ui = {
   glass: 'glass-panel rounded-2xl',
-  label: 'text-[11px] font-semibold uppercase tracking-[0.25em] text-vitae-green',
+  label: 'text-xs font-semibold uppercase tracking-[0.25em] text-vitae-green',
   input: 'liquid-input',
   btn: 'liquid-btn',
   btnQuiet: 'liquid-btn liquid-btn--quiet',
@@ -160,7 +160,7 @@ export default function AdminShell({
               Open
             </button>
             {error && <span className="text-sm text-red-400">{error}</span>}
-            <p className="w-full text-xs text-white/40">
+            <p className="w-full text-xs text-white/60">
               The key is the CONTENT_ADMIN_KEY environment variable on Vercel. It is remembered in
               this browser only.
             </p>

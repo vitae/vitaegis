@@ -17,7 +17,7 @@ interface Message {
 }
 
 const TAG_COLORS: Record<string, string> = {
-  Zen: '#00ff9d',
+  Zen: '#00ff00',
   Stoic: '#00cfff',
   Taoist: '#a78bfa',
   Kundalini: '#f97316',
@@ -137,7 +137,7 @@ export default function ProverbsPage() {
         fontFamily: "'Courier New', monospace",
         background: '#000',
         minHeight: '100vh',
-        color: '#00ff9d',
+        color: '#00ff00',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -178,7 +178,7 @@ export default function ProverbsPage() {
             style={{
               fontSize: 10,
               letterSpacing: 8,
-              color: '#00ff9d55',
+              color: '#00ff0055',
               marginBottom: 10,
             }}
           >
@@ -193,7 +193,7 @@ export default function ProverbsPage() {
               fontFamily: 'Georgia, serif',
               textShadow: glitch
                 ? '3px 0 #ff0080, -3px 0 #00cfff'
-                : '0 0 40px #00ff9d66, 0 0 80px #00ff9d22',
+                : '0 0 40px #00ff0066, 0 0 80px #00ff0022',
               transition: 'text-shadow 0.1s',
             }}
           >
@@ -203,7 +203,7 @@ export default function ProverbsPage() {
             style={{
               fontSize: 10,
               letterSpacing: 6,
-              color: '#00ff9d44',
+              color: '#00ff0044',
               marginTop: 10,
             }}
           >
@@ -215,18 +215,18 @@ export default function ProverbsPage() {
               gap: 24,
               marginTop: 16,
               padding: '8px 24px',
-              border: '1px solid #00ff9d22',
-              background: '#00ff9d06',
+              border: '1px solid #00ff0022',
+              background: '#00ff0006',
               fontSize: 10,
               letterSpacing: 2,
             }}
           >
             <span>
-              ARCHIVE: <span style={{ color: '#00ff9d' }}>{proverbs.length} ENTRIES</span>
+              ARCHIVE: <span style={{ color: '#00ff00' }}>{proverbs.length} ENTRIES</span>
             </span>
             <span>|</span>
             <span>
-              STATUS: <span style={{ color: '#00ff9d' }}>ONLINE</span>
+              STATUS: <span style={{ color: '#00ff00' }}>ONLINE</span>
             </span>
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function ProverbsPage() {
             display: 'flex',
             gap: 2,
             marginBottom: 28,
-            borderBottom: '1px solid #00ff9d1a',
+            borderBottom: '1px solid #00ff001a',
           }}
         >
           {(
@@ -250,10 +250,10 @@ export default function ProverbsPage() {
               key={key}
               onClick={() => setView(key)}
               style={{
-                background: view === key ? '#00ff9d12' : 'transparent',
+                background: view === key ? '#00ff0012' : 'transparent',
                 border: 'none',
-                borderBottom: view === key ? '2px solid #00ff9d' : '2px solid transparent',
-                color: view === key ? '#00ff9d' : '#00ff9d44',
+                borderBottom: view === key ? '2px solid #00ff00' : '2px solid transparent',
+                color: view === key ? '#00ff00' : '#00ff0044',
                 padding: '10px 24px',
                 cursor: 'pointer',
                 fontSize: 11,
@@ -276,8 +276,8 @@ export default function ProverbsPage() {
                 overflowY: 'auto',
                 padding: 16,
                 marginBottom: 16,
-                border: '1px solid #00ff9d1a',
-                background: '#00ff9d04',
+                border: '1px solid #00ff001a',
+                background: '#00ff0004',
               }}
             >
               {messages.map((m, i) => (
@@ -295,7 +295,7 @@ export default function ProverbsPage() {
                       fontSize: 9,
                       letterSpacing: 3,
                       marginBottom: 5,
-                      color: m.role === 'user' ? '#00cfff66' : '#00ff9d33',
+                      color: m.role === 'user' ? '#00cfff66' : '#00ff0033',
                     }}
                   >
                     {m.role === 'user' ? 'YOU' : 'PROVERBS'}
@@ -304,8 +304,8 @@ export default function ProverbsPage() {
                     style={{
                       maxWidth: '88%',
                       padding: '12px 16px',
-                      background: m.role === 'user' ? '#00cfff08' : '#00ff9d08',
-                      border: `1px solid ${m.role === 'user' ? '#00cfff1a' : '#00ff9d1a'}`,
+                      background: m.role === 'user' ? '#00cfff08' : '#00ff0008',
+                      border: `1px solid ${m.role === 'user' ? '#00cfff1a' : '#00ff001a'}`,
                       fontSize: 13,
                       lineHeight: 1.75,
                       color: m.role === 'user' ? '#00cfff' : '#c0ffd8',
@@ -319,7 +319,7 @@ export default function ProverbsPage() {
               {loading && (
                 <div
                   style={{
-                    color: '#00ff9d33',
+                    color: '#00ff0033',
                     fontSize: 11,
                     letterSpacing: 3,
                     animation: 'pulse 1.2s infinite',
@@ -340,9 +340,9 @@ export default function ProverbsPage() {
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  background: '#00ff9d06',
-                  border: '1px solid #00ff9d2a',
-                  color: '#00ff9d',
+                  background: '#00ff0006',
+                  border: '1px solid #00ff002a',
+                  color: '#00ff00',
                   padding: '12px 16px',
                   fontSize: 13,
                   fontFamily: 'inherit',
@@ -353,9 +353,9 @@ export default function ProverbsPage() {
                 onClick={askOracle}
                 disabled={loading}
                 style={{
-                  background: '#00ff9d1a',
-                  border: '1px solid #00ff9d44',
-                  color: '#00ff9d',
+                  background: '#00ff001a',
+                  border: '1px solid #00ff0044',
+                  color: '#00ff00',
                   padding: '12px 16px',
                   flexShrink: 0,
                   cursor: loading ? 'not-allowed' : 'pointer',
@@ -388,8 +388,8 @@ export default function ProverbsPage() {
                   onClick={() => setInput(q)}
                   style={{
                     background: 'transparent',
-                    border: '1px solid #00ff9d1a',
-                    color: '#00ff9d44',
+                    border: '1px solid #00ff001a',
+                    color: '#00ff0044',
                     padding: '6px 12px',
                     cursor: 'pointer',
                     fontSize: 10,
@@ -420,11 +420,11 @@ export default function ProverbsPage() {
                   key={t}
                   onClick={() => setFilterTag(t)}
                   style={{
-                    background: filterTag === t ? `${TAG_COLORS[t] || '#00ff9d'}18` : 'transparent',
+                    background: filterTag === t ? `${TAG_COLORS[t] || '#00ff00'}18` : 'transparent',
                     border: `1px solid ${
-                      filterTag === t ? TAG_COLORS[t] || '#00ff9d' : '#00ff9d1a'
+                      filterTag === t ? TAG_COLORS[t] || '#00ff00' : '#00ff001a'
                     }`,
-                    color: filterTag === t ? TAG_COLORS[t] || '#00ff9d' : '#00ff9d44',
+                    color: filterTag === t ? TAG_COLORS[t] || '#00ff00' : '#00ff0044',
                     padding: '5px 12px',
                     cursor: 'pointer',
                     fontSize: 10,
@@ -440,7 +440,7 @@ export default function ProverbsPage() {
               style={{
                 fontSize: 10,
                 letterSpacing: 3,
-                color: '#00ff9d33',
+                color: '#00ff0033',
                 marginBottom: 16,
               }}
             >
@@ -452,8 +452,8 @@ export default function ProverbsPage() {
                 style={{
                   padding: 16,
                   marginBottom: 8,
-                  border: '1px solid #00ff9d0e',
-                  background: '#00ff9d03',
+                  border: '1px solid #00ff000e',
+                  background: '#00ff0003',
                   display: 'flex',
                   gap: 14,
                 }}
@@ -462,7 +462,7 @@ export default function ProverbsPage() {
                   style={{
                     width: 2,
                     alignSelf: 'stretch',
-                    background: TAG_COLORS[p.tag] || '#00ff9d',
+                    background: TAG_COLORS[p.tag] || '#00ff00',
                     flexShrink: 0,
                   }}
                 />
@@ -484,7 +484,7 @@ export default function ProverbsPage() {
                       alignItems: 'center',
                     }}
                   >
-                    <span style={{ fontSize: 11, color: '#00ff9d55' }}>
+                    <span style={{ fontSize: 11, color: '#00ff0055' }}>
                       — {p.source || 'Unknown'}
                     </span>
                     <span
@@ -492,8 +492,8 @@ export default function ProverbsPage() {
                         fontSize: 9,
                         letterSpacing: 2,
                         padding: '2px 8px',
-                        border: `1px solid ${TAG_COLORS[p.tag] || '#00ff9d'}33`,
-                        color: TAG_COLORS[p.tag] || '#00ff9d',
+                        border: `1px solid ${TAG_COLORS[p.tag] || '#00ff00'}33`,
+                        color: TAG_COLORS[p.tag] || '#00ff00',
                       }}
                     >
                       {p.tag}
@@ -503,7 +503,7 @@ export default function ProverbsPage() {
                     <div
                       style={{
                         fontSize: 11,
-                        color: '#00ff9d33',
+                        color: '#00ff0033',
                         marginTop: 6,
                         fontStyle: 'italic',
                       }}
@@ -519,7 +519,7 @@ export default function ProverbsPage() {
                 style={{
                   textAlign: 'center',
                   padding: 60,
-                  color: '#00ff9d22',
+                  color: '#00ff0022',
                   fontSize: 12,
                   letterSpacing: 3,
                 }}
@@ -536,7 +536,7 @@ export default function ProverbsPage() {
             marginTop: 48,
             fontSize: 9,
             letterSpacing: 6,
-            color: '#00ff9d1a',
+            color: '#00ff001a',
           }}
         >
           VITAEGIS · HEALTH · STEALTH · WEALTH
@@ -545,10 +545,10 @@ export default function ProverbsPage() {
 
       <style>{`
         * { box-sizing: border-box; }
-        input::placeholder { color: #00ff9d2a; }
+        input::placeholder { color: #00ff002a; }
         button:hover { opacity: 0.8; }
         ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: #00ff9d1a; }
+        ::-webkit-scrollbar-thumb { background: #00ff001a; }
         @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
       `}</style>
     </div>

@@ -48,12 +48,12 @@ interface Post {
 }
 
 const TONE: Record<string, string> = {
-  draft: 'text-white/50',
+  draft: 'text-white/60',
   ready: 'text-vitae-green',
   approved: 'text-vitae-green',
   publishing: 'text-vitae-green',
   published: 'text-white',
-  rejected: 'text-white/40',
+  rejected: 'text-white/60',
   failed: 'text-red-400',
 };
 
@@ -242,7 +242,7 @@ function Body({ adminKey }: { adminKey: string }) {
       </div>
 
       {posts.length === 0 && (
-        <p className="mt-10 text-sm font-light text-white/50">
+        <p className="mt-10 text-sm font-light text-white/60">
           {filter === 'needs'
             ? 'Nothing waiting. Send something from the Shortcut or post a research brief.'
             : 'Nothing here.'}
@@ -263,12 +263,12 @@ function Body({ adminKey }: { adminKey: string }) {
           return (
             <article key={p.id} className={`${ui.glass} p-5 sm:p-7`}>
               <header className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className={`${ui.label} ${TONE[p.status] ?? 'text-white/50'}`}>
+                <span className={`${ui.label} ${TONE[p.status] ?? 'text-white/60'}`}>
                   {p.status} ·{' '}
                   {p.media_kind === 'slides' ? `${p.media_urls?.length ?? 0} slides` : p.media_kind}
                   {p.ai_disclosure ? '' : ' · original'}
                 </span>
-                <span className="text-xs text-white/40">
+                <span className="text-xs text-white/60">
                   {p.published_at
                     ? `published ${hst(p.published_at)}`
                     : `created ${hst(p.created_at)}`}
@@ -276,7 +276,7 @@ function Body({ adminKey }: { adminKey: string }) {
               </header>
 
               {p.source && (
-                <p className="mt-3 text-xs text-white/50">
+                <p className="mt-3 text-xs text-white/60">
                   <span className="uppercase tracking-[0.2em] text-white/30">
                     from {p.source.kind}
                   </span>
@@ -324,7 +324,7 @@ function Body({ adminKey }: { adminKey: string }) {
                       href={drive[0]}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs text-white/40 hover:text-white"
+                      className="text-xs text-white/60 hover:text-white"
                     >
                       Drive archive ↗
                     </a>
@@ -368,7 +368,7 @@ function Body({ adminKey }: { adminKey: string }) {
                   : (['default'] as const)
                 ).map((k) => (
                   <label key={k} className="block">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                       {k}
                     </span>
                     <textarea
@@ -383,7 +383,7 @@ function Body({ adminKey }: { adminKey: string }) {
                 {!editable && (
                   <button
                     onClick={() => setOpen((o) => ({ ...o, [p.id]: !showAll }))}
-                    className="text-xs text-white/40 hover:text-white"
+                    className="text-xs text-white/60 hover:text-white"
                   >
                     {showAll ? 'Hide per-platform copy' : 'Show per-platform copy and job log'}
                   </button>
@@ -415,7 +415,7 @@ function Body({ adminKey }: { adminKey: string }) {
               {(editable || showAll) && p.jobs?.length > 0 && (
                 <ul className="mt-4 space-y-1 border-t border-white/5 pt-3">
                   {p.jobs.map((j) => (
-                    <li key={j.id} className="text-xs text-white/40">
+                    <li key={j.id} className="text-xs text-white/60">
                       <span className="text-white/25">{hst(j.updated_at)}</span> · {j.kind} →{' '}
                       <span
                         className={

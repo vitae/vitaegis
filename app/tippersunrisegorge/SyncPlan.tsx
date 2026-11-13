@@ -52,7 +52,7 @@ export default function SyncPlan() {
       <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
         {rows.map(({ t, mode, what }) => (
           <div key={t.n} className="grid gap-2 py-3 sm:grid-cols-[4rem_7rem_1fr] sm:items-center">
-            <a href={`#t${t.n}`} className="font-mono text-sm text-white/50 hover:text-white">
+            <a href={`#t${t.n}`} className="font-mono text-sm text-white/60 hover:text-white">
               T{t.n} · {mmss(t.at)}
             </a>
             <span
@@ -62,7 +62,7 @@ export default function SyncPlan() {
             </span>
             <div className="min-w-0">
               <div className="font-semibold">
-                {t.frm} <span className="text-white/40">→</span> {t.to}
+                {t.frm} <span className="text-white/60">→</span> {t.to}
               </div>
               <div className="text-sm font-light text-white/70">{what}</div>
             </div>

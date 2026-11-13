@@ -58,18 +58,18 @@ function LegCard({ leg, now }: { leg: Leg; now: Date }) {
     <div className="rounded-xl border border-white/10 p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-lg font-semibold text-white">{cfg.label}</h3>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
           Route 14 ·{' '}
           {data?.updated ? `updated ${data.updated}` : error ? 'live feed offline' : 'loading'}
         </span>
       </div>
-      <p className="mt-1 text-xs font-light text-white/55">
+      <p className="mt-1 text-xs font-light text-white/60">
         Board at {cfg.board.name}. Get off at {cfg.alight.name}.
       </p>
 
       <ul className="mt-4 space-y-2">
         {live.length === 0 && (
-          <li className="text-sm font-light text-white/50">
+          <li className="text-sm font-light text-white/60">
             {error
               ? 'No live data right now. Scheduled times below.'
               : 'No more Route 14 buses listed today.'}
@@ -97,17 +97,17 @@ function LegCard({ leg, now }: { leg: Leg; now: Date }) {
       </ul>
 
       <div className="mt-4 border-t border-white/10 pt-3">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">Timetable · next up</p>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">Timetable · next up</p>
         <ul className="mt-2 space-y-1 text-sm">
           {sched.length === 0 && (
-            <li className="font-light text-white/50">
+            <li className="font-light text-white/60">
               Done for today. First bus tomorrow is below.
             </li>
           )}
           {sched.map((d) => (
             <li key={d.board} className="flex flex-wrap gap-x-3 text-white/80">
               <span className="w-20 font-medium text-white">{clock12(d.board)}</span>
-              <span className="text-white/50">→ {clock12(d.alight)}</span>
+              <span className="text-white/60">→ {clock12(d.alight)}</span>
               <span className="text-vitae-green/80">
                 {d.minutesAway <= 0 ? 'now' : `in ${d.minutesAway} min`}
               </span>
@@ -119,7 +119,7 @@ function LegCard({ leg, now }: { leg: Leg; now: Date }) {
         href={`http://hea.thebus.org/nextbus.asp?s=${cfg.board.id}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 inline-block text-[11px] uppercase tracking-[0.2em] text-white/40 hover:text-vitae-green"
+        className="mt-3 inline-block text-[11px] uppercase tracking-[0.2em] text-white/60 hover:text-vitae-green"
       >
         Open stop {cfg.board.id} on TheBus HEA ↗
       </a>
@@ -141,7 +141,7 @@ export default function BusTracker() {
     <section className={`${glass} p-6 sm:p-8`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className={label}>Route 14 · Elks Club ↔ Whole Foods Kahala</h2>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
           Honolulu time · refreshes every 30 s
         </span>
       </div>
@@ -187,7 +187,7 @@ export default function BusTracker() {
               {(['toKahala', 'toWaikiki'] as Leg[]).map((leg) => (
                 <div key={leg}>
                   <p className="text-xs font-semibold text-white">{LEGS[leg].label}</p>
-                  <p className="text-[11px] text-white/45">
+                  <p className="text-[11px] text-white/60">
                     leaves {LEGS[leg].board.name.split(' (')[0]} → arrives{' '}
                     {LEGS[leg].alight.name.split(' (')[0]}
                   </p>
@@ -195,14 +195,14 @@ export default function BusTracker() {
                     {fullTimetable(leg, day).map(([b, a]) => (
                       <li key={b} className="flex justify-between text-white/80">
                         <span className="font-medium text-white">{clock12(b)}</span>
-                        <span className="text-white/45">{clock12(a)}</span>
+                        <span className="text-white/60">{clock12(a)}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               ))}
             </div>
-            <p className="mt-4 text-[11px] font-light text-white/40">
+            <p className="mt-4 text-[11px] font-light text-white/60">
               {FEED_NOTE}. Holidays run the Sunday table.
             </p>
           </div>

@@ -5,11 +5,14 @@ import { Analytics } from '@vercel/analytics/next';
 import GlassNav from '@/components/GlassNav';
 import NoZoom from '@/components/NoZoom';
 import VitaeOrb from '@/components/vitae/VitaeOrb';
+import PointerGlow from '@/components/PointerGlow';
 
 export const metadata: Metadata = {
-  title: 'VITAEGIS | Health • Stealth • Wealth',
+  metadataBase: new URL('https://www.vitaegis.com'),
+  title: { default: 'VITAEGIS | Health • Stealth • Wealth', template: '%s' },
+  alternates: { canonical: '/' },
   description:
-    'Ancient wisdom meets Cyberspirituality. Evolve your energy with  Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
+    'Ancient wisdom meets Cyberspirituality. Evolve your energy with Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
   keywords: [
     'Vitaegis',
     'Center for Inner Peace',
@@ -37,6 +40,8 @@ export const metadata: Metadata = {
     description:
       'Ancient wisdom meets Cyberspirituality. Evolve your energy with Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
     type: 'website',
+    siteName: 'VITAEGIS',
+    url: '/',
   },
   twitter: {
     card: 'summary_large_image',
@@ -59,18 +64,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="scroll-smooth">
       <head>
-        {/* Preconnect for performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Jost font - closest free alternative to Futura */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-        {/* JetBrains Mono for the Kalshi HUD. Linked here, not through next/font, so the build never fetches Google Fonts. */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap"
-          rel="stylesheet"
+          rel="preload"
+          href="/fonts/jost-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
         {/* iOS PWA settings */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -84,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <VitaeOrb />
         <GlassNav />
         <NoZoom />
+        <PointerGlow />
         <SpeedInsights />
         <Analytics />
       </body>

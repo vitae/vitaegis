@@ -81,8 +81,9 @@ export default function SexFuPage() {
             Sex Fu
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-light text-white/70">
-            Mantak Chia&apos;s Taoist approach to her pleasure. Men are fire: quick to light, quick to
-            burn out. Women are water: slow to heat, and hot for longer. So slow down and let it build.
+            Mantak Chia&apos;s Taoist approach to her pleasure. Men are fire: quick to light, quick
+            to burn out. Women are water: slow to heat, and hot for longer. So slow down and let it
+            build.
           </p>
         </header>
 
@@ -105,10 +106,13 @@ export default function SexFuPage() {
 
         <section className="mt-10">
           <h2 className={label}>Her own practice</h2>
-          <p className="mt-2 font-light text-white/50">From The Multi-Orgasmic Woman</p>
+          <p className="mt-2 font-light text-white/60">From The Multi-Orgasmic Woman</p>
           <ul className="mt-4 grid gap-4 sm:grid-cols-3">
             {herPractice.map((p) => (
-              <li key={p} className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5 font-light leading-relaxed text-white/80">
+              <li
+                key={p}
+                className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5 font-light leading-relaxed text-white/80"
+              >
                 {p}
               </li>
             ))}
@@ -120,9 +124,9 @@ export default function SexFuPage() {
           and The Multi-Orgasmic Woman.
         </p>
 
-        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/45">
-          A Vitaegis summary of Mantak Chia&apos;s teachings, for education only. Not affiliated with
-          or endorsed by Mantak Chia or his publishers. Not medical advice.
+        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/60">
+          A Vitaegis summary of Mantak Chia&apos;s teachings, for education only. Not affiliated
+          with or endorsed by Mantak Chia or his publishers. Not medical advice.
         </p>
       </div>
     </main>

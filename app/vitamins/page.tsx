@@ -164,7 +164,7 @@ export default function VitaminsPage() {
                 className="rounded-xl border border-vitae-green/30 bg-vitae-green/[0.04] p-5"
               >
                 <p className={label}>{s.slot}</p>
-                <p className="mt-1 text-sm font-light text-white/50">{s.hint}</p>
+                <p className="mt-1 text-sm font-light text-white/60">{s.hint}</p>
                 <ul className="mt-4 divide-y divide-white/10">
                   {s.items.map((i) => (
                     <li key={i} className="py-2 font-medium">
@@ -212,7 +212,7 @@ export default function VitaminsPage() {
                     <h3 className="text-xl font-medium">{item.name}</h3>
                     <span className={label}>{item.dose}</span>
                   </div>
-                  <p className="mt-1 text-white/50">{item.product}</p>
+                  <p className="mt-1 text-white/60">{item.product}</p>
                   <dl className="mt-4 space-y-2">
                     <div className="grid grid-cols-[3.5rem_1fr] gap-x-2">
                       <dt className={`${label} pt-1`}>Why</dt>
@@ -237,7 +237,7 @@ export default function VitaminsPage() {
           </ol>
         </section>
 
-        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/45">
+        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/60">
           Personal reference, not medical advice. Doses reflect one regimen. Check with a doctor or
           pharmacist before copying it, especially with any prescription medication, a kidney
           condition, or blood thinners.

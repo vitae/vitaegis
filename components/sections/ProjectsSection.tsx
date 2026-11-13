@@ -1,6 +1,3 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { HiArrowRight } from 'react-icons/hi';
 import ProjectGrid from '@/components/ProjectGrid';
@@ -12,35 +9,9 @@ import SectionTitle from '@/components/SectionTitle';
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 export default function ProjectsSection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.querySelectorAll('.reveal').forEach((el, i) => {
-              setTimeout(() => {
-                el.classList.add('revealed');
-              }, i * 80);
-            });
-          }
-        });
-      },
-      { threshold: 0.15 },
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
       id="projects"
-      ref={sectionRef}
       className="relative flex flex-col items-center py-10 text-center sm:py-14"
     >
       <div
@@ -56,7 +27,7 @@ export default function ProjectsSection() {
 
         <Link
           href="/projects"
-          className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 glass-panel glass-panel--hover mt-8 sm:mt-10 inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white min-h-[44px]"
+          className="reveal glass-panel glass-panel--hover mt-8 sm:mt-10 inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white min-h-[44px]"
         >
           View all projects
           <HiArrowRight size={16} />

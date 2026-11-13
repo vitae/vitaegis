@@ -103,7 +103,7 @@ export default function LineChart({
   };
 
   if (!view) {
-    return <p className="py-14 text-center text-sm text-white/40">Waiting for the first quote.</p>;
+    return <p className="py-14 text-center text-sm text-white/60">Waiting for the first quote.</p>;
   }
 
   const h = hover !== null ? points[hover] : null;
@@ -240,11 +240,11 @@ export default function LineChart({
           className="pointer-events-none absolute top-2 rounded-lg border border-white/15 bg-black/85 px-3 py-2 text-xs backdrop-blur"
           style={{ left: `min(max(${tipLeft}%, 0%), calc(100% - 11rem))`, width: '10.5rem' }}
         >
-          <p className="text-white/50">{tip.title}</p>
+          <p className="text-white/60">{tip.title}</p>
           {tip.rows.map((r) => (
             <p key={r.label} className="mt-0.5 flex items-baseline justify-between gap-3">
               <span className="text-sm font-medium text-white">{r.value}</span>
-              <span className="text-white/50">{r.label}</span>
+              <span className="text-white/60">{r.label}</span>
             </p>
           ))}
         </div>

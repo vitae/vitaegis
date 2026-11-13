@@ -102,7 +102,7 @@ function Inner({
               key={i}
               className={`text-sm ${l.role === 'agent' ? 'text-white/85' : 'text-[#00ff00]/80'}`}
             >
-              <span className="mr-2 text-[10px] uppercase tracking-[0.2em] text-white/40">
+              <span className="mr-2 text-xs uppercase tracking-[0.2em] text-white/60">
                 {l.role === 'agent' ? 'Vitae' : 'You'}
               </span>
               {l.text}

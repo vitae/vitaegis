@@ -124,7 +124,7 @@ export default function FilterMap() {
         10–60 s so the next track&apos;s bass creeps in.
       </p>
       <KnobTimeline />
-      <p className="mt-2 text-xs font-light text-white/50">
+      <p className="mt-2 text-xs font-light text-white/60">
         White line = estimated knob position; numbers = tracks. Bright bands sit at a track change
         (likely his hand); faint bands are mid-track and may be the production itself.
       </p>
@@ -139,12 +139,12 @@ export default function FilterMap() {
             <div className="min-w-0">
               <div className="text-lg font-semibold">
                 {mmss(m.start)}{' '}
-                <span className="text-[15px] font-light text-white/50">{m.track}</span>
+                <span className="text-[15px] font-light text-white/60">{m.track}</span>
               </div>
               <div className="font-light" style={{ color: m.side === 'right' ? GREEN : MAGENTA }}>
                 {describe(m)}
               </div>
-              <div className="text-sm font-light text-white/50">
+              <div className="text-sm font-light text-white/60">
                 {m.near}{' '}
                 {Math.abs(m.dist) <= 5
                   ? 'at the change'
@@ -162,13 +162,13 @@ export default function FilterMap() {
         <ul className="mt-3 space-y-1 text-sm font-light">
           {rest.map((m) => (
             <li key={`${m.side}-${m.start}`}>
-              <span className="font-mono text-white/50">{mmss(m.start)}</span> {m.track}:{' '}
+              <span className="font-mono text-white/60">{mmss(m.start)}</span> {m.track}:{' '}
               <span style={{ color: m.side === 'right' ? GREEN : MAGENTA }}>{describe(m)}</span>
             </li>
           ))}
         </ul>
       </details>
-      <p className="mt-4 text-xs font-light text-white/40">
+      <p className="mt-4 text-xs font-light text-white/60">
         Read from the audio: a filter built into a track sounds the same as one on the mixer, so
         treat these as likely moves.
       </p>

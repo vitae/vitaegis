@@ -70,7 +70,7 @@ interface Brief {
 }
 
 const TONE: Record<string, string> = {
-  queued: 'text-white/50',
+  queued: 'text-white/60',
   extracting: 'text-vitae-green',
   done: 'text-white',
   ready: 'text-vitae-green',
@@ -258,7 +258,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
           <p className={label}>Add a source</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block sm:col-span-2">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                 YouTube, article or paper URL
               </span>
               <input
@@ -270,7 +270,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
               />
             </label>
             <label className="block sm:col-span-2">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                 or a PDF (book, paper — up to 50 MB)
               </span>
               <input
@@ -283,7 +283,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
             </label>
             {!file && !url.trim() && (
               <label className="block sm:col-span-2">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                   or paste text
                 </span>
                 <textarea
@@ -295,7 +295,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
               </label>
             )}
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                 Title (optional)
               </span>
               <input
@@ -305,7 +305,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
               />
             </label>
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                 Author (optional)
               </span>
               <input
@@ -316,7 +316,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
             </label>
             {(file || url.trim()) && (
               <label className="block sm:col-span-2">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                   What to look for (optional)
                 </span>
                 <input
@@ -345,7 +345,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
             <button disabled={!canAdd} onClick={addSource} className={btn}>
               {busy === 'add' ? 'Uploading…' : 'Read it'}
             </button>
-            <span className="text-xs text-white/40">
+            <span className="text-xs text-white/60">
               Extraction runs in the background; this list refreshes itself.
             </span>
           </div>
@@ -366,20 +366,20 @@ function Desk({ adminKey: key }: { adminKey: string }) {
         {tab === 'sources' && (
           <div className="mt-6 space-y-4">
             {sources.length === 0 && (
-              <p className="text-sm font-light text-white/50">Nothing read yet.</p>
+              <p className="text-sm font-light text-white/60">Nothing read yet.</p>
             )}
             {sources.map((s) => (
               <article key={s.id} className={`${glass} p-5`}>
                 <header className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
-                    <span className={`${label} ${TONE[s.status] ?? 'text-white/50'}`}>
+                    <span className={`${label} ${TONE[s.status] ?? 'text-white/60'}`}>
                       {s.status}
                     </span>
-                    <span className="ml-3 text-[10px] uppercase tracking-[0.2em] text-white/40">
+                    <span className="ml-3 text-[10px] uppercase tracking-[0.2em] text-white/60">
                       {KIND_LABEL[s.kind]}
                     </span>
                   </div>
-                  <span className="text-xs text-white/40">{when(s.created_at)}</span>
+                  <span className="text-xs text-white/60">{when(s.created_at)}</span>
                 </header>
                 <h3 className="mt-2 text-lg font-semibold text-white">
                   {s.title || s.url || (s.kind === 'text' ? 'Pasted text' : 'Untitled')}
@@ -403,7 +403,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
                     </span>
                   ))}
                   {s.status === 'done' && (
-                    <span className="text-xs text-white/50">{s.findings_count} items pulled</span>
+                    <span className="text-xs text-white/60">{s.findings_count} items pulled</span>
                   )}
                 </div>
                 {s.error && <p className="mt-3 text-sm text-red-400">{s.error}</p>}
@@ -481,7 +481,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
             </div>
             <div className="mt-6 space-y-3">
               {shownFindings.length === 0 && (
-                <p className="text-sm font-light text-white/50">Nothing here yet.</p>
+                <p className="text-sm font-light text-white/60">Nothing here yet.</p>
               )}
               {shownFindings.map((f) => (
                 <article key={f.id} className={`${glass} p-4`}>
@@ -491,12 +491,12 @@ function Desk({ adminKey: key }: { adminKey: string }) {
                     </span>
                     {f.topic && <span className={pill(true)}>{f.topic}</span>}
                     {f.strength && (
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                         {f.strength}
                       </span>
                     )}
                     {f.location && (
-                      <span className="text-[10px] tracking-[0.1em] text-white/40">
+                      <span className="text-[10px] tracking-[0.1em] text-white/60">
                         {f.location}
                       </span>
                     )}
@@ -506,7 +506,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
                   >
                     {f.kind === 'quote' ? `“${f.text}”` : f.text}
                   </p>
-                  {f.evidence && <p className="mt-1 text-xs text-white/55">{f.evidence}</p>}
+                  {f.evidence && <p className="mt-1 text-xs text-white/60">{f.evidence}</p>}
                   {f.source && (
                     <p className="mt-2 text-xs text-vitae-green/70">
                       — {f.source.title || f.source.url || 'Untitled'}
@@ -523,7 +523,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
           <div className="mt-6">
             <div className={`${glass} p-5`}>
               <p className={label}>Build a brief</p>
-              <p className="mt-2 text-xs text-white/50">
+              <p className="mt-2 text-xs text-white/60">
                 Collates every quote and finding tagged with the topic, ranks what recurs across
                 sources, keeps the best quotes.
               </p>
@@ -551,20 +551,20 @@ function Desk({ adminKey: key }: { adminKey: string }) {
 
             <div className="mt-6 space-y-5">
               {briefs.length === 0 && (
-                <p className="text-sm font-light text-white/50">No briefs yet.</p>
+                <p className="text-sm font-light text-white/60">No briefs yet.</p>
               )}
               {briefs.map((b) => (
                 <article key={b.id} className={`${glass} p-5 sm:p-7`}>
                   <header className="flex flex-wrap items-baseline justify-between gap-2">
                     <div>
-                      <span className={`${label} ${TONE[b.status] ?? 'text-white/50'}`}>
+                      <span className={`${label} ${TONE[b.status] ?? 'text-white/60'}`}>
                         {b.status}
                       </span>
-                      <span className="ml-3 text-[10px] uppercase tracking-[0.2em] text-white/40">
+                      <span className="ml-3 text-[10px] uppercase tracking-[0.2em] text-white/60">
                         {b.topic}
                       </span>
                     </div>
-                    <span className="text-xs text-white/40">{when(b.created_at)}</span>
+                    <span className="text-xs text-white/60">{when(b.created_at)}</span>
                   </header>
                   {b.title && <h3 className="mt-3 text-2xl font-bold text-white">{b.title}</h3>}
                   {b.hook && <p className="mt-1 text-sm text-vitae-green">{b.hook}</p>}
@@ -574,7 +574,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
                       {b.key_findings.map((f, i) => (
                         <li key={i} className="text-sm text-white/90">
                           <span className="text-vitae-green">{i + 1}.</span> {f.claim}{' '}
-                          <span className="text-xs text-white/50">
+                          <span className="text-xs text-white/60">
                             · {f.recurrence} source{f.recurrence === 1 ? '' : 's'} · {f.evidence}
                           </span>
                         </li>
@@ -586,7 +586,7 @@ function Desk({ adminKey: key }: { adminKey: string }) {
                       {b.quotes.map((q, i) => (
                         <p key={i} className="text-sm italic text-white">
                           “{q.text}”{' '}
-                          <span className="not-italic text-xs text-white/50">
+                          <span className="not-italic text-xs text-white/60">
                             — {q.author || q.source}
                           </span>
                         </p>

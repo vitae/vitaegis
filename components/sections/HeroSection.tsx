@@ -1,147 +1,75 @@
-'use client';
-
 import Link from 'next/link';
-
-import { useRef, useState, useEffect, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import { PILLAR_COLORS } from '@/lib/pillars';
 import GlassContainer from '@/components/GlassContainer';
 import LogoGlow from '@/components/LogoGlow';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   VITAEGIS - HeroSection Component
-   Instagram-Level Polish with Native iOS Feel
+   VITAEGIS - HeroSection
+   Server-rendered. The entrance is CSS only, so the mark is on screen with the first
+   paint instead of waiting for JavaScript.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
+const PILLARS = [
+  ['/health', 'HEALTH', PILLAR_COLORS.health],
+  ['/stealth', 'STEALTH', PILLAR_COLORS.stealth],
+  ['/wealth', 'WEALTH', PILLAR_COLORS.wealth],
+] as const;
+
 export default function HeroSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
-  const [primaryPressed, setPrimaryPressed] = useState(false);
-
-  // Intersection observer for fade-in animation
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setHasBeenVisible(true);
-          }
-        });
-      },
-      { rootMargin: '100px 0px', threshold: 0.1 },
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       id="hero"
       className="relative flex min-h-screen flex-col items-center justify-center text-center"
       style={{ minHeight: 'calc(100svh - var(--nav-top) - var(--nav-bottom) - var(--sab))' }}
     >
-      {/* Content container with safe area padding and global alignment */}
-      <div
-        className="section-container flex flex-col items-center justify-center mx-auto"
-        style={{ width: '100%' }}
-      >
-        {/* The mark: lit green glass with lightning running through it */}
-        <h1
-          className={`
-            w-[min(92vw,720px)] mb-3 sm:mb-4
-            transition-all duration-700
-            ${hasBeenVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}
-          `}
-          style={{ transitionDelay: '200ms' }}
-        >
+      <div className="section-container">
+        <h1 className="mb-3 w-[min(92vw,720px)] sm:mb-4">
           <LogoGlow />
         </h1>
 
-        {/* Animated underline */}
         <div
-          className={`
-            w-24 sm:w-32 h-px mb-4 sm:mb-6
-            transition-all duration-500
-            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-          `}
-          style={{
-            transitionDelay: '300ms',
-            background: 'linear-gradient(90deg, transparent, #00ff00, transparent)',
-          }}
+          className="hero-in mb-4 h-px w-24 sm:mb-6 sm:w-32"
+          style={
+            {
+              '--d': '300ms',
+              background: 'linear-gradient(90deg, transparent, #00ff00, transparent)',
+            } as CSSProperties
+          }
         />
 
-        {/* Glassmorphic content card */}
         <GlassContainer
           variant="default"
           glow
+          lit
           padding="lg"
-          className={`
-            w-full
-            transition-all duration-500
-            ${hasBeenVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-          `}
-          style={{ transitionDelay: '400ms' }}
+          className="hero-in w-full max-w-3xl"
+          style={{ '--d': '400ms' } as CSSProperties}
         >
-          {/* Three rows, one gap: descriptor, pillars, call to action */}
           <div className="flex w-full flex-col items-center gap-5 sm:gap-6">
-            {/* Brand descriptor */}
-            <p className="text-sm sm:text-lg md:text-xl text-[#00ff00] text-center tracking-[0.2em] uppercase">
+            <p className="text-center text-sm uppercase tracking-[0.2em] text-vitae-green sm:text-lg md:text-xl">
               Center for Inner Peace
             </p>
 
-            {/* Pillars: three equal columns spanning the card, one word centred in each */}
             <div className="grid w-full grid-cols-3 items-center">
-              {(
-                [
-                  ['/health', 'HEALTH', PILLAR_COLORS.health],
-                  ['/stealth', 'STEALTH', PILLAR_COLORS.stealth],
-                  ['/wealth', 'WEALTH', PILLAR_COLORS.wealth],
-                ] as const
-              ).map(([href, label, color]) => (
+              {PILLARS.map(([href, label, color]) => (
                 <Link
                   key={href}
                   href={href}
                   style={{ '--pc': color } as CSSProperties}
-                  className="block text-center whitespace-nowrap text-base sm:text-2xl md:text-3xl lg:text-4xl font-light text-[color:var(--pc)] tracking-[0.1em] sm:tracking-[0.2em] transition-colors hover:text-white focus-visible:text-white"
+                  className="block whitespace-nowrap text-center text-base font-light tracking-[0.1em] text-[color:var(--pc)] transition-colors hover:text-white focus-visible:text-white sm:text-2xl sm:tracking-[0.2em] md:text-3xl lg:text-4xl"
                 >
                   {label}
                 </Link>
               ))}
             </div>
 
-            {/* CTA Buttons with touch feedback */}
-            <div className="flex w-full flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              {/* Primary CTA */}
-              <button
-                onClick={() =>
-                  document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
-                }
-                onTouchStart={() => setPrimaryPressed(true)}
-                onTouchEnd={() => setPrimaryPressed(false)}
-                onMouseDown={() => setPrimaryPressed(true)}
-                onMouseUp={() => setPrimaryPressed(false)}
-                onMouseLeave={() => setPrimaryPressed(false)}
-                className="
-                  w-full sm:w-auto
-                  px-5 sm:px-6 py-3
-                  bg-[#00ff00] text-black
-                  font-medium text-sm sm:text-base
-                  rounded-lg
-                  min-h-[44px]
-                  transition-all duration-200
-                "
-                style={{
-                  transform: primaryPressed ? 'scale(0.97)' : 'scale(1)',
-                  boxShadow: primaryPressed ? 'none' : '0 0 20px rgba(0, 255, 0, 0.5)',
-                }}
-              >
-                ENTER VITAEGIS
-              </button>
-            </div>
+            <a
+              href="#about"
+              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-6 py-3 text-sm font-medium tracking-[0.08em] text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none sm:w-auto sm:text-base"
+            >
+              ENTER VITAEGIS
+            </a>
           </div>
         </GlassContainer>
       </div>

@@ -42,7 +42,7 @@ export function LegalPage({
             {title}
           </h1>
           <p className="mt-6 text-lg font-light leading-relaxed text-white/70">{intro}</p>
-          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-white/40">
+          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-white/60">
             Last updated {updated}
           </p>
         </header>

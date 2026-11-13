@@ -33,7 +33,7 @@ export default function VitaePage() {
             )}
           </GlassContainer>
 
-          <p className="mt-8 max-w-md text-xs text-white/40 sm:mt-10">
+          <p className="mt-8 max-w-md text-xs text-white/60 sm:mt-10">
             Vitae is an AI. It can open pages, start a checkout after you say yes, and subscribe
             your email. Conversations are handled by ElevenLabs and are not stored by vitaegis.com.
           </p>

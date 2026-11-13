@@ -51,7 +51,7 @@ export default function WholeFoodsPage() {
           <Checklist />
         </div>
 
-        <p className="mt-16 text-center text-xs font-light text-white/40">
+        <p className="mt-16 text-center text-xs font-light text-white/60">
           Saved in this browser only. Checkout and payment happen in your Amazon account, never
           here. Pair it with the{' '}
           <Link href="/vitamins" className="text-vitae-green/80 hover:text-vitae-green">

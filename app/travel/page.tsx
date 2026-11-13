@@ -146,13 +146,13 @@ export default function TravelRadarPage() {
                       </span>
                     )}
                   </h3>
-                  <p className="mt-1 text-sm font-light text-white/55">
+                  <p className="mt-1 text-sm font-light text-white/60">
                     Shortest track: HNL → {nearest.to}
                     {nearest.via ? ` via ${nearest.via.join(', ')}` : ''} ·{' '}
                     {legMiles(airports, nearest).toLocaleString('en-US')} mi flown
                   </p>
                   <p className="mt-2 font-light leading-relaxed text-white/70">{s.blurb}</p>
-                  <p className="mt-4 text-xs uppercase tracking-[0.18em] text-white/45">
+                  <p className="mt-4 text-xs uppercase tracking-[0.18em] text-white/60">
                     HNL · {codes.join(' · ')}
                   </p>
                   <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1">
@@ -179,7 +179,7 @@ export default function TravelRadarPage() {
           </ol>
         </section>
 
-        <footer className="mt-16 text-center text-sm font-light text-white/40">
+        <footer className="mt-16 text-center text-sm font-light text-white/60">
           <p className="mx-auto max-w-3xl">
             Every track originates at Honolulu on Alaska Airlines, Hawaiian, American or a oneworld
             / Mileage Plan partner. Tracks are typical scheduled routings, not live traffic. Fares

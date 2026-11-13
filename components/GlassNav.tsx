@@ -121,9 +121,9 @@ export default function GlassNav() {
           {menuOpen && (
             <div
               id="projects-sheet"
-              className="absolute inset-x-2 bottom-full mb-2 max-h-[calc(100dvh-6.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#050805] p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] md:right-auto md:left-1/2 md:w-96 md:-translate-x-1/2"
+              className="sheet-in absolute inset-x-2 bottom-full mb-2 max-h-[calc(100dvh-6.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#050805] p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] md:right-auto md:left-1/2 md:w-96 md:-translate-x-1/2"
             >
-              <p className="px-3 pt-2 pb-1 text-left text-[0.65rem] tracking-[0.3em] text-vitae-green/80">
+              <p className="px-3 pt-2 pb-1 text-left text-xs tracking-[0.3em] text-vitae-green/80">
                 PROJECTS
               </p>
               {projects.map((project) => {
@@ -143,7 +143,7 @@ export default function GlassNav() {
                       <span className="truncate text-sm font-medium leading-tight">
                         {project.title}
                       </span>
-                      <span className="text-[0.6rem] tracking-[0.2em] text-white/40">
+                      <span className="text-xs tracking-[0.15em] text-white/60">
                         {project.label}
                       </span>
                     </span>
@@ -154,7 +154,7 @@ export default function GlassNav() {
                 <Link
                   href="/projects"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center justify-center min-h-[44px] rounded-xl border border-vitae-green/30 px-2 text-[0.65rem] uppercase tracking-[0.2em] text-vitae-green hover:bg-vitae-green/10 active:bg-vitae-green/10"
+                  className="flex items-center justify-center min-h-[44px] rounded-xl border border-vitae-green/30 px-2 text-xs uppercase tracking-[0.2em] text-vitae-green hover:bg-vitae-green/10 active:bg-vitae-green/10"
                 >
                   All projects
                 </Link>
@@ -165,7 +165,7 @@ export default function GlassNav() {
                       document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' });
                     else router.push('/#projects');
                   }}
-                  className="flex items-center justify-center min-h-[44px] rounded-xl border border-white/10 px-2 text-[0.65rem] uppercase tracking-[0.2em] text-white/70 hover:bg-white/5 active:bg-white/10"
+                  className="flex items-center justify-center min-h-[44px] rounded-xl border border-white/10 px-2 text-xs uppercase tracking-[0.2em] text-white/70 hover:bg-white/5 active:bg-white/10"
                 >
                   Home section
                 </button>
@@ -209,7 +209,7 @@ export default function GlassNav() {
                       <span className="absolute inset-x-1 inset-y-1 rounded-xl bg-vitae-green/10" />
                     )}
                     <Icon size={22} className="relative z-10 shrink-0" />
-                    <span className="relative z-10 flex items-center gap-1 truncate text-[9px] md:text-[10px] font-medium tracking-wide">
+                    <span className="relative z-10 flex items-center gap-1 truncate text-[10px] font-medium sm:text-xs sm:tracking-wide">
                       {item.label}
                       {isProjects && (
                         <HiChevronUp

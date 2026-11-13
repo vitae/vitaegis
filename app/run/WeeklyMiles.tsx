@@ -133,7 +133,7 @@ export default function WeeklyMiles({ weeks }: { weeks: WeekBucket[] }) {
         />
       </svg>
 
-      <figcaption className="mt-1 flex justify-between text-[11px] uppercase tracking-[0.18em] text-white/50">
+      <figcaption className="mt-1 flex justify-between text-[11px] uppercase tracking-[0.18em] text-white/60">
         <span>miles · week of</span>
         <span className="tabular-nums text-white/80">
           {active

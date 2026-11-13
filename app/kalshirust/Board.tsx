@@ -246,7 +246,7 @@ export default function Board() {
                       className="glass-panel flex justify-between gap-3 rounded-xl p-3 text-sm"
                     >
                       <span className="text-vitae-red">{e.message}</span>
-                      <span className="shrink-0 text-xs text-white/40">{hst(e.at, true)}</span>
+                      <span className="shrink-0 text-xs text-white/60">{hst(e.at, true)}</span>
                     </li>
                   ))}
                 </ul>
@@ -254,7 +254,7 @@ export default function Board() {
             )}
           </>
         )}
-        {!data && !error && <p className="mt-8 text-sm text-white/50">Loading…</p>}
+        {!data && !error && <p className="mt-8 text-sm text-white/60">Loading…</p>}
 
         <p className="mt-12 text-xs text-white/35">
           Bot → Supabase → this page, refreshed every 5 s. Times are Honolulu.
@@ -290,14 +290,14 @@ function Pill({
   const { ring, dot } = PILL_TONES[tone];
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 ${on ? ring : 'border-white/15 text-white/50'}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 ${on ? ring : 'border-white/15 text-white/60'}`}
     >
       <span
         className={`inline-block h-2 w-2 rounded-full ${on ? dot : 'bg-white/30'} ${pulse ? kalshiStyles.pulse : ''}`}
         aria-hidden
       />
       {label}
-      {detail && <span className="text-white/40">{detail}</span>}
+      {detail && <span className="text-white/60">{detail}</span>}
     </span>
   );
 }
@@ -483,10 +483,10 @@ function Controls({
         </form>
       )}
       {err && <p className="text-xs text-vitae-red">{err}</p>}
-      <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
+      <p className="max-w-xs text-[11px] leading-snug text-white/60 sm:text-right">
         RUN starts the bot on the VPS; STOP sends it a clean shutdown. Changes take up to 10 s.
       </p>
-      <p className="max-w-xs text-[11px] leading-snug text-white/45 sm:text-right">
+      <p className="max-w-xs text-[11px] leading-snug text-white/60 sm:text-right">
         NORMAL: one trade a window of 15% of the balance ($5 max), checked with 5, 4, 3 and 1 min
         left: a 25¢+ rise over the prior minute into 30–49¢ or 66–82¢, only in the direction BTC
         moved over the prior hour, never while its price is falling. Live trading pauses for the UTC
@@ -542,11 +542,11 @@ function NowPanel({
   return (
     <section className="mt-8" aria-labelledby="now-heading">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 id="now-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+        <h2 id="now-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
           Now
         </h2>
         {Number.isFinite(closeMs) && (
-          <p className="text-xs text-white/45">
+          <p className="text-xs text-white/60">
             Window opens {clockSeconds(closeMs - WINDOW_SECS * 1000)} HST · closes{' '}
             {clockSeconds(closeMs)} HST · settlement engine arms at +13:30
           </p>
@@ -569,10 +569,10 @@ function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
   return (
     <section className="mt-8" aria-labelledby="window-heading">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 id="window-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+        <h2 id="window-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
           Per window
         </h2>
-        <p className="text-xs text-white/45">
+        <p className="text-xs text-white/60">
           Every 15-minute window the bot watched to its close, traded or not. P&amp;L is its settled
           trades on that window, after fees.
         </p>
@@ -613,7 +613,7 @@ function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
       </div>
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[860px] text-left text-sm">
-          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/60">
             <tr>
               <Th>Closed</Th>
               <Th>Ticker</Th>
@@ -627,7 +627,7 @@ function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={7} className="px-4 py-6 text-center text-white/60">
                   No windows closed yet.
                 </td>
               </tr>
@@ -635,13 +635,13 @@ function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
             {rows.map((w) => (
               <tr key={w.ticker} className="border-t border-white/10 text-white/80">
                 <Td>
-                  <span className="text-white/50">{hst(w.closedAt, true)}</span>
+                  <span className="text-white/60">{hst(w.closedAt, true)}</span>
                 </Td>
                 <Td>
                   <TickerLink ticker={w.ticker} />
                 </Td>
                 <Td right>
-                  {usd(w.settled)} <span className="text-white/40">vs</span> {usd(w.strike)}
+                  {usd(w.settled)} <span className="text-white/60">vs</span> {usd(w.strike)}
                 </Td>
                 <Td>
                   <span
@@ -650,7 +650,7 @@ function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
                         ? 'text-vitae-green'
                         : w.outcome === 'NO'
                           ? 'text-vitae-red'
-                          : 'text-white/40'
+                          : 'text-white/60'
                     }
                   >
                     {w.outcome ?? '—'}
@@ -665,7 +665,7 @@ function PerWindow({ windows, mode }: { windows: Windows; mode: RustMode }) {
                 <Td
                   right
                   className={
-                    w.trades === 0 || w.pnlCents == null ? 'text-white/40' : tone(w.pnlCents)
+                    w.trades === 0 || w.pnlCents == null ? 'text-white/60' : tone(w.pnlCents)
                   }
                 >
                   {w.trades === 0
@@ -700,7 +700,7 @@ function Stat({
 }) {
   return (
     <div className="glass-panel rounded-xl p-4">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">{label}</p>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">{label}</p>
       <p
         className={`mt-2 truncate text-2xl font-semibold ${toneClass}`}
         style={{ fontVariantNumeric: 'normal' }}
@@ -709,7 +709,7 @@ function Stat({
         {href ? <ExternalLink href={href}>{value}</ExternalLink> : value}
         {badge}
       </p>
-      {sub && <p className="mt-1 text-xs text-white/40">{sub}</p>}
+      {sub && <p className="mt-1 text-xs text-white/60">{sub}</p>}
     </div>
   );
 }
@@ -722,7 +722,7 @@ const ExternalLink = ({ href, children }: { href: string; children: React.ReactN
     className="underline decoration-white/25 underline-offset-4 hover:decoration-vitae-green"
   >
     {children}
-    <span className="ml-1 text-[0.7em] text-white/45" aria-hidden>
+    <span className="ml-1 text-[0.7em] text-white/60" aria-hidden>
       ↗
     </span>
   </a>
@@ -762,10 +762,10 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
   return (
     <section className="mt-10" aria-labelledby="snipe-heading">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 id="snipe-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+        <h2 id="snipe-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
           Snipe list · YES picks
         </h2>
-        <p className="max-w-2xl text-xs text-white/45">
+        <p className="max-w-2xl text-xs text-white/60">
           Every open Kalshi Bitcoin price market, scanned each minute. Listed only if YES keeps a
           75%+ win chance and {SNIPE_EDGE_CENTS}¢ of edge after fees, with the BTC trend not against
           it, at low, normal and high volatility, most expected profit first. These are model
@@ -775,7 +775,7 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
       </div>
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[1040px] text-left text-sm">
-          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+          <thead className="text-[10px] uppercase tracking-[0.2em] text-white/60">
             <tr>
               <Th>Market and entry</Th>
               <Th right>Closes in</Th>
@@ -791,7 +791,7 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={9} className="px-4 py-6 text-center text-white/60">
                   No YES picks clear the bar right now.
                 </td>
               </tr>
@@ -805,12 +805,12 @@ function SnipeList({ rows, now }: { rows: WatchRow[]; now: number }) {
                 <tr key={w.ticker} className="border-t border-white/10 text-white/80">
                   <Td>
                     <span className="text-white">{w.title ?? w.ticker}</span>
-                    {w.subtitle && <span className="ml-2 text-xs text-white/45">{w.subtitle}</span>}
-                    <TickerLink ticker={w.ticker} className="ml-2 text-[10px] text-white/50" />
+                    {w.subtitle && <span className="ml-2 text-xs text-white/60">{w.subtitle}</span>}
+                    <TickerLink ticker={w.ticker} className="ml-2 text-[10px] text-white/60" />
                     {w.note && (
-                      <p className="mt-1 max-w-xl text-xs leading-snug text-white/55">{w.note}</p>
+                      <p className="mt-1 max-w-xl text-xs leading-snug text-white/60">{w.note}</p>
                     )}
-                    <p className="mt-1 text-[10px] text-white/40">
+                    <p className="mt-1 text-[10px] text-white/60">
                       Re-checks in {Math.max(0, 60 - Math.round((now - Date.parse(w.at)) / 1000))} s
                     </p>
                   </Td>
@@ -860,7 +860,7 @@ function Charts({ history }: { history: Summary['history'] }) {
   return (
     <section className="mt-10 grid gap-4 lg:grid-cols-2" aria-label="Model against market">
       <div className="glass-panel rounded-2xl p-4">
-        <p className="text-xs uppercase tracking-[0.2em] text-white/50">Model P(UP)</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-white/60">Model P(UP)</p>
         <div className="mt-3">
           <LineChart
             points={model}
@@ -880,7 +880,7 @@ function Charts({ history }: { history: Summary['history'] }) {
         </div>
       </div>
       <div className="glass-panel rounded-2xl p-4">
-        <p className="text-xs uppercase tracking-[0.2em] text-white/50">Market YES ask</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-white/60">Market YES ask</p>
         <div className="mt-3">
           <LineChart
             points={market}
@@ -910,17 +910,17 @@ function KalshiRecords({ check }: { check: ExchangeCheck | null }) {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2
           id="kalshi-records-heading"
-          className="text-sm uppercase tracking-[0.2em] text-white/50"
+          className="text-sm uppercase tracking-[0.2em] text-white/60"
         >
           Kalshi&apos;s records
         </h2>
-        <p className="max-w-xl text-xs text-white/45">
+        <p className="max-w-xl text-xs text-white/60">
           Real-money P&amp;L from Kalshi&apos;s own fills and settlements, checked against the
           bot&apos;s numbers. Published when something changes, and at least hourly.
         </p>
       </div>
       {check == null ? (
-        <p className="glass-panel mt-3 rounded-2xl px-4 py-5 text-sm text-white/45">
+        <p className="glass-panel mt-3 rounded-2xl px-4 py-5 text-sm text-white/60">
           No check yet. It runs only while the bot is live.
         </p>
       ) : (
@@ -992,7 +992,7 @@ function Trades({
   const rows = trades.slice(0, TRADE_ROWS);
   return (
     <section className="mt-10" aria-labelledby="trades-heading">
-      <h2 id="trades-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+      <h2 id="trades-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
         {allPaper ? `${TRADE_ROWS} TRADE PAPER RUN` : `${TRADE_ROWS} TRADE RUN`}
       </h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-4 lg:grid-cols-8">
@@ -1053,7 +1053,7 @@ function Trades({
       )}
       <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
         <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="text-[10px] uppercase tracking-[0.15em] text-white/40">
+          <thead className="text-[10px] uppercase tracking-[0.15em] text-white/60">
             <tr>
               <Th>Time</Th>
               <Th right>P&amp;L</Th>
@@ -1066,7 +1066,7 @@ function Trades({
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-white/40">
+                <td colSpan={8} className="px-4 py-6 text-center text-white/60">
                   No trades yet.
                 </td>
               </tr>
@@ -1074,10 +1074,10 @@ function Trades({
             {rows.map((t) => (
               <tr key={t.id} className="border-t border-white/10 text-white/80">
                 <Td title={hst(t.at, true)}>
-                  <span className="text-white/50">{clock(Date.parse(t.at))}</span>
+                  <span className="text-white/60">{clock(Date.parse(t.at))}</span>
                   {!allPaper && (
                     <span
-                      className={`ml-1.5 text-[9px] uppercase tracking-[0.15em] ${t.live ? 'text-vitae-green' : 'text-white/40'}`}
+                      className={`ml-1.5 text-[9px] uppercase tracking-[0.15em] ${t.live ? 'text-vitae-green' : 'text-white/60'}`}
                     >
                       {t.live ? 'live' : 'paper'}
                     </span>
@@ -1086,7 +1086,7 @@ function Trades({
                 <Td right className={tone(t.pnlCents)}>
                   {t.pnlCents == null ? '—' : signedDollars(t.pnlCents)}
                   {t.pnlCents != null && t.costCents != null && t.costCents > 0 && (
-                    <span className="ml-1 text-[10px] text-white/45">
+                    <span className="ml-1 text-[10px] text-white/60">
                       {t.pnlCents >= 0 ? '+' : '−'}
                       {pct(Math.abs(t.pnlCents) / (t.costCents + (t.feeCents ?? 0)), 0)}
                     </span>
@@ -1096,13 +1096,13 @@ function Trades({
                   {t.result ? (
                     <ResultPill result={t.result} side={t.side} />
                   ) : (
-                    <span className="text-white/40">{pendingText(t.closeTime, now)}</span>
+                    <span className="text-white/60">{pendingText(t.closeTime, now)}</span>
                   )}
                 </Td>
                 <Td>
                   <TickerLink ticker={t.ticker} />
                   <span
-                    className={`ml-1.5 text-[10px] ${t.source === 'sniper' ? 'text-vitae-cyan' : 'text-white/40'}`}
+                    className={`ml-1.5 text-[10px] ${t.source === 'sniper' ? 'text-vitae-cyan' : 'text-white/60'}`}
                   >
                     {t.source === 'shadow'
                       ? 'shadow'
@@ -1145,7 +1145,7 @@ const EntryCell = ({ t }: { t: Prediction }) => (
       {t.side?.toUpperCase() ?? '—'}
     </span>{' '}
     {cents(t.priceCents)}
-    <span className="ml-1 text-white/40">×{t.count ?? '—'}</span>
+    <span className="ml-1 text-white/60">×{t.count ?? '—'}</span>
   </Td>
 );
 
@@ -1154,11 +1154,11 @@ const PredictionCells = ({ t }: { t: Prediction }) => (
   <>
     <Td right title={`fee ${dollars(t.feeCents)} · max win ${dollars(t.maxWinCents)}`}>
       {dollars(t.costCents)}
-      <span className="block text-[10px] text-white/40">+{dollars(t.feeCents)} fee</span>
+      <span className="block text-[10px] text-white/60">+{dollars(t.feeCents)} fee</span>
     </Td>
     <Td right title={`model ${pct(t.modelProb, 1)} · EV ${signedDollars(t.evCents)}`}>
       {cents(t.edgeCents, 1)}
-      <span className="block text-[10px] text-white/40">
+      <span className="block text-[10px] text-white/60">
         {pct(t.pWin)} vs {pct(t.marketPWin)}
       </span>
     </Td>
@@ -1182,13 +1182,13 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
   return (
     <section className="mt-10" aria-labelledby="backtest-heading">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 id="backtest-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+        <h2 id="backtest-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
           Backtest{trades.length > 0 && `: last ${totals.trades} settled windows`}
         </h2>
-        {ranAt && <p className="text-xs text-white/45">Ran {hst(ranAt, true)}. Fees included.</p>}
+        {ranAt && <p className="text-xs text-white/60">Ran {hst(ranAt, true)}. Fees included.</p>}
       </div>
       {trades.length === 0 ? (
-        <p className="mt-3 text-sm text-white/50">
+        <p className="mt-3 text-sm text-white/60">
           No backtest yet. Run{' '}
           <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs">
             cargo run --release --bin backtest
@@ -1231,7 +1231,7 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
             <div className="glass-panel rounded-2xl p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/50">Equity curve</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/60">Equity curve</p>
               <div className="mt-3">
                 <LineChart
                   points={points}
@@ -1254,7 +1254,7 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
             </div>
             <div className="glass-panel overflow-x-auto rounded-2xl">
               <table className="w-full text-left text-sm">
-                <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                <thead className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                   <tr>
                     <Th>Entry price</Th>
                     <Th right>Trades</Th>
@@ -1279,7 +1279,7 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
           </div>
           <div className="glass-panel mt-4 overflow-x-auto rounded-2xl">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="text-[10px] uppercase tracking-[0.15em] text-white/40">
+              <thead className="text-[10px] uppercase tracking-[0.15em] text-white/60">
                 <tr>
                   <Th>Close</Th>
                   <Th>Window</Th>
@@ -1294,7 +1294,7 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
                 {newestFirst.map((t: BacktestTrade) => (
                   <tr key={t.id} className="border-t border-white/10 text-white/80">
                     <Td>
-                      <span className="text-white/50">{hst(t.at, true)}</span>
+                      <span className="text-white/60">{hst(t.at, true)}</span>
                     </Td>
                     <Td>
                       <TickerLink ticker={t.ticker} />
@@ -1305,13 +1305,13 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
                       {t.result ? (
                         <ResultPill result={t.result} side={t.side} />
                       ) : (
-                        <span className="text-white/40">—</span>
+                        <span className="text-white/60">—</span>
                       )}
                     </Td>
                     <Td right className={tone(t.pnlCents)}>
                       {t.pnlCents == null ? '—' : signedDollars(t.pnlCents)}
                     </Td>
-                    <Td className="text-xs text-white/50">{t.note ?? ''}</Td>
+                    <Td className="text-xs text-white/60">{t.note ?? ''}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -1326,7 +1326,7 @@ function Backtest({ backtest }: { backtest: BacktestSummary }) {
 function Research() {
   return (
     <section className="mt-10" aria-labelledby="research-heading">
-      <h2 id="research-heading" className="text-sm uppercase tracking-[0.2em] text-white/50">
+      <h2 id="research-heading" className="text-sm uppercase tracking-[0.2em] text-white/60">
         What the research says
       </h2>
       <ol className="glass-panel mt-4 list-decimal space-y-2 rounded-2xl p-5 pl-9 text-sm text-white/70">

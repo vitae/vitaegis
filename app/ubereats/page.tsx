@@ -268,7 +268,7 @@ export default function UberEatsPage() {
           </p>
         </section>
 
-        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/45">
+        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/60">
           Uber Eats is a trademark of Uber Technologies, Inc. Vitaegis is not affiliated with Uber.
           Platform rules change; confirm current terms in the Uber Driver app.
         </p>

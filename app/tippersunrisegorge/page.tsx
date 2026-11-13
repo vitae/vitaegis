@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 const BANDCAMP = 'https://tipper.bandcamp.com/album/sunrise-at-the-gorge-2';
 const NUNU = 'https://nunu.tips/shows';
 
-const label = 'text-[11px] font-semibold uppercase tracking-[0.25em] text-white/50';
+const label = 'text-[11px] font-semibold uppercase tracking-[0.25em] text-white/60';
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
 
@@ -117,7 +117,7 @@ function Timeline() {
           </text>
         ))}
       </svg>
-      <figcaption className="mt-2 text-xs font-light text-white/50">
+      <figcaption className="mt-2 text-xs font-light text-white/60">
         Bar height = measured BPM, colour = Camelot key, dashed = beatless passage. Ticks under the
         bars mark each change: <span className="text-[#00FF00]">green = blend</span>,{' '}
         <span className="text-[#FF0000]">red = cut</span>.
@@ -130,7 +130,7 @@ function Stat({ value, text }: { value: string; text: string }) {
   return (
     <div className="border-l border-[#00FF00]/40 pl-4">
       <div className="text-3xl font-light text-[#00FF00]">{value}</div>
-      <div className="mt-1 text-xs uppercase tracking-[0.2em] text-white/50">{text}</div>
+      <div className="mt-1 text-xs uppercase tracking-[0.2em] text-white/60">{text}</div>
     </div>
   );
 }
@@ -138,7 +138,7 @@ function Stat({ value, text }: { value: string; text: string }) {
 function TrackRow({ t }: { t: SetTrack }) {
   return (
     <tr className="border-t border-white/10">
-      <td className="py-2 pr-3 text-white/40">{t.pos}</td>
+      <td className="py-2 pr-3 text-white/60">{t.pos}</td>
       <td className="py-2 pr-3 font-mono text-white/60">{mmss(t.start)}</td>
       <td className="py-2 pr-3">{t.title}</td>
       <td className="py-2 pr-3 whitespace-nowrap">
@@ -146,10 +146,10 @@ function TrackRow({ t }: { t: SetTrack }) {
           className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
           style={{ background: keyColor(t.camelot) }}
         />
-        {t.camelot} <span className="text-white/50">{t.key}</span>
+        {t.camelot} <span className="text-white/60">{t.key}</span>
       </td>
       <td className="py-2 text-right font-mono text-white/80">
-        {t.beatless ? <span className="text-white/40">beatless</span> : t.bpm}
+        {t.beatless ? <span className="text-white/60">beatless</span> : t.bpm}
       </td>
     </tr>
   );
@@ -160,11 +160,11 @@ function TransitionCard({ tr }: { tr: SetTransition }) {
     <article id={`t${tr.n}`} className="grid gap-4 py-8 sm:grid-cols-[6rem_1fr]">
       <div className="flex items-baseline gap-3 sm:flex-col sm:gap-1">
         <span className="text-2xl font-light text-[#00FF00]">T{tr.n}</span>
-        <span className="font-mono text-sm text-white/50">{mmss(tr.at)}</span>
+        <span className="font-mono text-sm text-white/60">{mmss(tr.at)}</span>
       </div>
       <div className="min-w-0">
         <h3 className="text-xl font-semibold leading-snug">
-          {tr.frm} <span className="text-white/40">→</span> {tr.to}
+          {tr.frm} <span className="text-white/60">→</span> {tr.to}
         </h3>
         <p className="mt-1 text-sm font-light text-white/60">
           {tr.keys} · {tr.move} · {tr.tempo || 'tempo n/a'}

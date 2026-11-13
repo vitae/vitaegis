@@ -83,7 +83,7 @@ function Stat({
     <div
       className={`${ui.glass} p-4 transition-colors ${href ? 'hover:border-vitae-green/50' : ''}`}
     >
-      <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">{label}</p>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">{label}</p>
       <p className={`mt-2 text-3xl font-bold tabular-nums ${tone}`}>{value}</p>
     </div>
   );
@@ -126,7 +126,7 @@ function Body({ adminKey }: { adminKey: string }) {
   }, [load]);
 
   if (error) return <p className="mt-8 text-sm text-red-400">{error}</p>;
-  if (!data) return <p className="mt-8 text-sm text-white/50">Loading…</p>;
+  if (!data) return <p className="mt-8 text-sm text-white/60">Loading…</p>;
 
   const workerStale = data.jobs.last
     ? Date.now() - new Date(data.jobs.last.updated_at).getTime() > 15 * 60_000
@@ -184,7 +184,7 @@ function Body({ adminKey }: { adminKey: string }) {
         <div className={`${ui.glass} mt-3 overflow-x-auto p-4`}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-white/40">
+              <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-white/60">
                 <th className="pb-2 font-normal">Platform</th>
                 <th className="pb-2 font-normal">Account</th>
                 <th className="pb-2 text-right font-normal">7d</th>
@@ -209,7 +209,7 @@ function Body({ adminKey }: { adminKey: string }) {
                       ) : (
                         <a
                           href={`/api/social/connect/${a.platform}?key=${encodeURIComponent(adminKey)}`}
-                          className="text-white/40 hover:text-white"
+                          className="text-white/60 hover:text-white"
                         >
                           ○ connect
                         </a>
@@ -232,18 +232,18 @@ function Body({ adminKey }: { adminKey: string }) {
           <p className={ui.label}>Recently published</p>
           <Link
             href="/admin/content?status=published"
-            className="text-xs text-white/50 hover:text-vitae-green"
+            className="text-xs text-white/60 hover:text-vitae-green"
           >
             Full history →
           </Link>
         </div>
         <div className="mt-3 space-y-2">
           {data.recent.length === 0 && (
-            <p className="text-sm text-white/50">Nothing published yet.</p>
+            <p className="text-sm text-white/60">Nothing published yet.</p>
           )}
           {data.recent.map((r) => (
             <div key={r.id} className={`${ui.glass} flex flex-wrap items-center gap-3 px-4 py-3`}>
-              <span className="w-28 shrink-0 text-xs text-white/40">{hst(r.published_at)}</span>
+              <span className="w-28 shrink-0 text-xs text-white/60">{hst(r.published_at)}</span>
               <span className="min-w-0 flex-1 truncate text-sm text-white/80">
                 {r.caption || '(no caption)'}
               </span>
@@ -312,7 +312,7 @@ function Body({ adminKey }: { adminKey: string }) {
             <ul className="mt-4 space-y-1 border-t border-white/5 pt-3">
               {data.jobs.failedList.map((j) => (
                 <li key={j.id} className="text-xs text-red-300">
-                  <span className="text-white/40">{hst(j.updated_at)}</span> · {j.kind}
+                  <span className="text-white/60">{hst(j.updated_at)}</span> · {j.kind}
                   {j.post_id && (
                     <>
                       {' · '}

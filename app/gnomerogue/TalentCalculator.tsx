@@ -89,17 +89,31 @@ function Arrow({ from, to, lit }: { from: Talent; to: Talent; lit: boolean }) {
   const tc = cellCorner(to.tier, to.col);
   const color = lit ? 'bg-vitae-green' : 'bg-white/20';
   const orientation = sameRow ? (goesLeft ? 'left' : 'right') : 'bottom';
-  const headX = tc.x + CELL / 2 - HEAD / 2 + (orientation === 'right' ? -CELL / 2 : orientation === 'left' ? CELL / 2 : 0);
+  const headX =
+    tc.x +
+    CELL / 2 -
+    HEAD / 2 +
+    (orientation === 'right' ? -CELL / 2 : orientation === 'left' ? CELL / 2 : 0);
   const headY = tc.y - HEAD / 2 + (orientation === 'bottom' ? 0 : CELL / 2);
   const headColor = lit ? 'border-t-vitae-green' : 'border-t-white/20';
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
-      {hw > 0 && <span className={`absolute ${color}`} style={{ left: hx, top: hy, width: hw, height: SHAFT }} />}
+      {hw > 0 && (
+        <span
+          className={`absolute ${color}`}
+          style={{ left: hx, top: hy, width: hw, height: SHAFT }}
+        />
+      )}
       {vh > 0 && (
         <span
           className={`absolute ${color}`}
-          style={{ left: base.x + CELL / 2 - SHAFT / 2, top: base.y + (sameCol ? CELL : CELL / 2 + SHAFT / 2), width: SHAFT, height: vh }}
+          style={{
+            left: base.x + CELL / 2 - SHAFT / 2,
+            top: base.y + (sameCol ? CELL : CELL / 2 + SHAFT / 2),
+            width: SHAFT,
+            height: vh,
+          }}
         />
       )}
       <span
@@ -107,7 +121,12 @@ function Arrow({ from, to, lit }: { from: Talent; to: Talent; lit: boolean }) {
         style={{
           left: headX,
           top: headY,
-          transform: orientation === 'left' ? 'rotate(90deg)' : orientation === 'right' ? 'rotate(-90deg)' : undefined,
+          transform:
+            orientation === 'left'
+              ? 'rotate(90deg)'
+              : orientation === 'right'
+                ? 'rotate(-90deg)'
+                : undefined,
         }}
       />
     </div>
@@ -140,15 +159,22 @@ function TooltipBody({ tip }: { tip: Tip }) {
           {r}
         </p>
       ))}
-      <p className="mt-2 whitespace-pre-line text-sm font-light leading-relaxed text-[#ffd100]">{text(tip.description)}</p>
+      <p className="mt-2 whitespace-pre-line text-sm font-light leading-relaxed text-[#ffd100]">
+        {text(tip.description)}
+      </p>
       {tip.next && (
         <>
           <p className="mt-2 text-sm text-white/70">Next rank:</p>
-          <p className="whitespace-pre-line text-sm font-light leading-relaxed text-[#ffd100]">{text(tip.next)}</p>
+          <p className="whitespace-pre-line text-sm font-light leading-relaxed text-[#ffd100]">
+            {text(tip.next)}
+          </p>
         </>
       )}
       {tip.footer.map((f) => (
-        <p key={f.text} className={`mt-2 text-sm ${f.kind === 'learn' ? 'text-vitae-green' : 'text-red-400'}`}>
+        <p
+          key={f.text}
+          className={`mt-2 text-sm ${f.kind === 'learn' ? 'text-vitae-green' : 'text-red-400'}`}
+        >
           {f.text}
         </p>
       ))}
@@ -200,16 +226,25 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
       };
       if (!withFooter) return tip;
       if (rank > 0 || available(trees, build, tree, idx)) {
-        tip.footer.push({ kind: 'learn', text: rank < t.max ? 'Click to learn' : 'Right click to unlearn' });
+        tip.footer.push({
+          kind: 'learn',
+          text: rank < t.max ? 'Click to learn' : 'Right click to unlearn',
+        });
         return tip;
       }
       if (!tierUnlocked(trees, build, tree, idx)) {
-        tip.footer.push({ kind: 'locked', text: `Requires ${t.tier * TIER_POINTS} points in ${trees[tree].name}` });
+        tip.footer.push({
+          kind: 'locked',
+          text: `Requires ${t.tier * TIER_POINTS} points in ${trees[tree].name}`,
+        });
       }
       const missing = prereqMissing(trees, build, tree, idx);
       if (missing > 0) {
         const p = trees[tree].talents[prereqIndex(trees, tree, idx)];
-        tip.footer.push({ kind: 'locked', text: `Requires ${missing} point${missing === 1 ? '' : 's'} in ${p.name}` });
+        tip.footer.push({
+          kind: 'locked',
+          text: `Requires ${missing} point${missing === 1 ? '' : 's'} in ${p.name}`,
+        });
       }
       return tip;
     },
@@ -219,7 +254,12 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
   const showTip = (el: HTMLElement, tip: Tip) => {
     const r = el.getBoundingClientRect();
     const below = r.top < 260;
-    setTip({ tip, x: Math.min(r.right + 6, window.innerWidth - 300), y: below ? r.bottom + 6 : r.top - 6, below });
+    setTip({
+      tip,
+      x: Math.min(r.right + 6, window.innerWidth - 300),
+      y: below ? r.bottom + 6 : r.top - 6,
+      below,
+    });
   };
 
   const onEnter = (tree: number, idx: number) => (e: SyntheticEvent<HTMLElement>) => {
@@ -248,13 +288,16 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
   const level = requiredLevel(trees, build);
   const split = trees.map((_, i) => treePoints(trees, build, i));
   const activePreset =
-    presets.find((p) => p.build.every((tree, ti) => tree.talents.every((t, i) => t.rank === build.alloc[ti][i])))?.name ?? null;
+    presets.find((p) =>
+      p.build.every((tree, ti) => tree.talents.every((t, i) => t.rank === build.alloc[ti][i])),
+    )?.name ?? null;
 
   return (
     <section className="mt-12">
       <h2 className={`${label} text-center`}>Talent calculator</h2>
-      <p className="mt-2 text-center text-sm font-light text-white/50">
-        Click a talent to learn it, right click to unlearn. The link saves your build, and it opens in the Warcraft Tavern calculator too.
+      <p className="mt-2 text-center text-sm font-light text-white/60">
+        Click a talent to learn it, right click to unlearn. The link saves your build, and it opens
+        in the Warcraft Tavern calculator too.
       </p>
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
@@ -306,16 +349,29 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
         </div>
       </div>
 
-      <p className="mt-4 text-center text-4xl font-light tracking-[0.1em] text-white">{split.join(' / ')}</p>
+      <p className="mt-4 text-center text-4xl font-light tracking-[0.1em] text-white">
+        {split.join(' / ')}
+      </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {trees.map((tree, ti) => (
-          <div key={tree.name} className="mx-auto w-full max-w-[280px] rounded-2xl border border-vitae-green/25 bg-white/[0.03] backdrop-blur-lg">
+          <div
+            key={tree.name}
+            className="mx-auto w-full max-w-[280px] rounded-2xl border border-vitae-green/25 bg-white/[0.03] backdrop-blur-lg"
+          >
             <div className="flex h-14 items-center justify-between border-b border-vitae-green/25 px-4">
               <div className="flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={icon(treeIcons[tree.name] ?? tree.talents[0].icon)} alt="" width={24} height={24} className="rounded border border-vitae-green/40" />
-                <h3 className="text-sm font-medium uppercase tracking-[0.15em] text-white">{tree.name}</h3>
+                <img
+                  src={icon(treeIcons[tree.name] ?? tree.talents[0].icon)}
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="rounded border border-vitae-green/40"
+                />
+                <h3 className="text-sm font-medium uppercase tracking-[0.15em] text-white">
+                  {tree.name}
+                </h3>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-light text-vitae-green">{split[ti]}</span>
@@ -324,17 +380,30 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
                   onClick={() => change(resetTree(trees, build, ti))}
                   title={`Reset ${tree.name}`}
                   aria-label={`Reset ${tree.name}`}
-                  className="grid h-6 w-6 place-items-center rounded-full border border-white/20 text-xs text-white/50 transition hover:border-red-400 hover:text-red-400"
+                  className="grid h-6 w-6 place-items-center rounded-full border border-white/20 text-xs text-white/60 transition hover:border-red-400 hover:text-red-400"
                 >
                   ✕
                 </button>
               </div>
             </div>
-            <div className="relative mx-auto" style={{ width: PAD * 2 + COLS * CELL + (COLS - 1) * GAP, height: PAD * 2 + ROWS * CELL + (ROWS - 1) * GAP }}>
+            <div
+              className="relative mx-auto"
+              style={{
+                width: PAD * 2 + COLS * CELL + (COLS - 1) * GAP,
+                height: PAD * 2 + ROWS * CELL + (ROWS - 1) * GAP,
+              }}
+            >
               {tree.talents.map((t, idx) => {
                 const p = prereqIndex(trees, ti, idx);
                 if (p < 0) return null;
-                return <Arrow key={`${t.name}-arrow`} from={tree.talents[p]} to={t} lit={available(trees, build, ti, idx) || build.alloc[ti][idx] > 0} />;
+                return (
+                  <Arrow
+                    key={`${t.name}-arrow`}
+                    from={tree.talents[p]}
+                    to={t}
+                    lit={available(trees, build, ti, idx) || build.alloc[ti][idx] > 0}
+                  />
+                );
               })}
               {tree.talents.map((t, idx) => {
                 const rank = build.alloc[ti][idx];
@@ -358,7 +427,12 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
                     className={`absolute rounded-md border outline-none transition ${
                       hovered === k ? 'ring-2 ring-white/70' : ''
                     } ${maxed ? 'border-[#ffd100]' : open ? 'border-vitae-green' : 'border-white/15'}`}
-                    style={{ left: cellCorner(t.tier, t.col).x, top: cellCorner(t.tier, t.col).y, width: CELL, height: CELL }}
+                    style={{
+                      left: cellCorner(t.tier, t.col).x,
+                      top: cellCorner(t.tier, t.col).y,
+                      width: CELL,
+                      height: CELL,
+                    }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -371,7 +445,11 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
                     />
                     <span
                       className={`absolute -bottom-1.5 -right-1.5 rounded border bg-black px-1 text-[10px] font-semibold leading-4 ${
-                        maxed ? 'border-[#ffd100] text-[#ffd100]' : open ? 'border-vitae-green text-vitae-green' : 'border-white/20 text-white/40'
+                        maxed
+                          ? 'border-[#ffd100] text-[#ffd100]'
+                          : open
+                            ? 'border-vitae-green text-vitae-green'
+                            : 'border-white/20 text-white/60'
                       }`}
                     >
                       {rank}/{t.max}
@@ -386,13 +464,17 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
 
       <div className="mt-8 rounded-2xl border border-vitae-green/25 bg-white/[0.03] p-5 backdrop-blur-lg">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-sm font-medium uppercase tracking-[0.15em] text-white">Talent order</h3>
+          <h3 className="text-sm font-medium uppercase tracking-[0.15em] text-white">
+            Talent order
+          </h3>
           <span className={label}>
             {totalPoints(trees, build)} of {MAX_POINTS}
           </span>
         </div>
         {groups.length === 0 ? (
-          <p className="mt-3 text-sm font-light text-white/50">No talents yet. Click a talent above or pick a build.</p>
+          <p className="mt-3 text-sm font-light text-white/60">
+            No talents yet. Click a talent above or pick a build.
+          </p>
         ) : (
           <div className="mt-4 flex flex-wrap gap-2">
             {groups.map((g, i) => {
@@ -411,16 +493,29 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={icon(t.icon)} alt={t.name} width={22} height={22} className="rounded border border-vitae-green/40" />
-                  <span className="text-white/80">{g.levelEnd > g.levelStart ? `${g.levelStart} - ${g.levelEnd}` : g.levelStart}</span>
+                  <img
+                    src={icon(t.icon)}
+                    alt={t.name}
+                    width={22}
+                    height={22}
+                    className="rounded border border-vitae-green/40"
+                  />
+                  <span className="text-white/80">
+                    {g.levelEnd > g.levelStart ? `${g.levelStart} - ${g.levelEnd}` : g.levelStart}
+                  </span>
                 </div>
               );
             })}
           </div>
         )}
-        <p className="mt-4 text-xs font-light text-white/40">
+        <p className="mt-4 text-xs font-light text-white/60">
           Level {levelFor(1)} is the first point and level {levelFor(MAX_POINTS)} the last.{' '}
-          <a href={`${tavernUrl}#?t=${encoded}`} target="_blank" rel="noopener noreferrer" className="underline decoration-vitae-green/40 underline-offset-4 hover:text-vitae-green">
+          <a
+            href={`${tavernUrl}#?t=${encoded}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-vitae-green/40 underline-offset-4 hover:text-vitae-green"
+          >
             Open this build in the Warcraft Tavern calculator
           </a>
           .
@@ -431,7 +526,11 @@ export default function TalentCalculator({ trees, presets, tavernUrl }: Props) {
         <div
           role="tooltip"
           className="pointer-events-none fixed z-50 w-[290px] max-w-[calc(100vw-16px)] rounded-xl border border-vitae-green/60 bg-black/95 p-4 text-left shadow-[0_0_30px_rgba(0,255,0,0.25)]"
-          style={{ left: Math.max(8, tip.x), top: tip.y, transform: tip.below ? undefined : 'translateY(-100%)' }}
+          style={{
+            left: Math.max(8, tip.x),
+            top: tip.y,
+            transform: tip.below ? undefined : 'translateY(-100%)',
+          }}
         >
           <TooltipBody tip={tip.tip} />
         </div>

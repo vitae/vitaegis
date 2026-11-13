@@ -36,11 +36,11 @@ function Group({ group }: { group: MenuGroup }) {
               <span className="font-medium text-white">{item.name}</span>
               <span aria-hidden className="mb-1 flex-1 border-b border-dotted border-white/20" />
               <span className="whitespace-nowrap tabular-nums">
-                {item.was && <s className="mr-2 text-sm text-white/40">{item.was}</s>}
+                {item.was && <s className="mr-2 text-sm text-white/60">{item.was}</s>}
                 {item.price && <span className="font-semibold text-vitae-green">{item.price}</span>}
               </span>
             </div>
-            {item.desc && <p className="text-sm font-light text-white/55">{item.desc}</p>}
+            {item.desc && <p className="text-sm font-light text-white/60">{item.desc}</p>}
           </li>
         ))}
       </ul>
@@ -109,7 +109,7 @@ function SpotSection({ spot }: { spot: Spot }) {
         ))}
       </div>
 
-      <p className="border-t border-vitae-green/20 pt-5 text-center text-sm font-light italic text-white/55">
+      <p className="border-t border-vitae-green/20 pt-5 text-center text-sm font-light italic text-white/60">
         {spot.note}
       </p>
     </section>
@@ -171,7 +171,7 @@ export default function HappyHourPage() {
                         {hoursOf(spot)}
                       </span>
                     </a>
-                    <p className="mt-1 text-sm font-light text-white/55">
+                    <p className="mt-1 text-sm font-light text-white/60">
                       <a
                         href={mapsUrl(`${spot.name}, ${fullAddress(spot)}`)}
                         target="_blank"
@@ -212,7 +212,7 @@ export default function HappyHourPage() {
               </a>
             </li>
           </ol>
-          <p className="mt-6 text-center text-sm font-light italic text-white/50">
+          <p className="mt-6 text-center text-sm font-light italic text-white/60">
             Ranked by the strength of the food offer. Prices as published on each restaurant&apos;s
             own site, September 2026. Hawaiʻi tax of 4.712% is added everywhere; gratuity is
             additional.
@@ -245,13 +245,13 @@ export default function HappyHourPage() {
                       href={mapsUrl(`${row.name}, ${row.address}`)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block text-sm font-light text-white/55 hover:text-vitae-green"
+                      className="block text-sm font-light text-white/60 hover:text-vitae-green"
                     >
                       {row.address}
                     </a>
                     <a
                       href={telUrl(row.phone)}
-                      className="text-sm font-light text-white/55 hover:text-vitae-green"
+                      className="text-sm font-light text-white/60 hover:text-vitae-green"
                     >
                       {row.phone}
                     </a>
@@ -261,7 +261,7 @@ export default function HappyHourPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-center text-sm font-light italic text-white/55">
+            <p className="mt-5 text-center text-sm font-light italic text-white/60">
               {lateNightLeftOut}
             </p>
           </section>
@@ -286,30 +286,30 @@ export default function HappyHourPage() {
                       href={mapsUrl(`${row.name}, ${row.address}`)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block text-sm font-light text-white/55 hover:text-vitae-green"
+                      className="block text-sm font-light text-white/60 hover:text-vitae-green"
                     >
                       {row.address}
                     </a>
                     <a
                       href={telUrl(row.phone)}
-                      className="text-sm font-light text-white/55 hover:text-vitae-green"
+                      className="text-sm font-light text-white/60 hover:text-vitae-green"
                     >
                       {row.phone}
                     </a>
                   </div>
                   <p className="font-light text-white/85">{row.cut}</p>
-                  <p className="text-sm font-light italic text-white/55">{row.consider}</p>
+                  <p className="text-sm font-light italic text-white/60">{row.consider}</p>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-center text-sm font-light italic text-white/55">
+            <p className="mt-5 text-center text-sm font-light italic text-white/60">
               Roy&apos;s and Solera carry no tomahawk or for-two. d.k Steak House and BLT Steak have
               closed. Tax and gratuity are additional throughout.
             </p>
           </section>
         </div>
 
-        <footer className="mt-16 text-center text-sm font-light text-white/40">
+        <footer className="mt-16 text-center text-sm font-light text-white/60">
           <p>
             Hours and prices change — call ahead before you go. Compiled by Vitaegis from each
             restaurant&apos;s official site.

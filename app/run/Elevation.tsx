@@ -129,7 +129,7 @@ export default function Elevation({ profile, color, miles }: Props) {
           </g>
         )}
       </svg>
-      <figcaption className="mt-1 flex justify-between text-[11px] uppercase tracking-[0.18em] text-white/50">
+      <figcaption className="mt-1 flex justify-between text-[11px] uppercase tracking-[0.18em] text-white/60">
         <span>feet · miles</span>
         <span className="tabular-nums text-white/80">
           {pt ? `mile ${pt[0].toFixed(1)} · ${pt[1]} ft` : 'hover or touch for a point'}

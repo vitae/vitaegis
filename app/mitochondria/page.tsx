@@ -304,7 +304,7 @@ function TierBadge({ tier }: { tier: Supp['tier'] }) {
       ? 'border-vitae-green text-vitae-green'
       : tier === 'B'
         ? 'border-vitae-green/50 text-vitae-green/80'
-        : 'border-white/30 text-white/50';
+        : 'border-white/30 text-white/60';
   return (
     <span
       title={tiers[tier]}
@@ -384,7 +384,7 @@ export default function MitochondriaPage() {
 
         <section className="mt-14">
           <h2 className={`${label} text-center`}>The full list, by mechanism</h2>
-          <p className="mt-3 text-center text-sm font-light text-white/50">
+          <p className="mt-3 text-center text-sm font-light text-white/60">
             {Object.entries(tiers).map(([t, d]) => (
               <span key={t} className="mx-2 inline-flex items-center gap-1.5">
                 <TierBadge tier={t as Supp['tier']} /> {d}
@@ -439,7 +439,7 @@ export default function MitochondriaPage() {
                 </span>
                 <span>
                   <span className="font-medium text-white/90">{r.name}</span>
-                  <span className="font-light text-white/55"> · {r.why}</span>
+                  <span className="font-light text-white/60"> · {r.why}</span>
                 </span>
               </li>
             ))}
@@ -469,7 +469,7 @@ export default function MitochondriaPage() {
           on top of it.
         </p>
 
-        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/45">
+        <p className="mt-10 text-center text-sm font-light leading-relaxed text-white/60">
           Education only, not medical advice. These statements have not been evaluated by the FDA.
           Statins deplete CoQ10, berberine and ALA lower blood sugar, and fish oil thins blood, so
           talk to a doctor or pharmacist before combining any of these with prescription medication.

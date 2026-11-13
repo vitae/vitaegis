@@ -100,7 +100,7 @@ export default function GainersBoard({ windows, lists, available }: Props) {
                   </span>
                   <span className="block text-xs leading-tight text-vitae-gray sm:text-sm">
                     {c.name}
-                    {c.rank ? <span className="text-white/40"> · #{c.rank}</span> : null}
+                    {c.rank ? <span className="text-white/60"> · #{c.rank}</span> : null}
                   </span>
                 </td>
                 <td className="whitespace-nowrap py-3 pr-2 text-right text-sm text-white sm:text-base">

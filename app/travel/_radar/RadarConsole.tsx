@@ -231,7 +231,7 @@ export default function RadarConsole({
     `rounded-full border px-3 py-1 transition ${
       on
         ? 'border-vitae-green/60 bg-vitae-green/10 text-vitae-green'
-        : 'border-white/15 text-white/55 hover:border-vitae-green/60 hover:text-vitae-green'
+        : 'border-white/15 text-white/60 hover:border-vitae-green/60 hover:text-vitae-green'
     } ${hud}`;
 
   return (
@@ -282,19 +282,19 @@ export default function RadarConsole({
                     {r.label}
                   </span>
                   {r.rank && (
-                    <span className="mt-0.5 block text-xs text-white/45">
+                    <span className="mt-0.5 block text-xs text-white/60">
                       {count} {count === 1 ? 'track' : 'tracks'}
                       {r.nonstop ? ' · nonstop' : ''}
                     </span>
                   )}
                   {r.blurb && (
-                    <span className="mt-1.5 hidden text-xs font-light leading-relaxed text-white/55 lg:block">
+                    <span className="mt-1.5 hidden text-xs font-light leading-relaxed text-white/60 lg:block">
                       {r.blurb}
                     </span>
                   )}
                   {r.href && (
                     <span
-                      className={`mt-2 block ${on ? 'text-white' : 'text-white/40 group-hover:text-white'} ${hud}`}
+                      className={`mt-2 block ${on ? 'text-white' : 'text-white/60 group-hover:text-white'} ${hud}`}
                     >
                       Open →
                     </span>
@@ -340,7 +340,7 @@ export default function RadarConsole({
               <p>
                 VTGS Approach<span className="hidden sm:inline"> · {sectorName}</span>
               </p>
-              <p className="mt-1 text-white/45">
+              <p className="mt-1 text-white/60">
                 {scope} · {shown.length} tracks{picked ? ' lit' : ''}
                 <span className="hidden lg:inline"> · drag to turn · click a track to lock</span>
               </p>
@@ -352,7 +352,7 @@ export default function RadarConsole({
                   {now ? clock(airports[home].tz, now) : '--:--:--'}
                 </span>
               </p>
-              <p className="mt-1 text-white/45">
+              <p className="mt-1 text-white/60">
                 {leg && destZone ? (
                   <>
                     {leg.to}{' '}
@@ -409,7 +409,7 @@ export default function RadarConsole({
           </div>
 
           <div
-            className={`mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-white/55 ${hud}`}
+            className={`mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-white/60 ${hud}`}
           >
             <span className="flex items-center gap-2">
               <i className="h-px w-6 bg-vitae-green shadow-[0_0_6px_#00ff00]" /> Booked track
@@ -494,7 +494,7 @@ export default function RadarConsole({
                         </span>
                         {l.toLabel ?? l.to}
                       </span>
-                      <span className="ml-auto hidden text-xs tabular-nums tracking-wider text-white/45 sm:inline">
+                      <span className="ml-auto hidden text-xs tabular-nums tracking-wider text-white/60 sm:inline">
                         {legMiles(airports, l).toLocaleString('en-US')} mi
                       </span>
                       <span
@@ -504,20 +504,20 @@ export default function RadarConsole({
                         ${l.farePP}
                       </span>
                     </span>
-                    <span className="mt-0.5 block pl-8 text-sm font-light text-white/55">
+                    <span className="mt-0.5 block pl-8 text-sm font-light text-white/60">
                       {airports[l.from].city} → {airports[l.to].city}
                       {via ? ` · via ${via}` : ''} · {l.time}
                     </span>
                     {on && (
                       <span className="mt-2 block border-t border-[#ff00ff]/25 pl-8 pt-2 text-sm font-light leading-relaxed text-white/80">
-                        <span className={`block text-white/50 ${hud}`}>{l.carriers}</span>
+                        <span className={`block text-white/60 ${hud}`}>{l.carriers}</span>
                         <span
                           className={`mt-1.5 block ${l.flag === 'visa' ? 'text-[#ffff00]' : ''}`}
                         >
                           {l.note}
                         </span>
                         {l.via && (
-                          <span className={`mt-1.5 block text-white/40 ${hud}`}>
+                          <span className={`mt-1.5 block text-white/60 ${hud}`}>
                             Routing {waypoints(l).join(' → ')}
                           </span>
                         )}
@@ -528,7 +528,7 @@ export default function RadarConsole({
               );
             })}
           </ol>
-          <p className={`mt-3 flex items-baseline justify-between px-1 text-white/55 ${hud}`}>
+          <p className={`mt-3 flex items-baseline justify-between px-1 text-white/60 ${hud}`}>
             <span>Per person, one-way{travelers > 1 ? ` · ×${travelers} travelers` : ''}</span>
           </p>
         </div>

@@ -1,61 +1,31 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
 import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
 
 export default function AboutSection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.querySelectorAll('.reveal').forEach((el, i) => {
-              setTimeout(() => {
-                el.classList.add('revealed');
-              }, i * 100);
-            });
-          }
-        });
-      },
-      { threshold: 0.2 },
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <section
-      id="about"
-      ref={sectionRef}
-      className="relative flex flex-col items-center py-10 text-center sm:py-14"
-    >
+    <section id="about" className="relative flex flex-col items-center py-10 text-center sm:py-14">
       <div
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
         <SectionTitle>About Vitaegis</SectionTitle>
-        <div className="w-full">
+        <div className="grid w-full items-start gap-8 sm:gap-10 lg:grid-cols-2">
           {/* Text Content in Glassmorphic Container */}
-          <GlassContainer variant="default" glow={true} padding="lg" className="w-full">
+          <GlassContainer
+            variant="default"
+            padding="lg"
+            className="reveal w-full lg:sticky lg:top-8"
+          >
             {/* Main Heading */}
-            <h3 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+            <h3 className="reveal text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
               Advanced Intelligence
               <br />
-              <span className="bg-gradient-to-r from-vitae-green to-emerald-400 bg-clip-text text-transparent">
-                as a Service
-              </span>
+              <span className="text-vitae-green">as a Service</span>
             </h3>
 
             {/* Description */}
-            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-6 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
+            <div className="reveal mt-6 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
               <p>
                 Vitaegis is a portmanteau of <em>Vitae</em> and <em>Aegis</em>: Life Energy.
               </p>
@@ -67,7 +37,7 @@ export default function AboutSection() {
             </div>
 
             {/* CTA Link */}
-            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8">
+            <div className="reveal mt-8">
               <Link
                 href="/secrets"
                 className="group inline-flex items-center gap-2 text-vitae-green font-medium tracking-[0.2em] hover:gap-4 transition-all duration-300"
@@ -89,13 +59,11 @@ export default function AboutSection() {
               </Link>
             </div>
           </GlassContainer>
-        </div>
 
-        {/* Vitality */}
-        <div className="mt-8 w-full sm:mt-10">
-          <GlassContainer variant="default" glow={true} padding="lg" className="w-full">
+          {/* Vitality */}
+          <GlassContainer variant="default" padding="lg" className="reveal w-full">
             {/* Header: eight letters each, one grid, so every letter sits over its partner. */}
-            <h2 className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mx-auto w-full max-w-md">
+            <h2 className="reveal mx-auto w-full max-w-md">
               <svg
                 viewBox="0 0 640 236"
                 className="block h-auto w-full"
@@ -122,22 +90,22 @@ export default function AboutSection() {
             </h2>
 
             {/* Definition */}
-            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8 text-left mx-auto max-w-xl">
+            <div className="reveal mt-8 text-left mx-auto max-w-xl">
               <p className="text-white text-xl sm:text-2xl font-medium">
-                vi·tal·i·ty <span className="text-white/50 text-base font-normal">/vīˈtalədē/</span>{' '}
-                <span className="text-white/50 text-base font-normal italic">noun</span>
+                vi·tal·i·ty <span className="text-white/60 text-base font-normal">/vīˈtalədē/</span>{' '}
+                <span className="text-white/60 text-base font-normal italic">noun</span>
               </p>
               <ol className="mt-3 space-y-2 text-white/70 text-base sm:text-lg leading-relaxed list-decimal list-inside">
                 <li>The state of being strong and active. Energy.</li>
                 <li>The power giving continuance of life, present in all living things.</li>
               </ol>
-              <p className="mt-3 text-white/50 text-sm">
+              <p className="mt-3 text-white/60 text-sm">
                 From the Latin <em>vitalis</em>, of life. The same root as <em>Vitae</em>.
               </p>
             </div>
 
             {/* How */}
-            <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 mt-8 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
+            <div className="reveal mt-8 space-y-4 text-white/70 text-base sm:text-lg leading-relaxed">
               <p>
                 Vitality is the one asset every other one depends on, and the one that cannot be
                 bought back. So we point the most advanced technology we have at it.

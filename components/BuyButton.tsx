@@ -38,7 +38,7 @@ export default function BuyButton({ productId, priceLabel }: Props) {
       type="button"
       disabled={loading}
       onClick={checkout}
-      className="glass-panel glass-panel--hover flex min-h-[52px] w-full items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white disabled:opacity-60 sm:w-auto sm:min-w-[160px]"
+      className="glass-panel glass-panel--lit glass-panel--hover flex min-h-[52px] w-full items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white disabled:opacity-60 sm:w-auto sm:min-w-[160px]"
       style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
     >
       <span className="relative z-10 flex items-center gap-2">

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export type CategoryPost = { href: string; label: string; blurb?: string };
 
-const label = 'text-[11px] font-semibold uppercase tracking-[0.25em]';
+const label = 'text-xs font-semibold uppercase tracking-[0.25em]';
 
 /** "Posts · N" grid of linked cards, shared by the category pages. */
 export default function CategoryPosts({

@@ -36,7 +36,7 @@ const TAGS = [
 ];
 
 const TAG_COLORS: Record<string, string> = {
-  Zen: '#00ff9d',
+  Zen: '#00ff00',
   Stoic: '#00cfff',
   Taoist: '#a78bfa',
   Kundalini: '#f97316',
@@ -197,7 +197,7 @@ function Body({ adminKey }: { adminKey: string }) {
         <button onClick={() => setTab('pdf')} className={ui.pill(tab === 'pdf')}>
           Upload PDF
         </button>
-        <span className="ml-auto text-xs text-white/40">
+        <span className="ml-auto text-xs text-white/60">
           {proverbs ? `${proverbs.length} entries` : 'Loading…'}
         </span>
       </div>
@@ -280,14 +280,14 @@ function Body({ adminKey }: { adminKey: string }) {
             {pdfFile ? (
               <>
                 <p className="text-sm text-vitae-green">{pdfFile.name}</p>
-                <p className="mt-1 text-xs text-white/40">
+                <p className="mt-1 text-xs text-white/60">
                   {(pdfFile.size / 1024 / 1024).toFixed(1)} MB · click to change
                 </p>
               </>
             ) : (
               <>
                 <p className="text-sm text-white/70">Drop a PDF here or click to browse</p>
-                <p className="mt-1 text-xs text-white/40">Books, guides, scriptures, manuscripts</p>
+                <p className="mt-1 text-xs text-white/60">Books, guides, scriptures, manuscripts</p>
               </>
             )}
           </div>
@@ -370,7 +370,7 @@ function Body({ adminKey }: { adminKey: string }) {
                       <span className="block text-sm leading-relaxed text-white/90">
                         &ldquo;{q.text}&rdquo;
                       </span>
-                      <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/40">
+                      <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/60">
                         — {q.source}
                         <Tag tag={q.tag} />
                       </span>
@@ -394,7 +394,7 @@ function Body({ adminKey }: { adminKey: string }) {
       <section className="space-y-2">
         <p className={ui.label}>Archive</p>
         {proverbs && proverbs.length === 0 && (
-          <p className={`${ui.glass} p-6 text-sm text-white/50`}>
+          <p className={`${ui.glass} p-6 text-sm text-white/60`}>
             Archive empty. Add your first proverb above.
           </p>
         )}
@@ -406,12 +406,12 @@ function Body({ adminKey }: { adminKey: string }) {
             />
             <div className="flex-1">
               <p className="text-sm leading-relaxed text-white/90">&ldquo;{p.text}&rdquo;</p>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/40">
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/60">
                 <span>— {p.source || 'Unknown'}</span>
                 <Tag tag={p.tag} />
                 <span>{new Date(p.created_at).toLocaleDateString()}</span>
               </div>
-              {p.note && <p className="mt-1 text-xs italic text-white/40">↳ {p.note}</p>}
+              {p.note && <p className="mt-1 text-xs italic text-white/60">↳ {p.note}</p>}
             </div>
             <button onClick={() => remove(p.id)} className={ui.btnDanger} aria-label="Delete">
               ✕

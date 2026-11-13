@@ -23,7 +23,7 @@ const nextConfig = {
     ],
   },
   images: {
-    domains: [],
+    formats: ['image/avif', 'image/webp'],
   },
   async rewrites() {
     // Routes are case-sensitive; serve the shared /ED link from app/ed.

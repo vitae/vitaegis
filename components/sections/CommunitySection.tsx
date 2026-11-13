@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import GlassButton from '@/components/GlassButton';
+import { useState } from 'react';
 import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
 import { socials } from '@/components/socials';
 
 export default function CommunitySection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState('');
   const [subscribeState, setSubscribeState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
   const [subscribeNote, setSubscribeNote] = useState('');
@@ -33,33 +31,9 @@ export default function CommunitySection() {
     }
   }
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.querySelectorAll('.reveal').forEach((el, i) => {
-              setTimeout(() => {
-                el.classList.add('revealed');
-              }, i * 100);
-            });
-          }
-        });
-      },
-      { threshold: 0.2 },
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
       id="community"
-      ref={sectionRef}
       className="relative flex flex-col items-center py-10 text-center sm:py-14"
     >
       <div
@@ -71,8 +45,8 @@ export default function CommunitySection() {
         </SectionTitle>
 
         {/* Social Links Grid */}
-        <div className="mb-8 grid w-full grid-cols-4 gap-3 sm:mb-10 sm:gap-6">
-          {socials.map((social, index) => {
+        <div className="mb-8 grid w-full grid-cols-4 gap-3 sm:mb-10 sm:gap-6 lg:grid-cols-8 lg:gap-4">
+          {socials.map((social) => {
             const Icon = social.icon;
             return (
               <a
@@ -81,8 +55,7 @@ export default function CommunitySection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`VITAEGIS on ${social.name}`}
-                className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 group glass-panel glass-panel--hover relative min-w-0 px-1 py-4 sm:p-6 rounded-xl text-center"
-                style={{ transitionDelay: `${index * 50}ms` }}
+                className="reveal group glass-panel glass-panel--hover relative min-w-0 px-1 py-4 sm:p-6 rounded-xl text-center"
               >
                 {/* Icon */}
                 <div className="flex justify-center mb-3">
@@ -94,7 +67,7 @@ export default function CommunitySection() {
                 </div>
 
                 {/* Name */}
-                <div className="text-[11px] leading-tight text-white font-medium sm:text-sm lg:text-base">
+                <div className="text-xs leading-tight text-white font-medium sm:text-sm lg:text-base">
                   {social.name}
                 </div>
 
@@ -111,7 +84,7 @@ export default function CommunitySection() {
         </div>
 
         {/* Newsletter Section */}
-        <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 w-full">
+        <div className="reveal w-full">
           <div className="glass-panel glass-panel--prominent relative p-6 sm:p-8 rounded-xl overflow-hidden w-full">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
@@ -185,7 +158,7 @@ export default function CommunitySection() {
 
         {/* Community Stats in Glassmorphic Container */}
         <GlassContainer variant="subtle" padding="lg" className="mt-8 w-full sm:mt-10">
-          <div className="reveal opacity-0 translate-y-4 transition-all duration-700 [&.revealed]:opacity-100 [&.revealed]:translate-y-0 grid grid-cols-2 gap-4 text-center sm:gap-6 lg:grid-cols-4">
+          <div className="reveal grid grid-cols-2 gap-4 text-center sm:gap-6 lg:grid-cols-4">
             {[
               { value: '99K', label: 'Community Members' },
               { value: '120+', label: 'Countries' },
@@ -196,7 +169,7 @@ export default function CommunitySection() {
                 <div className="text-3xl sm:text-4xl font-bold text-vitae-green mb-1">
                   {stat.value}
                 </div>
-                <div className="text-sm text-white/50">{stat.label}</div>
+                <div className="text-sm text-white/60">{stat.label}</div>
               </div>
             ))}
           </div>

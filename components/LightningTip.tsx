@@ -83,7 +83,7 @@ export default function LightningTip({ inline = false }: { inline?: boolean }) {
           </svg>
         </a>
         <p
-          className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
+          className="mt-1.5 text-xs font-semibold uppercase tracking-[0.2em]"
           style={{ color: rail.color }}
         >
           {rail.label}
@@ -92,7 +92,7 @@ export default function LightningTip({ inline = false }: { inline?: boolean }) {
           type="button"
           onClick={copy}
           title={`Copy ${rail.address}`}
-          className="mt-0.5 max-w-full break-all font-mono text-[11px] leading-snug hover:underline"
+          className="mt-0.5 max-w-full break-all font-mono text-xs leading-snug hover:underline"
           style={{ color: rail.color }}
         >
           {copied ? 'Copied' : rail.id === 'lightning' ? rail.address : shortAddress(rail.address)}

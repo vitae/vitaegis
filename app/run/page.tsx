@@ -134,7 +134,7 @@ export default function RunPage() {
               </div>
             ))}
           </dl>
-          <p className="mt-8 border-t border-vitae-green/20 pt-5 text-center text-xs font-light leading-relaxed text-white/45">
+          <p className="mt-8 border-t border-vitae-green/20 pt-5 text-center text-xs font-light leading-relaxed text-white/60">
             Routes traced on OpenStreetMap data (© OpenStreetMap contributors, ODbL) with pedestrian
             routing; distances are measured along the trace and rounded, elevation is from terrain
             data. Marathon course per honolulumarathon.org; the traced line is a close approximation

@@ -233,7 +233,7 @@ export default async function TravelSectorPage({ params }: { params: Promise<{ s
           </ul>
         </nav>
 
-        <footer className="mt-16 text-center text-sm font-light text-white/40">
+        <footer className="mt-16 text-center text-sm font-light text-white/60">
           <p className="mx-auto max-w-3xl">
             Every track originates at Honolulu on Alaska Airlines, Hawaiian, American or a oneworld
             / Mileage Plan partner. Tracks are typical scheduled routings, not live traffic. Fares

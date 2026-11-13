@@ -72,7 +72,7 @@ function Body({ adminKey }: { adminKey: string }) {
   }, [load]);
 
   if (error) return <p className="mt-8 text-sm text-red-400">{error}</p>;
-  if (!data) return <p className="mt-8 text-sm text-white/50">Loading…</p>;
+  if (!data) return <p className="mt-8 text-sm text-white/60">Loading…</p>;
 
   const m = data.market;
   const mode = data.live == null ? '—' : data.live ? 'Live' : 'Dry run';
@@ -94,7 +94,7 @@ function Body({ adminKey }: { adminKey: string }) {
       <section className={`${ui.glass} p-4 sm:p-5`}>
         <p className={ui.label}>Watching</p>
         {!m ? (
-          <p className="mt-3 text-sm text-white/50">No market seen yet.</p>
+          <p className="mt-3 text-sm text-white/60">No market seen yet.</p>
         ) : (
           <>
             <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
@@ -105,7 +105,7 @@ function Body({ adminKey }: { adminKey: string }) {
               <Quote side="YES" ask={m.yesAsk} hot={m.entry?.outcome === 'yes'} />
               <Quote side="NO" ask={m.noAsk} hot={m.entry?.outcome === 'no'} />
             </div>
-            <p className={`mt-4 text-sm ${m.entry ? 'text-vitae-green' : 'text-white/50'}`}>
+            <p className={`mt-4 text-sm ${m.entry ? 'text-vitae-green' : 'text-white/60'}`}>
               {m.entry
                 ? `In the zone: ${m.entry.outcome.toUpperCase()} at ${m.entry.priceCents}¢`
                 : 'Outside the 8–28¢ entry zone'}
@@ -122,7 +122,7 @@ function Body({ adminKey }: { adminKey: string }) {
           </button>
         </div>
         {data.orders.length === 0 ? (
-          <p className={`${ui.glass} mt-3 p-5 text-sm text-white/50`}>No orders yet.</p>
+          <p className={`${ui.glass} mt-3 p-5 text-sm text-white/60`}>No orders yet.</p>
         ) : (
           <div className="mt-3 space-y-2">
             {data.orders.map((o) => (
@@ -139,7 +139,7 @@ function Body({ adminKey }: { adminKey: string }) {
             {data.errors.map((e) => (
               <div key={e.id} className={`${ui.glass} flex justify-between gap-3 p-3 text-sm`}>
                 <span className="text-red-400">{e.message}</span>
-                <span className="shrink-0 text-xs text-white/40">{hst(e.created_at)}</span>
+                <span className="shrink-0 text-xs text-white/60">{hst(e.created_at)}</span>
               </div>
             ))}
           </div>
@@ -150,7 +150,7 @@ function Body({ adminKey }: { adminKey: string }) {
         <p className={ui.label}>Recent ticks</p>
         <div className={`${ui.glass} mt-3 overflow-x-auto`}>
           <table className="w-full text-left text-sm">
-            <thead className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+            <thead className="text-[10px] uppercase tracking-[0.2em] text-white/60">
               <tr>
                 <th className="px-4 py-3 font-medium">Time</th>
                 <th className="px-4 py-3 font-medium">Ticker</th>
@@ -161,7 +161,7 @@ function Body({ adminKey }: { adminKey: string }) {
             <tbody>
               {data.ticks.map((t) => (
                 <tr key={t.id} className="border-t border-white/10 text-white/80">
-                  <td className="px-4 py-2 text-white/50">{hst(t.created_at)}</td>
+                  <td className="px-4 py-2 text-white/60">{hst(t.created_at)}</td>
                   <td className="px-4 py-2">{t.ticker}</td>
                   <td className="px-4 py-2">{cents(t.yes_ask_cents)}</td>
                   <td className="px-4 py-2">{cents(t.no_ask_cents)}</td>
@@ -169,7 +169,7 @@ function Body({ adminKey }: { adminKey: string }) {
               ))}
               {data.ticks.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-4 text-white/50">
+                  <td colSpan={4} className="px-4 py-4 text-white/60">
                     Nothing logged yet.
                   </td>
                 </tr>
@@ -203,7 +203,7 @@ function Stat({
     <div className={`${ui.glass} p-4`}>
       <p className={ui.label}>{label}</p>
       <p className={`mt-2 text-2xl font-semibold ${color}`}>{value}</p>
-      {sub && <p className="mt-1 text-xs text-white/40">{sub}</p>}
+      {sub && <p className="mt-1 text-xs text-white/60">{sub}</p>}
     </div>
   );
 }
@@ -211,7 +211,7 @@ function Stat({
 function Quote({ side, ask, hot }: { side: string; ask: number | null; hot: boolean }) {
   return (
     <div className={`rounded-xl border p-3 ${hot ? 'border-vitae-green/60' : 'border-white/10'}`}>
-      <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">{side} ask</p>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">{side} ask</p>
       <p className={`mt-1 text-3xl font-semibold ${hot ? 'text-vitae-green' : 'text-white'}`}>
         {cents(ask)}
       </p>
@@ -226,7 +226,7 @@ function OrderRow({ o }: { o: KalshiEvent }) {
     <article className={`${ui.glass} flex flex-wrap items-center gap-x-4 gap-y-1 p-3 text-sm`}>
       <span
         className={`text-[10px] uppercase tracking-[0.25em] ${
-          o.live ? 'text-vitae-green' : 'text-white/40'
+          o.live ? 'text-vitae-green' : 'text-white/60'
         }`}
       >
         {o.live ? 'Live' : 'Dry'}
@@ -235,7 +235,7 @@ function OrderRow({ o }: { o: KalshiEvent }) {
         {o.count}× {o.outcome?.toUpperCase()} @ {cents(o.price_cents)}
       </span>
       <span className="text-white/60">{o.ticker}</span>
-      <span className="text-white/50">
+      <span className="text-white/60">
         {[filled, left, o.avg_fill_cents != null ? `avg ${o.avg_fill_cents}¢` : null]
           .filter(Boolean)
           .join(' · ')}
@@ -250,7 +250,7 @@ function OrderRow({ o }: { o: KalshiEvent }) {
             : `${o.pnl_cents < 0 ? '−' : '+'}$${(Math.abs(o.pnl_cents) / 100).toFixed(2)}`}
         </span>
       )}
-      <span className="ml-auto text-xs text-white/40">{hst(o.created_at)}</span>
+      <span className="ml-auto text-xs text-white/60">{hst(o.created_at)}</span>
     </article>
   );
 }
