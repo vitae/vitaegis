@@ -28,10 +28,12 @@ export default function TokenSection() {
                     className="object-cover"
                   />
                 </div>
-                <h3 className="mt-1 text-lg font-semibold leading-snug text-white">
-                  {product.name}
+                <h3 className="mt-1 flex min-h-[3.125rem] w-full items-center justify-center text-lg font-semibold leading-snug text-white">
+                  <span className="line-clamp-2">{product.name}</span>
                 </h3>
-                <p className="mb-2 flex-1 text-sm text-white/70">{product.description}</p>
+                <p className="mb-2 line-clamp-3 min-h-[3.75rem] w-full text-sm leading-5 text-white/70">
+                  {product.description}
+                </p>
                 <BuyButton productId={product.id} priceLabel={formatPrice(product.priceCents)} />
               </div>
             </GlassContainer>
