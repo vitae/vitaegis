@@ -233,11 +233,7 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
             {pillar.disclaimer}
           </p>
 
-          <Link
-            href="/#practices"
-            className={`${label} mt-8 hover:text-white sm:mt-10`}
-            style={{ color: c }}
-          >
+          <Link href="/" className={`${label} mt-8 hover:text-white sm:mt-10`} style={{ color: c }}>
             ← Vitaegis
           </Link>
         </section>

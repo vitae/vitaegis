@@ -64,12 +64,20 @@ export default function HeroSection() {
               ))}
             </div>
 
-            <a
-              href="#about"
-              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-6 py-3 text-sm font-medium tracking-[0.08em] text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none sm:w-auto sm:text-base"
-            >
-              ENTER VITAEGIS
-            </a>
+            <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+              <a
+                href="#token"
+                className="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-sm font-medium tracking-[0.08em] text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none sm:w-auto sm:text-base"
+              >
+                SHOP
+              </a>
+              <a
+                href="#community"
+                className="glass-panel glass-panel--hover inline-flex min-h-[48px] w-full items-center justify-center rounded-lg px-8 py-3 text-sm font-medium tracking-[0.08em] text-vitae-green sm:w-auto sm:text-base"
+              >
+                FOLLOW
+              </a>
+            </div>
           </div>
         </GlassContainer>
       </div>

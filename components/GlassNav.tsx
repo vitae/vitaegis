@@ -3,15 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  HiHome,
-  HiInformationCircle,
-  HiVideoCamera,
-  HiShoppingBag,
-  HiUserGroup,
-  HiCollection,
-  HiChevronUp,
-} from 'react-icons/hi';
+import { HiHome, HiShoppingBag, HiUserGroup, HiCollection, HiChevronUp } from 'react-icons/hi';
 import { projects } from '@/components/projects';
 
 interface NavItem {
@@ -22,14 +14,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'hero', label: 'HOME', icon: HiHome },
-  { id: 'about', label: 'ABOUT', icon: HiInformationCircle },
-  { id: 'practices', label: 'LIVE', icon: HiVideoCamera },
-  { id: 'projects', label: 'PROJECTS', icon: HiCollection },
   { id: 'token', label: 'STORE', icon: HiShoppingBag },
+  { id: 'projects', label: 'PROJECTS', icon: HiCollection },
   { id: 'community', label: 'CONNECT', icon: HiUserGroup },
 ];
 
-const SECTION_IDS = navItems.map((item) => item.id);
+const SECTION_IDS = navItems.filter((item) => item.id !== 'projects').map((item) => item.id);
 
 /**
  * Site navigation, rendered once from the root layout. An Instagram-style tab bar docked to
@@ -150,26 +140,13 @@ export default function GlassNav() {
                   </Link>
                 );
               })}
-              <div className="mt-1 grid grid-cols-2 gap-2">
-                <Link
-                  href="/projects"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center justify-center min-h-[44px] rounded-xl border border-vitae-green/30 px-2 text-xs uppercase tracking-[0.2em] text-vitae-green hover:bg-vitae-green/10 active:bg-vitae-green/10"
-                >
-                  All projects
-                </Link>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    if (isHome)
-                      document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' });
-                    else router.push('/#projects');
-                  }}
-                  className="flex items-center justify-center min-h-[44px] rounded-xl border border-white/10 px-2 text-xs uppercase tracking-[0.2em] text-white/70 hover:bg-white/5 active:bg-white/10"
-                >
-                  Home section
-                </button>
-              </div>
+              <Link
+                href="/projects"
+                onClick={() => setMenuOpen(false)}
+                className="mt-1 flex min-h-[44px] items-center justify-center rounded-xl border border-vitae-green/30 px-2 text-xs uppercase tracking-[0.2em] text-vitae-green hover:bg-vitae-green/10 active:bg-vitae-green/10"
+              >
+                All projects
+              </Link>
             </div>
           )}
 

@@ -15,17 +15,6 @@ export interface SitePage {
 export const SITE_MAP: SitePage[] = [
   { path: '/', title: 'Home', blurb: 'The Center for Inner Peace. Health, Stealth, Wealth.' },
   {
-    path: '/#about',
-    title: 'About',
-    blurb: 'What Vitaegis is: Advanced Intelligence as a Service.',
-  },
-  {
-    path: '/#practices',
-    title: 'Live',
-    blurb: 'The live stream and the three pillars at a glance.',
-  },
-  { path: '/#projects', title: 'Projects', blurb: 'Three featured projects.' },
-  {
     path: '/#token',
     title: 'Store',
     blurb: 'Matcha, The Art of Zen, Yoga for Life, Tai Chi Flow. All $9.99.',

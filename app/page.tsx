@@ -1,16 +1,14 @@
 import MatrixRainLazy from '@/components/MatrixRainLazy';
 import HeroSection from '@/components/sections/HeroSection';
-import AboutSection from '@/components/sections/AboutSection';
-import PracticesSection from '@/components/sections/PracticesSection';
-import ProjectsSection from '@/components/sections/ProjectsSection';
+import LiveStream from '@/components/LiveStream';
 import TokenSection from '@/components/sections/TokenSection';
 import CommunitySection from '@/components/sections/CommunitySection';
 import Footer from '@/components/Footer';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Home
-   Server-rendered. Only the rain, the live check, the buy buttons and the subscribe
-   form ship JavaScript; scroll reveals and the progress bar are CSS scroll timelines.
+   Three things: who this is, what to buy, where to follow. The live stream joins
+   them only while the channel is on air.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 export default function Home() {
@@ -21,9 +19,7 @@ export default function Home() {
 
       <main className="app-content relative z-10 flex w-full flex-col items-center">
         <HeroSection />
-        <AboutSection />
-        <PracticesSection />
-        <ProjectsSection />
+        <LiveStream />
         <TokenSection />
         <CommunitySection />
         <Footer />

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
 import { socials } from '@/components/socials';
 
@@ -155,25 +154,6 @@ export default function CommunitySection() {
             </div>
           </div>
         </div>
-
-        {/* Community Stats in Glassmorphic Container */}
-        <GlassContainer variant="subtle" padding="lg" className="mt-8 w-full sm:mt-10">
-          <div className="reveal grid grid-cols-2 gap-4 text-center sm:gap-6 lg:grid-cols-4">
-            {[
-              { value: '99K', label: 'Community Members' },
-              { value: '120+', label: 'Countries' },
-              { value: '1M+', label: 'Practice Sessions' },
-              { value: '24/7', label: 'Active Support' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="text-3xl sm:text-4xl font-bold text-vitae-green mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-sm text-white/60">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </GlassContainer>
       </div>
     </section>
   );
