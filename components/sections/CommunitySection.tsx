@@ -110,15 +110,15 @@ export default function CommunitySection() {
 
               {/* Right - Form */}
               <div>
-                {/* Field and button: one glass surface, one height, one radius */}
+                {/* Field on top, button centred under it */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     subscribe();
                   }}
-                  className="flex flex-col gap-4 sm:flex-row"
+                  className="mx-auto flex w-full max-w-md flex-col items-center gap-4"
                 >
-                  <label className="glass-panel glass-panel--hover flex min-h-[52px] min-w-0 flex-1 items-center rounded-xl px-4 focus-within:border-[#00ff00]/60">
+                  <label className="glass-panel glass-panel--hover flex min-h-[52px] w-full min-w-0 items-center justify-center rounded-xl px-4 focus-within:border-[#00ff00]/60">
                     <input
                       type="email"
                       required
@@ -126,13 +126,13 @@ export default function CommunitySection() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your Email"
                       aria-label="Your email"
-                      className="relative z-10 w-full min-w-0 bg-transparent text-center text-base text-white placeholder:text-white/30 outline-none"
+                      className="relative z-10 m-0 w-full min-w-0 bg-transparent p-0 text-center text-base text-white placeholder:text-white/30 outline-none"
                     />
                   </label>
                   <button
                     type="submit"
                     disabled={subscribeState === 'busy'}
-                    className="glass-panel glass-panel--hover flex min-h-[52px] shrink-0 items-center justify-center rounded-xl px-5 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white disabled:opacity-60"
+                    className="glass-panel glass-panel--hover flex min-h-[52px] min-w-[12rem] items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white disabled:opacity-60"
                     style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
                   >
                     <span className="relative z-10">
