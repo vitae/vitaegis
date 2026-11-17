@@ -24,19 +24,9 @@ export default function HeroSection() {
       style={{ minHeight: 'calc(100svh - var(--nav-top) - var(--nav-bottom) - var(--sab))' }}
     >
       <div className="section-container">
-        <h1 className="mb-3 w-[min(92vw,720px)] sm:mb-4">
+        <h1 className="mb-6 w-[min(92vw,720px)] sm:mb-8">
           <LogoGlow />
         </h1>
-
-        <div
-          className="hero-in mb-4 h-px w-24 sm:mb-6 sm:w-32"
-          style={
-            {
-              '--d': '300ms',
-              background: 'linear-gradient(90deg, transparent, #00ff00, transparent)',
-            } as CSSProperties
-          }
-        />
 
         <GlassContainer
           variant="default"
@@ -47,7 +37,7 @@ export default function HeroSection() {
           style={{ '--d': '400ms' } as CSSProperties}
         >
           <div className="flex w-full flex-col items-center gap-5 sm:gap-6">
-            <p className="text-center text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-vitae-green">
+            <p className="text-center !leading-none text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-vitae-green">
               Center for Inner Peace
             </p>
 
@@ -57,7 +47,7 @@ export default function HeroSection() {
                   key={href}
                   href={href}
                   style={{ '--pc': color } as CSSProperties}
-                  className="block whitespace-nowrap text-center text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-[color:var(--pc)] transition-colors hover:text-white focus-visible:text-white"
+                  className="relative block min-h-0 whitespace-nowrap text-center !leading-none after:absolute after:inset-x-0 after:-inset-y-4 after:content-[''] text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-[color:var(--pc)] underline decoration-[0.06em] underline-offset-[0.3em] transition-colors hover:text-white focus-visible:text-white"
                 >
                   {label}
                 </Link>
@@ -66,7 +56,7 @@ export default function HeroSection() {
 
             <a
               href="#token"
-              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none sm:w-auto"
+              className="mt-[0.42em] inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none sm:w-auto"
             >
               ENTER
             </a>

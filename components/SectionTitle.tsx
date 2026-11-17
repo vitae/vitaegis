@@ -23,10 +23,6 @@ export default function SectionTitle({ children, tagline, as: Heading = 'h2' }: 
       >
         {children}
       </Heading>
-      <div
-        className="mt-5 h-px w-24 sm:w-32"
-        style={{ background: 'linear-gradient(90deg, transparent, #00ff00, transparent)' }}
-      />
       {tagline && (
         <p className="mt-5 max-w-2xl text-base font-light text-white/70 sm:text-lg">{tagline}</p>
       )}
