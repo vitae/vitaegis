@@ -1,11 +1,12 @@
+import Link from 'next/link';
 import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
-import UnlockProjectsButton from '@/components/UnlockProjectsButton';
 import { projects } from '@/components/projects';
-import { LOCKED_PROJECTS, PROJECTS_PRICE_LABEL } from '@/lib/projects-access';
+
+const HOME_PROJECTS = ['/travel', '/stocks', '/vitamins'];
 
 export default function ProjectsSection() {
-  const locked = LOCKED_PROJECTS.map((href) => projects.find((p) => p.href === href)).filter(
+  const shown = HOME_PROJECTS.map((href) => projects.find((p) => p.href === href)).filter(
     (p) => p !== undefined,
   );
 
@@ -15,11 +16,9 @@ export default function ProjectsSection() {
       className="relative flex flex-col items-center py-10 text-center sm:py-14"
     >
       <div className="section-container min-w-0">
-        <SectionTitle tagline={`${PROJECTS_PRICE_LABEL} each. Pay once, keep access.`}>
-          Projects
-        </SectionTitle>
+        <SectionTitle>Projects</SectionTitle>
         <div className="grid w-full grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
-          {locked.map((project) => {
+          {shown.map((project) => {
             const Icon = project.icon;
             return (
               <GlassContainer
@@ -39,7 +38,13 @@ export default function ProjectsSection() {
                   <p className="mb-2 line-clamp-3 min-h-[3.75rem] w-full text-sm leading-5 text-white/70">
                     {project.description}
                   </p>
-                  <UnlockProjectsButton project={project.href} />
+                  <Link
+                    href={project.href}
+                    className="glass-panel glass-panel--lit glass-panel--hover flex min-h-[52px] w-full items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white sm:w-auto sm:min-w-[160px]"
+                    style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
+                  >
+                    <span className="relative z-10">Open</span>
+                  </Link>
                 </div>
               </GlassContainer>
             );
