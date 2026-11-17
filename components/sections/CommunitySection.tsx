@@ -99,20 +99,18 @@ export default function CommunitySection() {
             {/* Top edge glow */}
             <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
-            <div className="relative flex flex-col items-center gap-6 text-center">
-              <div className="flex flex-col items-center gap-3">
-                <h3 className="text-2xl font-bold text-white sm:text-3xl">
-                  Stay <span className="text-vitae-green">Connected</span>
-                </h3>
-                <p className="text-white/70">Get updates on new intel and events.</p>
-              </div>
+            <div className="relative flex flex-col items-center gap-5 text-center">
+              <h3 className="text-2xl font-bold leading-none text-white sm:text-3xl">
+                Stay <span className="text-vitae-green">Connected</span>
+              </h3>
+              <p className="leading-none text-white/70">Get updates on new intel and events.</p>
 
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   subscribe();
                 }}
-                className="flex w-full max-w-md flex-col items-center gap-4"
+                className="flex w-full max-w-md flex-col items-center gap-5"
               >
                 <label className="glass-panel glass-panel--lit glass-panel--hover flex min-h-[52px] w-full min-w-0 items-center justify-center rounded-xl px-4 focus-within:border-[#00ff00]/60">
                   <input

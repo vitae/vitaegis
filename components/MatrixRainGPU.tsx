@@ -196,9 +196,7 @@ export default function MatrixRainGPU() {
 
       const green = vec3(0.0, 1.0, 0.0);
       const pale = vec3(0.85, 1.0, 0.85);
-      const dim = vec3(0.0, 0.55, 0.05);
-      const body = mix(dim, green, smoothstep(0.0, 0.5, fade));
-      const colorNode = mix(body, pale, isHead);
+      const colorNode = mix(green, pale, isHead);
       const depthFade = float(1).sub(layer.div(LAYERS).mul(0.8));
       // Streams differ in brightness, so a few bright ones stand out of a dim field.
       const streamGain = hash(col.mul(13).add(layer.mul(401)).add(3))
