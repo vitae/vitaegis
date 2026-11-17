@@ -1,19 +1,28 @@
 import Link from 'next/link';
+import Footer from '@/components/Footer';
+import GlassContainer from '@/components/GlassContainer';
+import MatrixRainLazy from '@/components/MatrixRainLazy';
 import OpenHashDetails from '@/components/OpenHashDetails';
+import SectionTitle from '@/components/SectionTitle';
+import HeroSection from '@/components/sections/HeroSection';
 import { pillars, type Pillar } from '@/lib/pillars';
 import { LETTER, tenetId } from '@/lib/tenets';
 
-const label = 'text-xs font-semibold uppercase tracking-[0.25em]';
+const section = 'relative flex w-full flex-col items-center py-10 text-center sm:py-14';
+const label = 'text-xs font-medium uppercase tracking-[0.2em] text-vitae-green';
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   VITAEGIS - Pillar page (/health, /stealth, /wealth)
+   The same format as the home page: rain, the hero box, then titled sections of glass
+   boxes and the footer. Every tenet keeps its registry ID (see lib/tenets.ts).
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
 export default function PillarDossier({ pillar }: { pillar: Pillar }) {
-  const c = pillar.color;
   const L = LETTER[pillar.slug];
-  // Every tenet carries its registry ID (see lib/tenets.ts) so a card can be traced here.
   const Tag = ({ id }: { id: string }) => (
     <a
       href={`#${id}`}
-      className="ml-2 inline-block rounded-full border px-2 py-px align-middle font-mono text-xs tracking-[0.12em] opacity-60 transition hover:opacity-100"
-      style={{ borderColor: `${c}66`, color: c }}
+      className="ml-2 inline-block min-h-0 whitespace-nowrap rounded-full border border-vitae-green/40 px-2 py-px align-middle font-mono text-xs tracking-[0.12em] text-vitae-green opacity-60 transition hover:opacity-100"
       title={`Tenet ${id}`}
     >
       {id}
@@ -22,222 +31,190 @@ export default function PillarDossier({ pillar }: { pillar: Pillar }) {
   const others = pillars.filter((p) => p.slug !== pillar.slug);
 
   return (
-    <main
-      className="min-h-screen w-full bg-black text-left text-white"
-      style={{ fontFamily: "'Jost', sans-serif" }}
-    >
+    <div className="app-shell mx-auto flex min-h-screen w-full min-w-0 max-w-6xl flex-col items-center px-4 sm:px-6">
+      <MatrixRainLazy />
       <OpenHashDetails />
-      {/* Classification strip */}
-      <div
-        className={`${label} flex items-center justify-between gap-4 border-b px-4 py-2 sm:px-6`}
-        style={{ color: c, borderColor: `${c}40`, background: `${c}0d` }}
-      >
-        <span>Vitaegis // Pillar {pillar.numeral}</span>
-        <span className="hidden sm:inline">Eyes only // Need to know</span>
-        <span className="hidden sm:inline">{pillar.codename}</span>
-        <span className="sm:hidden">Eyes only</span>
-      </div>
 
-      <div className="mx-auto w-full max-w-screen-md px-4 sm:px-6">
-        <section className="relative flex flex-col items-center py-10 text-center sm:py-14">
-          {/* Same shape and spacing as SectionTitle, in the pillar's colour */}
-          <header className="mb-10 flex w-full flex-col items-center text-center sm:mb-14">
-            <p className={label} style={{ color: c }}>
-              Field manual · Pillar {pillar.numeral}
-            </p>
-            <div className="mt-5 text-5xl opacity-60 sm:text-6xl" style={{ color: c }} aria-hidden>
-              {pillar.glyph}
-            </div>
-            <h1
-              className="mt-4 text-4xl font-bold uppercase tracking-[0.18em] sm:text-5xl lg:text-6xl"
-              style={{ color: c, textShadow: `0 0 28px ${c}40` }}
+      <main className="app-content relative z-10 flex w-full flex-col items-center">
+        <HeroSection
+          title={pillar.name.toUpperCase()}
+          tagline={pillar.codename}
+          enterHref="#about"
+        />
+
+        <section id="about" className={section}>
+          <div className="section-container min-w-0">
+            <SectionTitle>About</SectionTitle>
+            <GlassContainer
+              variant="default"
+              glow
+              lit
+              padding="lg"
+              className="reveal mx-auto w-full max-w-3xl"
             >
-              {pillar.name}
-            </h1>
-            <div
-              className="mt-5 h-px w-24 sm:w-32"
-              style={{ background: `linear-gradient(90deg, transparent, ${c}, transparent)` }}
-            />
-            <p className="mt-5 max-w-2xl text-base font-light italic text-white/80 sm:text-lg">
-              “{pillar.doctrine}”
-            </p>
-            <p className="mt-3 max-w-2xl text-base font-light text-white/60">{pillar.summary}</p>
-          </header>
+              <div className="flex flex-col items-center gap-5 text-base leading-relaxed text-white/80 sm:text-lg">
+                <p>{pillar.doctrine}</p>
+                <p>{pillar.summary}</p>
+              </div>
+            </GlassContainer>
+          </div>
+        </section>
 
-          {/* Prime directives */}
-          <section
-            className="glass-panel w-full rounded-xl p-6 text-left sm:p-8"
-            style={{ borderColor: `${c}40`, boxShadow: `0 0 40px ${c}0d` }}
-          >
-            <h2 className={`${label} text-center`} style={{ color: c }}>
-              Prime directives
-            </h2>
-            <ol className="mt-6 divide-y" style={{ borderColor: `${c}33` }}>
-              {pillar.directives.map((d, i) => (
-                <li
-                  key={d}
-                  id={tenetId(`${L}-00`, i + 1)}
-                  className="grid scroll-mt-24 grid-cols-[3rem_1fr] py-3"
-                  style={{ borderColor: `${c}33` }}
-                >
-                  <span className="text-2xl font-light leading-none" style={{ color: c }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="font-light text-white/85">
-                    {d}
-                    <Tag id={tenetId(`${L}-00`, i + 1)} />
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </section>
+        <section id="directives" className={section}>
+          <div className="section-container min-w-0">
+            <SectionTitle>Directives</SectionTitle>
+            <GlassContainer
+              variant="default"
+              glow
+              lit
+              padding="lg"
+              className="reveal mx-auto w-full max-w-3xl text-left"
+            >
+              <ol className="divide-y divide-white/10">
+                {pillar.directives.map((d, i) => (
+                  <li
+                    key={d}
+                    id={tenetId(`${L}-00`, i + 1)}
+                    className="grid scroll-mt-24 grid-cols-[3rem_1fr] py-3"
+                  >
+                    <span className="text-2xl font-light leading-none text-vitae-green">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-white/80">
+                      {d}
+                      <Tag id={tenetId(`${L}-00`, i + 1)} />
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </GlassContainer>
+          </div>
+        </section>
 
-          {/* Protocol */}
-          <section className="mt-8 w-full text-left sm:mt-10">
-            <h2 className={label} style={{ color: c }}>
-              {pillar.protocolTitle}
-            </h2>
-            <ul className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-6">
+        <section id="protocol" className={section}>
+          <div className="section-container min-w-0">
+            <SectionTitle>Protocol</SectionTitle>
+            <ul className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
               {pillar.protocol.map((p, i) => (
-                <li
-                  key={p.k}
-                  id={tenetId(`${L}-P`, i + 1)}
-                  className="scroll-mt-24 rounded-xl border p-4 sm:p-6"
-                  style={{ borderColor: `${c}4d`, background: `${c}0a` }}
-                >
-                  <p className={label} style={{ color: c }}>
-                    {p.k}
-                    <Tag id={tenetId(`${L}-P`, i + 1)} />
-                  </p>
-                  <p className="mt-2 font-light leading-relaxed text-white/80">{p.v}</p>
+                <li key={p.k} id={tenetId(`${L}-P`, i + 1)} className="scroll-mt-24">
+                  <GlassContainer
+                    variant="default"
+                    glow
+                    lit
+                    padding="md"
+                    className="reveal h-full text-center"
+                  >
+                    <p className={label}>
+                      {p.k}
+                      <Tag id={tenetId(`${L}-P`, i + 1)} />
+                    </p>
+                    <p className="mt-3 text-sm leading-relaxed text-white/70">{p.v}</p>
+                  </GlassContainer>
                 </li>
               ))}
             </ul>
-          </section>
-
-          {/* Dossier index */}
-          <nav className="mt-8 flex w-full flex-wrap gap-2 sm:mt-10" aria-label="Files">
-            {pillar.dossiers.map((d) => (
-              <a
-                key={d.code}
-                href={`#${d.code}`}
-                className="rounded-full border px-3 py-1 text-xs font-medium transition hover:bg-white/10"
-                style={{ borderColor: `${c}4d`, color: c }}
-              >
-                {d.code} · {d.title}
-              </a>
-            ))}
-          </nav>
-
-          {/* Dossiers */}
-          <div className="mt-8 flex w-full flex-col gap-4 text-left sm:mt-10 sm:gap-6">
-            {pillar.dossiers.map((d, i) => (
-              <details
-                key={d.code}
-                id={d.code}
-                open={i === 0}
-                className="group scroll-mt-8 rounded-xl border bg-white/[0.02]"
-                style={{ borderColor: `${c}33` }}
-              >
-                <summary className="flex cursor-pointer list-none items-baseline gap-4 p-4 sm:p-6 [&::-webkit-details-marker]:hidden">
-                  <span className={label} style={{ color: c }}>
-                    {d.code}
-                  </span>
-                  <h2 className="flex-1 text-xl font-medium sm:text-2xl">{d.title}</h2>
-                  <span
-                    className="text-xl transition-transform group-open:rotate-45"
-                    style={{ color: c }}
-                    aria-hidden
-                  >
-                    +
-                  </span>
-                </summary>
-                <div className="px-4 pb-4 sm:px-6 sm:pb-6">
-                  <p
-                    className="border-l-2 pl-4 font-light leading-relaxed text-white/70"
-                    style={{ borderColor: c }}
-                  >
-                    {d.brief}
-                  </p>
-                  <dl className="mt-4 divide-y" style={{ borderColor: `${c}26` }}>
-                    {d.entries.map((e, j) => (
-                      <div
-                        key={e.k}
-                        id={tenetId(d.code, j + 1)}
-                        className="grid scroll-mt-24 gap-1 py-3 sm:grid-cols-[12rem_1fr] sm:gap-6"
-                        style={{ borderColor: `${c}26` }}
-                      >
-                        <dt className="font-medium" style={{ color: c }}>
-                          {e.k}
-                          <Tag id={tenetId(d.code, j + 1)} />
-                        </dt>
-                        <dd className="font-light leading-relaxed text-white/80">{e.v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              </details>
-            ))}
           </div>
+        </section>
 
-          {pillar.related.length > 0 && (
-            <section className="mt-8 w-full text-left sm:mt-10">
-              <h2 className={label} style={{ color: c }}>
-                Posts · {pillar.related.length}
-              </h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-6">
+        <section id="files" className={section}>
+          <div className="section-container min-w-0">
+            <SectionTitle>Files</SectionTitle>
+            <div className="flex w-full flex-col gap-4 text-left sm:gap-6">
+              {pillar.dossiers.map((d, i) => (
+                <details
+                  key={d.code}
+                  id={d.code}
+                  open={i === 0}
+                  className="reveal group glass-panel scroll-mt-8 rounded-xl"
+                >
+                  <summary className="relative z-10 flex cursor-pointer list-none items-baseline gap-4 p-4 sm:p-6 [&::-webkit-details-marker]:hidden">
+                    <span className={label}>{d.code}</span>
+                    <h3 className="flex-1 text-lg font-semibold text-white sm:text-xl">
+                      {d.title}
+                    </h3>
+                    <span
+                      className="text-xl text-vitae-green transition-transform group-open:rotate-45"
+                      aria-hidden
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <div className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-6">
+                    <p className="leading-relaxed text-white/70">{d.brief}</p>
+                    <dl className="mt-4 divide-y divide-white/10">
+                      {d.entries.map((e, j) => (
+                        <div
+                          key={e.k}
+                          id={tenetId(d.code, j + 1)}
+                          className="grid scroll-mt-24 gap-1 py-3 sm:grid-cols-[12rem_1fr] sm:gap-6"
+                        >
+                          <dt className="font-medium text-vitae-green">
+                            {e.k}
+                            <Tag id={tenetId(d.code, j + 1)} />
+                          </dt>
+                          <dd className="leading-relaxed text-white/80">{e.v}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {pillar.related.length > 0 && (
+          <section id="posts" className={section}>
+            <div className="section-container min-w-0">
+              <SectionTitle>Posts</SectionTitle>
+              <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                 {pillar.related.map((r) => (
                   <Link
                     key={r.href}
                     href={r.href}
-                    className="group rounded-xl border p-4 transition hover:bg-white/[0.04] sm:p-6"
-                    style={{ borderColor: `${c}4d` }}
+                    className="reveal glass-panel glass-panel--hover flex h-full flex-col items-center gap-2 rounded-xl p-4 text-center sm:p-6"
                   >
-                    <p className="text-lg font-medium text-white">
-                      {r.label}{' '}
-                      <span className="transition group-hover:translate-x-0.5" style={{ color: c }}>
-                        →
+                    <span className="relative z-10 text-lg font-semibold text-white">
+                      {r.label}
+                    </span>
+                    {r.blurb && (
+                      <span className="relative z-10 text-sm leading-5 text-white/70">
+                        {r.blurb}
                       </span>
-                    </p>
-                    {r.blurb && <p className="mt-1 text-sm font-light text-white/60">{r.blurb}</p>}
+                    )}
                   </Link>
                 ))}
               </div>
-            </section>
-          )}
-
-          {/* Other pillars */}
-          <section className="mt-8 grid w-full gap-4 text-left sm:mt-10 sm:grid-cols-2 sm:gap-6">
-            {others.map((o) => (
-              <Link
-                key={o.slug}
-                href={`/${o.slug}`}
-                className="rounded-xl border p-4 transition hover:bg-white/[0.04] sm:p-6"
-                style={{ borderColor: `${o.color}4d` }}
-              >
-                <p className={label} style={{ color: o.color }}>
-                  Pillar {o.numeral} · {o.codename}
-                </p>
-                <p
-                  className="mt-2 text-2xl font-bold uppercase tracking-[0.15em]"
-                  style={{ color: o.color }}
-                >
-                  {o.name} →
-                </p>
-                <p className="mt-2 text-sm font-light text-white/60">{o.summary}</p>
-              </Link>
-            ))}
+            </div>
           </section>
+        )}
 
-          <p className="mt-8 text-center text-sm font-light leading-relaxed text-white/60 sm:mt-10">
-            {pillar.disclaimer}
-          </p>
-
-          <Link href="/" className={`${label} mt-8 hover:text-white sm:mt-10`} style={{ color: c }}>
-            ← Vitaegis
-          </Link>
+        <section id="pillars" className={section}>
+          <div className="section-container min-w-0">
+            <SectionTitle>Pillars</SectionTitle>
+            <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+              {others.map((o) => (
+                <Link
+                  key={o.slug}
+                  href={`/${o.slug}`}
+                  className="reveal glass-panel glass-panel--hover flex h-full flex-col items-center gap-3 rounded-xl p-4 text-center sm:p-6"
+                >
+                  <span className={`${label} relative z-10`}>{o.codename}</span>
+                  <span className="relative z-10 text-2xl font-bold uppercase tracking-[0.15em] text-vitae-green">
+                    {o.name}
+                  </span>
+                  <span className="relative z-10 text-sm leading-5 text-white/70">{o.summary}</span>
+                </Link>
+              ))}
+            </div>
+            <p className="mt-8 max-w-3xl text-sm leading-relaxed text-white/60 sm:mt-10">
+              {pillar.disclaimer}
+            </p>
+          </div>
         </section>
-      </div>
-    </main>
+
+        <Footer />
+      </main>
+    </div>
   );
 }

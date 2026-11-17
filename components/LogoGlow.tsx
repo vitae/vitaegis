@@ -20,6 +20,8 @@ import { useId } from 'react';
 interface Props {
   text?: string;
   className?: string;
+  /** Stretch the letters to this width (viewBox units), so any word spans what VITAEGIS does. */
+  inkWidth?: number;
 }
 
 const W = 1000;
@@ -32,7 +34,7 @@ const ACID = '#66FF66';
 const LIME = '#00FF00';
 const DEEP = '#00A300';
 
-export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
+export default function LogoGlow({ text = 'VITAEGIS', className = '', inkWidth }: Props) {
   const id = useId().replace(/:/g, '');
 
   const mark = (fill: string, extra: React.SVGProps<SVGTextElement> = {}) => (
@@ -44,6 +46,7 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '' }: Props) {
       fontWeight={700}
       fontSize={150}
       letterSpacing={10}
+      {...(inkWidth ? { textLength: inkWidth, lengthAdjust: 'spacing' as const } : {})}
       fill={fill}
       {...extra}
     >

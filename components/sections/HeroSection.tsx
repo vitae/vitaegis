@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
+import { Fragment, type CSSProperties } from 'react';
 import { PILLAR_COLORS } from '@/lib/pillars';
 import GlassContainer from '@/components/GlassContainer';
 import LogoGlow from '@/components/LogoGlow';
@@ -22,7 +22,19 @@ const TEXT =
 /** Share of the logo's width that the VITAEGIS letters cover, so the box lines up with them. */
 const LOGO_INK = 0.7733;
 
-export default function HeroSection() {
+interface Props {
+  /** Word shown as the glass logo. Anything but the default is stretched to the same width. */
+  title?: string;
+  tagline?: string;
+  /** Where ENTER goes. */
+  enterHref?: string;
+}
+
+export default function HeroSection({
+  title,
+  tagline = 'Center for Inner Peace',
+  enterHref = '#token',
+}: Props) {
   return (
     <section
       id="hero"
@@ -31,7 +43,7 @@ export default function HeroSection() {
     >
       <div className="section-container">
         <h1 className="mb-6 w-[min(92vw,720px)] sm:mb-8">
-          <LogoGlow />
+          {title ? <LogoGlow text={title} inkWidth={LOGO_INK * 1000} /> : <LogoGlow />}
         </h1>
 
         <GlassContainer
@@ -46,7 +58,12 @@ export default function HeroSection() {
             <p
               className={`${TEXT} text-center text-vitae-green sm:-mr-[0.2em] sm:flex sm:justify-between`}
             >
-              <span>Center</span> <span>for</span> <span>Inner</span> <span>Peace</span>
+              {tagline.split(' ').map((word, i) => (
+                <Fragment key={i}>
+                  {i > 0 && ' '}
+                  <span>{word}</span>
+                </Fragment>
+              ))}
             </p>
 
             <div className="grid w-full grid-cols-3 items-center text-base sm:-mr-[0.2em] sm:flex sm:w-auto sm:justify-between sm:text-xl md:text-2xl">
@@ -63,7 +80,7 @@ export default function HeroSection() {
             </div>
 
             <a
-              href="#token"
+              href={enterHref}
               className={`${TEXT} mt-[0.05em] inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none`}
             >
               ENTER
