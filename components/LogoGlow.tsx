@@ -1,20 +1,11 @@
-'use client';
-
 import { useId } from 'react';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Glowing wordmark
-   Modelled frame by frame on the 2026 Xbox boot animation (PROJECTS/VITAEGIS/xbox-ref):
-     0.0–1.6 s  The mark scales up from about half size out of the dark.
-     0.6–2.1 s  The glass fills from the bottom up: translucent, then solid, pale
-                green at the base shading to deep green at the top.
-     2.1 s →    Settle: solid lit glass with a slow specular sweep.
+   Solid lit glass, pale green at the base shading to deep green at the top, with a slow
+   specular sweep. It is drawn in its final state with the first paint: no entrance.
    No outline pass and no bevel bands: on a wordmark those read as boxes inside the
-   A and E, so the letters are left as clean lit shapes.
-   Kept cheap on purpose: one blurred layer for the glow, and only opacity and
-   transform animate, so
-   phones composite it without re-rastering filters. No per-frame JavaScript;
-   reduced-motion shows the settled state.
+   A and E, so the letters are left as clean lit shapes. One blurred layer for the glow.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 interface Props {
@@ -69,7 +60,7 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '', inkWidth }
           <stop offset="0.75" stopColor={DEEP} />
           <stop offset="1" stopColor="#006B00" />
         </linearGradient>
-        {/* The fill rising through the glass during the entrance. */}
+        {/* Fades the glass out toward the top of the letters. */}
         <linearGradient id={`${id}-rise`} x1="0" y1="1" x2="0" y2="0">
           <stop offset="0" stopColor="#fff" />
           <stop offset="0.6" stopColor="#fff" />
@@ -117,7 +108,6 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '', inkWidth }
         </filter>
       </defs>
 
-      {/* Everything that scales in with the entrance. */}
       <g className="logo-glow__mark">
         {/* Phase 2 and 3: the glass filling from the bottom, then its bevels. */}
         <g className="logo-glow__glass" mask={`url(#${id}-risemask)`}>
@@ -129,19 +119,7 @@ export default function LogoGlow({ text = 'VITAEGIS', className = '', inkWidth }
         </g>
       </g>
 
-      <style>{`
-        .logo-glow__mark, .logo-glow__glass { will-change: opacity, transform; }
-        .logo-glow__mark { transform-box: fill-box; transform-origin: 50% 60%; animation: lg-scale 1.7s cubic-bezier(0.2,0.6,0.2,1) both; }
-        .logo-glow__glass { animation: lg-glass 1.3s ease-out 0.6s both; }
-        .logo-glow__rise { animation: lg-rise 1.5s cubic-bezier(0.3,0.6,0.3,1) 0.6s both; }
-        @keyframes lg-scale { 0% { transform: scale(0.52); } 100% { transform: scale(1); } }
-        @keyframes lg-glass { 0% { opacity: 0; } 100% { opacity: 1; } }
-        @keyframes lg-rise { 0% { transform: translateY(260px); } 100% { transform: translateY(-40px); } }
-        @media (prefers-reduced-motion: reduce) {
-          .logo-glow__mark, .logo-glow__glass, .logo-glow__rise { animation: none; }
-          .logo-glow__rise { transform: translateY(-40px); }
-        }
-      `}</style>
+      <style>{`.logo-glow__rise { transform: translateY(-40px); }`}</style>
     </svg>
   );
 }

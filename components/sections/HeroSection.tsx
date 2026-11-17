@@ -6,8 +6,8 @@ import LogoGlow from '@/components/LogoGlow';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - HeroSection
-   Server-rendered. The entrance is CSS only, so the mark is on screen with the first
-   paint instead of waiting for JavaScript.
+   Server-rendered with no entrance animation, so the mark is on screen with the first
+   paint.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 const PILLARS = [
@@ -51,10 +51,10 @@ export default function HeroSection({
           glow
           lit
           padding="none"
-          className="hero-in w-full sm:w-[calc(min(92vw,720px)*var(--logo-ink))]"
-          style={{ '--d': '400ms', '--logo-ink': LOGO_INK } as CSSProperties}
+          className="w-full sm:w-[calc(min(92vw,720px)*var(--logo-ink))]"
+          style={{ '--logo-ink': LOGO_INK } as CSSProperties}
         >
-          <div className="flex w-full flex-col gap-5 p-6 sm:gap-6 sm:p-10 md:p-12">
+          <div className="flex w-full flex-col gap-5 p-6 text-base sm:gap-[1.387em] sm:p-[1.667em] sm:pt-[1.607em] sm:text-xl md:text-2xl">
             <p
               className={`${TEXT} text-center text-vitae-green sm:-mr-[0.2em] sm:flex sm:justify-between`}
             >
@@ -81,7 +81,7 @@ export default function HeroSection({
 
             <a
               href={enterHref}
-              className={`${TEXT} mt-[0.05em] inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none`}
+              className={`${TEXT} mt-[0.05em] sm:mt-[0.06em] inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none`}
             >
               ENTER
             </a>
