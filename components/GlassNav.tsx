@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HiHome, HiShoppingBag, HiUserGroup, HiCollection, HiChevronUp } from 'react-icons/hi';
+import {
+  HiHome,
+  HiInformationCircle,
+  HiShoppingBag,
+  HiUserGroup,
+  HiCollection,
+  HiChevronUp,
+} from 'react-icons/hi';
 import { projects } from '@/components/projects';
 
 interface NavItem {
@@ -14,6 +21,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'hero', label: 'HOME', icon: HiHome },
+  { id: 'about', label: 'ABOUT', icon: HiInformationCircle },
   { id: 'token', label: 'STORE', icon: HiShoppingBag },
   { id: 'projects', label: 'PROJECTS', icon: HiCollection },
   { id: 'community', label: 'CONNECT', icon: HiUserGroup },
@@ -57,7 +65,13 @@ export default function GlassNav() {
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    // The page keeps growing after first paint (fonts, images); re-check when it does.
+    const resized = new ResizeObserver(handleScroll);
+    resized.observe(document.body);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      resized.disconnect();
+    };
   }, [isHome]);
 
   // Close the projects sheet on navigation
@@ -152,7 +166,7 @@ export default function GlassNav() {
 
           {/* Bar: flush to the bottom edge, its background filling the home-indicator area */}
           <div
-            className="relative overflow-hidden border-t border-white/10 bg-black/85 backdrop-blur-xl shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
+            className="relative overflow-hidden border-t border-white/10 bg-black/65 backdrop-blur-xl backdrop-saturate-[1.8] shadow-[0_-4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.22)]"
             style={{
               paddingBottom: 'env(safe-area-inset-bottom, 0px)',
               paddingLeft: 'env(safe-area-inset-left, 0px)',

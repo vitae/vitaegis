@@ -16,7 +16,7 @@ export default function AboutSection() {
           <div className="flex flex-col items-center gap-5 text-base leading-relaxed text-white/80 sm:text-lg">
             <p>
               VITAEGIS is a portmanteau of the words VITAE, LIFE and AEGIS, FORCE which represents
-              the life force energy of all things and how we can access that infinite intelligence.
+              the life force energy of all things and how we can access infinite intelligence.
             </p>
             <p>We offer advanced intelligence as a service.</p>
             <p className="font-medium uppercase tracking-[0.2em] text-vitae-green">

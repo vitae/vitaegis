@@ -18,10 +18,15 @@ const ATLAS_COLS = 8;
 const ATLAS_ROWS = Math.ceil(CHARS.length / ATLAS_COLS);
 const CELL = 64;
 
-/** Columns across, depth layers, glyphs per stream: the instance count is their product. */
-const COLUMNS = 34;
-const LAYERS = 3;
+/** Most columns a very wide screen can show, and glyphs per stream: the instance count is
+    their product. Each column carries one stream at its own depth, so streams never overlap. */
+const MAX_COLUMNS = 48;
 const TRAIL = 24;
+/** Distance between columns, in world units at the front of the scene (a glyph is 0.5 wide). */
+const PITCH = 0.9;
+const CAM_Z = 10;
+/** How far back the deepest stream sits. */
+const DEPTH = 12;
 
 /** Every character once, white on transparent, for the shader to pick from by index. */
 function buildAtlas() {
@@ -113,24 +118,23 @@ export default function MatrixRainGPU() {
         0.1,
         60,
       );
-      camera.position.z = 10;
+      camera.position.z = CAM_Z;
 
       // ── geometry: one quad, instanced ────────────────────────────────────────
-      const count = COLUMNS * LAYERS * TRAIL;
+      const count = MAX_COLUMNS * TRAIL;
       const geometry = new THREE.InstancedBufferGeometry();
       const quad = new THREE.PlaneGeometry(0.5, 0.6);
       geometry.index = quad.index;
       geometry.setAttribute('position', quad.getAttribute('position'));
       geometry.setAttribute('uv', quad.getAttribute('uv'));
       geometry.instanceCount = count;
-      // Column (0..COLUMNS-1), layer (0..LAYERS-1) and slot in the trail (0..TRAIL-1).
-      const slotData = new Float32Array(count * 3);
+      // Column (0..MAX_COLUMNS-1) and slot in the trail (0..TRAIL-1).
+      const slotData = new Float32Array(count * 2);
       for (let i = 0; i < count; i++) {
-        slotData[i * 3] = Math.floor(i / (LAYERS * TRAIL));
-        slotData[i * 3 + 1] = Math.floor(i / TRAIL) % LAYERS;
-        slotData[i * 3 + 2] = i % TRAIL;
+        slotData[i * 2] = Math.floor(i / TRAIL);
+        slotData[i * 2 + 1] = i % TRAIL;
       }
-      geometry.setAttribute('glyphSlot', new THREE.InstancedBufferAttribute(slotData, 3));
+      geometry.setAttribute('glyphSlot', new THREE.InstancedBufferAttribute(slotData, 2));
 
       const atlas = new THREE.CanvasTexture(buildAtlas());
       atlas.colorSpace = THREE.SRGBColorSpace;
@@ -141,6 +145,8 @@ export default function MatrixRainGPU() {
       // Pointer in world units at z=0 (far off screen until it moves) and page scroll in screens.
       const uPointer = uniform(new THREE.Vector2(999, 999));
       const uScroll = uniform(0);
+      // Columns that fit this screen at PITCH apart; the rest of the instances stay dark.
+      const uCols = uniform(MAX_COLUMNS);
 
       const material = new THREE.MeshBasicNodeMaterial();
       material.transparent = true;
@@ -149,30 +155,36 @@ export default function MatrixRainGPU() {
 
       // Everything below runs on the GPU, once per instance per frame.
       // Not "meta": that is a reserved word in WGSL.
-      const m = attribute('glyphSlot', 'vec3');
+      const m = attribute('glyphSlot', 'vec2');
       const col = m.x;
-      const layer = m.y;
-      const slot = m.z;
-      const seed = hash(col.mul(31).add(layer.mul(977)));
-      const seed2 = hash(col.mul(53).add(layer.mul(1301)).add(7));
+      const slot = m.y;
+      const seed = hash(col.mul(31).add(11));
+      const seed2 = hash(col.mul(53).add(7));
 
-      const depth = layer.mul(-3.5); // layers sit further back
+      // Each column sits at its own depth. k is how much wider the view is back there, so
+      // placing a stream at (screen fraction × k) keeps the columns evenly spaced on screen
+      // while perspective shrinks, dims and slows the far ones.
+      const k = hash(col.mul(97).add(3))
+        .pow(1.6)
+        .mul(DEPTH / CAM_Z)
+        .add(1);
+      const depth = float(1).sub(k).mul(CAM_Z);
+      const viewH = uView.y.mul(k);
       const rowH = float(0.62);
       const trailLen = float(TRAIL).sub(seed2.mul(10)); // 14–24 glyphs long
       const speed = seed.mul(3).add(1.8); // units per second
-      // The cycle is three screens tall, so each stream spends most of its time off
-      // screen and only about a third of the columns are lit at any moment.
-      const span = uView.y.mul(3).add(trailLen.mul(rowH)).add(2);
-      // Page scroll pushes the streams back up, nearer layers further: parallax, and it wraps
-      // with the stream's own cycle so it holds on a page of any length.
-      const drift = uScroll.mul(uView.y).mul(float(0.35).sub(layer.mul(0.1)));
+      // The cycle is a screen and a half tall, so a stream is off screen for part of it.
+      const span = viewH.mul(1.5).add(trailLen.mul(rowH)).add(2);
+      // Page scroll pushes the streams back up; the same push reads smaller on far streams,
+      // which is the parallax. It wraps with the stream's own cycle on a page of any length.
+      const drift = uScroll.mul(uView.y).mul(0.35);
       const head = fract(seed2.add(uTime.mul(speed).sub(drift).div(span))).mul(span); // 0..span
-      const headY = uView.y.mul(0.5).add(1).sub(head);
-      const x = col.div(COLUMNS).sub(0.5).mul(uView.x.mul(1.15)).add(layer.mul(0.37));
+      const headY = viewH.mul(0.5).add(1).sub(head);
+      const x = col.add(0.5).div(uCols).sub(0.5).mul(uView.x.mul(1.1)).mul(k);
       const y = headY.add(slot.mul(rowH));
 
-      // Alive only while the slot is inside this stream's trail.
-      const alive = step(slot, trailLen);
+      // Alive only while the slot is inside this stream's trail and the column is on screen.
+      const alive = step(slot, trailLen).mul(step(col, uCols.sub(0.5)));
       const fade = float(1).sub(slot.div(trailLen)).mul(alive);
       const isHead = float(1).sub(step(0.5, slot));
 
@@ -187,28 +199,29 @@ export default function MatrixRainGPU() {
 
       // Which glyph: changes a few times a second, more often near the head.
       const tick = floor(uTime.mul(seed.mul(6).add(4)).add(slot.mul(0.37)));
-      const glyph = floor(
-        hash(col.mul(7).add(slot.mul(131)).add(tick.mul(17)).add(layer)).mul(CHARS.length),
-      );
+      const glyph = floor(hash(col.mul(7).add(slot.mul(131)).add(tick.mul(17))).mul(CHARS.length));
       const cell = vec2(glyph.mod(ATLAS_COLS), floor(glyph.div(ATLAS_COLS)));
       const atlasUv = uv().add(cell).div(vec2(ATLAS_COLS, ATLAS_ROWS));
       const sampled = texture(atlas, atlasUv);
 
       const green = vec3(0.0, 1.0, 0.0);
-      const pale = vec3(0.85, 1.0, 0.85);
+      const pale = vec3(0.7, 1.0, 0.7);
       const colorNode = mix(green, pale, isHead);
-      const depthFade = float(1).sub(layer.div(LAYERS).mul(0.8));
+      const depthFade = float(1).sub(
+        k
+          .sub(1)
+          .div(DEPTH / CAM_Z)
+          .mul(0.6),
+      );
       // Streams differ in brightness, so a few bright ones stand out of a dim field.
-      const streamGain = hash(col.mul(13).add(layer.mul(401)).add(3))
-        .mul(0.6)
-        .add(0.4);
+      const streamGain = hash(col.mul(13).add(5)).mul(0.45).add(0.55);
       // Glyphs within reach of the pointer light up, falling off smoothly with distance.
-      const reach = float(1).sub(smoothstep(0.0, 3.2, vec2(x, y).sub(uPointer).length()));
+      const reach = float(1).sub(smoothstep(0.0, 3.2, vec2(x, y).div(k).sub(uPointer).length()));
       const alpha = sampled.a
         .mul(fade)
         .mul(depthFade)
         .mul(streamGain.add(reach.mul(0.9)))
-        .mul(mix(0.3, 0.95, isHead));
+        .mul(mix(0.5, 1.0, isHead));
       material.colorNode = vec4(colorNode.mul(alpha), alpha);
 
       const mesh = new THREE.Mesh(geometry, material);
@@ -232,6 +245,10 @@ export default function MatrixRainGPU() {
         renderer.setSize(w, h);
         const vh = 2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.z;
         uView.value.set(vh * camera.aspect, vh);
+        uCols.value = Math.max(
+          4,
+          Math.min(MAX_COLUMNS, Math.floor((vh * camera.aspect * 1.1) / PITCH)),
+        );
       };
       fit();
       window.addEventListener('resize', fit);
@@ -263,7 +280,7 @@ export default function MatrixRainGPU() {
         timer.update();
         const t = timer.getElapsed();
         uTime.value = t;
-        camera.position.x = Math.sin(t * 0.3) * 0.5;
+        camera.position.x = Math.sin(t * 0.3) * 0.35;
         camera.position.y = Math.cos(t * 0.4) * 0.3;
         post.render();
       });
