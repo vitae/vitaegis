@@ -3,6 +3,7 @@ import HeroSection from '@/components/sections/HeroSection';
 import AboutSection from '@/components/sections/AboutSection';
 import LiveStream from '@/components/LiveStream';
 import TokenSection from '@/components/sections/TokenSection';
+import ProjectsSection from '@/components/sections/ProjectsSection';
 import CommunitySection from '@/components/sections/CommunitySection';
 import Footer from '@/components/Footer';
 
@@ -23,6 +24,7 @@ export default function Home() {
         <AboutSection />
         <LiveStream />
         <TokenSection />
+        <ProjectsSection />
         <CommunitySection />
         <Footer />
       </main>
