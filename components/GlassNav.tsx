@@ -166,7 +166,7 @@ export default function GlassNav() {
 
           {/* Bar: flush to the bottom edge, its background filling the home-indicator area */}
           <div
-            className="relative overflow-hidden border-t border-white/10 bg-black/65 backdrop-blur-xl backdrop-saturate-[1.8] shadow-[0_-4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.22)]"
+            className="relative overflow-hidden border-t border-white/10 bg-black/65 backdrop-blur-md backdrop-saturate-[1.8] shadow-[0_-4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.22)]"
             style={{
               paddingBottom: 'env(safe-area-inset-bottom, 0px)',
               paddingLeft: 'env(safe-area-inset-left, 0px)',
