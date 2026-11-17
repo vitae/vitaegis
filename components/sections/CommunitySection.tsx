@@ -39,9 +39,7 @@ export default function CommunitySection() {
         className="section-container flex flex-col items-center justify-center mx-auto"
         style={{ width: '100%' }}
       >
-        <SectionTitle tagline="Connect globally, share your journey, let's grow together.">
-          Connect
-        </SectionTitle>
+        <SectionTitle tagline="Connect globally and share your journey.">Connect</SectionTitle>
 
         {/* Social Links Grid */}
         <div className="mb-8 grid w-full grid-cols-4 gap-3 sm:mb-10 sm:gap-6 lg:grid-cols-8 lg:gap-4">
