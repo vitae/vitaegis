@@ -51,8 +51,10 @@ export default function DonatePage() {
         </div>
 
         <p className={s.back}>
-          <Link href="/bitcoin">Bitcoin library →</Link>
-          <Link href="/">VITAEGIS home →</Link>
+          <Link href="/bitcoin">BITCOIN</Link>
+          <Link href="/" className={s.home}>
+            HOME
+          </Link>
         </p>
       </div>
     </main>

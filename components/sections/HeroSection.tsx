@@ -47,7 +47,7 @@ export default function HeroSection() {
           style={{ '--d': '400ms' } as CSSProperties}
         >
           <div className="flex w-full flex-col items-center gap-5 sm:gap-6">
-            <p className="text-center text-sm uppercase tracking-[0.2em] text-vitae-green sm:text-lg md:text-xl">
+            <p className="text-center text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-vitae-green">
               Center for Inner Peace
             </p>
 
@@ -57,7 +57,7 @@ export default function HeroSection() {
                   key={href}
                   href={href}
                   style={{ '--pc': color } as CSSProperties}
-                  className="block whitespace-nowrap text-center text-base font-light tracking-[0.1em] text-[color:var(--pc)] transition-colors hover:text-white focus-visible:text-white sm:text-2xl sm:tracking-[0.2em] md:text-3xl lg:text-4xl"
+                  className="block whitespace-nowrap text-center text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-[color:var(--pc)] transition-colors hover:text-white focus-visible:text-white"
                 >
                   {label}
                 </Link>
@@ -66,7 +66,7 @@ export default function HeroSection() {
 
             <a
               href="#token"
-              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-sm font-medium tracking-[0.08em] text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none sm:w-auto sm:text-base"
+              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-vitae-green px-8 py-3 text-base font-medium uppercase tracking-[0.15em] sm:text-xl sm:tracking-[0.2em] md:text-2xl text-black shadow-neon-sm transition-[box-shadow,transform] duration-200 hover:shadow-neon-md active:scale-[0.97] active:shadow-none sm:w-auto"
             >
               ENTER
             </a>

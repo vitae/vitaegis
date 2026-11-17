@@ -14,7 +14,8 @@ export default function TokenSection() {
             <GlassContainer
               key={product.id}
               variant="default"
-              glow={product.featured}
+              glow
+              lit
               padding="md"
               className="reveal flex h-full flex-col text-center"
             >

@@ -10,7 +10,7 @@ interface GlassContainerProps {
   className?: string;
   variant?: 'default' | 'subtle' | 'prominent';
   glow?: boolean;
-  /** Full neon rim and bloom. Keep it to the one pane per screen that matters most. */
+  /** Full neon rim and bloom. */
   lit?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   style?: CSSProperties;

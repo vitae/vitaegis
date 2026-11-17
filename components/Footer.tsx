@@ -7,16 +7,19 @@ export default function Footer() {
         <span className="inline-flex min-h-[44px] items-center">© 2026 VITAEGIS</span>
         <Link
           href="/privacy"
-          className="inline-flex items-center transition-colors hover:text-white"
+          className="inline-flex items-center transition-colors hover:text-vitae-green focus-visible:text-vitae-green active:text-vitae-green"
         >
           Privacy
         </Link>
-        <Link href="/terms" className="inline-flex items-center transition-colors hover:text-white">
+        <Link
+          href="/terms"
+          className="inline-flex items-center transition-colors hover:text-vitae-green focus-visible:text-vitae-green active:text-vitae-green"
+        >
           Terms
         </Link>
         <Link
           href="/donate"
-          className="inline-flex items-center transition-colors hover:text-white"
+          className="inline-flex items-center transition-colors hover:text-vitae-green focus-visible:text-vitae-green active:text-vitae-green"
         >
           Donate
         </Link>

@@ -507,8 +507,7 @@ a:active,
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-/* The lit pane: full neon rim and bloom. One per screen, for the thing that matters most,
-   plus whatever the pointer is on. */
+/* The lit pane: full neon rim and bloom. */
 .glass-panel--lit {
   --rim: 0.95;
   box-shadow:

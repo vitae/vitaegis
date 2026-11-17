@@ -54,7 +54,7 @@ export default function CommunitySection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`VITAEGIS on ${social.name}`}
-                className="reveal group glass-panel glass-panel--hover relative min-w-0 px-1 py-4 sm:p-6 rounded-xl text-center"
+                className="reveal group glass-panel glass-panel--lit glass-panel--hover relative min-w-0 px-1 py-4 sm:p-6 rounded-xl text-center"
               >
                 {/* Icon */}
                 <div className="flex justify-center mb-3">
@@ -84,7 +84,7 @@ export default function CommunitySection() {
 
         {/* Newsletter Section */}
         <div className="reveal w-full">
-          <div className="glass-panel glass-panel--prominent relative p-6 sm:p-8 rounded-xl overflow-hidden w-full">
+          <div className="glass-panel glass-panel--lit relative p-6 sm:p-8 rounded-xl overflow-hidden w-full">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div
@@ -99,58 +99,53 @@ export default function CommunitySection() {
             {/* Top edge glow */}
             <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vitae-green/50 to-transparent" />
 
-            <div className="relative grid gap-6 sm:gap-8">
-              {/* Left - Text */}
-              <div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+            <div className="relative flex flex-col items-center gap-6 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <h3 className="text-2xl font-bold text-white sm:text-3xl">
                   Stay <span className="text-vitae-green">Connected</span>
                 </h3>
                 <p className="text-white/70">Get updates on new intel and events.</p>
               </div>
 
-              {/* Right - Form */}
-              <div>
-                {/* Field on top, button centred under it */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    subscribe();
-                  }}
-                  className="mx-auto flex w-full max-w-md flex-col items-center gap-4"
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  subscribe();
+                }}
+                className="flex w-full max-w-md flex-col items-center gap-4"
+              >
+                <label className="glass-panel glass-panel--lit glass-panel--hover flex min-h-[52px] w-full min-w-0 items-center justify-center rounded-xl px-4 focus-within:border-[#00ff00]/60">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Your Email"
+                    aria-label="Your email"
+                    className="relative z-10 m-0 w-full min-w-0 bg-transparent p-0 text-center text-base text-white placeholder:text-white/30 outline-none"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={subscribeState === 'busy'}
+                  className="glass-panel glass-panel--lit glass-panel--hover flex min-h-[52px] w-full items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white disabled:opacity-60 sm:w-auto sm:min-w-[160px]"
+                  style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
                 >
-                  <label className="glass-panel glass-panel--hover flex min-h-[52px] w-full min-w-0 items-center justify-center rounded-xl px-4 focus-within:border-[#00ff00]/60">
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Your Email"
-                      aria-label="Your email"
-                      className="relative z-10 m-0 w-full min-w-0 bg-transparent p-0 text-center text-base text-white placeholder:text-white/30 outline-none"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={subscribeState === 'busy'}
-                    className="glass-panel glass-panel--hover flex min-h-[52px] min-w-[12rem] items-center justify-center rounded-xl px-8 text-base font-medium tracking-wide text-[#00ff00] transition-colors hover:text-white disabled:opacity-60"
-                    style={{ textShadow: '0 0 12px rgba(0,255,0,0.35)' }}
-                  >
-                    <span className="relative z-10">
-                      {subscribeState === 'busy'
-                        ? 'Sending…'
-                        : subscribeState === 'done'
-                          ? "You're in"
-                          : 'Subscribe'}
-                    </span>
-                  </button>
-                </form>
-                <p
-                  className={`mt-3 min-h-[1rem] text-xs ${subscribeState === 'error' ? 'text-vitae-red' : 'text-vitae-green'}`}
-                  aria-live="polite"
-                >
-                  {subscribeNote}
-                </p>
-              </div>
+                  <span className="relative z-10">
+                    {subscribeState === 'busy'
+                      ? 'Sending…'
+                      : subscribeState === 'done'
+                        ? "You're in"
+                        : 'Subscribe'}
+                  </span>
+                </button>
+              </form>
+              <p
+                className={`text-xs empty:hidden ${subscribeState === 'error' ? 'text-vitae-red' : 'text-vitae-green'}`}
+                aria-live="polite"
+              >
+                {subscribeNote}
+              </p>
             </div>
           </div>
         </div>
