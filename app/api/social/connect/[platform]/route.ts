@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomBytes } from 'node:crypto';
+import { adminAuthedByLink } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,8 +17,7 @@ const base64url = (b: Buffer) =>
  */
 export async function GET(req: NextRequest, ctx: { params: Promise<{ platform: string }> }) {
   const { platform } = await ctx.params;
-  const admin = process.env.CONTENT_ADMIN_KEY;
-  if (!admin || req.nextUrl.searchParams.get('key') !== admin) {
+  if (!adminAuthedByLink(req)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

@@ -25,6 +25,22 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          // Only this site and GWDF, which proxies KeyCrate, may put these pages in a frame.
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' https://www.glowwitdaflow.com https://glowwitdaflow.com",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     // Routes are case-sensitive; serve the shared /ED link from app/ed.
     // Other case-insensitive routes (e.g. /Bitcoin) are handled in proxy.ts.

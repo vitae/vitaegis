@@ -7,10 +7,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
-    const { quantity } = await req.json();
-
-    // Safety check
-    const ticketQuantity = Math.max(1, Math.min(quantity || 1, 10));
+    const body = (await req.json().catch(() => ({}))) as { quantity?: unknown };
+    const requested = Number(body.quantity);
+    const ticketQuantity = Number.isInteger(requested) ? Math.max(1, Math.min(requested, 10)) : 1;
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: ticketQuantity * 900, // $9 per ticket
@@ -35,9 +34,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Stripe error:', err);
-    // Return more details for debugging (do not expose stack in production)
-    return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 });
+    return NextResponse.json({ error: 'Could not start the payment. Try again.' }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthedByLink } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { listAccounts } from '@/lib/social';
 
@@ -9,11 +10,7 @@ export const dynamic = 'force-dynamic';
  * ever returning a secret: each variable is only ever reported as set or not set.
  */
 export async function GET(req: NextRequest) {
-  const admin = process.env.CONTENT_ADMIN_KEY;
-  if (
-    !admin ||
-    (req.headers.get('x-admin-key') !== admin && req.nextUrl.searchParams.get('key') !== admin)
-  ) {
+  if (!adminAuthedByLink(req)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

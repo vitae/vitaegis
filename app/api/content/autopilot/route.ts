@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cronAuthed } from '@/lib/admin-auth';
 import { autopilotConfig, planNext } from '@/lib/autopilot';
 
 export const dynamic = 'force-dynamic';
@@ -9,8 +10,7 @@ export const maxDuration = 60;
  * the CRON_SECRET bearer token; the worker cron does the rendering and publishing.
  */
 async function handle(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret && req.headers.get('authorization') !== `Bearer ${secret}`) {
+  if (!cronAuthed(req)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   try {

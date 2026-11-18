@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { clientIp, rateLimit, tooMany } from '@/lib/rate-limit';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeEmail } from '@/lib/vitae/tools';
 
@@ -8,6 +9,8 @@ const SOURCES = new Set(['home', 'vitae']);
 
 /** POST { email, source? } → { ok: true }. Duplicates are fine. */
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(`subscribe:${clientIp(req)}`, 8, 10 * 60_000);
+  if (!limit.ok) return tooMany('Too many tries. Wait a few minutes.', limit.retryAfterS);
   const body = (await req.json().catch(() => ({}))) as { email?: unknown; source?: unknown };
   const email = normalizeEmail(body.email);
   if (!email) {

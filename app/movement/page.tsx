@@ -38,19 +38,9 @@ function CheckoutForm() {
         body: JSON.stringify({ quantity }),
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('Network/API error:', text);
-        setMessage('Server error: ' + text);
-        setLoading(false);
-        return;
-      }
-
-      const { clientSecret, error } = await res.json();
-
-      if (error) {
-        console.error('Stripe API error:', error);
-        setMessage('Stripe error: ' + error);
+      const { clientSecret } = (await res.json().catch(() => ({}))) as { clientSecret?: string };
+      if (!res.ok || !clientSecret) {
+        setMessage('Could not start the payment. Try again.');
         setLoading(false);
         return;
       }
@@ -58,9 +48,10 @@ function CheckoutForm() {
       // Submit PaymentElement data before confirming payment
       try {
         await elements.submit();
-      } catch (submitError: any) {
+      } catch (submitError) {
         setMessage(
-          'Error submitting payment details: ' + (submitError.message || submitError.toString()),
+          'Error submitting payment details: ' +
+            (submitError instanceof Error ? submitError.message : String(submitError)),
         );
         setLoading(false);
         return;
@@ -76,30 +67,19 @@ function CheckoutForm() {
         redirect: 'if_required',
       });
 
-      // Log the full result for debugging
-      console.log('Stripe confirmPayment result:', result);
-
       if (result.error) {
         console.error('PaymentElement error:', result.error);
         setMessage('Payment failed: ' + (result.error.message || 'Unknown error'));
       } else if (result.paymentIntent?.status === 'succeeded') {
         setMessage('Payment successful! Thank you 🙏');
       } else if (result.paymentIntent) {
-        setMessage(
-          'Payment status: ' +
-            result.paymentIntent.status +
-            '\n' +
-            JSON.stringify(result.paymentIntent, null, 2),
-        );
+        setMessage('Payment status: ' + result.paymentIntent.status);
       } else {
-        setMessage(
-          'No error, but no PaymentIntent returned. Full result: ' +
-            JSON.stringify(result, null, 2),
-        );
+        setMessage('Payment could not be confirmed. Try again.');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Unexpected error:', err);
-      setMessage('Unexpected error: ' + (err.message || err.toString()));
+      setMessage('Unexpected error. Try again.');
     }
     setLoading(false);
   };

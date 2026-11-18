@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 import { VITAE_VOICE } from '@/lib/voice';
+import { clientIp, rateLimit, tooMany } from '@/lib/rate-limit';
 
 function getSupabase() {
   return createClient(
@@ -33,11 +34,24 @@ async function logConsultation(
 
 export const maxDuration = 30;
 
-export async function POST(req: Request) {
-  const { message } = await req.json();
+const MAX_MESSAGE_CHARS = 2000;
 
-  if (!message?.trim()) {
+export async function POST(req: Request) {
+  const body = (await req.json().catch(() => ({}))) as { message?: unknown };
+  const message = typeof body.message === 'string' ? body.message.trim() : '';
+
+  if (!message) {
     return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+  }
+  if (message.length > MAX_MESSAGE_CHARS) {
+    return NextResponse.json(
+      { error: `Keep the question under ${MAX_MESSAGE_CHARS} characters.` },
+      { status: 400 },
+    );
+  }
+  const limit = rateLimit(`oracle:${clientIp(req)}`, 10, 60_000);
+  if (!limit.ok) {
+    return tooMany('The oracle needs a moment. Ask again shortly.', limit.retryAfterS);
   }
 
   const supabase = getSupabase();

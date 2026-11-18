@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PUBLIC_ORIGINS } from '@/lib/keycrate/public-origin';
+import { clientIp, rateLimit, tooMany } from '@/lib/rate-limit';
 import { ElevenLabs, ElevenLabsError } from '@/lib/vitae/elevenlabs';
 import { vitaeServerEnabled } from '@/lib/vitae/env';
 
 export const dynamic = 'force-dynamic';
 
+const SESSIONS_PER_WINDOW = 6;
+const WINDOW_MS = 10 * 60_000;
+
 /** POST → { token }: a single-use ElevenLabs WebRTC token for the Vitae agent. */
 export async function POST(req: NextRequest) {
-  const origin = req.headers.get('origin');
-  if (origin && !PUBLIC_ORIGINS.has(origin.toLowerCase()) && origin !== req.nextUrl.origin) {
+  const origin = req.headers.get('origin')?.toLowerCase();
+  if (!origin || (!PUBLIC_ORIGINS.has(origin) && origin !== req.nextUrl.origin)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   if (!vitaeServerEnabled()) {
     return NextResponse.json({ error: 'Vitae is not configured' }, { status: 503 });
+  }
+  const limit = rateLimit(`vitae-token:${clientIp(req)}`, SESSIONS_PER_WINDOW, WINDOW_MS);
+  if (!limit.ok) {
+    return tooMany('Too many sessions. Try again in a few minutes.', limit.retryAfterS);
   }
   try {
     const el = new ElevenLabs(process.env.ELEVENLABS_API_KEY!);

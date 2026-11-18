@@ -27,9 +27,10 @@ export async function POST(req: NextRequest) {
     const rawBody = await buffer(req.body!);
     const sig = req.headers.get('stripe-signature')!;
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret!);
-  } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Webhook signature verification failed:', message);
+    return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
   // KeyCrate subscriptions: checkout.session.completed and customer.subscription.* → kc_access.
@@ -37,9 +38,14 @@ export async function POST(req: NextRequest) {
     if (await handleKeyCrateEvent(stripe, event)) {
       return NextResponse.json({ received: true });
     }
-  } catch (err: any) {
+  } catch (err) {
     // A 500 makes Stripe retry, so a brief Supabase outage doesn't lose a subscription.
-    console.error('[keycrate] webhook failed', event.type, event.id, err?.message);
+    console.error(
+      '[keycrate] webhook failed',
+      event.type,
+      event.id,
+      err instanceof Error ? err.message : err,
+    );
     return NextResponse.json({ error: 'KeyCrate update failed' }, { status: 500 });
   }
 
