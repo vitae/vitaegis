@@ -30,6 +30,11 @@ const posts: CategoryPost[] = [
     label: 'Tipper · Sunrise at the Gorge',
     blurb: 'Track-by-track study of the 6 July 2025 set: every key, tempo and transition.',
   },
+  {
+    href: '/tipper',
+    label: 'Tipper · Setlists',
+    blurb: 'Tipper setlists in running order, starting with RRX25DOWN.',
+  },
 ];
 
 const label = 'text-[11px] font-semibold uppercase tracking-[0.25em] text-vitae-green';
