@@ -4,6 +4,7 @@
 // carries no extra bundle weight; the map only renders in the browser.
 
 import { useEffect, useRef, useState } from 'react';
+import type * as Leaflet from 'leaflet';
 import type { RunRoute, Poi } from './routes';
 
 // Two CDNs, tried in order, so one slow mirror does not blank the map.
@@ -23,13 +24,15 @@ const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-let leafletPromise: Promise<any> | null = null;
-function loadLeaflet(): Promise<any> {
+type LeafletWindow = Window & { L?: typeof Leaflet };
+
+let leafletPromise: Promise<typeof Leaflet> | null = null;
+function loadLeaflet(): Promise<typeof Leaflet> {
   if (typeof window === 'undefined') return Promise.reject(new Error('no window'));
-  const w = window as any;
+  const w = window as LeafletWindow;
   if (w.L) return Promise.resolve(w.L);
   if (leafletPromise) return leafletPromise;
-  const attempt = (i: number): Promise<any> =>
+  const attempt = (i: number): Promise<typeof Leaflet> =>
     new Promise((resolve, reject) => {
       const src = LEAFLET_SOURCES[i];
       if (!src) return reject(new Error('Leaflet failed to load'));
@@ -42,7 +45,7 @@ function loadLeaflet(): Promise<any> {
       const script = document.createElement('script');
       script.src = src.js;
       script.async = true;
-      script.onload = () => resolve(w.L);
+      script.onload = () => (w.L ? resolve(w.L) : reject(new Error('Leaflet failed to load')));
       script.onerror = () => {
         script.remove();
         attempt(i + 1).then(resolve, reject);
@@ -101,11 +104,11 @@ interface Props {
 
 export default function RunMap({ routes, pois, selected, onSelect }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const linesRef = useRef<Record<string, any>>({});
+  const mapRef = useRef<Leaflet.Map | null>(null);
+  const linesRef = useRef<Record<string, { line: Leaflet.Polyline; halo: Leaflet.Polyline }>>({});
   // Arrows and the start/finish flags belong to whichever route is selected, so they
   // live in their own layer and are rebuilt on every change.
-  const markersRef = useRef<any>(null);
+  const markersRef = useRef<Leaflet.LayerGroup | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -133,7 +136,7 @@ export default function RunMap({ routes, pois, selected, onSelect }: Props) {
 
         // Dim halo + coloured line per route, drawn back-to-front so short routes stay clickable.
         [...routes].reverse().forEach((r) => {
-          const latlngs = r.coords.map(([lon, lat]) => [lat, lon]);
+          const latlngs = r.coords.map(([lon, lat]) => [lat, lon] as [number, number]);
           const halo = L.polyline(latlngs, {
             color: '#000',
             weight: 8,
@@ -178,7 +181,8 @@ export default function RunMap({ routes, pois, selected, onSelect }: Props) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || status !== 'ready') return;
-    const L = (window as any).L;
+    const L = (window as LeafletWindow).L;
+    if (!L) return;
 
     Object.entries(linesRef.current).forEach(([slug, { line, halo }]) => {
       const on = slug === selected;
@@ -186,7 +190,7 @@ export default function RunMap({ routes, pois, selected, onSelect }: Props) {
       halo.setStyle({ opacity: on ? 0.9 : 0.3 });
       if (on) {
         map.fitBounds(line.getBounds(), { padding: [28, 28], animate: true });
-        if (line._path) line.bringToFront();
+        if ((line as Leaflet.Polyline & { _path?: unknown })._path) line.bringToFront();
       }
     });
 
