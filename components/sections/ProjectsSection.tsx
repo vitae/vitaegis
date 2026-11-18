@@ -3,7 +3,17 @@ import GlassContainer from '@/components/GlassContainer';
 import SectionTitle from '@/components/SectionTitle';
 import { projects } from '@/components/projects';
 
-const HOME_PROJECTS = ['/travel', '/stocks', '/vitamins'];
+const HOME_PROJECTS = [
+  '/travel',
+  '/stocks',
+  '/vitamins',
+  '/happy-hour',
+  '/run',
+  '/keycrate',
+  '/crypto',
+  '/mitochondria',
+  '/proverbs',
+];
 
 export default function ProjectsSection() {
   const shown = HOME_PROJECTS.map((href) => projects.find((p) => p.href === href)).filter(
