@@ -884,13 +884,14 @@ export default function RadarGlobe({
       composer.render(delta);
       if (l.running && !l.still) raf = requestAnimationFrame(frame);
     };
-    live.current.wake = () => {
+    const liveState = live.current;
+    liveState.wake = () => {
       if (!raf) raf = requestAnimationFrame(frame);
     };
-    live.current.wake();
+    liveState.wake();
 
     return () => {
-      live.current.wake = () => {};
+      liveState.wake = () => {};
       cancelAnimationFrame(raf);
       ro.disconnect();
       scene.traverse((obj) => {

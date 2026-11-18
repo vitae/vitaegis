@@ -10,7 +10,6 @@ import PointerGlow from '@/components/PointerGlow';
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.vitaegis.com'),
   title: { default: 'VITAEGIS | Health • Stealth • Wealth', template: '%s' },
-  alternates: { canonical: '/' },
   description:
     'Ancient wisdom meets Cyberspirituality. Evolve your energy with Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
   keywords: [
@@ -41,7 +40,6 @@ export const metadata: Metadata = {
       'Ancient wisdom meets Cyberspirituality. Evolve your energy with Zen Meditation, Kundalini Yoga, and Yang Tai Chi.',
     type: 'website',
     siteName: 'VITAEGIS',
-    url: '/',
   },
   twitter: {
     card: 'summary_large_image',

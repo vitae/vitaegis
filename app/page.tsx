@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import MatrixRainLazy from '@/components/MatrixRainLazy';
 import HeroSection from '@/components/sections/HeroSection';
 import AboutSection from '@/components/sections/AboutSection';
@@ -12,6 +13,8 @@ import Footer from '@/components/Footer';
    Who this is, what it means, what to buy, where to follow. The live stream joins
    them only while the channel is on air.
    ═══════════════════════════════════════════════════════════════════════════════ */
+
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default function Home() {
   return (
