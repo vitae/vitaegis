@@ -1,37 +1,71 @@
 'use client';
 
-import { useState } from 'react';
-import type { PortfolioState } from '@/lib/stocks-portfolio';
-import type { PeriodKey } from './data';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  deskKey,
+  trackPortfolio,
+  withLive,
+  type LiveQuotes,
+  type PaperHistory,
+  type PortfolioState,
+} from '@/lib/stocks-portfolio';
+import type { PaperPortfolio, PeriodKey } from './data';
 import Prompt from './Prompt';
 import TvChart from './TvChart';
 import styles from './stocks.module.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   VITAEGIS - Paper portfolio
-   Six blocks of one terminal session: the portfolio's value, its positions, the
-   positions ranked by how fast they gained, the gain or loss on every day since
-   the entry (in total and per position), what a yearly return the reader picks
-   would compound to, and a TradingView chart of whichever position is selected.
+   VITAEGIS - Paper portfolios
+   One terminal session. For each portfolio size, four blocks: its value, its
+   positions, the gain or loss on every day since the entry (in total and per
+   position) and what a yearly return the reader picks would compound to. Then,
+   once for all sizes, the positions ranked by how fast they gained and a
+   TradingView chart of whichever position is selected. Prices are the daily
+   closes the page was built with, re-marked to Nasdaq's latest price for any
+   day whose close is not published yet; that price is polled while the tab is
+   in view.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 interface Props {
-  state: PortfolioState;
+  /** One portfolio per size, largest first: the same positions, weights and entries in each. */
+  portfolios: PaperPortfolio[];
+  /** Daily closes per held ticker since the entry. */
+  history: PaperHistory;
   /** Company name per ticker. */
   names: Record<string, string>;
-  /** TradingView symbol per ticker. */
-  charts: Record<string, string>;
+  /** Latest close and trailing start closes per held ticker, for the ranking. */
+  trail: Record<string, { end: number; starts: Partial<Record<PeriodKey, number>> }>;
+  /** When the latest closes are from, already formatted for display. */
+  asOf: string;
+}
+
+interface DeskProps {
+  state: PortfolioState;
+  names: Record<string, string>;
   /** Analysts' average price target per ticker at the entry, where one is on record. */
   targets: Record<string, number | undefined>;
   /** How the weights were set, shown under the positions. */
   weighting?: string;
   /** Date of the entry closes, YYYY-MM-DD. */
   opened: string;
-  /** Latest close and trailing start closes per held ticker, for the ranking. */
-  trail: Record<string, { end: number; starts: Partial<Record<PeriodKey, number>> }>;
-  /** When the latest closes are from, already formatted for display. */
-  asOf: string;
+  /** New York clock time of the prices while the newest day is still trading, else null. */
+  liveAt: string | null;
+  /** Show a symbol in the chart under the portfolios. */
+  onChart: (ticker: string) => void;
 }
+
+/** How often to ask for prices: while the market is open, and while it is not. */
+const POLL_OPEN_MS = 10_000;
+const POLL_CLOSED_MS = 60_000;
+
+const newYorkClock = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hourCycle: 'h23',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 
 type RankWindow = 'entry' | '1d' | '1w' | '1m';
 
@@ -103,20 +137,12 @@ const heat = (move: number | null, scale: number) => {
   };
 };
 
-export default function PaperDesk({
-  state,
-  names,
-  charts,
-  targets,
-  weighting,
-  opened,
-  trail,
-  asOf,
-}: Props) {
-  const [symbol, setSymbol] = useState(state.positions[0]?.ticker ?? '');
-  const [rankBy, setRankBy] = useState<RankWindow>(state.days.length ? 'entry' : '1d');
+/** The four blocks whose numbers depend on the portfolio's size. */
+function Desk({ state, names, targets, weighting, opened, liveAt, onChart }: DeskProps) {
   const [rate, setRate] = useState(DEFAULT_RATE);
 
+  const dir = deskKey(state.capital);
+  const size = `$${state.capital.toLocaleString('en-US')}`;
   const latest = state.days[state.days.length - 1];
   const newestFirst = [...state.days].reverse();
   const ranked = latest ? [...state.positions].sort((a, b) => b.pnlPct - a.pnlPct) : [];
@@ -137,33 +163,16 @@ export default function PaperDesk({
   const narrowHides = (i: number) =>
     i < tapeDays.length - TAPE_DAYS_NARROW ? 'hidden sm:table-cell' : '';
 
-  const rankWindow = RANK_WINDOWS.find((w) => w.key === rankBy) ?? RANK_WINDOWS[0];
-  const rankDays = rankBy === 'entry' ? state.days.length : rankWindow.days;
-  const ranking = state.positions
-    .map((p) => {
-      if (rankBy === 'entry') return { ticker: p.ticker, gain: latest ? p.pnlPct : null };
-      const start = trail[p.ticker]?.starts[rankBy];
-      return { ticker: p.ticker, gain: start ? (trail[p.ticker].end / start - 1) * 100 : null };
-    })
-    // Positions with no data for the window sink to the bottom.
-    .sort((a, b) => (b.gain ?? -Infinity) - (a.gain ?? -Infinity));
-  const reach = Math.max(1, ...ranking.map((r) => Math.abs(r.gain ?? 0)));
-
   const projectFrom = latest?.date ?? opened;
   const atTargets = state.positions.reduce(
     (sum, p) => sum + p.shares * (targets[p.ticker] ?? p.last),
     0,
   );
 
-  const chart = (ticker: string) => {
-    setSymbol(ticker);
-    document.getElementById('chart')?.scrollIntoView({ block: 'start' });
-  };
-
   return (
     <>
-      <section id="portfolio" className={styles.section}>
-        <Prompt cmd="portfolio" flags="--paper" label="Paper portfolio" />
+      <section id={dir} className={`${styles.section} ${styles.group}`}>
+        <Prompt dir={dir} cmd="portfolio" flags="--paper" label={`Paper portfolio of ${size}`} />
         <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,23rem)] md:items-end">
           <div>
             <p className="text-xs text-vitae-gray">value</p>
@@ -185,10 +194,17 @@ export default function PaperDesk({
             </div>
             <div>
               <dt>marked to</dt>
-              <dd>{latest ? `${latest.date} close` : 'entry'}</dd>
+              {liveAt ? (
+                <dd className="text-vitae-green">
+                  <span className={styles.liveDot} aria-hidden />
+                  live {liveAt} ET
+                </dd>
+              ) : (
+                <dd>{latest ? `${latest.date} close` : 'entry'}</dd>
+              )}
             </div>
             <div>
-              <dt>last day</dt>
+              <dt>{liveAt ? 'today' : 'last day'}</dt>
               <dd className={latest ? tone(latest.change) : 'text-vitae-gray'}>
                 {latest
                   ? `${signedUsd(latest.change)}  ${signedPct(latest.changePct)}`
@@ -211,8 +227,8 @@ export default function PaperDesk({
         </div>
       </section>
 
-      <section id="positions" className={styles.section}>
-        <Prompt cmd="positions" label="Positions" />
+      <section id={`${dir}-positions`} className={styles.section}>
+        <Prompt dir={dir} cmd="positions" label={`Positions of the ${size} portfolio`} />
         <table className={`${styles.table} mt-4`}>
           <caption className="sr-only">
             Each position&apos;s weight, shares, entry price, analyst target, latest close and gain
@@ -261,7 +277,7 @@ export default function PaperDesk({
                     <button
                       type="button"
                       className={styles.sym}
-                      onClick={() => chart(p.ticker)}
+                      onClick={() => onChart(p.ticker)}
                       aria-label={`Chart ${names[p.ticker] ?? p.ticker}`}
                     >
                       {p.ticker}
@@ -327,7 +343,309 @@ export default function PaperDesk({
         </p>
       </section>
 
-      <section id="rank" className={styles.section}>
+      <section id={`${dir}-log`} className={styles.section}>
+        <Prompt
+          dir={dir}
+          cmd="log"
+          flags="--daily"
+          label={`Daily gains and losses of the ${size} portfolio`}
+        />
+        <table className={`${styles.table} mt-4`}>
+          <caption className="sr-only">
+            The portfolio&apos;s value at each daily close since the entry, with the day&apos;s gain
+            or loss and the running total
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" className="text-left">
+                date
+              </th>
+              <th scope="col" className="text-right">
+                value
+              </th>
+              <th scope="col" className="hidden text-right sm:table-cell">
+                day $
+              </th>
+              <th scope="col" className="text-right">
+                day %
+              </th>
+              <th scope="col" className="text-right">
+                total %
+              </th>
+              <th scope="col" className="hidden w-[28%] sm:table-cell">
+                <span className="sr-only">Size of the day&apos;s move</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {newestFirst.map((d) => (
+              <tr key={d.date}>
+                <th scope="row" className="text-left text-white">
+                  {d.date}
+                  {liveAt && d === latest && <span className="ml-2 text-vitae-green">live</span>}
+                </th>
+                <td className="text-right text-white">{usd(d.value)}</td>
+                <td className={`hidden text-right sm:table-cell ${tone(d.change)}`}>
+                  {signedUsd(d.change)}
+                </td>
+                <td className={`text-right ${tone(d.change)}`}>{signedPct(d.changePct)}</td>
+                <td className={`text-right ${tone(d.total)}`}>{signedPct(d.totalPct)}</td>
+                <td className="hidden sm:table-cell" aria-hidden>
+                  <span className={styles.swing}>
+                    <i
+                      className={styles.swingDown}
+                      style={{
+                        width: d.change < 0 ? `${(Math.abs(d.changePct) / swing) * 100}%` : 0,
+                      }}
+                    />
+                    <i className={styles.swingAxis} />
+                    <i
+                      className={styles.swingUp}
+                      style={{ width: d.change > 0 ? `${(d.changePct / swing) * 100}%` : 0 }}
+                    />
+                  </span>
+                </td>
+              </tr>
+            ))}
+            <tr>
+              <th scope="row" className="text-left text-vitae-gray">
+                {opened}
+              </th>
+              <td className="text-right text-vitae-gray">{usd(state.capital)}</td>
+              <td className="hidden sm:table-cell" />
+              <td colSpan={2} className="text-right text-vitae-gray">
+                entry
+              </td>
+              <td className="hidden sm:table-cell" />
+            </tr>
+          </tbody>
+        </table>
+        {!latest && (
+          <p className="mt-4 max-w-[68ch] font-normal text-white/70">
+            No closes after the entry yet. The first row prints after the next market close.
+          </p>
+        )}
+
+        {tapeDays.length > 0 && (
+          <div className="mt-8 overflow-x-auto">
+            <table className={styles.tape}>
+              <caption className="pb-2 text-left text-xs text-vitae-gray">
+                Each position&apos;s move per day
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span className="sr-only">Symbol</span>
+                  </th>
+                  {tapeDays.map((d, i) => (
+                    <th key={d.date} scope="col" className={narrowHides(i)}>
+                      {d.date.slice(5)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {state.positions.map((p) => (
+                  <tr key={p.ticker}>
+                    <th scope="row">{p.ticker}</th>
+                    {p.moves.slice(tapeFrom).map((m, i) => (
+                      <td
+                        key={tapeDays[i].date}
+                        className={narrowHides(i)}
+                        style={heat(m, tapeScale)}
+                      >
+                        {m === null ? (
+                          <span className="text-vitae-gray">no bar</span>
+                        ) : (
+                          signedPct(m, 1)
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section id={`${dir}-project`} className={styles.section}>
+        <Prompt
+          dir={dir}
+          cmd="project"
+          flags={`--rate ${signedRate(rate)}`}
+          label={`What a yearly return would compound the ${size} portfolio to`}
+        />
+        <div
+          className="mt-4 flex flex-wrap items-center gap-1.5"
+          role="group"
+          aria-label="Yearly return to assume"
+        >
+          {PROJECT_RATES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRate(r)}
+              aria-pressed={r === rate}
+              aria-label={`Assume ${r} percent a year`}
+              className={`${styles.tab} ${r === rate ? styles.tabOn : ''}`}
+            >
+              {r === 0 ? '0%' : signedRate(r)}
+            </button>
+          ))}
+          <span className="ml-1 text-xs text-vitae-gray">a year</span>
+        </div>
+        <table className={`${styles.table} mt-3`}>
+          <caption className="sr-only">
+            The portfolio&apos;s value and profit at six horizons if it returned {rate} percent a
+            year from {projectFrom}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" className="text-left">
+                in
+              </th>
+              <th scope="col" className="hidden text-left sm:table-cell">
+                on
+              </th>
+              <th scope="col" className="text-right">
+                value
+              </th>
+              <th scope="col" className="text-right">
+                profit
+              </th>
+              <th scope="col" className="hidden text-right sm:table-cell">
+                profit %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {HORIZONS.map((h) => {
+              const value = state.value * (1 + rate / 100) ** (h.months / 12);
+              const profit = value - state.capital;
+              return (
+                <tr key={h.months}>
+                  <th scope="row" className="text-left text-white">
+                    {h.label}
+                  </th>
+                  <td className="hidden text-left text-vitae-gray sm:table-cell">
+                    {addMonths(projectFrom, h.months)}
+                  </td>
+                  <td className="text-right text-white">{usd(value)}</td>
+                  <td className={`text-right ${tone(profit)}`}>{signedUsd(profit)}</td>
+                  <td className={`hidden text-right sm:table-cell ${tone(profit)}`}>
+                    {signedPct((profit / state.capital) * 100)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="mt-3 max-w-[76ch] text-xs text-vitae-gray">
+          Arithmetic, not a forecast: today&apos;s value compounded at the yearly return you pick.
+          About 10% a year is the US stock market&apos;s long-run average, and single stocks stray
+          far from it in both directions.
+          {hasTargets &&
+            ` If every position reached its analyst target by ${addMonths(opened, 12)}, the portfolio would be worth $${usd(atTargets)} (${signedUsd(atTargets - state.capital)}).`}
+        </p>
+      </section>
+    </>
+  );
+}
+
+export default function PaperDesk({ portfolios, history, names, trail, asOf }: Props) {
+  const [live, setLive] = useState<LiveQuotes | null>(null);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let asking = false;
+    let stopped = false;
+    const poll = async () => {
+      if (asking || stopped) return;
+      clearTimeout(timer);
+      let wait = POLL_CLOSED_MS;
+      // A tab nobody is looking at asks for nothing; it asks again as soon as it is shown.
+      if (document.visibilityState === 'visible') {
+        asking = true;
+        try {
+          const res = await fetch('/api/stocks/live', { cache: 'no-store' });
+          if (res.ok) {
+            const next = (await res.json()) as LiveQuotes;
+            if (!stopped) setLive(next);
+            if (next.session === 'open') wait = POLL_OPEN_MS;
+          }
+        } catch {
+          // Offline or blocked: keep the last prices and try again later.
+        }
+        asking = false;
+      }
+      if (!stopped) timer = setTimeout(poll, wait);
+    };
+    const onShown = () => {
+      if (document.visibilityState === 'visible') void poll();
+    };
+    void poll();
+    document.addEventListener('visibilitychange', onShown);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onShown);
+    };
+  }, []);
+
+  const base = portfolios[0];
+  const { opened, weighting } = base;
+  const marked = useMemo(
+    () => withLive(history, live?.quotes ?? {}, opened),
+    [history, live, opened],
+  );
+  const desks = useMemo(
+    () => portfolios.map((p) => trackPortfolio(p, marked.history)),
+    [portfolios, marked],
+  );
+  const lead = desks[0];
+  // Only a day that is still trading counts as live; a close read early is just a close.
+  const liveAt = live?.session === 'open' && marked.date ? newYorkClock(live.at) : null;
+  const charts = Object.fromEntries(base.positions.map((p) => [p.ticker, p.chart]));
+  const targets = Object.fromEntries(base.positions.map((p) => [p.ticker, p.target]));
+
+  const [symbol, setSymbol] = useState(lead.positions[0]?.ticker ?? '');
+  const [rankBy, setRankBy] = useState<RankWindow>(lead.days.length ? 'entry' : '1d');
+
+  const latest = lead.days[lead.days.length - 1];
+  const rankWindow = RANK_WINDOWS.find((w) => w.key === rankBy) ?? RANK_WINDOWS[0];
+  const rankDays = rankBy === 'entry' ? lead.days.length : rankWindow.days;
+  const ranking = lead.positions
+    .map((p) => {
+      if (rankBy === 'entry') return { ticker: p.ticker, gain: latest ? p.pnlPct : null };
+      const start = trail[p.ticker]?.starts[rankBy];
+      return { ticker: p.ticker, gain: start ? (trail[p.ticker].end / start - 1) * 100 : null };
+    })
+    // Positions with no data for the window sink to the bottom.
+    .sort((a, b) => (b.gain ?? -Infinity) - (a.gain ?? -Infinity));
+  const reach = Math.max(1, ...ranking.map((r) => Math.abs(r.gain ?? 0)));
+
+  const chart = (ticker: string) => {
+    setSymbol(ticker);
+    document.getElementById('chart')?.scrollIntoView({ block: 'start' });
+  };
+
+  return (
+    <>
+      {desks.map((state) => (
+        <Desk
+          key={state.capital}
+          state={state}
+          names={names}
+          targets={targets}
+          weighting={weighting}
+          opened={opened}
+          liveAt={liveAt}
+          onChart={chart}
+        />
+      ))}
+
+      <section id="rank" className={`${styles.section} ${styles.group}`}>
         <Prompt cmd="rank" flags={`--window ${rankBy}`} label="Positions ranked by gain" />
         <div className="mt-4 flex flex-wrap gap-1.5" role="group" aria-label="Window to rank over">
           {RANK_WINDOWS.map((w) => (
@@ -416,206 +734,6 @@ export default function PaperDesk({
         </p>
       </section>
 
-      <section id="log" className={styles.section}>
-        <Prompt cmd="log" flags="--daily" label="Daily gains and losses" />
-        <table className={`${styles.table} mt-4`}>
-          <caption className="sr-only">
-            The portfolio&apos;s value at each daily close since the entry, with the day&apos;s gain
-            or loss and the running total
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" className="text-left">
-                date
-              </th>
-              <th scope="col" className="text-right">
-                value
-              </th>
-              <th scope="col" className="hidden text-right sm:table-cell">
-                day $
-              </th>
-              <th scope="col" className="text-right">
-                day %
-              </th>
-              <th scope="col" className="text-right">
-                total %
-              </th>
-              <th scope="col" className="hidden w-[28%] sm:table-cell">
-                <span className="sr-only">Size of the day&apos;s move</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {newestFirst.map((d) => (
-              <tr key={d.date}>
-                <th scope="row" className="text-left text-white">
-                  {d.date}
-                </th>
-                <td className="text-right text-white">{usd(d.value)}</td>
-                <td className={`hidden text-right sm:table-cell ${tone(d.change)}`}>
-                  {signedUsd(d.change)}
-                </td>
-                <td className={`text-right ${tone(d.change)}`}>{signedPct(d.changePct)}</td>
-                <td className={`text-right ${tone(d.total)}`}>{signedPct(d.totalPct)}</td>
-                <td className="hidden sm:table-cell" aria-hidden>
-                  <span className={styles.swing}>
-                    <i
-                      className={styles.swingDown}
-                      style={{
-                        width: d.change < 0 ? `${(Math.abs(d.changePct) / swing) * 100}%` : 0,
-                      }}
-                    />
-                    <i className={styles.swingAxis} />
-                    <i
-                      className={styles.swingUp}
-                      style={{ width: d.change > 0 ? `${(d.changePct / swing) * 100}%` : 0 }}
-                    />
-                  </span>
-                </td>
-              </tr>
-            ))}
-            <tr>
-              <th scope="row" className="text-left text-vitae-gray">
-                {opened}
-              </th>
-              <td className="text-right text-vitae-gray">{usd(state.capital)}</td>
-              <td className="hidden sm:table-cell" />
-              <td colSpan={2} className="text-right text-vitae-gray">
-                entry
-              </td>
-              <td className="hidden sm:table-cell" />
-            </tr>
-          </tbody>
-        </table>
-        {!latest && (
-          <p className="mt-4 max-w-[68ch] font-normal text-white/70">
-            No closes after the entry yet. The first row prints after the next market close.
-          </p>
-        )}
-
-        {tapeDays.length > 0 && (
-          <div className="mt-8 overflow-x-auto">
-            <table className={styles.tape}>
-              <caption className="pb-2 text-left text-xs text-vitae-gray">
-                Each position&apos;s move per day
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">
-                    <span className="sr-only">Symbol</span>
-                  </th>
-                  {tapeDays.map((d, i) => (
-                    <th key={d.date} scope="col" className={narrowHides(i)}>
-                      {d.date.slice(5)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {state.positions.map((p) => (
-                  <tr key={p.ticker}>
-                    <th scope="row">{p.ticker}</th>
-                    {p.moves.slice(tapeFrom).map((m, i) => (
-                      <td
-                        key={tapeDays[i].date}
-                        className={narrowHides(i)}
-                        style={heat(m, tapeScale)}
-                      >
-                        {m === null ? (
-                          <span className="text-vitae-gray">no bar</span>
-                        ) : (
-                          signedPct(m, 1)
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section id="project" className={styles.section}>
-        <Prompt
-          cmd="project"
-          flags={`--rate ${signedRate(rate)}`}
-          label="What a yearly return would compound to"
-        />
-        <div
-          className="mt-4 flex flex-wrap items-center gap-1.5"
-          role="group"
-          aria-label="Yearly return to assume"
-        >
-          {PROJECT_RATES.map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRate(r)}
-              aria-pressed={r === rate}
-              aria-label={`Assume ${r} percent a year`}
-              className={`${styles.tab} ${r === rate ? styles.tabOn : ''}`}
-            >
-              {r === 0 ? '0%' : signedRate(r)}
-            </button>
-          ))}
-          <span className="ml-1 text-xs text-vitae-gray">a year</span>
-        </div>
-        <table className={`${styles.table} mt-3`}>
-          <caption className="sr-only">
-            The portfolio&apos;s value and profit at six horizons if it returned {rate} percent a
-            year from {projectFrom}
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" className="text-left">
-                in
-              </th>
-              <th scope="col" className="hidden text-left sm:table-cell">
-                on
-              </th>
-              <th scope="col" className="text-right">
-                value
-              </th>
-              <th scope="col" className="text-right">
-                profit
-              </th>
-              <th scope="col" className="hidden text-right sm:table-cell">
-                profit %
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {HORIZONS.map((h) => {
-              const value = state.value * (1 + rate / 100) ** (h.months / 12);
-              const profit = value - state.capital;
-              return (
-                <tr key={h.months}>
-                  <th scope="row" className="text-left text-white">
-                    {h.label}
-                  </th>
-                  <td className="hidden text-left text-vitae-gray sm:table-cell">
-                    {addMonths(projectFrom, h.months)}
-                  </td>
-                  <td className="text-right text-white">{usd(value)}</td>
-                  <td className={`text-right ${tone(profit)}`}>{signedUsd(profit)}</td>
-                  <td className={`hidden text-right sm:table-cell ${tone(profit)}`}>
-                    {signedPct((profit / state.capital) * 100)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <p className="mt-3 max-w-[76ch] text-xs text-vitae-gray">
-          Arithmetic, not a forecast: today&apos;s value compounded at the yearly return you pick.
-          About 10% a year is the US stock market&apos;s long-run average, and single stocks stray
-          far from it in both directions.
-          {hasTargets &&
-            ` If every position reached its analyst target by ${addMonths(opened, 12)}, the portfolio would be worth $${usd(atTargets)} (${signedUsd(atTargets - state.capital)}).`}
-        </p>
-      </section>
-
       <section id="chart" className={styles.section}>
         <Prompt
           cmd="chart"
@@ -623,7 +741,7 @@ export default function PaperDesk({
           label={`${names[symbol] ?? symbol} chart`}
         />
         <div className="mt-4 flex flex-wrap gap-1.5" role="group" aria-label="Symbol to chart">
-          {state.positions.map((p) => (
+          {lead.positions.map((p) => (
             <button
               key={p.ticker}
               type="button"

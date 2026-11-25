@@ -77,8 +77,17 @@ interface NasdaqHistory {
   status?: { bCodeMessage?: Array<{ errorMessage?: string }> | null };
 }
 
+/** What a browser on nasdaq.com sends; Nasdaq's quote API refuses requests without them. */
+export const NASDAQ_HEADERS = {
+  'User-Agent': USER_AGENT,
+  Accept: 'application/json',
+  'Accept-Language': 'en-US,en;q=0.9',
+  Origin: 'https://www.nasdaq.com',
+  Referer: 'https://www.nasdaq.com/',
+};
+
 /** "$1,816.57" → 1816.57 */
-const parseNasdaqNumber = (s: string | undefined) => Number((s ?? '').replace(/[$,]/g, ''));
+export const parseNasdaqNumber = (s: string | undefined) => Number((s ?? '').replace(/[$,]/g, ''));
 
 /** "09/23/2026" → Unix seconds at noon UTC, so the date reads the same in US time zones. */
 function parseNasdaqDate(s: string | undefined): number {
@@ -95,11 +104,7 @@ function nasdaqUrl(row: StockRow): string {
 }
 
 async function fetchNasdaq(row: StockRow): Promise<Series> {
-  const json = await getJson<NasdaqHistory>(nasdaqUrl(row), {
-    'Accept-Language': 'en-US,en;q=0.9',
-    Origin: 'https://www.nasdaq.com',
-    Referer: 'https://www.nasdaq.com/',
-  });
+  const json = await getJson<NasdaqHistory>(nasdaqUrl(row), NASDAQ_HEADERS);
   const rows = json.data?.tradesTable?.rows;
   if (!rows?.length) {
     throw new Error(json.status?.bCodeMessage?.[0]?.errorMessage ?? 'no rows');

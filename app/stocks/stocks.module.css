@@ -102,6 +102,12 @@
   scroll-margin-top: 8px;
 }
 
+/* A solid rule opens each portfolio and the sections they share; dashed rules divide the
+   sections inside one. */
+.group {
+  border-top: 1px solid rgba(0, 255, 0, 0.6);
+}
+
 .prompt {
   margin: 0;
   overflow: hidden;
@@ -124,6 +130,17 @@
   50% {
     opacity: 0;
   }
+}
+
+/* Beside the time of a price that is still moving. */
+.liveDot {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: #00ff00;
+  animation: blink 1.2s steps(1, end) infinite;
 }
 
 .equity {
@@ -339,7 +356,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cursor {
+  .cursor,
+  .liveDot {
     animation: none;
   }
   .tab,

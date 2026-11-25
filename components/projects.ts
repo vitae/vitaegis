@@ -64,7 +64,7 @@ export const projects: Project[] = [
     label: 'STOCKS',
     title: 'Wealth Board',
     description:
-      'A $10,000 paper portfolio marked to every daily close, and the wider market ranked by move.',
+      'Paper portfolios of $10,000, $5,000 and $1,000 marked to live Nasdaq prices, and the wider market ranked by move.',
     icon: HiTrendingUp,
   },
   {

@@ -199,6 +199,12 @@ export const paper: PaperPortfolio = {
   ].map(byTarget),
 };
 
+/** /stocks shows one portfolio per size: the same positions, weights and entry closes in each. */
+export const papers: PaperPortfolio[] = [10_000, 5_000, 1_000].map((capital) => ({
+  ...paper,
+  capital,
+}));
+
 /** Lookback periods the board can compare against. `ytd` uses the fixed `start` closes above. */
 export const periods = [
   { key: '1d', label: '1D', long: '1 day' },
