@@ -152,6 +152,8 @@ export interface PaperPosition {
   parts: number;
   /** Paper fill: the close on the day the portfolio opened. */
   entry: number;
+  /** Analysts' average 12-month price target when the portfolio opened, if it set the weight. */
+  target?: number;
 }
 
 export interface PaperPortfolio {
@@ -161,25 +163,36 @@ export interface PaperPortfolio {
   positions: PaperPosition[];
 }
 
-/** No real orders: $10,000 split evenly at the Nov 24, 2026 closes, tracked on /stocks. */
+/** Weight by how far the target sits above the entry; a target at or under it gets nothing. */
+const byTarget = (p: Omit<PaperPosition, 'parts'> & { target: number }): PaperPosition => ({
+  ...p,
+  parts: Math.max(0, p.target / p.entry - 1),
+});
+
+/**
+ * No real orders: $10,000 at the Nov 24, 2026 closes, tracked on /stocks. Each position's
+ * weight is in proportion to the gap between its entry and the analysts' average 12-month
+ * price target, as published between Nov 6 and Nov 24, 2026. DELL's predates its Nov 24
+ * earnings; ANT's is from the thirteen firms covering it four days after its listing.
+ */
 // prettier-ignore
 export const paper: PaperPortfolio = {
   opened: '2026-11-24',
   capital: 10_000,
   positions: [
-    { ticker: 'AMD', chart: 'NASDAQ:AMD', parts: 1, entry: 413.27 },
-    { ticker: 'NVDA', chart: 'NASDAQ:NVDA', parts: 1, entry: 155.38 },
-    { ticker: 'ORCL', chart: 'NYSE:ORCL', parts: 1, entry: 109.5 },
-    { ticker: 'ANT', chart: 'NASDAQ:ANT', parts: 1, entry: 81.91 },
-    { ticker: 'DELL', chart: 'NYSE:DELL', parts: 1, entry: 295.28 },
-    { ticker: 'MU', chart: 'NASDAQ:MU', parts: 1, entry: 629.79 },
-    { ticker: 'PLTR', chart: 'NASDAQ:PLTR', parts: 1, entry: 161.18 },
-    { ticker: 'PANW', chart: 'NASDAQ:PANW', parts: 1, entry: 352.99 },
-    { ticker: 'TSM', chart: 'NYSE:TSM', parts: 1, entry: 349.2 },
-    { ticker: 'TSLA', chart: 'NASDAQ:TSLA', parts: 1, entry: 384.68 },
-    { ticker: 'SPCX', chart: 'NASDAQ:SPCX', parts: 1, entry: 125.81 },
-    { ticker: 'ASTS', chart: 'NASDAQ:ASTS', parts: 1, entry: 23.6 },
-  ],
+    { ticker: 'AMD', chart: 'NASDAQ:AMD', entry: 413.27, target: 640.11 },
+    { ticker: 'NVDA', chart: 'NASDAQ:NVDA', entry: 155.38, target: 229.33 },
+    { ticker: 'ORCL', chart: 'NYSE:ORCL', entry: 109.5, target: 235.77 },
+    { ticker: 'ANT', chart: 'NASDAQ:ANT', entry: 81.91, target: 135.3 },
+    { ticker: 'DELL', chart: 'NYSE:DELL', entry: 295.28, target: 589.32 },
+    { ticker: 'MU', chart: 'NASDAQ:MU', entry: 629.79, target: 1561.91 },
+    { ticker: 'PLTR', chart: 'NASDAQ:PLTR', entry: 161.18, target: 218 },
+    { ticker: 'PANW', chart: 'NASDAQ:PANW', entry: 352.99, target: 408.45 },
+    { ticker: 'TSM', chart: 'NYSE:TSM', entry: 349.2, target: 587 },
+    { ticker: 'TSLA', chart: 'NASDAQ:TSLA', entry: 384.68, target: 403.86 },
+    { ticker: 'SPCX', chart: 'NASDAQ:SPCX', entry: 125.81, target: 243.64 },
+    { ticker: 'ASTS', chart: 'NASDAQ:ASTS', entry: 23.6, target: 63.35 },
+  ].map(byTarget),
 };
 
 /** Lookback periods the board can compare against. `ytd` uses the fixed `start` closes above. */

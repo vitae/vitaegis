@@ -21,6 +21,8 @@ interface Props {
   names: Record<string, string>;
   /** TradingView symbol per ticker. */
   charts: Record<string, string>;
+  /** Analysts' average price target per ticker at the entry, where it set the weight. */
+  targets: Record<string, number | undefined>;
   /** Date of the entry closes, YYYY-MM-DD. */
   opened: string;
   /** Latest close and trailing start closes per held ticker, for the ranking. */
@@ -73,7 +75,7 @@ const heat = (move: number | null, scale: number) => {
   };
 };
 
-export default function PaperDesk({ state, names, charts, opened, trail, asOf }: Props) {
+export default function PaperDesk({ state, names, charts, targets, opened, trail, asOf }: Props) {
   const [symbol, setSymbol] = useState(state.positions[0]?.ticker ?? '');
   const [rankBy, setRankBy] = useState<RankWindow>(state.days.length ? 'entry' : '1d');
 
@@ -84,6 +86,8 @@ export default function PaperDesk({ state, names, charts, opened, trail, asOf }:
   const worst = ranked[ranked.length - 1];
   // A full meter is a quarter of the capital, or the largest position if one is bigger.
   const widest = Math.max(0.25, ...state.positions.map((p) => p.weight));
+  const heaviestFirst = [...state.positions].sort((a, b) => b.weight - a.weight);
+  const weightedByTarget = state.positions.some((p) => targets[p.ticker] !== undefined);
   const swing = Math.max(1, ...state.days.map((d) => Math.abs(d.changePct)));
 
   const tapeFrom = Math.max(0, state.days.length - TAPE_DAYS);
@@ -167,8 +171,8 @@ export default function PaperDesk({ state, names, charts, opened, trail, asOf }:
         <Prompt cmd="positions" label="Positions" />
         <table className={`${styles.table} mt-4`}>
           <caption className="sr-only">
-            Each position&apos;s weight, shares, entry price, latest close and gain or loss since
-            the entry
+            Each position&apos;s weight, shares, entry price, analyst target, latest close and gain
+            or loss since the entry
           </caption>
           <thead>
             <tr>
@@ -184,6 +188,11 @@ export default function PaperDesk({ state, names, charts, opened, trail, asOf }:
               <th scope="col" className="text-right">
                 entry
               </th>
+              {weightedByTarget && (
+                <th scope="col" className="hidden text-right md:table-cell">
+                  target
+                </th>
+              )}
               <th scope="col" className="text-right">
                 last
               </th>
@@ -199,8 +208,9 @@ export default function PaperDesk({ state, names, charts, opened, trail, asOf }:
             </tr>
           </thead>
           <tbody>
-            {state.positions.map((p) => {
+            {heaviestFirst.map((p) => {
               const day = p.moves[p.moves.length - 1] ?? null;
+              const target = targets[p.ticker];
               return (
                 <tr key={p.ticker}>
                   <th scope="row" className="text-left">
@@ -226,6 +236,11 @@ export default function PaperDesk({ state, names, charts, opened, trail, asOf }:
                     {p.shares.toFixed(4)}
                   </td>
                   <td className="text-right text-vitae-gray">{usd(p.entry)}</td>
+                  {weightedByTarget && (
+                    <td className="hidden text-right text-vitae-gray md:table-cell">
+                      {target === undefined ? '—' : usd(target)}
+                    </td>
+                  )}
                   <td className="text-right text-white">{usd(p.last)}</td>
                   <td
                     className={`hidden text-right sm:table-cell ${day === null ? 'text-vitae-gray' : tone(day)}`}
@@ -248,6 +263,7 @@ export default function PaperDesk({ state, names, charts, opened, trail, asOf }:
               <td className="text-right">100%</td>
               <td className="hidden md:table-cell" />
               <td className="text-right text-vitae-gray">{usd(state.capital)}</td>
+              {weightedByTarget && <td className="hidden md:table-cell" />}
               <td className="text-right">{usd(state.value)}</td>
               <td
                 className={`hidden text-right sm:table-cell ${latest ? tone(latest.change) : 'text-vitae-gray'}`}
@@ -261,7 +277,11 @@ export default function PaperDesk({ state, names, charts, opened, trail, asOf }:
             </tr>
           </tfoot>
         </table>
-        <p className="mt-3 text-xs text-vitae-gray">Select a symbol to chart it.</p>
+        <p className="mt-3 max-w-[76ch] text-xs text-vitae-gray">
+          {weightedByTarget &&
+            `Each weight is in proportion to how far analysts' average 12-month price target sat above the entry price on ${opened}. A target is an opinion, not a forecast. `}
+          Select a symbol to chart it.
+        </p>
       </section>
 
       <section id="rank" className={styles.section}>

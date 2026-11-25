@@ -44,6 +44,7 @@ export default async function StocksPage() {
   const state = trackPortfolio(paper, history);
   const names = Object.fromEntries(stocks.map((s) => [s.ticker, s.name]));
   const charts = Object.fromEntries(paper.positions.map((p) => [p.ticker, p.chart]));
+  const targets = Object.fromEntries(paper.positions.map((p) => [p.ticker, p.target]));
   const trail = Object.fromEntries(
     paper.positions.map((p) => [
       p.ticker,
@@ -90,6 +91,7 @@ export default async function StocksPage() {
               state={state}
               names={names}
               charts={charts}
+              targets={targets}
               opened={paper.opened}
               trail={trail}
               asOf={asOfText}
@@ -100,8 +102,9 @@ export default async function StocksPage() {
             <footer className={`${styles.section} text-xs leading-relaxed text-vitae-gray`}>
               <p className="max-w-[76ch]">
                 Not investment advice. The portfolio is a paper one: each position was filled at its{' '}
-                {entryDate} closing price with an equal share of the capital, and a day&apos;s gain
-                or loss prints once that day&apos;s close is published.
+                {entryDate} closing price and sized by how far analysts&apos; average 12-month price
+                target sat above it, and a day&apos;s gain or loss prints once that day&apos;s close
+                is published.
               </p>
               <p className="mt-3 max-w-[76ch]">
                 Closes are adjusted for splits but not dividends, in US dollars; Bitcoin trades

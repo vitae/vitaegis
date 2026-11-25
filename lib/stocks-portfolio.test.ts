@@ -88,6 +88,14 @@ describe('paper portfolio', () => {
     expect(new Set(held).size).toBe(held.length);
   });
 
+  it('weights each position by the gap between its target and its entry', () => {
+    const state = trackPortfolio(paper, {});
+    const gaps = paper.positions.map((p) => (p.target ?? 0) / p.entry - 1);
+    const total = gaps.reduce((sum, g) => sum + g, 0);
+    expect(gaps.every((g) => g > 0)).toBe(true);
+    state.positions.forEach((p, i) => expect(p.weight).toBeCloseTo(gaps[i] / total));
+  });
+
   it('spends exactly the capital', () => {
     const state = trackPortfolio(paper, {});
     expect(state.positions.reduce((sum, p) => sum + p.weight, 0)).toBeCloseTo(1);
