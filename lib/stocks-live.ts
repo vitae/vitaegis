@@ -6,7 +6,7 @@ import type { LiveQuote, LiveQuotes } from '@/lib/stocks-portfolio';
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Stocks, live
    The paper portfolio's tickers at Nasdaq's latest regular-session prices. While
-   the market is open that is each ticker's last sale, all twelve in one request.
+   the market is open that is each ticker's last sale, all of them in one request.
    Otherwise it is each ticker's last official close, which Nasdaq's quote API has
    hours before its history API does. Pre-market and after-hours trades are left
    out, so a day ends at the same price the daily log later prints.

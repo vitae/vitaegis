@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
-  deskKey,
   trackPortfolio,
   withLive,
+  type ClosedState,
   type LiveQuotes,
   type PaperHistory,
   type PortfolioState,
@@ -17,18 +17,18 @@ import styles from './stocks.module.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Paper portfolios
-   One terminal session. For each portfolio size, four blocks: its value, its
+   One terminal session. For each portfolio, four blocks: its value, its
    positions, the gain or loss on every day since the entry (in total and per
    position) and what a yearly return the reader picks would compound to. Then,
-   once for all sizes, the positions ranked by how fast they gained and a
-   TradingView chart of whichever position is selected. Prices are the daily
+   once, for the portfolio that holds the most stocks: its positions ranked by how
+   fast they gained and a TradingView chart of whichever one is selected. Prices are the daily
    closes the page was built with, re-marked to Nasdaq's latest price for any
    day whose close is not published yet; that price is polled while the tab is
    in view.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 interface Props {
-  /** One portfolio per size, largest first: the same positions, weights and entries in each. */
+  /** The portfolios to show, top to bottom, all opened at the same close. */
   portfolios: PaperPortfolio[];
   /** Daily closes per held ticker since the entry. */
   history: PaperHistory;
@@ -43,6 +43,8 @@ interface Props {
 }
 
 interface DeskProps {
+  /** The portfolio's short name: its folder in the prompts and its anchor on the page. */
+  dir: string;
   state: PortfolioState;
   names: Record<string, string>;
   /** Analysts' average price target per ticker at the entry, where one is on record. */
@@ -64,6 +66,8 @@ interface DeskProps {
 /** How often to ask for prices: while the market is open, and while it is not. */
 const POLL_OPEN_MS = 10_000;
 const POLL_CLOSED_MS = 60_000;
+
+const LIST = new Intl.ListFormat('en-US', { type: 'conjunction' });
 
 const newYorkClock = (iso: string) =>
   new Date(iso).toLocaleTimeString('en-US', {
@@ -123,10 +127,9 @@ const heat = (move: number | null, scale: number) => {
 };
 
 /** The four blocks whose numbers depend on the portfolio's size. */
-function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskProps) {
+function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: DeskProps) {
   const [rate, setRate] = useState(DEFAULT_RATE);
 
-  const dir = deskKey(state.capital);
   const size = `$${state.capital.toLocaleString('en-US')}`;
   const latest = state.days[state.days.length - 1];
   const newestFirst = [...state.days].reverse();
@@ -134,6 +137,16 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
   const best = ranked[0];
   const worst = ranked[ranked.length - 1];
   const heaviestFirst = [...state.positions].sort((a, b) => b.weight - a.weight);
+  // What is still held cost the capital, less whatever closed positions lost or made.
+  const invested = state.positions.reduce((sum, p) => sum + p.cost, 0);
+  const investedPct = (invested / state.capital) * 100;
+  // Sales made together, into the same position, read as one line.
+  const sales = Object.values(
+    state.closed.reduce<Record<string, ClosedState[]>>((groups, c) => {
+      (groups[`${c.date} ${c.time} ${c.into}`] ??= []).push(c);
+      return groups;
+    }, {}),
+  );
   const hasTargets = state.positions.some((p) => targets[p.ticker] !== undefined);
   const swing = Math.max(1, ...state.days.map((d) => Math.abs(d.changePct)));
 
@@ -312,8 +325,10 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
               <th scope="row" className="text-left">
                 total
               </th>
-              <td className="text-right">{usd(state.capital)}</td>
-              <td className="text-right">100%</td>
+              <td className="text-right">{usd(invested)}</td>
+              <td className="text-right">
+                {Math.abs(investedPct - 100) < 0.005 ? '100%' : `${investedPct.toFixed(2)}%`}
+              </td>
               <td className="hidden lg:table-cell" />
               <td className="hidden md:table-cell" />
               {hasTargets && <td className="hidden lg:table-cell" />}
@@ -330,6 +345,18 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
             </tr>
           </tfoot>
         </table>
+        {sales.map((sold) => (
+          <p
+            key={`${sold[0].date} ${sold[0].time}`}
+            className="mt-3 max-w-[76ch] text-xs text-white/70"
+          >
+            Sold {sold[0].date} at {sold[0].time} ET:{' '}
+            {LIST.format(sold.map((c) => `${c.ticker} at ${usd(c.price)} (${signedUsd(c.pnl)})`))}.
+            The ${usd(sold.reduce((sum, c) => sum + c.proceeds, 0))} they fetched bought{' '}
+            {sold.reduce((sum, c) => sum + c.bought, 0).toFixed(4)} more {sold[0].into} at{' '}
+            {usd(sold[0].intoPrice)}.
+          </p>
+        ))}
         <p className="mt-3 max-w-[76ch] text-xs text-vitae-gray">
           {weighting && `${weighting} `}
           Select a symbol to chart it.
@@ -593,19 +620,25 @@ export default function PaperDesk({ portfolios, history, initialLive, names, tra
     };
   }, []);
 
-  const base = portfolios[0];
-  const { opened, weighting } = base;
+  const opened = portfolios[0].opened;
   const marked = useMemo(() => withLive(history, live.quotes, opened), [history, live, opened]);
   const desks = useMemo(
-    () => portfolios.map((p) => trackPortfolio(p, marked.history)),
+    () =>
+      portfolios.map((portfolio) => ({
+        portfolio,
+        state: trackPortfolio(portfolio, marked.history),
+      })),
     [portfolios, marked],
   );
-  const lead = desks[0];
+  // The ranking and the chart cover the portfolio that holds the most stocks.
+  const main = desks.reduce((most, desk) =>
+    desk.state.positions.length > most.state.positions.length ? desk : most,
+  );
+  const lead = main.state;
   // Only a day that is still trading is marked to a last sale; a close read early is a close.
   const mark =
     live.session === 'open' && marked.date ? { live: fresh, clock: newYorkClock(live.at) } : null;
-  const charts = Object.fromEntries(base.positions.map((p) => [p.ticker, p.chart]));
-  const targets = Object.fromEntries(base.positions.map((p) => [p.ticker, p.target]));
+  const charts = Object.fromEntries(main.portfolio.positions.map((p) => [p.ticker, p.chart]));
 
   const [symbol, setSymbol] = useState(lead.positions[0]?.ticker ?? '');
   const [rankBy, setRankBy] = useState<RankWindow>(lead.days.length ? 'entry' : '1d');
@@ -630,14 +663,15 @@ export default function PaperDesk({ portfolios, history, initialLive, names, tra
 
   return (
     <>
-      {desks.map((state) => (
+      {desks.map(({ portfolio, state }) => (
         <Desk
-          key={state.capital}
+          key={portfolio.key}
+          dir={portfolio.key}
           state={state}
           names={names}
-          targets={targets}
-          weighting={weighting}
-          opened={opened}
+          targets={Object.fromEntries(portfolio.positions.map((p) => [p.ticker, p.target]))}
+          weighting={portfolio.weighting}
+          opened={portfolio.opened}
           mark={mark}
           onChart={chart}
         />

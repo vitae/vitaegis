@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { getStockPrices } from '@/lib/stocks';
 import { getLiveQuotes } from '@/lib/stocks-live';
 import { getPlays } from '@/lib/stocks-plays';
-import { deskKey, trackPortfolio } from '@/lib/stocks-portfolio';
+import { trackPortfolio } from '@/lib/stocks-portfolio';
 import PaperDesk from './PaperDesk';
 import Plays from './Plays';
 import StocksBoard from './StocksBoard';
-import { paper, papers, stocks } from './data';
+import { astsOnly, paper, papers, stocks } from './data';
 import styles from './stocks.module.css';
 
 // The prices in the first paint are at most about a minute old; the page then polls for
@@ -17,7 +17,7 @@ export const revalidate = 60;
 export const maxDuration = 60;
 
 const DESCRIPTION =
-  'Paper portfolios of $10,000, $5,000 and $1,000 across twelve stocks, marked to Nasdaq prices while the market is open and to every daily close, with TradingView charts and the wider market.';
+  'Paper portfolios marked to Nasdaq prices while the market is open and to every daily close: $10,000 in ASTS alone, and $10,000, $5,000 and $1,000 across ten stocks, with TradingView charts and the wider market.';
 
 export const metadata: Metadata = {
   title: 'Stocks | VITAEGIS',
@@ -34,11 +34,11 @@ const formatDate = (iso: string) =>
   });
 
 /** The page's windows, listed in the status line the way a multiplexer lists them: one per portfolio, then the shared sections. */
-const WINDOWS = [...papers.map((p) => deskKey(p.capital)), 'rank', 'chart', 'scan', 'plays'];
+const WINDOWS = [...papers.map((p) => p.key), 'rank', 'chart', 'scan', 'plays'];
 
 /** "$10,000, $5,000 and $1,000" */
 const SIZES = new Intl.ListFormat('en-US', { type: 'conjunction' }).format(
-  papers.map((p) => `$${p.capital.toLocaleString('en-US')}`),
+  papers.filter((p) => p.positions.length > 1).map((p) => `$${p.capital.toLocaleString('en-US')}`),
 );
 
 export default async function StocksPage() {
@@ -94,12 +94,13 @@ export default async function StocksPage() {
                 Stocks
               </h1>
               <p className="mt-4 max-w-[68ch] font-normal text-white/70">
-                Paper portfolios of {SIZES}, each across the same {paper.positions.length} stocks at
-                the same weights, bought at the {entryDate} close. While the market is open they are
-                marked to Nasdaq&apos;s last sale price; after it, to the close. No real orders are
-                placed. Under them, the positions ranked by how fast they gained, a chart of each
-                one, the wider market, and what a put, a call or a short on each stock would cost
-                and pay at a move you pick.
+                A ${astsOnly.capital.toLocaleString('en-US')} paper portfolio held entirely in{' '}
+                {astsOnly.positions[0].ticker}, then paper portfolios of {SIZES} spread across the
+                same {paper.positions.length} stocks at the same weights, all bought at the{' '}
+                {entryDate} close. While the market is open they are marked to Nasdaq&apos;s last
+                sale price; after it, to the close. No real orders are placed. Under them, the
+                positions ranked by how fast they gained, a chart of each one, the wider market, and
+                what a put, a call or a short on each stock would cost and pay at a move you pick.
               </p>
             </header>
 
@@ -119,10 +120,11 @@ export default async function StocksPage() {
             <footer className={`${styles.section} text-xs leading-relaxed text-vitae-gray`}>
               <p className="max-w-[76ch]">
                 Not investment advice. The portfolios are paper ones: in each, every position was
-                filled at its {entryDate} closing price at the weight listed under positions. During
-                the regular session, prices are Nasdaq&apos;s last sale, read about every ten
-                seconds while this page is in view; pre-market and after-hours trades are not
-                counted, and a day&apos;s row in the log is final once its close is published.
+                first filled at its {entryDate} closing price, and any sale since, with what it
+                bought, is listed under the positions. During the regular session, prices are
+                Nasdaq&apos;s last sale, read about every ten seconds while this page is in view;
+                pre-market and after-hours trades are not counted, and a day&apos;s row in the log
+                is final once its close is published.
               </p>
               <p className="mt-3 max-w-[76ch]">
                 Closes are adjusted for splits but not dividends, in US dollars; Bitcoin trades

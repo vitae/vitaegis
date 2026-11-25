@@ -156,19 +156,49 @@ export interface PaperPosition {
   target?: number;
 }
 
+/** A position bought with the portfolio and sold later. */
+export interface PaperSale {
+  ticker: string;
+  /** Its share of the capital at the entry, in the same parts as the positions. */
+  parts: number;
+  entry: number;
+  /** Price it was sold at. */
+  price: number;
+}
+
+/** Positions sold after the entry, with everything they fetched put into one that stayed. */
+export interface PaperSwitch {
+  /** New York date (YYYY-MM-DD). The switch counts from that day's close on. */
+  date: string;
+  /** New York clock time, for the record shown on the page. */
+  time: string;
+  sold: PaperSale[];
+  /** Ticker of the position that took the proceeds. */
+  into: string;
+  /** Price `into` was bought at. */
+  price: number;
+}
+
 export interface PaperPortfolio {
+  /** Short name used in the page's links and prompts. */
+  key: string;
   /** Date of the entry closes (YYYY-MM-DD). Tracking starts with the next close. */
   opened: string;
   capital: number;
   /** How the weights were set, in a sentence or two shown under the positions. */
   weighting?: string;
   positions: PaperPosition[];
+  /** Oldest first. */
+  switches?: PaperSwitch[];
 }
 
-/** Weight by how far the target sits above the entry; a target at or under it gets nothing. */
+/** How far a target sits above an entry; a target at or under it counts for nothing. */
+const gap = (entry: number, target: number) => Math.max(0, target / entry - 1);
+
+/** Weight by the gap between the target and the entry. */
 const byTarget = (p: Omit<PaperPosition, 'parts'> & { target: number }): PaperPosition => ({
   ...p,
-  parts: Math.max(0, p.target / p.entry - 1),
+  parts: gap(p.entry, p.target),
 });
 
 /**
@@ -176,13 +206,28 @@ const byTarget = (p: Omit<PaperPosition, 'parts'> & { target: number }): PaperPo
  * weight is in proportion to the gap between its entry and the analysts' average 12-month
  * price target, as published between Nov 6 and Nov 24, 2026. DELL's predates its Nov 24
  * earnings; ANT's is from the thirteen firms covering it four days after its listing.
+ * The portfolio opened with twelve positions. On Nov 25 PANW and TSLA were sold at Nasdaq's
+ * last sale prices at 1:26 PM New York time and what they fetched bought more ASTS.
  */
 // prettier-ignore
 export const paper: PaperPortfolio = {
+  key: '10k',
   opened: '2026-11-24',
   capital: 10_000,
   weighting:
-    "Each weight is in proportion to how far analysts' average 12-month price target sat above the entry price. A target is an opinion, not a forecast.",
+    "Each weight began in proportion to how far analysts' average 12-month price target sat above the entry price; ASTS has since taken what PANW and TSLA were sold for. A target is an opinion, not a forecast.",
+  switches: [
+    {
+      date: '2026-11-25',
+      time: '13:26',
+      sold: [
+        { ticker: 'PANW', parts: gap(352.99, 408.45), entry: 352.99, price: 349.98 },
+        { ticker: 'TSLA', parts: gap(384.68, 403.86), entry: 384.68, price: 376.615 },
+      ],
+      into: 'ASTS',
+      price: 26.05,
+    },
+  ],
   positions: [
     { ticker: 'AMD', chart: 'NASDAQ:AMD', entry: 413.27, target: 640.11 },
     { ticker: 'NVDA', chart: 'NASDAQ:NVDA', entry: 155.38, target: 229.33 },
@@ -191,19 +236,33 @@ export const paper: PaperPortfolio = {
     { ticker: 'DELL', chart: 'NYSE:DELL', entry: 295.28, target: 589.32 },
     { ticker: 'MU', chart: 'NASDAQ:MU', entry: 629.79, target: 1561.91 },
     { ticker: 'PLTR', chart: 'NASDAQ:PLTR', entry: 161.18, target: 218 },
-    { ticker: 'PANW', chart: 'NASDAQ:PANW', entry: 352.99, target: 408.45 },
     { ticker: 'TSM', chart: 'NYSE:TSM', entry: 349.2, target: 587 },
-    { ticker: 'TSLA', chart: 'NASDAQ:TSLA', entry: 384.68, target: 403.86 },
     { ticker: 'SPCX', chart: 'NASDAQ:SPCX', entry: 125.81, target: 243.64 },
     { ticker: 'ASTS', chart: 'NASDAQ:ASTS', entry: 23.6, target: 63.35 },
   ].map(byTarget),
 };
 
-/** /stocks shows one portfolio per size: the same positions, weights and entry closes in each. */
-export const papers: PaperPortfolio[] = [10_000, 5_000, 1_000].map((capital) => ({
-  ...paper,
-  capital,
-}));
+/**
+ * $10,000 in ASTS alone at the same Nov 24 close, for comparison. It was added on Nov 25, a
+ * day after the close it starts from, so its first day was already known when it was set up.
+ */
+export const astsOnly: PaperPortfolio = {
+  key: 'asts',
+  opened: paper.opened,
+  capital: 10_000,
+  weighting:
+    'All of it in ASTS. This portfolio was added on Nov 25, 2026 and is tracked from the same Nov 24 close as the others.',
+  positions: [{ ticker: 'ASTS', chart: 'NASDAQ:ASTS', parts: 1, entry: 23.6, target: 63.35 }],
+};
+
+/**
+ * The portfolios /stocks shows, top to bottom: ASTS alone, then the spread one at three
+ * sizes, with the same positions, weights, entry closes and sales in each.
+ */
+export const papers: PaperPortfolio[] = [
+  astsOnly,
+  ...[10_000, 5_000, 1_000].map((capital) => ({ ...paper, key: `${capital / 1000}k`, capital })),
+];
 
 /** Lookback periods the board can compare against. `ytd` uses the fixed `start` closes above. */
 export const periods = [

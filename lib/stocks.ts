@@ -2,6 +2,7 @@
 import {
   asOfSnapshot,
   paper,
+  papers,
   startDate,
   stocks,
   yahooSymbol,
@@ -222,7 +223,13 @@ async function settleAll<T, R>(
   return out;
 }
 
-const PAPER_TICKERS = new Set(paper.positions.map((p) => p.ticker));
+// Every ticker a paper portfolio holds or has held: one sold in a switch still counts on the
+// days before it was sold.
+const PAPER_TICKERS = new Set(
+  papers
+    .flatMap((p) => [...p.positions, ...(p.switches ?? []).flatMap((s) => s.sold)])
+    .map((held) => held.ticker),
+);
 
 /** Bars dated after `date` (YYYY-MM-DD), oldest first. */
 function closesAfter(series: Series, date: string): PaperHistory[string] {
