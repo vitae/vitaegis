@@ -29,7 +29,7 @@ const formatDate = (iso: string) =>
   });
 
 /** The sections of the page, listed in the status line the way a multiplexer lists windows. */
-const WINDOWS = ['portfolio', 'positions', 'rank', 'log', 'chart', 'scan'];
+const WINDOWS = ['portfolio', 'positions', 'rank', 'log', 'project', 'chart', 'scan'];
 
 export default async function StocksPage() {
   const { asOf, prices, starts, startDates, history, source } = await getStockPrices();

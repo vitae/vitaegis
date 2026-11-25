@@ -9,10 +9,10 @@ import styles from './stocks.module.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Paper portfolio
-   Five blocks of one terminal session: the portfolio's value, its positions, the
+   Six blocks of one terminal session: the portfolio's value, its positions, the
    positions ranked by how fast they gained, the gain or loss on every day since
-   the entry (in total and per position), and a TradingView chart of whichever
-   position is selected.
+   the entry (in total and per position), what a yearly return the reader picks
+   would compound to, and a TradingView chart of whichever position is selected.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 interface Props {
@@ -40,6 +40,32 @@ const RANK_WINDOWS: Array<{ key: RankWindow; long: string; days: number }> = [
   { key: '1w', long: 'over the past week', days: 5 },
   { key: '1m', long: 'over the past month', days: 21 },
 ];
+
+/** Yearly returns the projection can assume, in percent. Ten is about the US market's long-run average. */
+const PROJECT_RATES = [-20, -10, 0, 10, 20, 30];
+const DEFAULT_RATE = 10;
+
+const HORIZONS = [
+  { label: '1 month', months: 1 },
+  { label: '3 months', months: 3 },
+  { label: '6 months', months: 6 },
+  { label: '1 year', months: 12 },
+  { label: '5 years', months: 60 },
+  { label: '10 years', months: 120 },
+];
+
+/** `iso` (YYYY-MM-DD) plus whole months, clamped to the last day of the month it lands in. */
+const addMonths = (iso: string, months: number) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, last));
+  return d.toISOString().slice(0, 10);
+};
+
+const signedRate = (n: number) => `${sign(n)}${Math.abs(n)}%`;
 
 /** Days shown per position in the tape; narrow screens show the newest five. */
 const TAPE_DAYS = 10;
@@ -78,6 +104,7 @@ const heat = (move: number | null, scale: number) => {
 export default function PaperDesk({ state, names, charts, targets, opened, trail, asOf }: Props) {
   const [symbol, setSymbol] = useState(state.positions[0]?.ticker ?? '');
   const [rankBy, setRankBy] = useState<RankWindow>(state.days.length ? 'entry' : '1d');
+  const [rate, setRate] = useState(DEFAULT_RATE);
 
   const latest = state.days[state.days.length - 1];
   const newestFirst = [...state.days].reverse();
@@ -110,6 +137,12 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
     // Positions with no data for the window sink to the bottom.
     .sort((a, b) => (b.gain ?? -Infinity) - (a.gain ?? -Infinity));
   const reach = Math.max(1, ...ranking.map((r) => Math.abs(r.gain ?? 0)));
+
+  const projectFrom = latest?.date ?? opened;
+  const atTargets = state.positions.reduce(
+    (sum, p) => sum + p.shares * (targets[p.ticker] ?? p.last),
+    0,
+  );
 
   const chart = (ticker: string) => {
     setSymbol(ticker);
@@ -491,6 +524,86 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
             </table>
           </div>
         )}
+      </section>
+
+      <section id="project" className={styles.section}>
+        <Prompt
+          cmd="project"
+          flags={`--rate ${signedRate(rate)}`}
+          label="What a yearly return would compound to"
+        />
+        <div
+          className="mt-4 flex flex-wrap items-center gap-1.5"
+          role="group"
+          aria-label="Yearly return to assume"
+        >
+          {PROJECT_RATES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRate(r)}
+              aria-pressed={r === rate}
+              aria-label={`Assume ${r} percent a year`}
+              className={`${styles.tab} ${r === rate ? styles.tabOn : ''}`}
+            >
+              {r === 0 ? '0%' : signedRate(r)}
+            </button>
+          ))}
+          <span className="ml-1 text-xs text-vitae-gray">a year</span>
+        </div>
+        <table className={`${styles.table} mt-3`}>
+          <caption className="sr-only">
+            The portfolio&apos;s value and profit at six horizons if it returned {rate} percent a
+            year from {projectFrom}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" className="text-left">
+                in
+              </th>
+              <th scope="col" className="hidden text-left sm:table-cell">
+                on
+              </th>
+              <th scope="col" className="text-right">
+                value
+              </th>
+              <th scope="col" className="text-right">
+                profit
+              </th>
+              <th scope="col" className="hidden text-right sm:table-cell">
+                profit %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {HORIZONS.map((h) => {
+              const value = state.value * (1 + rate / 100) ** (h.months / 12);
+              const profit = value - state.capital;
+              return (
+                <tr key={h.months}>
+                  <th scope="row" className="text-left text-white">
+                    {h.label}
+                  </th>
+                  <td className="hidden text-left text-vitae-gray sm:table-cell">
+                    {addMonths(projectFrom, h.months)}
+                  </td>
+                  <td className="text-right text-white">{usd(value)}</td>
+                  <td className={`text-right ${tone(profit)}`}>{signedUsd(profit)}</td>
+                  <td className={`hidden text-right sm:table-cell ${tone(profit)}`}>
+                    {signedPct((profit / state.capital) * 100)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="mt-3 max-w-[76ch] text-xs text-vitae-gray">
+          Arithmetic, not a forecast: today&apos;s value compounded at the yearly return you pick.
+          About 10% a year is the US stock market&apos;s long-run average, and single stocks stray
+          far from it in both directions.
+          {weightedByTarget &&
+            ` If every position reached its analyst target by ${addMonths(opened, 12)}, the portfolio would be worth $${usd(atTargets)} (${signedUsd(atTargets - state.capital)}).`}
+        </p>
       </section>
 
       <section id="chart" className={styles.section}>
