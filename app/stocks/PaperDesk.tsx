@@ -21,8 +21,10 @@ interface Props {
   names: Record<string, string>;
   /** TradingView symbol per ticker. */
   charts: Record<string, string>;
-  /** Analysts' average price target per ticker at the entry, where it set the weight. */
+  /** Analysts' average price target per ticker at the entry, where one is on record. */
   targets: Record<string, number | undefined>;
+  /** How the weights were set, shown under the positions. */
+  weighting?: string;
   /** Date of the entry closes, YYYY-MM-DD. */
   opened: string;
   /** Latest close and trailing start closes per held ticker, for the ranking. */
@@ -101,7 +103,16 @@ const heat = (move: number | null, scale: number) => {
   };
 };
 
-export default function PaperDesk({ state, names, charts, targets, opened, trail, asOf }: Props) {
+export default function PaperDesk({
+  state,
+  names,
+  charts,
+  targets,
+  weighting,
+  opened,
+  trail,
+  asOf,
+}: Props) {
   const [symbol, setSymbol] = useState(state.positions[0]?.ticker ?? '');
   const [rankBy, setRankBy] = useState<RankWindow>(state.days.length ? 'entry' : '1d');
   const [rate, setRate] = useState(DEFAULT_RATE);
@@ -114,7 +125,7 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
   // A full meter is a quarter of the capital, or the largest position if one is bigger.
   const widest = Math.max(0.25, ...state.positions.map((p) => p.weight));
   const heaviestFirst = [...state.positions].sort((a, b) => b.weight - a.weight);
-  const weightedByTarget = state.positions.some((p) => targets[p.ticker] !== undefined);
+  const hasTargets = state.positions.some((p) => targets[p.ticker] !== undefined);
   const swing = Math.max(1, ...state.days.map((d) => Math.abs(d.changePct)));
 
   const tapeFrom = Math.max(0, state.days.length - TAPE_DAYS);
@@ -221,7 +232,7 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
               <th scope="col" className="text-right">
                 entry
               </th>
-              {weightedByTarget && (
+              {hasTargets && (
                 <th scope="col" className="hidden text-right md:table-cell">
                   target
                 </th>
@@ -269,7 +280,7 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
                     {p.shares.toFixed(4)}
                   </td>
                   <td className="text-right text-vitae-gray">{usd(p.entry)}</td>
-                  {weightedByTarget && (
+                  {hasTargets && (
                     <td className="hidden text-right text-vitae-gray md:table-cell">
                       {target === undefined ? '—' : usd(target)}
                     </td>
@@ -296,7 +307,7 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
               <td className="text-right">100%</td>
               <td className="hidden md:table-cell" />
               <td className="text-right text-vitae-gray">{usd(state.capital)}</td>
-              {weightedByTarget && <td className="hidden md:table-cell" />}
+              {hasTargets && <td className="hidden md:table-cell" />}
               <td className="text-right">{usd(state.value)}</td>
               <td
                 className={`hidden text-right sm:table-cell ${latest ? tone(latest.change) : 'text-vitae-gray'}`}
@@ -311,8 +322,7 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
           </tfoot>
         </table>
         <p className="mt-3 max-w-[76ch] text-xs text-vitae-gray">
-          {weightedByTarget &&
-            `Each weight is in proportion to how far analysts' average 12-month price target sat above the entry price on ${opened}. A target is an opinion, not a forecast. `}
+          {weighting && `${weighting} `}
           Select a symbol to chart it.
         </p>
       </section>
@@ -601,7 +611,7 @@ export default function PaperDesk({ state, names, charts, targets, opened, trail
           Arithmetic, not a forecast: today&apos;s value compounded at the yearly return you pick.
           About 10% a year is the US stock market&apos;s long-run average, and single stocks stray
           far from it in both directions.
-          {weightedByTarget &&
+          {hasTargets &&
             ` If every position reached its analyst target by ${addMonths(opened, 12)}, the portfolio would be worth $${usd(atTargets)} (${signedUsd(atTargets - state.capital)}).`}
         </p>
       </section>
