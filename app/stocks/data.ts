@@ -148,7 +148,7 @@ export interface PaperPosition {
   ticker: string;
   /** TradingView symbol, with its exchange. */
   chart: string;
-  /** Share of the capital in parts of the whole. Written here as percentages. */
+  /** Share of the capital in parts of the whole: equal parts are equal weights. */
   parts: number;
   /** Paper fill: the close on the day the portfolio opened. */
   entry: number;
@@ -165,33 +165,38 @@ export interface PaperPortfolio {
   positions: PaperPosition[];
 }
 
+/** Weight by how far the target sits above the entry; a target at or under it gets nothing. */
+const byTarget = (p: Omit<PaperPosition, 'parts'> & { target: number }): PaperPosition => ({
+  ...p,
+  parts: Math.max(0, p.target / p.entry - 1),
+});
+
 /**
- * No real orders: $10,000 at the Nov 24, 2026 closes, tracked on /stocks. The weights began
- * in proportion to the gap between each entry and the analysts' average 12-month price
- * target (as published between Nov 6 and Nov 24, 2026; DELL's predates its Nov 24 earnings),
- * then were set by hand the same day: MU and ASTS halved, the difference split equally
- * across PANW, NVDA, ANT, SPCX, AMD and PLTR.
+ * No real orders: $10,000 at the Nov 24, 2026 closes, tracked on /stocks. Each position's
+ * weight is in proportion to the gap between its entry and the analysts' average 12-month
+ * price target, as published between Nov 6 and Nov 24, 2026. DELL's predates its Nov 24
+ * earnings; ANT's is from the thirteen firms covering it four days after its listing.
  */
 // prettier-ignore
 export const paper: PaperPortfolio = {
   opened: '2026-11-24',
   capital: 10_000,
   weighting:
-    "Weights began in proportion to how far analysts' average 12-month price target sat above each entry price, then were set by hand: MU and ASTS halved, and the difference split equally across PANW, NVDA, ANT, SPCX, AMD and PLTR. A target is an opinion, not a forecast.",
+    "Each weight is in proportion to how far analysts' average 12-month price target sat above the entry price. A target is an opinion, not a forecast.",
   positions: [
-    { ticker: 'AMD', chart: 'NASDAQ:AMD', parts: 8.87, entry: 413.27, target: 640.11 },
-    { ticker: 'NVDA', chart: 'NASDAQ:NVDA', parts: 8.07, entry: 155.38, target: 229.33 },
-    { ticker: 'ORCL', chart: 'NYSE:ORCL', parts: 12.58, entry: 109.5, target: 235.77 },
-    { ticker: 'ANT', chart: 'NASDAQ:ANT', parts: 9.99, entry: 81.91, target: 135.3 },
-    { ticker: 'DELL', chart: 'NYSE:DELL', parts: 10.86, entry: 295.28, target: 589.32 },
-    { ticker: 'MU', chart: 'NASDAQ:MU', parts: 8.08, entry: 629.79, target: 1561.91 },
-    { ticker: 'PLTR', chart: 'NASDAQ:PLTR', parts: 6.73, entry: 161.18, target: 218 },
-    { ticker: 'PANW', chart: 'NASDAQ:PANW', parts: 4.59, entry: 352.99, target: 408.45 },
-    { ticker: 'TSM', chart: 'NYSE:TSM', parts: 7.43, entry: 349.2, target: 587 },
-    { ticker: 'TSLA', chart: 'NASDAQ:TSLA', parts: 0.54, entry: 384.68, target: 403.86 },
-    { ticker: 'SPCX', chart: 'NASDAQ:SPCX', parts: 13.1, entry: 125.81, target: 243.64 },
-    { ticker: 'ASTS', chart: 'NASDAQ:ASTS', parts: 9.19, entry: 23.6, target: 63.35 },
-  ],
+    { ticker: 'AMD', chart: 'NASDAQ:AMD', entry: 413.27, target: 640.11 },
+    { ticker: 'NVDA', chart: 'NASDAQ:NVDA', entry: 155.38, target: 229.33 },
+    { ticker: 'ORCL', chart: 'NYSE:ORCL', entry: 109.5, target: 235.77 },
+    { ticker: 'ANT', chart: 'NASDAQ:ANT', entry: 81.91, target: 135.3 },
+    { ticker: 'DELL', chart: 'NYSE:DELL', entry: 295.28, target: 589.32 },
+    { ticker: 'MU', chart: 'NASDAQ:MU', entry: 629.79, target: 1561.91 },
+    { ticker: 'PLTR', chart: 'NASDAQ:PLTR', entry: 161.18, target: 218 },
+    { ticker: 'PANW', chart: 'NASDAQ:PANW', entry: 352.99, target: 408.45 },
+    { ticker: 'TSM', chart: 'NYSE:TSM', entry: 349.2, target: 587 },
+    { ticker: 'TSLA', chart: 'NASDAQ:TSLA', entry: 384.68, target: 403.86 },
+    { ticker: 'SPCX', chart: 'NASDAQ:SPCX', entry: 125.81, target: 243.64 },
+    { ticker: 'ASTS', chart: 'NASDAQ:ASTS', entry: 23.6, target: 63.35 },
+  ].map(byTarget),
 };
 
 /** Lookback periods the board can compare against. `ytd` uses the fixed `start` closes above. */
