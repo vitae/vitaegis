@@ -1,20 +1,356 @@
-/* Styles Tailwind does not express cleanly for the /stocks board. */
+/* /stocks: one terminal session in the brand's green, black and white.
+   Red marks a loss and nothing else. */
 
-.numeric {
+/* globals.css puts Jost on every div and p and turns text selection off; a terminal is
+   monospace and its output can be copied. */
+.term,
+.term * {
+  font-family:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.term {
+  font-size: 13px;
+  line-height: 1.55;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-.row {
-  transition: background-color 150ms ease;
+.term .brand {
+  font-family: 'Jost', 'Century Gothic', 'Avant Garde', sans-serif;
 }
 
-.change {
-  transition: color 150ms ease;
+/* ─── Window ─────────────────────────────────────────────────────────────────── */
+
+.frame {
+  position: relative;
+  border: 1px solid rgba(0, 255, 0, 0.32);
+  background: #000;
+  box-shadow:
+    0 0 28px rgba(0, 255, 0, 0.1),
+    inset 0 0 60px rgba(0, 255, 0, 0.025);
+}
+.frame::before,
+.frame::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.frame::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #00ff00;
+  border-left: 2px solid #00ff00;
+}
+.frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid #00ff00;
+  border-right: 2px solid #00ff00;
+}
+
+/* The status line of a terminal multiplexer: session name, then one entry per section. */
+.status {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  white-space: nowrap;
+  background: #00ff00;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  scrollbar-width: none;
+}
+.status::-webkit-scrollbar {
+  display: none;
+}
+.status a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  padding: 7px 9px;
+  color: #000;
+  font-weight: 700;
+}
+.status a:hover,
+.status a:focus-visible {
+  background: #000;
+  color: #00ff00;
+  outline: none;
+}
+.statusInfo {
+  display: none;
+  align-items: center;
+  margin-left: auto;
+  padding: 0 10px;
+  font-weight: 500;
+}
+@media (min-width: 768px) {
+  .statusInfo {
+    display: inline-flex;
+  }
+}
+
+/* ─── Sections ───────────────────────────────────────────────────────────────── */
+
+.section {
+  padding: 22px 0 30px;
+  border-top: 1px dashed rgba(0, 255, 0, 0.24);
+  scroll-margin-top: 8px;
+}
+
+.prompt {
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.15em;
+  margin-left: 0.35em;
+  vertical-align: text-bottom;
+  background: #00ff00;
+  animation: blink 1.2s steps(1, end) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.equity {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.5rem, 11vw, 4.5rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+/* Key on the left, value on the right, a dotted leader between them. */
+.facts {
+  margin: 0;
+}
+.facts > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+}
+.facts > div::before {
+  content: '';
+  order: 1;
+  flex: 1;
+  min-width: 16px;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.28);
+  transform: translateY(-3px);
+}
+.facts dt {
+  order: 0;
+  color: #808080;
+}
+.facts dd {
+  order: 2;
+  margin: 0;
+  text-align: right;
+}
+
+/* ─── Tables ─────────────────────────────────────────────────────────────────── */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+@media (min-width: 640px) {
+  .table {
+    font-size: 13px;
+  }
+}
+.table th,
+.table td {
+  padding: 7px 0 7px 12px;
+  white-space: nowrap;
+}
+.table th:first-child,
+.table td:first-child {
+  padding-left: 0;
+}
+/* A company name may wrap under its ticker so the numbers keep their room on a phone. */
+.table td.wrap {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.table thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+  color: #808080;
+  font-weight: 400;
+}
+.table tbody th,
+.table tbody td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 400;
+}
+.table tbody tr {
+  transition: background-color 150ms ease;
+}
+.table tbody tr:hover {
+  background: rgba(0, 255, 0, 0.055);
+}
+.table tfoot th,
+.table tfoot td {
+  border-top: 1px solid rgba(0, 255, 0, 0.4);
+  font-weight: 700;
+}
+
+.sym {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.sym:hover,
+.sym:focus-visible {
+  color: #00ff00;
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.meter {
+  display: block;
+  height: 2px;
+  margin-top: 5px;
+  background: #003311;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  background: #00ff00;
+}
+
+/* A day's move as a bar off a center line: losses left, gains right. */
+.swing {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  align-items: center;
+  width: 100%;
+  min-width: 120px;
+  height: 12px;
+}
+.swing > i {
+  display: block;
+  height: 6px;
+}
+.swingAxis {
+  height: 12px !important;
+  background: rgba(255, 255, 255, 0.4);
+}
+.swingDown {
+  justify-self: end;
+  background: #ff0000;
+}
+.swingUp {
+  justify-self: start;
+  background: #00ff00;
+}
+
+/* Each position's move per day; the fill deepens with the size of the move. */
+.tape {
+  border-collapse: separate;
+  border-spacing: 2px;
+  font-size: 11px;
+}
+.tape th {
+  padding: 3px 8px 3px 0;
+  color: #808080;
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+.tape thead th {
+  padding: 3px 0;
+  text-align: center;
+}
+.tape tbody th {
+  color: #fff;
+  font-weight: 700;
+}
+.tape td {
+  min-width: 54px;
+  padding: 4px 6px;
+  color: #fff;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ─── Controls ───────────────────────────────────────────────────────────────── */
+
+.tab {
+  min-height: 0;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: #000;
+  color: #808080;
+  font-size: 12px;
+  line-height: 1.35;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+.tab:hover {
+  border-color: rgba(255, 255, 255, 0.65);
+  color: #fff;
+}
+.tab:focus-visible {
+  outline: 2px solid #00ff00;
+  outline-offset: 2px;
+}
+.tabOn,
+.tabOn:hover {
+  border-color: #00ff00;
+  background: #00ff00;
+  color: #000;
+  font-weight: 700;
+}
+
+.chart {
+  height: 380px;
+  border: 1px solid rgba(0, 255, 0, 0.24);
+  background: #000;
+}
+@media (min-width: 640px) {
+  .chart {
+    height: 460px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .row,
-  .change {
+  .cursor {
+    animation: none;
+  }
+  .tab,
+  .table tbody tr {
     transition: none;
   }
+}
+
+/* Eight period tabs share one row on a phone: no side padding, centered label. */
+.tabTight {
+  padding-right: 0;
+  padding-left: 0;
+  text-align: center;
 }

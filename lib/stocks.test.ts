@@ -70,6 +70,27 @@ describe('getStockPrices', () => {
     expect(data.asOf).toBe('2026-09-23T12:00:00.000Z');
   });
 
+  it('returns the closes after the paper portfolio opened, for the tickers it holds', async () => {
+    const body = {
+      data: {
+        tradesTable: {
+          rows: [
+            { date: '11/27/2026', close: '$120.00' },
+            { date: '11/25/2026', close: '$110.00' },
+            { date: '11/24/2026', close: '$100.00' },
+          ],
+        },
+      },
+    };
+    mockFetch(() => json(body));
+    const data = await getStockPrices();
+    expect(data.history.NVDA).toEqual([
+      { date: '2026-11-25', close: 110 },
+      { date: '2026-11-27', close: 120 },
+    ]);
+    expect(data.history.SPY).toBeUndefined();
+  });
+
   it('asks Nasdaq for the right asset class', async () => {
     const urls: string[] = [];
     mockFetch((url) => {

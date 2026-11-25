@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { defaultPeriod, groups, periods, type GroupKey, type PeriodKey } from './data';
+import Prompt from './Prompt';
 import styles from './stocks.module.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -10,6 +11,7 @@ import styles from './stocks.module.css';
    (1D … 5Y, YTD by default), filtered to one group or all. Sort by change or
    by ticker. Green up, red down,
    gray for the rest; a ticker with no start close for the period shows a dash.
+   The command above the table restates the period, group and sort in effect.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 type SortKey = 'change' | 'ticker';
@@ -78,164 +80,142 @@ export default function StocksBoard({ rows, startDates, asOf, source }: Props) {
   const missing = shown.length - changes.length;
   const heading = period === 'ytd' ? current.long : `Past ${current.long}`;
 
-  const toggle = (key: SortKey, text: string) => {
-    const active = sort === key;
-    return (
-      <button
-        type="button"
-        onClick={() => setSort(key)}
-        aria-pressed={active}
-        className={`rounded-full border px-4 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-vitae-green focus-visible:ring-offset-2 focus-visible:ring-offset-black motion-safe:transition-colors ${
-          active
-            ? 'border-vitae-green bg-vitae-green text-black'
-            : 'border-white/25 text-vitae-gray hover:border-white/60 hover:text-white'
-        }`}
-      >
-        {text}
-      </button>
-    );
-  };
+  const tab = (active: boolean, extra = '') =>
+    `${styles.tab} ${active ? styles.tabOn : ''} ${extra}`;
+
+  const toggle = (key: SortKey, text: string) => (
+    <button
+      type="button"
+      onClick={() => setSort(key)}
+      aria-pressed={sort === key}
+      className={tab(sort === key)}
+    >
+      {text}
+    </button>
+  );
 
   return (
-    <section aria-labelledby="stocks-board-heading">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <section id="scan" className={styles.section}>
+      <Prompt
+        cmd="scan"
+        flags={`--period ${period} --group ${group} --sort ${sort}`}
+        label="Market scan"
+      />
+      <p className="mt-4 max-w-[68ch] font-normal text-white/70">
+        The market, big tech, chipmakers, memory and hardware, gold, silver and copper and their
+        miners, uranium, space, and a handful of core holdings, ranked by how far they have moved
+        over the period you pick. Prices are daily closes from Nasdaq, refreshed hourly.
+      </p>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 id="stocks-board-heading" className="text-xl font-medium text-white">
-            {heading}
-          </h2>
-          <p className="mt-1 text-sm text-vitae-gray" aria-live="polite">
+          <h3 className="text-sm font-bold text-white">{heading}</h3>
+          <p className="mt-1 text-xs text-vitae-gray" aria-live="polite">
             <span className="text-vitae-green">{up} up</span>
-            <span aria-hidden> · </span>
+            <span aria-hidden>{'  '}</span>
             <span className="text-vitae-red">{down} down</span>
-            <span aria-hidden> · </span>
+            <span aria-hidden>{'  '}</span>
             <span>{asOf}</span>
             {source === 'snapshot' && <span> (live prices unavailable)</span>}
-            {missing > 0 && source === 'live' && <span> · {missing} without data</span>}
+            {missing > 0 && source === 'live' && <span>, {missing} without data</span>}
           </p>
         </div>
-        <div className="flex gap-2" role="group" aria-label="Sort rows">
-          {toggle('change', 'By change')}
-          {toggle('ticker', 'By ticker')}
+        <div className="flex gap-1.5" role="group" aria-label="Sort rows">
+          {toggle('change', 'by change')}
+          {toggle('ticker', 'by ticker')}
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Group">
-        {[{ key: 'all' as const, label: 'All' }, ...groups].map((g) => {
-          const active = g.key === group;
-          return (
-            <button
-              key={g.key}
-              type="button"
-              onClick={() => setGroup(g.key)}
-              aria-pressed={active}
-              className={`rounded-full border px-3 py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-vitae-green focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:text-sm motion-safe:transition-colors ${
-                active
-                  ? 'border-white bg-white text-black'
-                  : 'border-white/20 text-vitae-gray hover:border-white/60 hover:text-white'
-              }`}
-            >
-              {g.label}
-            </button>
-          );
-        })}
+      <div className="mt-5 flex flex-wrap gap-1.5" role="group" aria-label="Group">
+        {[{ key: 'all' as const, label: 'All' }, ...groups].map((g) => (
+          <button
+            key={g.key}
+            type="button"
+            onClick={() => setGroup(g.key)}
+            aria-pressed={g.key === group}
+            className={tab(g.key === group)}
+          >
+            {g.label.toLowerCase()}
+          </button>
+        ))}
       </div>
 
-      <div
-        className="mt-3 grid grid-cols-8 gap-1 rounded-full border border-white/15 p-1"
-        role="group"
-        aria-label="Time period"
-      >
-        {periods.map((p) => {
-          const active = p.key === period;
-          return (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPeriod(p.key)}
-              aria-pressed={active}
-              aria-label={p.key === 'ytd' ? 'Year to date' : p.long}
-              className={`rounded-full py-1.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-vitae-green sm:text-sm motion-safe:transition-colors ${
-                active ? 'bg-vitae-green text-black' : 'text-vitae-gray hover:text-white'
-              }`}
-            >
-              {p.label}
-            </button>
-          );
-        })}
+      <div className="mt-1.5 grid grid-cols-8 gap-1.5" role="group" aria-label="Time period">
+        {periods.map((p) => (
+          <button
+            key={p.key}
+            type="button"
+            onClick={() => setPeriod(p.key)}
+            aria-pressed={p.key === period}
+            aria-label={p.key === 'ytd' ? 'Year to date' : p.long}
+            className={tab(p.key === period, styles.tabTight)}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
 
-      <div className="mt-4">
-        <table className={`w-full border-collapse text-left ${styles.numeric}`}>
-          <caption className="sr-only">
-            Tickers with their close at the start of the period, latest close and percent change
-          </caption>
-          <thead>
-            <tr className="border-b border-white/20 text-xs font-normal text-vitae-gray">
-              <th scope="col" className="w-6 py-2 pr-2 font-normal sm:w-8">
-                #
-              </th>
-              <th scope="col" className="py-2 pr-2 font-normal">
-                Ticker
-              </th>
-              <th scope="col" className="w-1/5 py-2 pr-2 text-right font-normal">
-                {shortDate(startDates[period])}
-              </th>
-              <th scope="col" className="w-1/5 py-2 pr-2 text-right font-normal">
-                Latest
-              </th>
-              <th scope="col" className="w-1/5 py-2 text-right font-normal">
-                Change
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((r, i) => {
-              const p = pct(r, period);
-              const start = r.starts[period];
-              const upRow = p !== null && p >= 0;
-              return (
-                <tr
-                  key={r.ticker}
-                  className={`${styles.row} border-b border-white/10 hover:bg-white/[0.04]`}
+      <table className={`${styles.table} mt-4`}>
+        <caption className="sr-only">
+          Tickers with their close at the start of the period, latest close and percent change
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" className="w-7 text-left sm:w-9">
+              #
+            </th>
+            <th scope="col" className="text-left">
+              sym
+            </th>
+            <th scope="col" className="hidden w-1/5 text-right sm:table-cell">
+              {shortDate(startDates[period]).toLowerCase()}
+            </th>
+            <th scope="col" className="w-1/5 text-right">
+              latest
+            </th>
+            <th scope="col" className="w-1/5 text-right">
+              change
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((r, i) => {
+            const p = pct(r, period);
+            const start = r.starts[period];
+            const upRow = p !== null && p >= 0;
+            return (
+              <tr key={r.ticker}>
+                <td className="text-left text-vitae-gray">{i + 1}</td>
+                <td className={`${styles.wrap} text-left`}>
+                  <span className="block font-bold text-white">{r.ticker}</span>
+                  <span className="block text-xs leading-tight text-vitae-gray">{r.name}</span>
+                </td>
+                <td className="hidden text-right text-vitae-gray sm:table-cell">
+                  {start ? price(start) : '—'}
+                </td>
+                <td className="text-right text-white">{price(r.end)}</td>
+                <td
+                  className={`text-right font-bold ${
+                    p === null ? 'text-vitae-gray' : upRow ? 'text-vitae-green' : 'text-vitae-red'
+                  }`}
                 >
-                  <td className="py-3 pr-2 text-xs text-vitae-gray sm:text-sm">{i + 1}</td>
-                  <td className="py-3 pr-2">
-                    <span className="block text-sm font-medium text-white sm:text-base">
-                      {r.ticker}
-                    </span>
-                    <span className="block text-xs leading-tight text-vitae-gray sm:text-sm">
-                      {r.name}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap py-3 pr-2 text-right text-xs text-vitae-gray sm:text-sm">
-                    {start ? price(start) : '—'}
-                  </td>
-                  <td className="whitespace-nowrap py-3 pr-2 text-right text-sm text-white sm:text-base">
-                    {price(r.end)}
-                  </td>
-                  <td
-                    className={`${styles.change} whitespace-nowrap py-3 text-right text-sm font-medium sm:text-base ${
-                      p === null ? 'text-vitae-gray' : upRow ? 'text-vitae-green' : 'text-vitae-red'
-                    }`}
-                  >
-                    {p === null ? (
-                      <>
-                        <span aria-hidden>—</span>
-                        <span className="sr-only">no data</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="sr-only">{upRow ? 'up ' : 'down '}</span>
-                        {change(p)}
-                      </>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                  {p === null ? (
+                    <>
+                      <span aria-hidden>—</span>
+                      <span className="sr-only">no data</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sr-only">{upRow ? 'up ' : 'down '}</span>
+                      {change(p)}
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </section>
   );
 }

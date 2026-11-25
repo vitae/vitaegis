@@ -63,7 +63,8 @@ export const projects: Project[] = [
     href: '/stocks',
     label: 'STOCKS',
     title: 'Wealth Board',
-    description: 'Twelve tickers versus their Dec 31, 2025 close, refreshed hourly.',
+    description:
+      'A $10,000 paper portfolio marked to every daily close, and the wider market ranked by move.',
     icon: HiTrendingUp,
   },
   {

@@ -1,6 +1,7 @@
 // Server-only: called from the /stocks page and /api/stocks route. Never import from a client component.
 import {
   asOfSnapshot,
+  paper,
   startDate,
   stocks,
   yahooSymbol,
@@ -8,6 +9,7 @@ import {
   type StockRow,
 } from '@/app/stocks/data';
 import { closeOnOrBefore, LOOKBACK_KEYS, referenceFor, type Series } from '@/lib/stocks-periods';
+import type { PaperHistory } from '@/lib/stocks-portfolio';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Stocks
@@ -33,6 +35,8 @@ export interface StockPrices {
   starts: Record<string, Partial<Record<PeriodKey, number>>>;
   /** ISO date (YYYY-MM-DD) each period starts from, taken from the first live stock. */
   startDates: Partial<Record<PeriodKey, string>>;
+  /** Daily closes after the paper portfolio opened, for each ticker it holds that was live. */
+  history: PaperHistory;
   source: StockSource;
 }
 
@@ -199,6 +203,19 @@ async function settleAll<T, R>(
   return out;
 }
 
+const PAPER_TICKERS = new Set(paper.positions.map((p) => p.ticker));
+
+/** Bars dated after `date` (YYYY-MM-DD), oldest first. */
+function closesAfter(series: Series, date: string): PaperHistory[string] {
+  const out: PaperHistory[string] = [];
+  for (let i = series.times.length - 1; i >= 0; i--) {
+    const day = isoDate(series.times[i]);
+    if (day <= date) break;
+    out.unshift({ date: day, close: series.closes[i] });
+  }
+  return out;
+}
+
 const ytdStarts = (): StockPrices['starts'] =>
   Object.fromEntries(stocks.map((s) => [s.ticker, { ytd: s.start }]));
 
@@ -207,6 +224,7 @@ const snapshot = (): StockPrices => ({
   prices: Object.fromEntries(stocks.map((s) => [s.ticker, s.end])),
   starts: ytdStarts(),
   startDates: { ytd: startDate },
+  history: {},
   source: 'snapshot',
 });
 
@@ -225,6 +243,7 @@ export async function getStockPrices(): Promise<StockPrices> {
     const prices: Record<string, number> = {};
     const starts = ytdStarts();
     const startDates: StockPrices['startDates'] = { ytd: startDate };
+    const history: PaperHistory = {};
     let datesFrom = '';
     // Newest stock bar; crypto trades daily and posts today's bar before stocks close.
     let newest = 0;
@@ -239,6 +258,7 @@ export async function getStockPrices(): Promise<StockPrices> {
         if (row.asset === 'crypto') newestCrypto = Math.max(newestCrypto, series.times[last]);
         else newest = Math.max(newest, series.times[last]);
         live++;
+        if (PAPER_TICKERS.has(row.ticker)) history[row.ticker] = closesAfter(series, paper.opened);
         const ytd = closeOnOrBefore(series, YTD_CUTOFF);
         if (ytd) starts[row.ticker].ytd = ytd.close;
         // Dates come from the first live stock; Bitcoin trades weekends, so only as a last resort.
@@ -264,6 +284,7 @@ export async function getStockPrices(): Promise<StockPrices> {
       prices,
       starts,
       startDates,
+      history,
       source: 'live',
     };
   } catch (err) {

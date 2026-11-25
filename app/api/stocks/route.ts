@@ -8,7 +8,8 @@ export const maxDuration = 60;
 
 // Same hourly fetch the /stocks page uses, exposed as JSON:
 // { asOf, prices: { [ticker]: close }, starts: { [ticker]: { [period]: close } },
-//   startDates: { [period]: 'YYYY-MM-DD' }, source: 'live' | 'snapshot' }.
+//   startDates: { [period]: 'YYYY-MM-DD' },
+//   history: { [paper portfolio ticker]: [{ date, close }] }, source: 'live' | 'snapshot' }.
 export async function GET() {
   const data = await getStockPrices();
   return NextResponse.json(data, {

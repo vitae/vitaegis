@@ -13,6 +13,7 @@ export const groups = [
   { key: 'hardware', label: 'Memory & Hardware' },
   { key: 'metals', label: 'Gold, Silver & Copper' },
   { key: 'uranium', label: 'Uranium' },
+  { key: 'space', label: 'Space' },
   { key: 'core', label: 'Core Picks' },
 ] as const;
 
@@ -57,6 +58,9 @@ export const stocks: StockRow[] = [
   { ticker: 'ORCL', name: 'Oracle', group: 'tech', asset: 'stocks', start: 194.91, end: 144.56 },
   { ticker: 'NFLX', name: 'Netflix', group: 'tech', asset: 'stocks', start: 93.76, end: 71.36 },
   { ticker: 'PLTR', name: 'Palantir', group: 'tech', asset: 'stocks', start: 177.75, end: 191.79 },
+  { ticker: 'PANW', name: 'Palo Alto Networks', group: 'tech', asset: 'stocks', start: 184.2, end: 393.3 },
+  // Listed Nov 19, 2026: `start` is the IPO price and `end` the Nov 24, 2026 close.
+  { ticker: 'ANT', name: 'Anthropic', group: 'tech', asset: 'stocks', start: 83, end: 81.91 },
 
   // Chips: designers, foundries, equipment
   { ticker: 'NVDA', name: 'Nvidia', group: 'chips', asset: 'stocks', start: 186.5, end: 225.51 },
@@ -123,6 +127,10 @@ export const stocks: StockRow[] = [
   { ticker: 'URA', name: 'Uranium ETF', group: 'uranium', asset: 'etf', start: 42.73, end: 41.99 },
   { ticker: 'URNM', name: 'Uranium Miners ETF', group: 'uranium', asset: 'etf', start: 54.89, end: 50.62 },
 
+  // Space. SPCX listed Jun 12, 2026: `start` is its IPO price.
+  { ticker: 'SPCX', name: 'SpaceX', group: 'space', asset: 'stocks', start: 135, end: 148.36 },
+  { ticker: 'ASTS', name: 'AST SpaceMobile', group: 'space', asset: 'stocks', start: 72.63, end: 59.98 },
+
   // Core picks: compounders across finance, payments, health, retail and AI power
   { ticker: 'BRK.B', name: 'Berkshire Hathaway', group: 'core', asset: 'stocks', start: 502.65, end: 507.17 },
   { ticker: 'JPM', name: 'JPMorgan Chase', group: 'core', asset: 'stocks', start: 322.22, end: 337.53 },
@@ -132,6 +140,47 @@ export const stocks: StockRow[] = [
   { ticker: 'CEG', name: 'Constellation Energy', group: 'core', asset: 'stocks', start: 353.27, end: 263.88 },
   { ticker: 'VST', name: 'Vistra', group: 'core', asset: 'stocks', start: 161.33, end: 137.97 },
 ];
+
+/* ─── Paper portfolio ────────────────────────────────────────────────────────── */
+
+export interface PaperPosition {
+  /** Must also be in `stocks`, which is what the price fetch reads. */
+  ticker: string;
+  /** TradingView symbol, with its exchange. */
+  chart: string;
+  /** Share of the capital in parts of the whole: equal parts are equal weights. */
+  parts: number;
+  /** Paper fill: the close on the day the portfolio opened. */
+  entry: number;
+}
+
+export interface PaperPortfolio {
+  /** Date of the entry closes (YYYY-MM-DD). Tracking starts with the next close. */
+  opened: string;
+  capital: number;
+  positions: PaperPosition[];
+}
+
+/** No real orders: $10,000 split evenly at the Nov 24, 2026 closes, tracked on /stocks. */
+// prettier-ignore
+export const paper: PaperPortfolio = {
+  opened: '2026-11-24',
+  capital: 10_000,
+  positions: [
+    { ticker: 'AMD', chart: 'NASDAQ:AMD', parts: 1, entry: 413.27 },
+    { ticker: 'NVDA', chart: 'NASDAQ:NVDA', parts: 1, entry: 155.38 },
+    { ticker: 'ORCL', chart: 'NYSE:ORCL', parts: 1, entry: 109.5 },
+    { ticker: 'ANT', chart: 'NASDAQ:ANT', parts: 1, entry: 81.91 },
+    { ticker: 'DELL', chart: 'NYSE:DELL', parts: 1, entry: 295.28 },
+    { ticker: 'MU', chart: 'NASDAQ:MU', parts: 1, entry: 629.79 },
+    { ticker: 'PLTR', chart: 'NASDAQ:PLTR', parts: 1, entry: 161.18 },
+    { ticker: 'PANW', chart: 'NASDAQ:PANW', parts: 1, entry: 352.99 },
+    { ticker: 'TSM', chart: 'NYSE:TSM', parts: 1, entry: 349.2 },
+    { ticker: 'TSLA', chart: 'NASDAQ:TSLA', parts: 1, entry: 384.68 },
+    { ticker: 'SPCX', chart: 'NASDAQ:SPCX', parts: 1, entry: 125.81 },
+    { ticker: 'ASTS', chart: 'NASDAQ:ASTS', parts: 1, entry: 23.6 },
+  ],
+};
 
 /** Lookback periods the board can compare against. `ytd` uses the fixed `start` closes above. */
 export const periods = [
