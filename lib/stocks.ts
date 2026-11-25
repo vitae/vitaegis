@@ -186,6 +186,20 @@ async function fetchSeries(row: StockRow, breaker: Breaker): Promise<Series> {
   throw new Error(`${row.ticker}: ${errors.join('; ')}`);
 }
 
+/**
+ * One ticker's daily closes, oldest first, from the same hourly requests `getStockPrices`
+ * makes, so asking again costs nothing. Null for an unknown ticker or when every source fails.
+ */
+export async function getSeries(ticker: string): Promise<Series | null> {
+  const row = stocks.find((s) => s.ticker === ticker);
+  if (!row) return null;
+  try {
+    return await fetchSeries(row, { nasdaqFailures: 0 });
+  } catch {
+    return null;
+  }
+}
+
 /** Like Promise.allSettled over `items`, at most `limit` at a time. */
 async function settleAll<T, R>(
   items: T[],

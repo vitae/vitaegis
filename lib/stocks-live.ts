@@ -75,22 +75,24 @@ export function watchlistTime(json: Watchlist): string | null {
   return Number.isFinite(time) ? new Date(time).toISOString() : null;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+/** The first date Nasdaq wrote in `text`, "Nov 24, 2026" or "November 24, 2026", as 2026-11-24. */
+export function nasdaqDate(text: string | null | undefined): string | null {
+  const m = /([a-z]{3})[a-z]* (\d{1,2}), (\d{4})/i.exec(text ?? '');
+  const month = m ? MONTHS.indexOf(m[1].toLowerCase()) : -1;
+  return m && month >= 0
+    ? `${m[3]}-${String(month + 1).padStart(2, '0')}-${m[2].padStart(2, '0')}`
+    : null;
+}
 
 /** The price Nasdaq labels "Closed at <date>", with that date; null if the answer has none. */
 export function parseClose(json: Info): LiveQuote | null {
   for (const quote of [json.data?.primaryData, json.data?.secondaryData]) {
-    const m = /closed at ([A-Z][a-z]{2})[a-z]* (\d{1,2}), (\d{4})/i.exec(
-      quote?.lastTradeTimestamp ?? '',
-    );
-    if (!m) continue;
-    const month = MONTHS.findIndex((name) => name.toLowerCase() === m[1].toLowerCase());
+    const stamp = quote?.lastTradeTimestamp ?? '';
+    const date = /closed at/i.test(stamp) ? nasdaqDate(stamp) : null;
     const price = parseNasdaqNumber(quote?.lastSalePrice);
-    if (month < 0 || !(price > 0)) continue;
-    return {
-      date: `${m[3]}-${String(month + 1).padStart(2, '0')}-${m[2].padStart(2, '0')}`,
-      price,
-    };
+    if (date && price > 0) return { date, price };
   }
   return null;
 }

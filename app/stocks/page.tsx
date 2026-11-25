@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getStockPrices } from '@/lib/stocks';
 import { getLiveQuotes } from '@/lib/stocks-live';
-import { deskKey } from '@/lib/stocks-portfolio';
+import { getPlays } from '@/lib/stocks-plays';
+import { deskKey, trackPortfolio } from '@/lib/stocks-portfolio';
 import PaperDesk from './PaperDesk';
+import Plays from './Plays';
 import StocksBoard from './StocksBoard';
 import { paper, papers, stocks } from './data';
 import styles from './stocks.module.css';
@@ -32,7 +34,7 @@ const formatDate = (iso: string) =>
   });
 
 /** The page's windows, listed in the status line the way a multiplexer lists them: one per portfolio, then the shared sections. */
-const WINDOWS = [...papers.map((p) => deskKey(p.capital)), 'rank', 'chart', 'scan'];
+const WINDOWS = [...papers.map((p) => deskKey(p.capital)), 'rank', 'chart', 'scan', 'plays'];
 
 /** "$10,000, $5,000 and $1,000" */
 const SIZES = new Intl.ListFormat('en-US', { type: 'conjunction' }).format(
@@ -40,9 +42,10 @@ const SIZES = new Intl.ListFormat('en-US', { type: 'conjunction' }).format(
 );
 
 export default async function StocksPage() {
-  const [{ asOf, prices, starts, startDates, history, source }, live] = await Promise.all([
+  const [{ asOf, prices, starts, startDates, history, source }, live, plays] = await Promise.all([
     getStockPrices(),
     getLiveQuotes(revalidate),
+    getPlays(),
   ]);
   const rows = stocks.map((s) => ({
     ticker: s.ticker,
@@ -60,6 +63,9 @@ export default async function StocksPage() {
     ]),
   );
   const entryDate = formatDate(`${paper.opened}T12:00:00Z`);
+  const mostShares = Math.max(
+    ...papers.flatMap((p) => trackPortfolio(p, {}).positions.map((held) => held.shares)),
+  );
 
   return (
     // Like /run: the site's global CSS pins <html> to the viewport in some browsers, so this
@@ -92,7 +98,8 @@ export default async function StocksPage() {
                 the same weights, bought at the {entryDate} close. While the market is open they are
                 marked to Nasdaq&apos;s last sale price; after it, to the close. No real orders are
                 placed. Under them, the positions ranked by how fast they gained, a chart of each
-                one and the wider market.
+                one, the wider market, and what a put, a call or a short on each stock would cost
+                and pay at a move you pick.
               </p>
             </header>
 
@@ -106,6 +113,8 @@ export default async function StocksPage() {
             />
 
             <StocksBoard rows={rows} startDates={startDates} asOf={asOfText} source={source} />
+
+            <Plays data={plays} names={names} mostShares={mostShares} />
 
             <footer className={`${styles.section} text-xs leading-relaxed text-vitae-gray`}>
               <p className="max-w-[76ch]">
