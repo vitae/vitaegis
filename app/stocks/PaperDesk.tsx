@@ -133,8 +133,6 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
   const ranked = latest ? [...state.positions].sort((a, b) => b.pnlPct - a.pnlPct) : [];
   const best = ranked[0];
   const worst = ranked[ranked.length - 1];
-  // A full meter is a quarter of the capital, or the largest position if one is bigger.
-  const widest = Math.max(0.25, ...state.positions.map((p) => p.weight));
   const heaviestFirst = [...state.positions].sort((a, b) => b.weight - a.weight);
   const hasTargets = state.positions.some((p) => targets[p.ticker] !== undefined);
   const swing = Math.max(1, ...state.days.map((d) => Math.abs(d.changePct)));
@@ -280,7 +278,8 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
                   <td className="text-right text-white/80">
                     {(p.weight * 100).toFixed(2)}%
                     <span className={styles.meter} aria-hidden>
-                      <span style={{ width: `${(p.weight / widest) * 100}%` }} />
+                      {/* The track is the whole portfolio, so the fill is the weight itself. */}
+                      <span style={{ width: `${p.weight * 100}%` }} />
                     </span>
                   </td>
                   <td className="hidden text-right text-white/80 lg:table-cell">

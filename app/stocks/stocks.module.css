@@ -252,8 +252,10 @@
   margin-top: 5px;
   background: #003311;
 }
+/* A sliver stays visible for a weight too small to fill one pixel of the track. */
 .meter > span {
   display: block;
+  min-width: 1px;
   height: 100%;
   background: #00ff00;
 }
