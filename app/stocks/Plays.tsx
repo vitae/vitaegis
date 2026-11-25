@@ -96,7 +96,7 @@ export default function Plays({ data, names, mostShares }: Props) {
             <th scope="col" className="text-left">
               sym
             </th>
-            <th scope="col" className="hidden text-right md:table-cell">
+            <th scope="col" className="hidden text-right lg:table-cell">
               last
             </th>
             <th scope="col" className="hidden text-right lg:table-cell">
@@ -120,7 +120,7 @@ export default function Plays({ data, names, mostShares }: Props) {
             <th scope="col" className="text-right">
               p/l
             </th>
-            <th scope="col" className="hidden text-right md:table-cell">
+            <th scope="col" className="hidden text-right lg:table-cell">
               on cost
             </th>
             <th scope="col" className="hidden text-right md:table-cell">
@@ -141,7 +141,7 @@ export default function Plays({ data, names, mostShares }: Props) {
                     {names[p.ticker]}
                   </span>
                 </th>
-                <td className="hidden text-right text-white md:table-cell">
+                <td className="hidden text-right text-white lg:table-cell">
                   {p.last ? usd(p.last) : '—'}
                 </td>
                 <td className="hidden text-right text-white/80 lg:table-cell">
@@ -164,7 +164,7 @@ export default function Plays({ data, names, mostShares }: Props) {
                   {pnl === null ? '—' : signedUsd(pnl)}
                 </td>
                 <td
-                  className={`hidden text-right md:table-cell ${pnl === null ? 'text-vitae-gray' : tone(pnl)}`}
+                  className={`hidden text-right lg:table-cell ${pnl === null ? 'text-vitae-gray' : tone(pnl)}`}
                 >
                   {pnl === null || !option ? '—' : signedPct((pnl / (option.cost * 100)) * 100, 0)}
                 </td>

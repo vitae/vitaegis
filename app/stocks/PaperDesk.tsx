@@ -218,8 +218,8 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
         <Prompt dir={dir} cmd="positions" label={`Positions of the ${size} portfolio`} />
         <table className={`${styles.table} mt-4`}>
           <caption className="sr-only">
-            Each position&apos;s weight, shares, entry price, analyst target, latest close and gain
-            or loss since the entry
+            Each position&apos;s dollars at the entry, weight, shares, entry price, analyst target,
+            latest close and gain or loss since the entry
           </caption>
           <thead>
             <tr>
@@ -227,23 +227,26 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
                 sym
               </th>
               <th scope="col" className="text-right">
-                wgt
-              </th>
-              <th scope="col" className="hidden text-right md:table-cell">
-                shares
+                $ total
               </th>
               <th scope="col" className="text-right">
+                wgt
+              </th>
+              <th scope="col" className="hidden text-right lg:table-cell">
+                shares
+              </th>
+              <th scope="col" className="hidden text-right md:table-cell">
                 entry
               </th>
               {hasTargets && (
-                <th scope="col" className="hidden text-right md:table-cell">
+                <th scope="col" className="hidden text-right lg:table-cell">
                   target
                 </th>
               )}
               <th scope="col" className="text-right">
                 last
               </th>
-              <th scope="col" className="hidden text-right sm:table-cell">
+              <th scope="col" className="hidden text-right md:table-cell">
                 day
               </th>
               <th scope="col" className="hidden text-right sm:table-cell">
@@ -273,24 +276,27 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
                       {names[p.ticker]}
                     </span>
                   </th>
+                  <td className="text-right text-white">{usd(p.cost)}</td>
                   <td className="text-right text-white/80">
                     {(p.weight * 100).toFixed(2)}%
                     <span className={styles.meter} aria-hidden>
                       <span style={{ width: `${(p.weight / widest) * 100}%` }} />
                     </span>
                   </td>
-                  <td className="hidden text-right text-white/80 md:table-cell">
+                  <td className="hidden text-right text-white/80 lg:table-cell">
                     {p.shares.toFixed(4)}
                   </td>
-                  <td className="text-right text-vitae-gray">{usd(p.entry)}</td>
+                  <td className="hidden text-right text-vitae-gray md:table-cell">
+                    {usd(p.entry)}
+                  </td>
                   {hasTargets && (
-                    <td className="hidden text-right text-vitae-gray md:table-cell">
+                    <td className="hidden text-right text-vitae-gray lg:table-cell">
                       {target === undefined ? '—' : usd(target)}
                     </td>
                   )}
                   <td className="text-right text-white">{usd(p.last)}</td>
                   <td
-                    className={`hidden text-right sm:table-cell ${day === null ? 'text-vitae-gray' : tone(day)}`}
+                    className={`hidden text-right md:table-cell ${day === null ? 'text-vitae-gray' : tone(day)}`}
                   >
                     {day === null ? '—' : signedPct(day)}
                   </td>
@@ -307,13 +313,14 @@ function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskP
               <th scope="row" className="text-left">
                 total
               </th>
+              <td className="text-right">{usd(state.capital)}</td>
               <td className="text-right">100%</td>
+              <td className="hidden lg:table-cell" />
               <td className="hidden md:table-cell" />
-              <td className="text-right text-vitae-gray">{usd(state.capital)}</td>
-              {hasTargets && <td className="hidden md:table-cell" />}
+              {hasTargets && <td className="hidden lg:table-cell" />}
               <td className="text-right">{usd(state.value)}</td>
               <td
-                className={`hidden text-right sm:table-cell ${latest ? tone(latest.change) : 'text-vitae-gray'}`}
+                className={`hidden text-right md:table-cell ${latest ? tone(latest.change) : 'text-vitae-gray'}`}
               >
                 {latest ? signedPct(latest.changePct) : '—'}
               </td>
