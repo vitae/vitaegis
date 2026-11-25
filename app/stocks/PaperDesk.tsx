@@ -31,6 +31,8 @@ interface Props {
   portfolios: PaperPortfolio[];
   /** Daily closes per held ticker since the entry. */
   history: PaperHistory;
+  /** Nasdaq's prices when the page was built, shown until the first poll answers. */
+  initialLive: LiveQuotes;
   /** Company name per ticker. */
   names: Record<string, string>;
   /** Latest close and trailing start closes per held ticker, for the ranking. */
@@ -48,8 +50,12 @@ interface DeskProps {
   weighting?: string;
   /** Date of the entry closes, YYYY-MM-DD. */
   opened: string;
-  /** New York clock time of the prices while the newest day is still trading, else null. */
-  liveAt: string | null;
+  /**
+   * Set while the newest day is marked to a last sale, not a close: the New York clock time
+   * of the prices, and whether this tab has read them itself (`live`) or they came with the
+   * page and may be older.
+   */
+  mark: { live: boolean; clock: string } | null;
   /** Show a symbol in the chart under the portfolios. */
   onChart: (ticker: string) => void;
 }
@@ -138,7 +144,7 @@ const heat = (move: number | null, scale: number) => {
 };
 
 /** The four blocks whose numbers depend on the portfolio's size. */
-function Desk({ state, names, targets, weighting, opened, liveAt, onChart }: DeskProps) {
+function Desk({ state, names, targets, weighting, opened, mark, onChart }: DeskProps) {
   const [rate, setRate] = useState(DEFAULT_RATE);
 
   const dir = deskKey(state.capital);
@@ -194,17 +200,19 @@ function Desk({ state, names, targets, weighting, opened, liveAt, onChart }: Des
             </div>
             <div>
               <dt>marked to</dt>
-              {liveAt ? (
+              {mark?.live ? (
                 <dd className="text-vitae-green">
                   <span className={styles.liveDot} aria-hidden />
-                  live {liveAt} ET
+                  live {mark.clock} ET
                 </dd>
               ) : (
-                <dd>{latest ? `${latest.date} close` : 'entry'}</dd>
+                <dd>
+                  {latest ? `${latest.date} ${mark ? `${mark.clock} ET` : 'close'}` : 'entry'}
+                </dd>
               )}
             </div>
             <div>
-              <dt>{liveAt ? 'today' : 'last day'}</dt>
+              <dt>{mark?.live ? 'today' : 'last day'}</dt>
               <dd className={latest ? tone(latest.change) : 'text-vitae-gray'}>
                 {latest
                   ? `${signedUsd(latest.change)}  ${signedPct(latest.changePct)}`
@@ -382,7 +390,9 @@ function Desk({ state, names, targets, weighting, opened, liveAt, onChart }: Des
               <tr key={d.date}>
                 <th scope="row" className="text-left text-white">
                   {d.date}
-                  {liveAt && d === latest && <span className="ml-2 text-vitae-green">live</span>}
+                  {mark?.live && d === latest && (
+                    <span className="ml-2 text-vitae-green">live</span>
+                  )}
                 </th>
                 <td className="text-right text-white">{usd(d.value)}</td>
                 <td className={`hidden text-right sm:table-cell ${tone(d.change)}`}>
@@ -553,8 +563,10 @@ function Desk({ state, names, targets, weighting, opened, liveAt, onChart }: Des
   );
 }
 
-export default function PaperDesk({ portfolios, history, names, trail, asOf }: Props) {
-  const [live, setLive] = useState<LiveQuotes | null>(null);
+export default function PaperDesk({ portfolios, history, initialLive, names, trail, asOf }: Props) {
+  const [live, setLive] = useState(initialLive);
+  // False until this tab has read prices itself; what came with the page can be minutes old.
+  const [fresh, setFresh] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -571,7 +583,10 @@ export default function PaperDesk({ portfolios, history, names, trail, asOf }: P
           const res = await fetch('/api/stocks/live', { cache: 'no-store' });
           if (res.ok) {
             const next = (await res.json()) as LiveQuotes;
-            if (!stopped) setLive(next);
+            if (!stopped) {
+              setLive(next);
+              setFresh(true);
+            }
             if (next.session === 'open') wait = POLL_OPEN_MS;
           }
         } catch {
@@ -595,17 +610,15 @@ export default function PaperDesk({ portfolios, history, names, trail, asOf }: P
 
   const base = portfolios[0];
   const { opened, weighting } = base;
-  const marked = useMemo(
-    () => withLive(history, live?.quotes ?? {}, opened),
-    [history, live, opened],
-  );
+  const marked = useMemo(() => withLive(history, live.quotes, opened), [history, live, opened]);
   const desks = useMemo(
     () => portfolios.map((p) => trackPortfolio(p, marked.history)),
     [portfolios, marked],
   );
   const lead = desks[0];
-  // Only a day that is still trading counts as live; a close read early is just a close.
-  const liveAt = live?.session === 'open' && marked.date ? newYorkClock(live.at) : null;
+  // Only a day that is still trading is marked to a last sale; a close read early is a close.
+  const mark =
+    live.session === 'open' && marked.date ? { live: fresh, clock: newYorkClock(live.at) } : null;
   const charts = Object.fromEntries(base.positions.map((p) => [p.ticker, p.chart]));
   const targets = Object.fromEntries(base.positions.map((p) => [p.ticker, p.target]));
 
@@ -640,7 +653,7 @@ export default function PaperDesk({ portfolios, history, names, trail, asOf }: P
           targets={targets}
           weighting={weighting}
           opened={opened}
-          liveAt={liveAt}
+          mark={mark}
           onChart={chart}
         />
       ))}

@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getStockPrices } from '@/lib/stocks';
+import { getLiveQuotes } from '@/lib/stocks-live';
 import { deskKey } from '@/lib/stocks-portfolio';
 import PaperDesk from './PaperDesk';
 import StocksBoard from './StocksBoard';
 import { paper, papers, stocks } from './data';
 import styles from './stocks.module.css';
 
-export const revalidate = 3600;
+// The prices in the first paint are at most about a minute old; the page then polls for
+// newer ones. The daily closes behind them are still fetched hourly.
+export const revalidate = 60;
 // A cold fetch of ~80 tickers takes several seconds; leave room over the platform default.
 export const maxDuration = 60;
 
@@ -37,7 +40,10 @@ const SIZES = new Intl.ListFormat('en-US', { type: 'conjunction' }).format(
 );
 
 export default async function StocksPage() {
-  const { asOf, prices, starts, startDates, history, source } = await getStockPrices();
+  const [{ asOf, prices, starts, startDates, history, source }, live] = await Promise.all([
+    getStockPrices(),
+    getLiveQuotes(revalidate),
+  ]);
   const rows = stocks.map((s) => ({
     ticker: s.ticker,
     name: s.name,
@@ -93,6 +99,7 @@ export default async function StocksPage() {
             <PaperDesk
               portfolios={papers}
               history={history}
+              initialLive={live}
               names={names}
               trail={trail}
               asOf={asOfText}

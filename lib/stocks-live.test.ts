@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseClose, parseWatchlist } from './stocks-live';
+import { parseClose, parseWatchlist, watchlistTime } from './stocks-live';
 
 const row = (symbol: string, lastSalePrice: string, marketStatus = 'Market Open') => ({
   symbol,
@@ -28,6 +28,18 @@ describe('parseWatchlist', () => {
   it('drops rows without a usable price', () => {
     const quotes = parseWatchlist({ data: [row('NVDA', '$141.70'), row('ANT', 'N/A')] });
     expect(Object.keys(quotes ?? {})).toEqual(['NVDA']);
+  });
+});
+
+describe('watchlistTime', () => {
+  it('reads the New York stamp as an instant', () => {
+    expect(watchlistTime({ data: [row('NVDA', '$141.70')] })).toBe('2026-11-25T16:52:42.000Z');
+  });
+
+  it('answers null when no row is stamped', () => {
+    expect(watchlistTime({ data: [{ symbol: 'NVDA' }] })).toBeNull();
+    expect(watchlistTime({ data: [{ lastTradeTimestampDateTime: 'soon' }] })).toBeNull();
+    expect(watchlistTime({})).toBeNull();
   });
 });
 

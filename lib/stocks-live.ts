@@ -67,6 +67,14 @@ export function parseWatchlist(json: Watchlist): Record<string, LiveQuote> | nul
   return quotes;
 }
 
+/** When Nasdaq made a watchlist answer, as an ISO time; null if no row carries one. */
+export function watchlistTime(json: Watchlist): string | null {
+  const stamp = json.data?.find((r) => r.lastTradeTimestampDateTime)?.lastTradeTimestampDateTime;
+  // Seven decimals of a second is more than Date.parse promises to read.
+  const time = stamp ? Date.parse(stamp.replace(/\.\d+/, '')) : NaN;
+  return Number.isFinite(time) ? new Date(time).toISOString() : null;
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** The price Nasdaq labels "Closed at <date>", with that date; null if the answer has none. */
@@ -87,13 +95,19 @@ export function parseClose(json: Info): LiveQuote | null {
   return null;
 }
 
-export async function getLiveQuotes(): Promise<LiveQuotes> {
+/**
+ * `revalidate` in seconds lets Next's data cache answer for that long, for a page that is
+ * rebuilt on a timer; without it the last sales are read fresh.
+ */
+export async function getLiveQuotes(revalidate?: number): Promise<LiveQuotes> {
   const at = new Date().toISOString();
   const tickers = paper.positions.map((p) => p.ticker);
   try {
     const symbols = tickers.map((t) => `symbol=${encodeURIComponent(`${t.toLowerCase()}|stocks`)}`);
-    const open = parseWatchlist(await getJson<Watchlist>(`${API}/watchlist?${symbols.join('&')}`));
-    if (open) return { session: 'open', at, quotes: open };
+    const list = await getJson<Watchlist>(`${API}/watchlist?${symbols.join('&')}`, revalidate);
+    const open = parseWatchlist(list);
+    // A cached answer is as old as Nasdaq's stamp on it, not as old as this call.
+    if (open) return { session: 'open', at: watchlistTime(list) ?? at, quotes: open };
 
     const settled = await Promise.allSettled(
       tickers.map((t) =>
