@@ -1,4 +1,4 @@
-import type { PaperPortfolio } from '@/app/stocks/data';
+import type { PaperPortfolio, PaperSwitch, PaperTrim } from '@/app/stocks/data';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Paper portfolio
@@ -6,7 +6,8 @@ import type { PaperPortfolio } from '@/app/stocks/data';
    after it opened. Each position is bought at its entry close with its share of
    the capital; on a day a ticker has no bar, its previous close carries forward.
    A switch sells positions at recorded prices and puts what they fetch into one
-   that stays, from that day's close on.
+   that stays, from that day's close on. A trim sells part of a position that
+   stays and buys another with it.
    While a day's close is not published yet, `withLive` stands in Nasdaq's latest
    price for it.
    ═══════════════════════════════════════════════════════════════════════════════ */
@@ -36,11 +37,15 @@ export interface PositionState {
   pnlPct: number;
   /** Percent move on each tracked day, oldest first; null where the ticker had no bar. */
   moves: Array<number | null>;
+  /** How many of the oldest tracked days passed before it was first bought; their moves are null. */
+  idle: number;
 }
 
-/** A position sold in a switch. */
+/** A sale: a whole position in a switch, or part of one that stays in a trim. */
 export interface ClosedState {
   ticker: string;
+  /** Only part of the position was sold; the rest is still held. */
+  partial: boolean;
   /** New York date and clock time of the sale. */
   date: string;
   time: string;
@@ -58,6 +63,8 @@ export interface ClosedState {
   into: string;
   bought: number;
   intoPrice: number;
+  /** `into` was not held until these proceeds bought it. */
+  intoNew: boolean;
 }
 
 export interface DayState {
@@ -121,13 +128,27 @@ export function withLive(
 
 const pct = (now: number, then: number) => (then ? (now / then - 1) * 100 : 0);
 
+/** A switch or a trim, with what the two have in common: when it was made and what it bought. */
+interface Change {
+  when: PaperSwitch | PaperTrim;
+  sw?: PaperSwitch;
+  trim?: PaperTrim;
+}
+
 export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory): PortfolioState {
   const { capital, opened } = portfolio;
-  // Oldest first; on one day, a switch made during the session comes before one made after it.
-  const switches = [...(portfolio.switches ?? [])].sort(
-    (a, b) => a.date.localeCompare(b.date) || Number(!!a.afterClose) - Number(!!b.afterClose),
+  // Oldest first; on one day, a change made during the session comes before one made after it,
+  // and at one time of day a switch comes before a trim.
+  const changes: Change[] = [
+    ...(portfolio.switches ?? []).map((sw) => ({ when: sw, sw })),
+    ...(portfolio.trims ?? []).map((trim) => ({ when: trim, trim })),
+  ].sort(
+    (a, b) =>
+      a.when.date.localeCompare(b.when.date) ||
+      Number(!!a.when.afterClose) - Number(!!b.when.afterClose) ||
+      a.when.time.localeCompare(b.when.time),
   );
-  const sales = switches.flatMap((s) => s.sold);
+  const sales = (portfolio.switches ?? []).flatMap((s) => s.sold);
   const parts = [...portfolio.positions, ...sales].reduce((sum, p) => sum + p.parts, 0) || 1;
 
   const hold = (p: { ticker: string; parts: number; entry: number }) => {
@@ -142,6 +163,10 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
       /** Latest price on record, which the position is valued at. */
       price: p.entry,
       added: false,
+      /** False until a trim first buys a position that was not bought with the portfolio. */
+      begun: cost > 0,
+      /** Tracked days that passed before then. */
+      idle: 0,
       bars: new Map(
         (history[p.ticker] ?? []).filter((b) => b.date > opened).map((b) => [b.date, b.close]),
       ),
@@ -153,21 +178,33 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
   const closed: ClosedState[] = [];
 
   let next = 0;
-  const applySwitches = (through?: string) => {
-    for (; next < switches.length; next++) {
-      const sw = switches[next];
-      // A switch made after a day's close leaves that day's value alone.
-      if (through !== undefined && (sw.afterClose ? sw.date >= through : sw.date > through)) return;
-      const into = open.find((h) => h.ticker === sw.into);
-      for (const sale of sw.sold) {
+  const applyChanges = (through?: string) => {
+    for (; next < changes.length; next++) {
+      const { sw, trim, when } = changes[next];
+      // A change made after a day's close leaves that day's value alone.
+      if (through !== undefined && (when.afterClose ? when.date >= through : when.date > through))
+        return;
+      const into = open.find((h) => h.ticker === when.into);
+      if (!into) continue;
+      const record = { date: when.date, time: when.time, afterClose: !!when.afterClose };
+      const buy = (proceeds: number) => {
+        const intoNew = !into.shares;
+        into.shares += proceeds / when.price;
+        into.cost += proceeds;
+        into.added = into.begun = true;
+        // A price paid during the session is the newest regular-session price on record. One
+        // paid after the close is not: the position stays marked to that day's close.
+        if (!when.afterClose) into.price = when.price;
+        return { into: when.into, bought: proceeds / when.price, intoPrice: when.price, intoNew };
+      };
+      for (const sale of sw?.sold ?? []) {
         const sold = leaving.get(sale.ticker);
-        if (!sold || !into) continue;
+        if (!sold) continue;
         const proceeds = sold.shares * sale.price;
         closed.push({
           ticker: sold.ticker,
-          date: sw.date,
-          time: sw.time,
-          afterClose: !!sw.afterClose,
+          partial: false,
+          ...record,
           cost: sold.cost,
           shares: sold.shares,
           entry: sold.entry,
@@ -175,17 +212,34 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
           proceeds,
           pnl: proceeds - sold.cost,
           pnlPct: pct(sale.price, sold.entry),
-          into: sw.into,
-          bought: proceeds / sw.price,
-          intoPrice: sw.price,
+          ...buy(proceeds),
         });
         leaving.delete(sale.ticker);
-        into.shares += proceeds / sw.price;
-        into.cost += proceeds;
-        into.added = true;
-        // A price paid during the session is the newest regular-session price on record. One
-        // paid after the close is not: the position stays marked to that day's close.
-        if (!sw.afterClose) into.price = sw.price;
+      }
+      const from = trim && trim.from !== trim.into && open.find((h) => h.ticker === trim.from);
+      if (trim && from && from.shares > 0) {
+        // No more than the position holds.
+        const shares = Math.min(from.shares, (capital * trim.share) / trim.fromPrice);
+        const proceeds = shares * trim.fromPrice;
+        // The shares sold cost what the position's shares cost on average.
+        const entry = from.cost / from.shares;
+        const cost = shares * entry;
+        closed.push({
+          ticker: from.ticker,
+          partial: shares < from.shares,
+          ...record,
+          cost,
+          shares,
+          entry,
+          price: trim.fromPrice,
+          proceeds,
+          pnl: proceeds - cost,
+          pnlPct: pct(trim.fromPrice, entry),
+          ...buy(proceeds),
+        });
+        from.shares -= shares;
+        from.cost -= cost;
+        if (!trim.afterClose) from.price = trim.fromPrice;
       }
     }
   };
@@ -195,19 +249,24 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
   ].sort();
   const moves: Array<Array<number | null>> = open.map(() => []);
   const values = dates.map((date) => {
-    applySwitches(date);
+    applyChanges(date);
     let value = 0;
     [...open, ...leaving.values()].forEach((h, i) => {
       const close = h.bars.get(date);
-      if (i < open.length) moves[i].push(close === undefined ? null : pct(close, h.last));
+      // A position a trim has yet to buy has no move of its own, but its close is still the
+      // price it is marked to once bought, and what its first move is measured from.
+      if (i < open.length) {
+        moves[i].push(close === undefined || !h.shares ? null : pct(close, h.last));
+        if (!h.begun) h.idle++;
+      }
       if (close !== undefined) h.last = h.price = close;
       value += h.shares * h.price;
     });
     return value;
   });
-  // A switch made after the newest close still counts: it has happened.
-  const switchedSince = next < switches.length;
-  applySwitches();
+  // A change made after the newest close still counts: it has happened.
+  const changedSince = next < changes.length;
+  applyChanges();
 
   const positions = open.map((h, i): PositionState => {
     const value = h.shares * h.price;
@@ -216,12 +275,13 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
       weight: h.cost / capital,
       cost: h.cost,
       shares: h.shares,
-      entry: h.added ? h.cost / h.shares : h.entry,
+      entry: h.added && h.shares ? h.cost / h.shares : h.entry,
       last: h.price,
       value,
       pnl: value - h.cost,
       pnlPct: h.added ? pct(value, h.cost) : pct(h.price, h.entry),
       moves: moves[i],
+      idle: h.idle,
     };
   });
 
@@ -236,7 +296,7 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
       totalPct: pct(values[d], capital),
     };
   });
-  const value = switchedSince
+  const value = changedSince
     ? positions.reduce((sum, p) => sum + p.value, 0)
     : days.length
       ? days[days.length - 1].value

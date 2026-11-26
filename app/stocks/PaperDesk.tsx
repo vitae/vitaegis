@@ -359,11 +359,16 @@ function Desk({ id, dir, state, names, targets, weighting, opened, mark, onChart
             className="mt-3 max-w-[76ch] text-xs text-white/70"
           >
             Sold {sold[0].date} at {sold[0].time} ET{sold[0].afterClose && ', after the close'}:{' '}
-            {LIST.format(sold.map((c) => `${c.ticker} at ${usd(c.price)} (${signedUsd(c.pnl)})`))}.
-            The ${usd(sold.reduce((sum, c) => sum + c.proceeds, 0))}{' '}
-            {sold.length > 1 ? 'they' : 'it'} fetched bought{' '}
-            {sold.reduce((sum, c) => sum + c.bought, 0).toFixed(4)} more {sold[0].into} at{' '}
-            {usd(sold[0].intoPrice)}.
+            {LIST.format(
+              sold.map(
+                (c) =>
+                  `${c.partial ? `${c.shares.toFixed(4)} shares of ${c.ticker}` : c.ticker} at ${usd(c.price)} (${signedUsd(c.pnl)})`,
+              ),
+            )}
+            . The ${usd(sold.reduce((sum, c) => sum + c.proceeds, 0))}{' '}
+            {sold.length > 1 || sold[0].partial ? 'they' : 'it'} fetched bought{' '}
+            {sold.reduce((sum, c) => sum + c.bought, 0).toFixed(4)}{' '}
+            {sold[0].intoNew ? 'shares of' : 'more'} {sold[0].into} at {usd(sold[0].intoPrice)}.
           </p>
         ))}
         <p className="mt-3 max-w-[76ch] text-xs text-vitae-gray">
@@ -486,7 +491,9 @@ function Desk({ id, dir, state, names, targets, weighting, opened, mark, onChart
                         style={heat(m, tapeScale)}
                       >
                         {m === null ? (
-                          <span className="text-vitae-gray">no bar</span>
+                          <span className="text-vitae-gray">
+                            {tapeFrom + i < p.idle ? 'not held' : 'no bar'}
+                          </span>
                         ) : (
                           signedPct(m, 1)
                         )}

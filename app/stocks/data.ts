@@ -148,9 +148,15 @@ export interface PaperPosition {
   ticker: string;
   /** TradingView symbol, with its exchange. */
   chart: string;
-  /** Share of the capital in parts of the whole: equal parts are equal weights. */
+  /**
+   * Share of the capital in parts of the whole: equal parts are equal weights. Zero for a
+   * position that was not bought with the portfolio: a trim buys it later.
+   */
   parts: number;
-  /** Paper fill: the close on the day the portfolio opened. */
+  /**
+   * Paper fill: the close on the day the portfolio opened. For a position a trim buys later,
+   * the price that trim paid.
+   */
   entry: number;
   /** Analysts' average 12-month price target when the portfolio opened, for reference. */
   target?: number;
@@ -181,6 +187,26 @@ export interface PaperSwitch {
   price: number;
 }
 
+/** Part of a position that stays, sold to buy another. */
+export interface PaperTrim {
+  /** New York date (YYYY-MM-DD). The trim counts from that day's close on. */
+  date: string;
+  /** New York clock time, for the record shown on the page. */
+  time: string;
+  /** Made after that day's close, so it counts from the next trading day on. */
+  afterClose?: boolean;
+  /** Ticker of the position part of which was sold. */
+  from: string;
+  /** Price its shares went at. */
+  fromPrice: number;
+  /** Dollars moved, as a share of the capital: 0.05 is $500 of $10,000. */
+  share: number;
+  /** Ticker of the position bought: one of `positions`, with no parts if this is its first buy. */
+  into: string;
+  /** Price `into` was bought at. */
+  price: number;
+}
+
 export interface PaperPortfolio {
   /** Short name used in the page's links and prompts. */
   key: string;
@@ -192,6 +218,8 @@ export interface PaperPortfolio {
   positions: PaperPosition[];
   /** Oldest first. */
   switches?: PaperSwitch[];
+  /** Oldest first. Switches and trims made at the same time of a day apply switches first. */
+  trims?: PaperTrim[];
 }
 
 /** How far a target sits above an entry; a target at or under it counts for nothing. */
@@ -210,7 +238,9 @@ const byTarget = (p: Omit<PaperPosition, 'parts'> & { target: number }): PaperPo
  * earnings; ANT's is from the thirteen firms covering it four days after its listing.
  * The portfolio opened with twelve positions. On Nov 25 PANW and TSLA were sold at Nasdaq's
  * last sale prices at 1:26 PM New York time and what they fetched bought more ASTS. SPCX
- * followed the same evening, at the after-hours last sale prices of 7:18 PM.
+ * followed the same evening, at the after-hours last sale prices of 7:18 PM. Later that night
+ * 5% of the capital came back out of ASTS and bought SPCX again. No market was trading by
+ * then, so that trim is filled at the session's final after-hours sales, of 7:59 PM.
  */
 // prettier-ignore
 export const paper: PaperPortfolio = {
@@ -218,7 +248,7 @@ export const paper: PaperPortfolio = {
   opened: '2026-11-24',
   capital: 10_000,
   weighting:
-    "Each weight began in proportion to how far analysts' average 12-month price target sat above the entry price; ASTS has since taken what PANW, TSLA and SPCX were sold for. A target is an opinion, not a forecast.",
+    "Each weight began in proportion to how far analysts' average 12-month price target sat above the entry price; ASTS has since taken what PANW, TSLA and SPCX were sold for, and 5% of the capital then went from ASTS back into SPCX. A target is an opinion, not a forecast.",
   switches: [
     {
       date: '2026-11-25',
@@ -239,6 +269,18 @@ export const paper: PaperPortfolio = {
       price: 26.83,
     },
   ],
+  trims: [
+    {
+      date: '2026-11-25',
+      time: '19:59',
+      afterClose: true,
+      from: 'ASTS',
+      fromPrice: 26.98,
+      share: 0.05,
+      into: 'SPCX',
+      price: 128.96,
+    },
+  ],
   positions: [
     { ticker: 'AMD', chart: 'NASDAQ:AMD', entry: 413.27, target: 640.11 },
     { ticker: 'NVDA', chart: 'NASDAQ:NVDA', entry: 155.38, target: 229.33 },
@@ -249,7 +291,10 @@ export const paper: PaperPortfolio = {
     { ticker: 'PLTR', chart: 'NASDAQ:PLTR', entry: 161.18, target: 218 },
     { ticker: 'TSM', chart: 'NYSE:TSM', entry: 349.2, target: 587 },
     { ticker: 'ASTS', chart: 'NASDAQ:ASTS', entry: 23.6, target: 63.35 },
-  ].map(byTarget),
+  ].map(byTarget).concat([
+    // Sold on Nov 25 and bought back by the trim later that night: no part of the entry.
+    { ticker: 'SPCX', chart: 'NASDAQ:SPCX', parts: 0, entry: 128.96, target: 243.64 },
+  ]),
 };
 
 /**
