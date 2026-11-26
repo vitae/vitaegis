@@ -11,6 +11,7 @@ const HOME_PROJECTS = [
   '/run',
   '/keycrate',
   '/crypto',
+  '/bitcoin',
   '/mitochondria',
   '/proverbs',
 ];

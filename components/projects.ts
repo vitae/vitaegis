@@ -12,6 +12,7 @@ import {
   HiTruck,
   HiCurrencyDollar,
 } from 'react-icons/hi';
+import { FaBitcoin } from 'react-icons/fa';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Projects
@@ -74,6 +75,14 @@ export const projects: Project[] = [
     description:
       'Live Bitcoin from Chainlink, daily to yearly returns, a bull-or-bear trend read and the top gainers.',
     icon: HiCurrencyDollar,
+  },
+  {
+    href: '/bitcoin',
+    label: 'BITCOIN',
+    title: 'Bitcoin',
+    description:
+      'Primary sources from the 2008 whitepaper up, the protocol broken down section by section, with a live halving-cycle clock.',
+    icon: FaBitcoin,
   },
   {
     href: '/ubereats',
