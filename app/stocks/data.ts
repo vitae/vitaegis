@@ -172,6 +172,8 @@ export interface PaperSwitch {
   date: string;
   /** New York clock time, for the record shown on the page. */
   time: string;
+  /** Made after that day's close, so it counts from the next trading day on. */
+  afterClose?: boolean;
   sold: PaperSale[];
   /** Ticker of the position that took the proceeds. */
   into: string;
@@ -207,15 +209,16 @@ const byTarget = (p: Omit<PaperPosition, 'parts'> & { target: number }): PaperPo
  * price target, as published between Nov 6 and Nov 24, 2026. DELL's predates its Nov 24
  * earnings; ANT's is from the thirteen firms covering it four days after its listing.
  * The portfolio opened with twelve positions. On Nov 25 PANW and TSLA were sold at Nasdaq's
- * last sale prices at 1:26 PM New York time and what they fetched bought more ASTS.
+ * last sale prices at 1:26 PM New York time and what they fetched bought more ASTS. SPCX
+ * followed the same evening, at the after-hours last sale prices of 7:18 PM.
  */
 // prettier-ignore
 export const paper: PaperPortfolio = {
-  key: '10k',
+  key: 'mix',
   opened: '2026-11-24',
   capital: 10_000,
   weighting:
-    "Each weight began in proportion to how far analysts' average 12-month price target sat above the entry price; ASTS has since taken what PANW and TSLA were sold for. A target is an opinion, not a forecast.",
+    "Each weight began in proportion to how far analysts' average 12-month price target sat above the entry price; ASTS has since taken what PANW, TSLA and SPCX were sold for. A target is an opinion, not a forecast.",
   switches: [
     {
       date: '2026-11-25',
@@ -227,6 +230,14 @@ export const paper: PaperPortfolio = {
       into: 'ASTS',
       price: 26.05,
     },
+    {
+      date: '2026-11-25',
+      time: '19:18',
+      afterClose: true,
+      sold: [{ ticker: 'SPCX', parts: gap(125.81, 243.64), entry: 125.81, price: 128.7 }],
+      into: 'ASTS',
+      price: 26.83,
+    },
   ],
   positions: [
     { ticker: 'AMD', chart: 'NASDAQ:AMD', entry: 413.27, target: 640.11 },
@@ -237,7 +248,6 @@ export const paper: PaperPortfolio = {
     { ticker: 'MU', chart: 'NASDAQ:MU', entry: 629.79, target: 1561.91 },
     { ticker: 'PLTR', chart: 'NASDAQ:PLTR', entry: 161.18, target: 218 },
     { ticker: 'TSM', chart: 'NYSE:TSM', entry: 349.2, target: 587 },
-    { ticker: 'SPCX', chart: 'NASDAQ:SPCX', entry: 125.81, target: 243.64 },
     { ticker: 'ASTS', chart: 'NASDAQ:ASTS', entry: 23.6, target: 63.35 },
   ].map(byTarget),
 };
@@ -255,13 +265,22 @@ export const astsOnly: PaperPortfolio = {
   positions: [{ ticker: 'ASTS', chart: 'NASDAQ:ASTS', parts: 1, entry: 23.6, target: 63.35 }],
 };
 
+/** The portfolios /stocks shows, top to bottom, each defined at $10,000. */
+export const papers: PaperPortfolio[] = [astsOnly, paper];
+
 /**
- * The portfolios /stocks shows, top to bottom: ASTS alone, then the spread one at three
- * sizes, with the same positions, weights, entry closes and sales in each.
+ * The sizes a reader can view them at. A size only scales the dollars and the shares: the
+ * positions, weights, entry closes and sales are the same at every one.
  */
-export const papers: PaperPortfolio[] = [
-  astsOnly,
-  ...[10_000, 5_000, 1_000].map((capital) => ({ ...paper, key: `${capital / 1000}k`, capital })),
+export const paperLevels = [10_000, 5_000, 1_000];
+
+/** Every ticker a paper portfolio holds or has sold; a sold one still counts on days it was held. */
+export const paperTickers = [
+  ...new Set(
+    papers
+      .flatMap((p) => [...p.positions, ...(p.switches ?? []).flatMap((s) => s.sold)])
+      .map((held) => held.ticker),
+  ),
 ];
 
 /** Lookback periods the board can compare against. `ytd` uses the fixed `start` closes above. */

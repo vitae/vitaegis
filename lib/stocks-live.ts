@@ -1,5 +1,5 @@
 // Server-only: called from /api/stocks/live. Never import from a client component.
-import { paper } from '@/app/stocks/data';
+import { paperTickers } from '@/app/stocks/data';
 import { NASDAQ_HEADERS, parseNasdaqNumber } from '@/lib/stocks';
 import type { LiveQuote, LiveQuotes } from '@/lib/stocks-portfolio';
 
@@ -103,7 +103,8 @@ export function parseClose(json: Info): LiveQuote | null {
  */
 export async function getLiveQuotes(revalidate?: number): Promise<LiveQuotes> {
   const at = new Date().toISOString();
-  const tickers = paper.positions.map((p) => p.ticker);
+  // Sold tickers too: the close of a day they were still held is part of that day's value.
+  const tickers = paperTickers;
   try {
     const symbols = tickers.map((t) => `symbol=${encodeURIComponent(`${t.toLowerCase()}|stocks`)}`);
     const list = await getJson<Watchlist>(`${API}/watchlist?${symbols.join('&')}`, revalidate);

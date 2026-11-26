@@ -7,7 +7,7 @@ import { trackPortfolio } from '@/lib/stocks-portfolio';
 import PaperDesk from './PaperDesk';
 import Plays from './Plays';
 import StocksBoard from './StocksBoard';
-import { astsOnly, paper, papers, stocks } from './data';
+import { astsOnly, paper, paperLevels, papers, stocks } from './data';
 import styles from './stocks.module.css';
 
 // The prices in the first paint are at most about a minute old; the page then polls for
@@ -17,7 +17,7 @@ export const revalidate = 60;
 export const maxDuration = 60;
 
 const DESCRIPTION =
-  'Paper portfolios marked to Nasdaq prices while the market is open and to every daily close: $10,000 in ASTS alone, and $10,000, $5,000 and $1,000 across ten stocks, with TradingView charts and the wider market.';
+  'Two paper portfolios, one in ASTS alone and one spread across AI stocks, shown at $10,000, $5,000 or $1,000 and marked to Nasdaq prices while the market is open and to every daily close, with TradingView charts and the wider market.';
 
 export const metadata: Metadata = {
   title: 'Stocks | VITAEGIS',
@@ -36,9 +36,9 @@ const formatDate = (iso: string) =>
 /** The page's windows, listed in the status line the way a multiplexer lists them: one per portfolio, then the shared sections. */
 const WINDOWS = [...papers.map((p) => p.key), 'rank', 'chart', 'scan', 'plays'];
 
-/** "$10,000, $5,000 and $1,000" */
-const SIZES = new Intl.ListFormat('en-US', { type: 'conjunction' }).format(
-  papers.filter((p) => p.positions.length > 1).map((p) => `$${p.capital.toLocaleString('en-US')}`),
+/** "$10,000, $5,000, or $1,000" */
+const SIZES = new Intl.ListFormat('en-US', { type: 'disjunction' }).format(
+  paperLevels.map((size) => `$${size.toLocaleString('en-US')}`),
 );
 
 export default async function StocksPage() {
@@ -94,18 +94,19 @@ export default async function StocksPage() {
                 Stocks
               </h1>
               <p className="mt-4 max-w-[68ch] font-normal text-white/70">
-                A ${astsOnly.capital.toLocaleString('en-US')} paper portfolio held entirely in{' '}
-                {astsOnly.positions[0].ticker}, then paper portfolios of {SIZES} spread across the
-                same {paper.positions.length} stocks at the same weights, all bought at the{' '}
-                {entryDate} close. While the market is open they are marked to Nasdaq&apos;s last
-                sale price; after it, to the close. No real orders are placed. Under them, the
-                positions ranked by how fast they gained, a chart of each one, the wider market, and
-                what a put, a call or a short on each stock would cost and pay at a move you pick.
+                Two paper portfolios, shown at the size you pick: {SIZES}. One is held entirely in{' '}
+                {astsOnly.positions[0].ticker}; the other is spread across {paper.positions.length}{' '}
+                stocks. Both were bought at the {entryDate} close. While the market is open they are
+                marked to Nasdaq&apos;s last sale price; after it, to the close. No real orders are
+                placed. Under them, the positions ranked by how fast they gained, a chart of each
+                one, the wider market, and what a put, a call or a short on each stock would cost
+                and pay at a move you pick.
               </p>
             </header>
 
             <PaperDesk
               portfolios={papers}
+              levels={paperLevels}
               history={history}
               initialLive={live}
               names={names}
@@ -123,8 +124,8 @@ export default async function StocksPage() {
                 first filled at its {entryDate} closing price, and any sale since, with what it
                 bought, is listed under the positions. During the regular session, prices are
                 Nasdaq&apos;s last sale, read about every ten seconds while this page is in view;
-                pre-market and after-hours trades are not counted, and a day&apos;s row in the log
-                is final once its close is published.
+                pre-market and after-hours prices do not move the marks, and a day&apos;s row in the
+                log is final once its close is published.
               </p>
               <p className="mt-3 max-w-[76ch]">
                 Closes are adjusted for splits but not dividends, in US dollars; Bitcoin trades

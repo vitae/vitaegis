@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { astsOnly, paper, papers, stocks, type PaperPortfolio } from '@/app/stocks/data';
+import {
+  astsOnly,
+  paper,
+  paperLevels,
+  papers,
+  paperTickers,
+  stocks,
+  type PaperPortfolio,
+} from '@/app/stocks/data';
 import { trackPortfolio, withLive } from './stocks-portfolio';
 
 // $10,000: a quarter in AAA at $100 (25 shares), three quarters in BBB at $50 (150 shares).
@@ -174,46 +182,119 @@ describe('a switch', () => {
     // 25 × 100 + 137.5 × 60, the price the switch paid
     expect(state.value).toBeCloseTo(10_750);
   });
+
+  it('leaves the day alone when the switch came after its close', () => {
+    const late: PaperPortfolio = {
+      ...switched,
+      switches: [{ ...switched.switches![0], afterClose: true }],
+    };
+    const state = trackPortfolio(late, {
+      AAA: [
+        { date: '2026-11-25', close: 100 },
+        { date: '2026-11-26', close: 110 },
+        { date: '2026-11-27', close: 110 },
+      ],
+      BBB: [
+        { date: '2026-11-25', close: 50 },
+        { date: '2026-11-26', close: 62 },
+        { date: '2026-11-27', close: 62 },
+      ],
+      CCC: [
+        { date: '2026-11-25', close: 190 },
+        { date: '2026-11-26', close: 500 },
+        { date: '2026-11-27', close: 900 },
+      ],
+    });
+    // Nov 26 still holds CCC at its close: 25 × 110 + 100 × 62 + 12.5 × 500
+    expect(state.days[1].value).toBeCloseTo(15_200);
+    // Nov 27 is after the switch: 25 × 110 + 137.5 × 62
+    expect(state.days[2].value).toBeCloseTo(11_275);
+    expect(state.closed[0].afterClose).toBe(true);
+  });
+
+  it('keeps the close as the mark when the switch came after it', () => {
+    const late: PaperPortfolio = {
+      ...switched,
+      switches: [{ ...switched.switches![0], afterClose: true }],
+    };
+    const state = trackPortfolio(late, {
+      AAA: [{ date: '2026-11-26', close: 110 }],
+      BBB: [{ date: '2026-11-26', close: 62 }],
+      CCC: [{ date: '2026-11-26', close: 190 }],
+    });
+    // The day closed still holding CCC: 25 × 110 + 100 × 62 + 12.5 × 190
+    expect(state.days[0].value).toBeCloseTo(11_325);
+    // Since then CCC went at $180 and bought BBB at $60, but BBB is still marked at its $62
+    // close: 25 × 110 + 137.5 × 62
+    expect(state.positions[1].last).toBe(62);
+    expect(state.value).toBeCloseTo(11_275);
+  });
+
+  it('applies a same-day switch made during the session before one made after the close', () => {
+    const both: PaperPortfolio = {
+      ...switched,
+      switches: [
+        { date: '2026-11-26', time: '19:00', afterClose: true, sold: [], into: 'AAA', price: 1 },
+        switched.switches![0],
+      ],
+    };
+    const state = trackPortfolio(both, {
+      AAA: [{ date: '2026-11-26', close: 110 }],
+      BBB: [{ date: '2026-11-26', close: 62 }],
+      CCC: [{ date: '2026-11-26', close: 500 }],
+    });
+    // The session switch counts on Nov 26 even though it is listed second.
+    expect(state.days[0].value).toBeCloseTo(11_275);
+  });
 });
 
 describe('paper portfolio', () => {
+  const sales = (paper.switches ?? []).flatMap((s) => s.sold);
+  const total = [...paper.positions, ...sales].reduce((sum, p) => sum + p.parts, 0);
+
   it('holds only tickers the board fetches, once each', () => {
     const fetched = new Set(stocks.map((s) => s.ticker));
     const held = paper.positions.map((p) => p.ticker);
-    const sold = (paper.switches ?? []).flatMap((s) => s.sold.map((sale) => sale.ticker));
+    const sold = sales.map((sale) => sale.ticker);
     expect([...held, ...sold].filter((t) => !fetched.has(t))).toEqual([]);
     expect(new Set([...held, ...sold]).size).toBe(held.length + sold.length);
+    expect([...paperTickers].sort()).toEqual([...new Set([...held, ...sold])].sort());
   });
 
   it('weights what it bought by the gap between each target and its entry', () => {
     const gaps = paper.positions.map((p) => (p.target ?? 0) / p.entry - 1);
-    const sold = (paper.switches ?? []).flatMap((s) => s.sold);
-    const total = [...paper.positions, ...sold].reduce((sum, p) => sum + p.parts, 0);
     expect(gaps.every((g) => g > 0)).toBe(true);
     paper.positions.forEach((p, i) => expect(p.parts).toBeCloseTo(gaps[i]));
     // PANW and TSLA were the two smallest, 2.26% of the capital between them.
-    expect(sold.map((s) => s.ticker)).toEqual(['PANW', 'TSLA']);
-    expect(sold.reduce((sum, s) => sum + s.parts, 0) / total).toBeCloseTo(0.0226, 4);
+    const first = paper.switches![0].sold;
+    expect(first.map((s) => s.ticker)).toEqual(['PANW', 'TSLA']);
+    expect(first.reduce((sum, s) => sum + s.parts, 0) / total).toBeCloseTo(0.0226, 4);
   });
 
-  it('put what PANW and TSLA fetched into ASTS and left the rest alone', () => {
+  it('put what PANW, TSLA and SPCX fetched into ASTS and left the rest alone', () => {
     const state = trackPortfolio(paper, {});
-    const total = [...paper.positions, ...paper.switches![0].sold].reduce(
-      (sum, p) => sum + p.parts,
-      0,
-    );
     const proceeds = state.closed.reduce((sum, c) => sum + c.proceeds, 0);
-    expect(state.closed.map((c) => c.ticker)).toEqual(['PANW', 'TSLA']);
-    expect(state.positions).toHaveLength(10);
+    expect(state.closed.map((c) => c.ticker)).toEqual(['PANW', 'TSLA', 'SPCX']);
+    expect(state.closed.map((c) => c.afterClose)).toEqual([false, false, true]);
+    expect(state.positions).toHaveLength(9);
     for (const [i, p] of state.positions.entries()) {
       const bought = (paper.capital * paper.positions[i].parts) / total;
       expect(p.cost).toBeCloseTo(p.ticker === 'ASTS' ? bought + proceeds : bought);
       expect(p.shares * p.entry).toBeCloseTo(p.cost);
     }
-    // Everything paid for what is still held, plus what the two sales lost, is the capital.
+    // Everything paid for what is still held, less what the sales made or lost, is the capital.
     const held = state.positions.reduce((sum, p) => sum + p.cost, 0);
     const realized = state.closed.reduce((sum, c) => sum + c.pnl, 0);
     expect(held - realized).toBeCloseTo(paper.capital);
+  });
+
+  it('still held SPCX at the Nov 25 close', () => {
+    const spcx = sales.find((s) => s.ticker === 'SPCX')!;
+    const shares = (paper.capital * spcx.parts) / total / spcx.entry;
+    const day = (close: number) =>
+      trackPortfolio(paper, { SPCX: [{ date: '2026-11-25', close }] }).days[0].value;
+    // Its close moves that day's value by its shares, so it was still in the portfolio.
+    expect(day(127.44) - day(spcx.entry)).toBeCloseTo(shares * (127.44 - spcx.entry));
   });
 
   it('keeps a second portfolio wholly in ASTS from the same close', () => {
@@ -227,29 +308,29 @@ describe('paper portfolio', () => {
   });
 });
 
-describe('paper portfolio sizes', () => {
-  const sizes = papers.filter((p) => p.positions.length > 1);
-
-  it('names each portfolio once', () => {
-    expect(papers.map((p) => p.key)).toEqual(['asts', '10k', '5k', '1k']);
-    expect(sizes.map((p) => p.capital)).toEqual([10_000, 5_000, 1_000]);
+describe('paper portfolio levels', () => {
+  it('names each portfolio once and offers three sizes', () => {
+    expect(papers.map((p) => p.key)).toEqual(['asts', 'mix']);
+    expect(paperLevels).toEqual([10_000, 5_000, 1_000]);
   });
 
-  it('holds the same positions at the same weights and entries in every size', () => {
+  it('scales the dollars and the shares and nothing else', () => {
     const history = { NVDA: [{ date: '2026-11-25', close: 141.81 }] };
-    const [big, ...rest] = sizes.map((p) => trackPortfolio(p, history));
-    expect(big.pnl).not.toBe(0);
-    for (const state of rest) {
-      const scale = state.capital / big.capital;
-      expect(state.pnlPct).toBeCloseTo(big.pnlPct);
-      expect(state.pnl).toBeCloseTo(big.pnl * scale);
-      expect(state.days[0].change).toBeCloseTo(big.days[0].change * scale);
-      state.positions.forEach((p, i) => {
-        expect(p.weight).toBeCloseTo(big.positions[i].weight);
-        expect(p.entry).toBeCloseTo(big.positions[i].entry);
-        expect(p.shares).toBeCloseTo(big.positions[i].shares * scale);
-      });
-      state.closed.forEach((c, i) => expect(c.pnl).toBeCloseTo(big.closed[i].pnl * scale));
+    for (const base of papers) {
+      const [big, ...rest] = paperLevels.map((capital) =>
+        trackPortfolio({ ...base, capital }, history),
+      );
+      for (const state of rest) {
+        const scale = state.capital / big.capital;
+        expect(state.pnlPct).toBeCloseTo(big.pnlPct);
+        expect(state.pnl).toBeCloseTo(big.pnl * scale);
+        state.positions.forEach((p, i) => {
+          expect(p.weight).toBeCloseTo(big.positions[i].weight);
+          expect(p.entry).toBeCloseTo(big.positions[i].entry);
+          expect(p.shares).toBeCloseTo(big.positions[i].shares * scale);
+        });
+        state.closed.forEach((c, i) => expect(c.pnl).toBeCloseTo(big.closed[i].pnl * scale));
+      }
     }
   });
 });

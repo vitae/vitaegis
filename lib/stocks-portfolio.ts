@@ -29,7 +29,7 @@ export interface PositionState {
   shares: number;
   /** Price paid per share; an average once a switch has added to the position. */
   entry: number;
-  /** Latest price on record: a close after the entry, a switch's price, or the entry. */
+  /** Latest regular-session price on record: a close, a switch made during a session, or the entry. */
   last: number;
   value: number;
   pnl: number;
@@ -44,6 +44,8 @@ export interface ClosedState {
   /** New York date and clock time of the sale. */
   date: string;
   time: string;
+  /** Sold after that day's close. */
+  afterClose: boolean;
   cost: number;
   shares: number;
   entry: number;
@@ -121,7 +123,10 @@ const pct = (now: number, then: number) => (then ? (now / then - 1) * 100 : 0);
 
 export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory): PortfolioState {
   const { capital, opened } = portfolio;
-  const switches = [...(portfolio.switches ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+  // Oldest first; on one day, a switch made during the session comes before one made after it.
+  const switches = [...(portfolio.switches ?? [])].sort(
+    (a, b) => a.date.localeCompare(b.date) || Number(!!a.afterClose) - Number(!!b.afterClose),
+  );
   const sales = switches.flatMap((s) => s.sold);
   const parts = [...portfolio.positions, ...sales].reduce((sum, p) => sum + p.parts, 0) || 1;
 
@@ -151,7 +156,8 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
   const applySwitches = (through?: string) => {
     for (; next < switches.length; next++) {
       const sw = switches[next];
-      if (through !== undefined && sw.date > through) return;
+      // A switch made after a day's close leaves that day's value alone.
+      if (through !== undefined && (sw.afterClose ? sw.date >= through : sw.date > through)) return;
       const into = open.find((h) => h.ticker === sw.into);
       for (const sale of sw.sold) {
         const sold = leaving.get(sale.ticker);
@@ -161,6 +167,7 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
           ticker: sold.ticker,
           date: sw.date,
           time: sw.time,
+          afterClose: !!sw.afterClose,
           cost: sold.cost,
           shares: sold.shares,
           entry: sold.entry,
@@ -176,7 +183,9 @@ export function trackPortfolio(portfolio: PaperPortfolio, history: PaperHistory)
         into.shares += proceeds / sw.price;
         into.cost += proceeds;
         into.added = true;
-        into.price = sw.price;
+        // A price paid during the session is the newest regular-session price on record. One
+        // paid after the close is not: the position stays marked to that day's close.
+        if (!sw.afterClose) into.price = sw.price;
       }
     }
   };

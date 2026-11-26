@@ -17,7 +17,8 @@ import styles from './stocks.module.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    VITAEGIS - Paper portfolios
-   One terminal session. For each portfolio, four blocks: its value, its
+   One terminal session. A row of buttons picks the size every portfolio is shown
+   at. Then, for each portfolio, four blocks: its value, its
    positions, the gain or loss on every day since the entry (in total and per
    position) and what a yearly return the reader picks would compound to. Then,
    once, for the portfolio that holds the most stocks: its positions ranked by how
@@ -30,6 +31,8 @@ import styles from './stocks.module.css';
 interface Props {
   /** The portfolios to show, top to bottom, all opened at the same close. */
   portfolios: PaperPortfolio[];
+  /** Sizes in dollars the reader can view them at; the first is shown to begin with. */
+  levels: number[];
   /** Daily closes per held ticker since the entry. */
   history: PaperHistory;
   /** Nasdaq's prices when the page was built, shown until the first poll answers. */
@@ -43,7 +46,9 @@ interface Props {
 }
 
 interface DeskProps {
-  /** The portfolio's short name: its folder in the prompts and its anchor on the page. */
+  /** The portfolio's short name: its anchor on the page. */
+  id: string;
+  /** Its folder in the prompts: the size it is shown at, then its name. */
   dir: string;
   state: PortfolioState;
   names: Record<string, string>;
@@ -68,6 +73,9 @@ const POLL_OPEN_MS = 10_000;
 const POLL_CLOSED_MS = 60_000;
 
 const LIST = new Intl.ListFormat('en-US', { type: 'conjunction' });
+
+/** 10000 is "10k". */
+const levelKey = (size: number) => `${size / 1000}k`;
 
 const newYorkClock = (iso: string) =>
   new Date(iso).toLocaleTimeString('en-US', {
@@ -127,7 +135,7 @@ const heat = (move: number | null, scale: number) => {
 };
 
 /** The four blocks whose numbers depend on the portfolio's size. */
-function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: DeskProps) {
+function Desk({ id, dir, state, names, targets, weighting, opened, mark, onChart }: DeskProps) {
   const [rate, setRate] = useState(DEFAULT_RATE);
 
   const size = `$${state.capital.toLocaleString('en-US')}`;
@@ -167,7 +175,7 @@ function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: 
 
   return (
     <>
-      <section id={dir} className={`${styles.section} ${styles.group}`}>
+      <section id={id} className={`${styles.section} ${styles.group}`}>
         <Prompt dir={dir} cmd="portfolio" flags="--paper" label={`Paper portfolio of ${size}`} />
         <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,23rem)] md:items-end">
           <div>
@@ -225,7 +233,7 @@ function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: 
         </div>
       </section>
 
-      <section id={`${dir}-positions`} className={styles.section}>
+      <section id={`${id}-positions`} className={styles.section}>
         <Prompt dir={dir} cmd="positions" label={`Positions of the ${size} portfolio`} />
         <table className={`${styles.table} mt-4`}>
           <caption className="sr-only">
@@ -350,9 +358,10 @@ function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: 
             key={`${sold[0].date} ${sold[0].time}`}
             className="mt-3 max-w-[76ch] text-xs text-white/70"
           >
-            Sold {sold[0].date} at {sold[0].time} ET:{' '}
+            Sold {sold[0].date} at {sold[0].time} ET{sold[0].afterClose && ', after the close'}:{' '}
             {LIST.format(sold.map((c) => `${c.ticker} at ${usd(c.price)} (${signedUsd(c.pnl)})`))}.
-            The ${usd(sold.reduce((sum, c) => sum + c.proceeds, 0))} they fetched bought{' '}
+            The ${usd(sold.reduce((sum, c) => sum + c.proceeds, 0))}{' '}
+            {sold.length > 1 ? 'they' : 'it'} fetched bought{' '}
             {sold.reduce((sum, c) => sum + c.bought, 0).toFixed(4)} more {sold[0].into} at{' '}
             {usd(sold[0].intoPrice)}.
           </p>
@@ -363,7 +372,7 @@ function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: 
         </p>
       </section>
 
-      <section id={`${dir}-log`} className={styles.section}>
+      <section id={`${id}-log`} className={styles.section}>
         <Prompt
           dir={dir}
           cmd="log"
@@ -491,7 +500,7 @@ function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: 
         )}
       </section>
 
-      <section id={`${dir}-project`} className={styles.section}>
+      <section id={`${id}-project`} className={styles.section}>
         <Prompt
           dir={dir}
           cmd="project"
@@ -575,7 +584,16 @@ function Desk({ dir, state, names, targets, weighting, opened, mark, onChart }: 
   );
 }
 
-export default function PaperDesk({ portfolios, history, initialLive, names, trail, asOf }: Props) {
+export default function PaperDesk({
+  portfolios,
+  levels,
+  history,
+  initialLive,
+  names,
+  trail,
+  asOf,
+}: Props) {
+  const [level, setLevel] = useState(levels[0]);
   const [live, setLive] = useState(initialLive);
   // False until this tab has read prices itself; what came with the page can be minutes old.
   const [fresh, setFresh] = useState(false);
@@ -626,9 +644,9 @@ export default function PaperDesk({ portfolios, history, initialLive, names, tra
     () =>
       portfolios.map((portfolio) => ({
         portfolio,
-        state: trackPortfolio(portfolio, marked.history),
+        state: trackPortfolio({ ...portfolio, capital: level }, marked.history),
       })),
-    [portfolios, marked],
+    [portfolios, marked, level],
   );
   // The ranking and the chart cover the portfolio that holds the most stocks.
   const main = desks.reduce((most, desk) =>
@@ -663,10 +681,31 @@ export default function PaperDesk({ portfolios, history, initialLive, names, tra
 
   return (
     <>
+      <div
+        className="flex flex-wrap items-center gap-3 pb-7"
+        role="group"
+        aria-label="Size to show the portfolios at"
+      >
+        <span className="text-xs text-vitae-gray">level</span>
+        {levels.map((size) => (
+          <button
+            key={size}
+            type="button"
+            onClick={() => setLevel(size)}
+            aria-pressed={size === level}
+            aria-label={`Show the portfolios at $${size.toLocaleString('en-US')}`}
+            className={`liquid-btn liquid-btn--pill ${size === level ? 'liquid-btn--on' : ''}`}
+          >
+            {levelKey(size)}
+          </button>
+        ))}
+      </div>
+
       {desks.map(({ portfolio, state }) => (
         <Desk
           key={portfolio.key}
-          dir={portfolio.key}
+          id={portfolio.key}
+          dir={`${levelKey(level)}/${portfolio.key}`}
           state={state}
           names={names}
           targets={Object.fromEntries(portfolio.positions.map((p) => [p.ticker, p.target]))}
